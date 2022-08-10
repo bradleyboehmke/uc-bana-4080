@@ -77,5 +77,3 @@ Upon successfully completing this course, you will be able to:
 ## Getting Started
 
 This course is split into two main sections - Data Wrangling and Machine Learning. The data wrangling section will provide you the fundamental skills required to acquire, munge, transform, manipulate, and visualize data in a computing environment that fosters reproducibility. The primary course material for this section is provided via this Bookdown resource [:closed_book:](https://bradleyboehmke.github.io/uc-bana-7025/).  The second section focused on machine learning section will expose you to several algorithms to identify hidden patterns and relationships within your data. The primary course material for this part of the course is provided via this Bookdown resource [:closed_book:](https://bradleyboehmke.github.io/uc-bana-4080/).
-
-primary course material is provided via this Bookdown resource [:closed_book:](https://bradleyboehmke.github.io/uc-bana-7025/).
