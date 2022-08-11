@@ -1,0 +1,408 @@
+# Introduction to Machine Learning
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+   echo = TRUE, 
+   warning = FALSE, 
+   message = FALSE,
+   collapse = TRUE
+   )
+```
+
+Machine learning (ML) continues to grow in importance for many organizations across nearly all domains. Some example applications of machine learning in practice include:
+
+* Predicting the likelihood of a patient returning to the hospital (_readmission_) within 30 days of discharge.
+* Segmenting customers based on common attributes or purchasing behavior for targeted marketing.
+* Predicting coupon redemption rates for a given marketing campaign.
+* Predicting customer churn so an organization can perform preventative intervention.
+* And many more!
+
+In essence, these tasks all seek to learn from data.  To address each scenario, we can use a given set of _features_ to train an algorithm and extract insights. These algorithms, or _learners_, can be classified according to the amount and type of supervision needed during training.  
+
+## Learning objectives
+
+This lesson will introduce you to some fundamental concepts around ML and this class. By the end of this lesson you will:
+
+1. Be able to explain the difference between supervised and unsupervised learning.
+2. Know when a problem is considered a regression or classification problem.
+3. Be able to import and explore the data sets we'll use through various examples.
+
+## Supervised learning
+
+A ___predictive model___ is used for tasks that involve the prediction of a given output (or target) using other variables (or features) in the data set. The learning algorithm in a predictive model attempts to discover and model the relationships among the <font color="red">target</font> variable (the variable being predicted) and the other <font color="blue">features</font> (aka predictor variables). Examples of predictive modeling include:
+
+* using <font color="blue">customer attributes</font> to predict the probability of the <font color="red">customer churning</font> in the next 6 weeks;
+* using <font color="blue">home attributes</font> to predict the <font color="red">sales price</font>;
+* using <font color="blue">employee attributes</font> to predict the likelihood of <font color="red">attrition</font>;
+* using <font color="blue">patient attributes</font> and symptoms to predict the risk of <font color="red">readmission</font>;
+* using <font color="blue">production attributes</font> to predict <font color="red">time to market</font>.
+
+Each of these examples has a defined learning task; they each intend to use attributes ($X$) to predict an outcome measurement ($Y$).
+
+```{block, type='note'}
+Throughout this course we'll use various terms interchangeably for
+
+* $X$: "predictor variable", "independent variable", "attribute", "feature", "predictor"
+* $Y$: "target variable", "dependent variable", "response", "outcome measurement"
+```
+
+The predictive modeling examples above describe what is known as _supervised learning_.  The supervision refers to the fact that the target values provide a supervisory role, which indicates to the learner the task it needs to learn. Specifically, given a set of data, the learning algorithm attempts to optimize a function (the algorithmic steps) to find the combination of feature values that results in a predicted value that is as close to the actual target output as possible.
+
+```{block, type='note'}
+In supervised learning, the training data you feed the algorithm includes the target values.  Consequently, the solutions can be used to help _supervise_ the training process to find the optimal algorithm parameters.
+```
+
+Most supervised learning problems can be bucketed into one of two categories, _regression_ or _classification_, which we discuss next.
+
+### Regression problems
+
+When the objective of our supervised learning is to predict a numeric outcome, we refer to this as a ___regression problem___ (not to be confused with linear regression modeling).  Regression problems revolve around predicting output that falls on a continuum. In the examples above, predicting home sales prices and time to market reflect a regression problem because the output is numeric and continuous.  This means, given the combination of predictor values, the response value could fall anywhere along some continuous spectrum (e.g., the predicted sales price of a particular home could be between \$80,000 and \$755,000).  The figure below illustrates average home sales prices as a function of two home features: year built and total square footage. Depending on the combination of these two features, the expected home sales price could fall anywhere along a plane.
+
+```{r intro-regression-problem, echo=FALSE, fig.cap="Fig 1: Average home sales price as a function of year built and total square footage."}
+library(plotly)
+df <- AmesHousing::make_ames()
+x <- matrix(sort(df$Gr_Liv_Area)[floor(seq(1, nrow(df), length.out = 15))], 15, 1)
+y <- matrix(sort(df$Year_Built)[floor(seq(1, nrow(df), length.out = 15))], 1, 15)
+z <- 25051 + 3505*(log(x^.9) %*% log(y)) - 5*as.vector(x) 
+c <- matrix(c(.92, .95, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, .95), 1, 15)
+z <- sweep(z, MARGIN = 2, c, `*`)
+plot_ly(x = as.vector(x), y = as.vector(y), z = z, showscale = FALSE) %>%  
+    add_surface() %>%
+    layout(
+        scene = list(
+            xaxis = list(title = "Feature: square footage"),
+            yaxis = list(title = "Feature: year built"),
+            zaxis = list(title = "Response: sale price")
+        )
+    )
+# code for 3D print version
+# par(mar = c(0.1, 0.1, 0.1, 0.1))  # remove extra white space
+# persp(
+#   x = x,
+#   y = y,
+#   z = z,
+#   xlab = "Square footage",
+#   ylab = "Year built",
+#   zlab = "Sale price",
+#   theta = -45,
+#   phi = 25,
+#   col = viridis::viridis(100)
+# )
+```
+
+
+### Classification problems
+
+When the objective of our supervised learning is to predict a categorical outcome, we refer to this as a ___classification problem___.  Classification problems most commonly revolve around predicting a binary or multinomial response measure such as:
+
+* Did a customer redeem a coupon (coded as yes/no or 1/0)?
+* Did a customer churn (coded as yes/no or 1/0)?
+* Did a customer click on our online ad (coded as yes/no or 1/0)?
+* Classifying customer reviews:
+    * Binary: positive vs. negative.
+    * Multinomial: extremely negative to extremely positive on a 0--5 Likert scale.
+    
+```{r classification-problem, echo=FALSE, out.width="50%", out.height="50%", fig.cap="Fig 2: Classification problem modeling 'Yes'/'No' response based on three features.", cache=FALSE}
+## code to create graphic
+library(DiagrammeR)
+grViz("
+
+  digraph boxes_and_circles {
+    node [shape = circle]
+    x1; x2; x3;
+
+    node [shape = box]
+    Model;
+
+    node [shape = triangle]
+    Yes; No;
+
+    x1->Model; x2->Model; x3->Model; Model->No; Model->Yes;
+}")
+```
+
+However, when we apply machine learning models for classification problems, rather than predict a particular class (i.e., "yes" or "no"), we often want to predict the _probability_ of a particular class (i.e., yes: 0.65, no: 0.35).  By default, the class with the highest predicted probability becomes the predicted class.  Consequently, even though we are performing a classification problem, we are still predicting a numeric output (probability).  However, the essence of the problem still makes it a classification problem.
+
+Although there are machine learning algorithms that can be applied to regression problems but not classification and vice versa, many of the supervised learning algorithms we cover in this class can be applied to both.  These algorithms have become the most popular machine learning applications in recent years. 
+
+
+## Unsupervised learning
+
+___Unsupervised learning___, in contrast to supervised learning, includes a set of statistical tools to better understand and describe your data, but performs the analysis without a target variable.  In essence, unsupervised learning is concerned with identifying groups in a data set. The groups may be defined by the rows (i.e., *clustering*) or the columns (i.e., *dimension reduction*); however, the motive in each case is quite different.
+
+The goal of ___clustering___ is to segment observations into similar groups based on the observed variables; for example, to divide consumers into different homogeneous groups, a process known as market segmentation.  In __dimension reduction__, we are often concerned with reducing the number of variables in a data set. For example, classical linear regression models break down in the presence of highly correlated features.  Some dimension reduction techniques can be used to reduce the feature set to a potentially smaller set of uncorrelated variables. Such a reduced feature set is often used as input to downstream supervised learning models (e.g., principal component regression).
+
+Unsupervised learning is often performed as part of an exploratory data analysis (EDA). However, the exercise tends to be more subjective, and there is no simple goal for the analysis, such as prediction of a response. Furthermore, it can be hard to assess the quality of results obtained from unsupervised learning methods. The reason for this is simple. If we fit a predictive model using a supervised learning technique (i.e., linear regression), then it is possible to check our work by seeing how well our model predicts the response _Y_ on observations not used in fitting the model. However, in unsupervised learning, there is no way to check our work because we don’t know the true answer---the problem is unsupervised!  
+
+Despite its subjectivity, the importance of unsupervised learning should not be overlooked and such techniques are often used in organizations to: 
+
+- Divide consumers into different homogeneous groups so that tailored marketing strategies can be developed and deployed for each segment.
+- Identify groups of online shoppers with similar browsing and purchase histories, as well as items that are of particular interest to the shoppers within each group. Then an individual shopper can be preferentially shown the items in which he or she is particularly likely to be interested, based on the purchase histories of similar shoppers.
+- Identify products that have similar purchasing behavior so that managers can manage them as product groups.
+
+These questions, and many more, can be addressed with unsupervised learning.  Moreover, the outputs of unsupervised learning models can be used as inputs to downstream supervised learning models.
+
+## Machine Learning in `r fontawesome::fa("r-project")`
+
+Historically, the R ecosystem provides a wide variety of ML algorithm implementations. This has its benefits; however, this also has drawbacks as it requires the users to learn many different formula interfaces and syntax nuances. 
+
+More recently, development on a group of packages called [**Tidymodels**](https://www.tidymodels.org/) has helped to make implementation easier. The **tidymodels** collection allows you to perform discrete parts of the ML workflow with discrete packages:
+
+- [rsample](https://rsample.tidymodels.org/) for data splitting and resampling
+- [recipes](https://recipes.tidymodels.org/) for data pre-processing and feature engineering
+- [parsnip](https://parsnip.tidymodels.org/) for applying algorithms
+- [tune](https://tune.tidymodels.org/) for hyperparameter tuning
+- [yardstick](https://yardstick.tidymodels.org/) for measuring model performance
+- and several others!
+
+Throughout this course you'll be exposed to several of these packages. Go ahead and make sure you have the following packages installed. 
+
+```{block, type='note'}
+Just like the **tidyverse** package, when you install **tidymodels** you are actually installing several packages that exist in the **tidymodels** ecosystem as discussed above.
+```
+
+```r
+# common data wrangling and visualization
+install.packages("tidyverse")
+install.packages("vip")
+install.packages("here")
+
+# modeling
+install.packages("tidymodels")
+```
+
+```{r, message=TRUE}
+packageVersion("tidymodels")
+
+library(tidymodels)
+```
+
+## The data sets
+
+The data sets chosen for this course allow us to illustrate the different features of the presented machine learning algorithms.  Since the goal of this course is to demonstrate how to implement ML workflows, we make the assumption that you have already spent significant time wrangling, cleaning and getting to know your data via exploratory data analysis. This would allow you to perform many necessary tasks prior to the ML tasks outlined in this course such as:
+
+* Feature selection (i.e., removing unnecessary variables and retaining only those variables you wish to include in your modeling process).
+* Recoding variable names and values so that they are meaningful and more interpretable.
+* Tidying data so that each column is a discrete variable and each row is an individual observation.
+* Recoding, removing, or some other approach to handling missing values.
+
+Consequently, the exemplar data sets we use throughout this book have, for the most part, gone through the necessary cleaning processes. As mentioned above, these data sets are fairly common data sets that provide good benchmarks to compare and illustrate ML workflows. Although some of these data sets are available in R, we will import these data sets from a .csv file to ensure consistency over time.
+
+### Boston housing
+
+The Boston Housing data set is derived from information collected by the U.S. Census Service concerning housing in the area of Boston MA. Originally published in @harrison1978hedonic [`r fontawesome::fa("link")`](https://deepblue.lib.umich.edu/handle/2027.42/22636), it contains 13 attributes to predict the median property value.
+
+- __problem type__: supervised regression
+- __response variable__: `medv` median value of owner-occupied homes in USD 1000's (i.e. 21.8, 24.5)
+- __features__: 13 
+- __observations__: 506
+- __objective__: use property attributes to predict the median value of owner-occupied homes
+
+
+```{r}
+# data file path
+library(here)
+data_path <- here("data")
+
+# access data
+boston <- readr::read_csv(here(data_path, "boston.csv"))
+
+# initial dimension
+dim(boston)
+
+# features
+dplyr::select(boston, -cmedv)
+
+# response variable
+head(boston$cmedv)
+```
+
+
+### Pima Indians Diabetes
+
+A population of women who were at least 21 years old, of Pima Indian heritage and living near Phoenix, Arizona, was tested for diabetes according to World Health Organization criteria. The data were collected by the US National Institute of Diabetes and Digestive and Kidney Diseases and published in smith1988using [`r fontawesome::fa("link")`](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2245318/pdf/procascamc00018-0276.pdf), it contains 8 attributes to predict the presence of diabetes.
+
+- __problem type__: supervised binary classification
+- __response variable__: `diabetes` positive or negative response (i.e. "pos", "neg")
+- __features__: 8 
+- __observations__: 768
+- __objective__: use biological attributes to predict the presence of diabetes
+
+
+```{r}
+# access data
+pima <- readr::read_csv(here(data_path, "pima.csv"))
+
+# initial dimension
+dim(pima)
+
+# features
+dplyr::select(pima, -diabetes)
+
+# response variable
+head(pima$diabetes)
+```
+
+
+### Iris flowers
+
+The Iris flower data set is a multivariate data set introduced by the British statistician and biologist Ronald Fisher in his 1936 paper [@fisher1936use] [`r fontawesome::fa("link")`](https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1469-1809.1936.tb02137.x). It is sometimes called Anderson's Iris data set because Edgar Anderson collected the data to quantify the morphologic variation of Iris flowers of three related species. The data set consists of 50 samples from each of three species of Iris (Iris Setosa, Iris virginica, and Iris versicolor). Four features were measured from each sample: the length and the width of the sepals and petals, in centimeters.
+
+- __problem type__: supervised multinomial classification
+- __response variable__: `species` (i.e. "setosa", "virginica", "versicolor")
+- __features__: 4 
+- __observations__: 150
+- __objective__: use plant leaf attributes to predict the type of flower
+
+
+```{r}
+# access data
+iris <- readr::read_csv(here(data_path, "iris.csv"))
+
+# initial dimension
+dim(iris)
+
+# features
+dplyr::select(iris, -Species)
+
+# response variable
+head(iris$Species)
+```
+
+
+### Ames housing
+
+The Ames housing data set is an alternative to the Boston housing data set and provides a more comprehensive set of home features to predict sales price. More information can be found in @de2011ames [`r fontawesome::fa("link")`](http://jse.amstat.org/v19n3/decock.pdf).
+
+- __problem type__: supervised regression
+- __response variable__: `Sale_Price` (i.e., \$195,000, \$215,000)
+- __features__: 80 
+- __observations__: 2,930
+- __objective__: use property attributes to predict the sale price of a home
+    
+
+```{r}
+# access data
+ames <- readr::read_csv(here(data_path, "ames.csv"))
+
+# initial dimension
+dim(ames)
+
+# features
+dplyr::select(ames, -Sale_Price)
+
+# response variable
+head(ames$Sale_Price)
+```
+    
+
+### Attrition
+
+The employee attrition data set was originally provided by [IBM Watson Analytics Lab](https://www.ibm.com/communities/analytics/watson-analytics-blog/hr-employee-attrition/) and is a fictional data set created by IBM data scientists to explore what employee attributes influence attrition.
+
+- __problem type__: supervised binomial classification
+- __response variable__: `Attrition` (i.e., "Yes", "No")
+- __features__: 30 
+- __observations__: 1,470
+- __objective__: use employee attributes to predict if they will attrit (leave the company)
+
+
+```{r import-attrition-data}
+# access data
+attrition <- readr::read_csv(here(data_path, "attrition.csv"))
+
+# initial dimension
+dim(attrition)
+
+# features
+dplyr::select(attrition, -Attrition)
+
+# response variable
+head(attrition$Attrition)
+```    
+    
+### Hitters
+
+This dataset was originally taken from the StatLib library which is maintained at Carnegie Mellon University. The idea was to illustrate if and how major league baseball player's batting performance could predict their salary. The salary data were originally from Sports Illustrated, April 20, 1987. The 1986 and career statistics were obtained from The 1987 Baseball Encyclopedia Update published by Collier Books, Macmillan Publishing Company, New York. Note that the data does contain the players name but this should be removed during analysis and is not a valid feature.
+
+- __problem type__: supervised regression
+- __response variable__: `Salary`
+- __features__: 19 
+- __observations__: 322
+- __objective__: use baseball player's batting attributes to predict their salary.
+
+
+```{r import-hitters-r}
+# access data
+hitters <- readr::read_csv(here(data_path, "hitters.csv"))
+
+# initial dimension
+dim(hitters)
+
+# features
+dplyr::select(hitters, -Salary, -Player)
+
+# response variable
+head(hitters$Salary)
+```
+
+
+## What You'll Learn Next
+
+The lessons that follow are designed to help you understand the individual sub-tasks of an ML project. The focus is to have an intuitive understanding of each discrete sub-task and algorithm. Once you understand when, where, and why these sub-tasks are performed you will be able to transfer this knowledge to other projects. The concepts you will learn include:
+
+1. Provide an overview of the ML modeling process:
+   - data splitting
+   - model fitting
+   - model validation and tuning 
+   - performance measurement
+   - feature engineering
+
+2. Cover common supervised learners:
+   - linear regression
+   - regularized regression
+   - K-nearest neighbors
+   - decision trees
+   - bagging & random forests
+   - gradient boosting
+   
+3. Cover common unsupervised learners:
+   - K-means clustering
+   - Principal component analysis
+
+4. Along the way you'll learn about:
+   - each algorithm's hyperparameters
+   - model interpretation
+   - feature importance
+   - and more!
+   
+## Exercises
+
+```{block, type='todo'}
+1. Identify four real-life applications of supervised and unsupervised problems.
+   - Explain what makes these problems supervised versus unsupervised.
+   - For each problem identify the target variable (if applicable) and potential
+     features.
+
+2. Identify and contrast a regression problem with a classification problem.
+   - What is the target variable in each problem and why would being able to
+     accurately predict this target be beneficial to society?
+   - What are potential features and where could you collect this information?
+   - What is determining if the problem is a regression or a classification
+     problem?
+
+3. Identify three open source data sets suitable for machine learning (e.g.,
+   https://bit.ly/35wKu5c).
+   - Explain the type of machine learning models that could be constructed from
+     the data (e.g., supervised versus unsupervised and regression versus
+     classification).
+   - What are the dimensions of the data?
+   - Is there a code book that explains who collected the data, why it was
+     originally collected, and what each variable represents?
+   - If the data set is suitable for supervised learning, which variable(s) could
+     be considered as a useful target? Which variable(s) could be considered as
+     features?
+
+4. Identify examples of misuse of machine learning in society. What was the
+   ethical concern?
+```
