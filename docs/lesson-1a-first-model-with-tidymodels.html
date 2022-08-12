@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>2 Lesson 1a: First model with Tidymodels | Data Mining with R</title>
+  <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="2 Lesson 1a: First model with Tidymodels | Data Mining with R" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="github-repo" content="bradleyboehmke/uc-bana-7025" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="2 Lesson 1a: First model with Tidymodels | Data Mining with R" />
+  <meta name="twitter:site" content="@bradleyboehmke" />
+  <meta name="twitter:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  
+
+<meta name="author" content="Bradley Boehmke" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="overview.html"/>
+<link rel="next" href="computing-environment.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<script src="libs/viz-1.8.2/viz.js"></script>
+<link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">UC BANA 4080: Data Mining</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Syllabus</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#learning-objectives"><i class="fa fa-check"></i>Learning Objectives</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#material"><i class="fa fa-check"></i>Material</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#class-structure"><i class="fa fa-check"></i>Class Structure</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#schedule"><i class="fa fa-check"></i>Schedule</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#conventions-used-in-this-book"><i class="fa fa-check"></i>Conventions used in this book</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#feedback"><i class="fa fa-check"></i>Feedback</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#acknowledgements"><i class="fa fa-check"></i>Acknowledgements</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html"><i class="fa fa-check"></i>Introduction to Machine Learning</a>
+<ul>
+<li class="chapter" data-level="0.1" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#learning-objectives-1"><i class="fa fa-check"></i><b>0.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="0.2" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#supervised-learning"><i class="fa fa-check"></i><b>0.2</b> Supervised learning</a>
+<ul>
+<li class="chapter" data-level="0.2.1" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#regression-problems"><i class="fa fa-check"></i><b>0.2.1</b> Regression problems</a></li>
+<li class="chapter" data-level="0.2.2" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#classification-problems"><i class="fa fa-check"></i><b>0.2.2</b> Classification problems</a></li>
+</ul></li>
+<li class="chapter" data-level="0.3" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#unsupervised-learning"><i class="fa fa-check"></i><b>0.3</b> Unsupervised learning</a></li>
+<li class="chapter" data-level="0.4" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#machine-learning-in"><i class="fa fa-check"></i><b>0.4</b> Machine Learning in <svg aria-hidden="true" role="img" viewBox="0 0 581 512" style="height:1em;width:1.13em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M581 226.6C581 119.1 450.9 32 290.5 32S0 119.1 0 226.6C0 322.4 103.3 402 239.4 418.1V480h99.1v-61.5c24.3-2.7 47.6-7.4 69.4-13.9L448 480h112l-67.4-113.7c54.5-35.4 88.4-84.9 88.4-139.7zm-466.8 14.5c0-73.5 98.9-133 220.8-133s211.9 40.7 211.9 133c0 50.1-26.5 85-70.3 106.4-2.4-1.6-4.7-2.9-6.4-3.7-10.2-5.2-27.8-10.5-27.8-10.5s86.6-6.4 86.6-92.7-90.6-87.9-90.6-87.9h-199V361c-74.1-21.5-125.2-67.1-125.2-119.9zm225.1 38.3v-55.6c57.8 0 87.8-6.8 87.8 27.3 0 36.5-38.2 28.3-87.8 28.3zm-.9 72.5H365c10.8 0 18.9 11.7 24 19.2-16.1 1.9-33 2.8-50.6 2.9v-22.1z"/></svg></a></li>
+<li class="chapter" data-level="0.5" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#the-data-sets"><i class="fa fa-check"></i><b>0.5</b> The data sets</a>
+<ul>
+<li class="chapter" data-level="0.5.1" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>0.5.1</b> Boston housing</a></li>
+<li class="chapter" data-level="0.5.2" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>0.5.2</b> Pima Indians Diabetes</a></li>
+<li class="chapter" data-level="0.5.3" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>0.5.3</b> Iris flowers</a></li>
+<li class="chapter" data-level="0.5.4" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>0.5.4</b> Ames housing</a></li>
+<li class="chapter" data-level="0.5.5" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>0.5.5</b> Attrition</a></li>
+<li class="chapter" data-level="0.5.6" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>0.5.6</b> Hitters</a></li>
+</ul></li>
+<li class="chapter" data-level="0.6" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#what-youll-learn-next"><i class="fa fa-check"></i><b>0.6</b> What You’ll Learn Next</a></li>
+<li class="chapter" data-level="0.7" data-path="introduction-to-machine-learning.html"><a href="introduction-to-machine-learning.html#exercises"><i class="fa fa-check"></i><b>0.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>I Module 1</b></span></li>
+<li class="chapter" data-level="1" data-path="overview.html"><a href="overview.html"><i class="fa fa-check"></i><b>1</b> Overview</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="overview.html"><a href="overview.html#learning-objectives-2"><i class="fa fa-check"></i><b>1.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="1.2" data-path="overview.html"><a href="overview.html#estimated-time-requirement"><i class="fa fa-check"></i><b>1.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="1.3" data-path="overview.html"><a href="overview.html#tasks"><i class="fa fa-check"></i><b>1.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html"><i class="fa fa-check"></i><b>2</b> Lesson 1a: First model with Tidymodels</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#learning-objectives-3"><i class="fa fa-check"></i><b>2.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="2.2" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#prerequisites"><i class="fa fa-check"></i><b>2.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="2.3" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#data-splitting"><i class="fa fa-check"></i><b>2.3</b> Data splitting</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#simple-random-sampling"><i class="fa fa-check"></i><b>2.3.1</b> Simple random sampling</a></li>
+<li class="chapter" data-level="2.3.2" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#stratified-sampling"><i class="fa fa-check"></i><b>2.3.2</b> Stratified sampling</a></li>
+<li class="chapter" data-level="2.3.3" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check"><i class="fa fa-check"></i><b>2.3.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#building-models"><i class="fa fa-check"></i><b>2.4</b> Building models</a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check-1"><i class="fa fa-check"></i><b>2.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#making-predictions"><i class="fa fa-check"></i><b>2.5</b> Making predictions</a>
+<ul>
+<li class="chapter" data-level="2.5.1" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check-2"><i class="fa fa-check"></i><b>2.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.6" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#evaluating-model-performance"><i class="fa fa-check"></i><b>2.6</b> Evaluating model performance</a>
+<ul>
+<li class="chapter" data-level="2.6.1" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#regression-models"><i class="fa fa-check"></i><b>2.6.1</b> Regression models</a></li>
+<li class="chapter" data-level="2.6.2" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#classification-models"><i class="fa fa-check"></i><b>2.6.2</b> Classification models</a></li>
+<li class="chapter" data-level="2.6.3" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check-3"><i class="fa fa-check"></i><b>2.6.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.7" data-path="lesson-1a-first-model-with-tidymodels.html"><a href="lesson-1a-first-model-with-tidymodels.html#exercises-1"><i class="fa fa-check"></i><b>2.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>II Additional Content</b></span></li>
+<li class="chapter" data-level="" data-path="computing-environment.html"><a href="computing-environment.html"><i class="fa fa-check"></i>Computing Environment</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://www.uc.edu/" target="blank">University of Cincinnati</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Data Mining with R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="lesson-1a-first-model-with-tidymodels" class="section level1 hasAnchor" number="2">
+<h1><span class="header-section-number">2</span> Lesson 1a: First model with Tidymodels<a href="lesson-1a-first-model-with-tidymodels.html#lesson-1a-first-model-with-tidymodels" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>This lesson is designed to get you acquainted with building predictive models using the <a href="https://www.tidymodels.org/">tidymodels</a> construct. We’ll focus on the process of splitting our data for improved generalizability, using Tidymodel’s <strong>parsnip</strong> package for constructing our models, along with <strong>yardstick</strong> to measure model performance.</p>
+<div class="note">
+<p>
+The tidymodels framework is a collection of packages for modeling and
+machine learning using tidyverse principles.
+</p>
+</div>
+<div id="learning-objectives-3" class="section level2 hasAnchor" number="2.1">
+<h2><span class="header-section-number">2.1</span> Learning objectives<a href="lesson-1a-first-model-with-tidymodels.html#learning-objectives-3" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>By the end of this lesson you will be able to:</p>
+<ol style="list-style-type: decimal">
+<li>Split your data into training and test sets.</li>
+<li>Instantiate, train, fit, and evaluate a basic model.</li>
+</ol>
+</div>
+<div id="prerequisites" class="section level2 hasAnchor" number="2.2">
+<h2><span class="header-section-number">2.2</span> Prerequisites<a href="lesson-1a-first-model-with-tidymodels.html#prerequisites" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>For this lesson we’ll primarily use the <strong>tidymodels</strong> package.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb10-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span></code></pre></div>
+<p>The two data sets we’ll use are <code>ames</code> and <code>attrition</code>.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb11-1" aria-hidden="true" tabindex="-1"></a>data_path <span class="ot">&lt;-</span> <span class="fu">here</span>(<span class="st">&quot;data&quot;</span>)</span>
+<span id="cb11-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb11-2" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="fu">here</span>(data_path, <span class="st">&quot;ames.csv&quot;</span>))</span>
+<span id="cb11-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb11-3" aria-hidden="true" tabindex="-1"></a>attrition <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(<span class="fu">here</span>(data_path, <span class="st">&quot;attrition.csv&quot;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb12-1" aria-hidden="true" tabindex="-1"></a>attrition <span class="ot">&lt;-</span> attrition <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb12-2" aria-hidden="true" tabindex="-1"></a>   dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">Attrition =</span> <span class="fu">as.factor</span>(Attrition))</span></code></pre></div>
+</div>
+<div id="data-splitting" class="section level2 hasAnchor" number="2.3">
+<h2><span class="header-section-number">2.3</span> Data splitting<a href="lesson-1a-first-model-with-tidymodels.html#data-splitting" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>A major goal of the machine learning process is to find an algorithm <span class="math inline">\(f\left(X\right)\)</span> that most accurately predicts future values (<span class="math inline">\(\hat{Y}\)</span>) based on a set of features (<span class="math inline">\(X\)</span>). In other words, we want an algorithm that not only fits well to our past data, but more importantly, one that predicts a future outcome accurately. This is called the <strong><em>generalizability</em></strong> of our algorithm. How we “spend” our data will help us understand how well our algorithm generalizes to unseen data.</p>
+<p>To provide an accurate understanding of the generalizability of our final optimal model, we can split our data into training and test data sets:</p>
+<ul>
+<li><strong>Training set</strong>: these data are used to develop feature sets, train our algorithms, tune hyperparameters, compare models, and all of the other activities required to choose a final model (e.g., the model we want to put into production).</li>
+<li><strong>Test set</strong>: having chosen a final model, these data are used to estimate an unbiased assessment of the model’s performance, which we refer to as the <em>generalization error</em>.</li>
+</ul>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-split"></span>
+<img src="images/data_split.png" alt="Splitting data into training and test sets." width="30%" height="30%" />
+<p class="caption">
+Figure 2.1: Splitting data into training and test sets.
+</p>
+</div>
+<p>Given a fixed amount of data, typical recommendations for splitting your data into training-test splits include 60% (training)–40% (testing), 70%–30%, or 80%–20%. Generally speaking, these are appropriate guidelines to follow; however, it is good to keep the following points in mind:</p>
+<ul>
+<li>Spending too much in training (e.g., <span class="math inline">\(&gt;80\%\)</span>) won’t allow us to get a good assessment of predictive performance. We may find a model that fits the training data very well, but is not generalizable (<em>overfitting</em>).</li>
+<li>Sometimes too much spent in testing (<span class="math inline">\(&gt;40\%\)</span>) won’t allow us to get a good assessment of model parameters.</li>
+</ul>
+<p>Other factors should also influence the allocation proportions. For example, very large training sets (e.g., <span class="math inline">\(n &gt; 100\texttt{K}\)</span>) often result in only marginal gains compared to smaller sample sizes. Consequently, you may use a smaller training sample to increase computation speed (e.g., models built on larger training sets often take longer to score new data sets in production). In contrast, as <span class="math inline">\(p \geq n\)</span> (where <span class="math inline">\(p\)</span> represents the number of features), larger samples sizes are often required to identify consistent signals in the features.</p>
+<p>The two most common ways of splitting data include <strong><em>simple random sampling</em></strong> and <strong><em>stratified sampling</em></strong>.</p>
+<div id="simple-random-sampling" class="section level3 hasAnchor" number="2.3.1">
+<h3><span class="header-section-number">2.3.1</span> Simple random sampling<a href="lesson-1a-first-model-with-tidymodels.html#simple-random-sampling" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The simplest way to split the data into training and test sets is to take a simple random sample. This does not control for any data attributes, such as the distribution of your response variable (<span class="math inline">\(Y\)</span>).</p>
+<div class="note">
+<p>
+Sampling is a random process so setting the random number generator
+with a common seed allows for reproducible results. Throughout this
+course we’ll often use the seed <code>123</code> for reproducibility but
+the number itself has no special meaning.
+</p>
+</div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create train/test split</span></span>
+<span id="cb13-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb13-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-3" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>)</span>
+<span id="cb13-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-4" aria-hidden="true" tabindex="-1"></a>train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb13-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-5" aria-hidden="true" tabindex="-1"></a>test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span>
+<span id="cb13-6"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># dimensions of training data</span></span>
+<span id="cb13-8"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(train)</span>
+<span id="cb13-9"><a href="lesson-1a-first-model-with-tidymodels.html#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 2051   81</span></span></code></pre></div>
+<p>With sufficient sample size, this sampling approach will typically result in a similar distribution of <span class="math inline">\(Y\)</span> (e.g., <code>Sale_Price</code> in the <code>ames</code> data) between your <font color="blue">training</font> and <font color="red">test</font> sets, as illustrated below.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb14-1" aria-hidden="true" tabindex="-1"></a>train <span class="sc">%&gt;%</span> </span>
+<span id="cb14-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">id =</span> <span class="st">&#39;train&#39;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(test <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">id =</span> <span class="st">&#39;test&#39;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Sale_Price, <span class="at">color =</span> id)) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/r-random-sampling-1.png" width="576" style="display: block; margin: auto;" /></p>
+</div>
+<div id="stratified-sampling" class="section level3 hasAnchor" number="2.3.2">
+<h3><span class="header-section-number">2.3.2</span> Stratified sampling<a href="lesson-1a-first-model-with-tidymodels.html#stratified-sampling" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>If we want to explicitly control the sampling so that our training and test sets have similar <span class="math inline">\(Y\)</span> distributions, we can use stratified sampling. This is more common with classification problems where the response variable may be severely imbalanced (e.g., 90% of observations with response “Yes” and 10% with response “No”). However, we can also apply stratified sampling to regression problems for data sets that have a small sample size and where the response variable deviates strongly from normality. With a continuous response variable, stratified sampling will segment <span class="math inline">\(Y\)</span> into quantiles and randomly sample from each.</p>
+<p>To perform stratified sampling we simply apply the <code>strata</code> argument in <code>initial_split</code>.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb15-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb15-2" aria-hidden="true" tabindex="-1"></a>split_strat <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(attrition, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Attrition&quot;</span>)</span>
+<span id="cb15-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb15-3" aria-hidden="true" tabindex="-1"></a>train_strat <span class="ot">&lt;-</span> <span class="fu">training</span>(split_strat)</span>
+<span id="cb15-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb15-4" aria-hidden="true" tabindex="-1"></a>test_strat  <span class="ot">&lt;-</span> <span class="fu">testing</span>(split_strat)</span></code></pre></div>
+<p>The following illustrates that in our original employee attrition data we have an imbalanced response (No: 84%, Yes: 16%). By enforcing stratified sampling, both our training and testing sets have approximately equal response distributions.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># original response distribution</span></span>
+<span id="cb16-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(attrition<span class="sc">$</span>Attrition) <span class="sc">%&gt;%</span> <span class="fu">prop.table</span>()</span>
+<span id="cb16-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb16-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="do">##        No       Yes </span></span>
+<span id="cb16-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="do">## 0.8387755 0.1612245</span></span>
+<span id="cb16-6"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># response distribution for training data</span></span>
+<span id="cb16-8"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(train_strat<span class="sc">$</span>Attrition) <span class="sc">%&gt;%</span> <span class="fu">prop.table</span>()</span>
+<span id="cb16-9"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb16-10"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="do">##        No       Yes </span></span>
+<span id="cb16-11"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 0.8394942 0.1605058</span></span>
+<span id="cb16-12"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># response distribution for test data</span></span>
+<span id="cb16-14"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(test_strat<span class="sc">$</span>Attrition) <span class="sc">%&gt;%</span> <span class="fu">prop.table</span>()</span>
+<span id="cb16-15"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb16-16"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="do">##        No       Yes </span></span>
+<span id="cb16-17"><a href="lesson-1a-first-model-with-tidymodels.html#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="do">## 0.8371041 0.1628959</span></span></code></pre></div>
+</div>
+<div id="knowledge-check" class="section level3 hasAnchor" number="2.3.3">
+<h3><span class="header-section-number">2.3.3</span> Knowledge check<a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<ol style="list-style-type: decimal">
+<li>
+Import the penguins data from the <strong>modeldata</strong>
+package
+</li>
+<li>
+Create a 70-30 stratified train-test split (<code>species</code> is
+the target variable).
+</li>
+<li>
+What are the response variable proportions for the train and test
+data sets?
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="building-models" class="section level2 hasAnchor" number="2.4">
+<h2><span class="header-section-number">2.4</span> Building models<a href="lesson-1a-first-model-with-tidymodels.html#building-models" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The R ecosystem provides a wide variety of ML algorithm implementations. This makes many powerful algorithms available at your fingertips. Moreover, there are almost always more than one package to perform each algorithm (e.g., there are over 20 packages for fitting random forests). There are pros and cons to this wide selection; some implementations may be more computationally efficient while others may be more flexible. This also has resulted in some drawbacks as there are inconsistencies in how algorithms allow you to define the formula of interest and how the results and predictions are supplied.</p>
+<p>Fortunately, the tidymodels ecosystem is simplifying this and, in particular, the <a href="https://parsnip.tidymodels.org/index.html">Parsnip package</a> provides one common interface to train many different models supplied by other packages. Consequently, we’ll focus on building models the tidymodels way.</p>
+<p>To create and fit a model with parsnip we follow 3 steps:</p>
+<ol style="list-style-type: decimal">
+<li>Create a model type</li>
+<li>Choose an “engine”</li>
+<li>Fit our model</li>
+</ol>
+<p>Let’s illustrate by building a linear regression model. For our first model we will simply use two features from our training data - total square feet of the home (<code>Gr_Liv_Area</code>) and year built (<code>Year_Built</code>) to predict the sale price (<code>Sale_Price</code>).</p>
+<div class="tip">
+<p>
+We can use <code>tidy()</code> to get results of our model’s
+parameter estimates and their statistical properties. Although the
+<code>summary()</code> function can provide this output, it gives the
+results back in an unwieldy format. Many models have a
+<code>tidy()</code> method that provides the summary results in a more
+predictable and useful format (e.g. a data frame with standard column
+names)
+</p>
+</div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-1" aria-hidden="true" tabindex="-1"></a>lm_ols <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> Gr_Liv_Area <span class="sc">+</span> Year_Built, <span class="at">data =</span> train)</span>
+<span id="cb17-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">tidy</span>(lm_ols)</span>
+<span id="cb17-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 3 × 5</span></span>
+<span id="cb17-6"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   term          estimate std.error statistic   p.value</span></span>
+<span id="cb17-7"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb17-8"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 (Intercept) -2157423.   69234.       -31.2 8.09e-175</span></span>
+<span id="cb17-9"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 Gr_Liv_Area       94.4      2.12      44.4 2.54e-302</span></span>
+<span id="cb17-10"><a href="lesson-1a-first-model-with-tidymodels.html#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 3 Year_Built      1114.      35.5       31.4 5.30e-177</span></span></code></pre></div>
+<p>Now, you may have noticed that I only applied two of the three steps I mentioned previously:</p>
+<ol style="list-style-type: decimal">
+<li>Create a model type</li>
+<li><del>Choose an “engine”</del></li>
+<li>Fit our model</li>
+</ol>
+<p>The reason is because most model objects (<code>linear_reg()</code> in this example) have a default engine. <code>linear_reg()</code> by default uses <code>lm</code> for ordinary least squares. But we can always change the engine. For example, say I wanted to use keras to perform gradient descent linear regression, then I could change the engine to keras but use the same code workflow.</p>
+<div class="warning">
+<p>
+For this code to run successfully on your end you need to have the
+<strong>keras</strong> and <strong>tensorflow</strong> packages
+installed on your machine. Depending on your current setup this could be
+an easy process or you could run into problems. If you run into problems
+don’t fret, this is primarily just to illustrate how we can change
+engines.
+</p>
+</div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb18-1" aria-hidden="true" tabindex="-1"></a>lm_sgd <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb18-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">set_engine</span>(<span class="st">&#39;keras&#39;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb18-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> Gr_Liv_Area <span class="sc">+</span> Year_Built, <span class="at">data =</span> train)</span></code></pre></div>
+<div class="tip">
+<p>
+When we talk about ‘engines’ we’re really just referring to packages
+that provide the desired algorithm. Each model object has different
+engines available to use and they are all documented. For example check
+out the help file for <code>linear_reg</code> (<code>?linear_reg</code>)
+and you’ll see the different engines available (lm, brulee, glm, glmnet,
+etc.)
+</p>
+</div>
+<p>The beauty of this workflow is that if we want to explore different models we can simply change the model object. For example, say we wanted to run a K-nearest neighbor model. We can just use <code>nearest_neighbor()</code>.</p>
+<p>In this example we have pretty much the same code as above except we added the line of code <code>set_mode()</code>. This is because most algorithms require you to specify if you are building a regression model or a classification model.</p>
+<div class="note">
+<p>
+When you run this code you’ll probably get an error message saying
+that <em>“This engine requires some package installs: ‘kknn’.”</em> This
+just means you need to <code>install.packages(‘kknn’)</code> and then
+you should be able to successfully run this code.
+</p>
+</div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb19-1" aria-hidden="true" tabindex="-1"></a>knn <span class="ot">&lt;-</span> <span class="fu">nearest_neighbor</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb19-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">set_engine</span>(<span class="st">&quot;kknn&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb19-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb19-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb19-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> Gr_Liv_Area <span class="sc">+</span> Year_Built, <span class="at">data =</span> train)</span></code></pre></div>
+<div class="tip">
+<p>
+You can see all the different model objects available at <a
+href="https://parsnip.tidymodels.org/reference/index.html"
+class="uri">https://parsnip.tidymodels.org/reference/index.html</a>
+</p>
+</div>
+<div id="knowledge-check-1" class="section level3 hasAnchor" number="2.4.1">
+<h3><span class="header-section-number">2.4.1</span> Knowledge check<a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<ol style="list-style-type: decimal">
+<li>
+If you haven’t already done so, create a 70-30 stratified train-test
+split on the <code>attrition</code> data (note: <code>Attrition</code>
+is the response variable).
+</li>
+<li>
+Using the <code>logistic_reg()</code> model object, fit a model
+using <code>Age</code>, <code>DistanceFromHome</code>, and
+<code>JobLevel</code> as the features.
+</li>
+<li>
+Now train a K-nearest neighbor model using the ‘kknn’ engine and be
+sure to set the mode to be a classification model.
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="making-predictions" class="section level2 hasAnchor" number="2.5">
+<h2><span class="header-section-number">2.5</span> Making predictions<a href="lesson-1a-first-model-with-tidymodels.html#making-predictions" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We have fit a few different models. Now, if we want to see our predictions we can simply apply <code>predict()</code> and feed it the data set we want to make predictions on. Here, we can see the predictions made on our training data for our ordinary least square linear regression model.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-1" aria-hidden="true" tabindex="-1"></a>lm_ols <span class="sc">%&gt;%</span> <span class="fu">predict</span>(train)</span>
+<span id="cb20-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2,051 × 1</span></span>
+<span id="cb20-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="do">##      .pred</span></span>
+<span id="cb20-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="do">##      &lt;dbl&gt;</span></span>
+<span id="cb20-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 217657.</span></span>
+<span id="cb20-6"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 214276.</span></span>
+<span id="cb20-7"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 223425.</span></span>
+<span id="cb20-8"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 260324.</span></span>
+<span id="cb20-9"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 109338.</span></span>
+<span id="cb20-10"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 195106.</span></span>
+<span id="cb20-11"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 222217.</span></span>
+<span id="cb20-12"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 126175.</span></span>
+<span id="cb20-13"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  9  98550.</span></span>
+<span id="cb20-14"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 120811.</span></span>
+<span id="cb20-15"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 2,041 more rows</span></span>
+<span id="cb20-16"><a href="lesson-1a-first-model-with-tidymodels.html#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows</span></span></code></pre></div>
+<p>And here we get the predicted values for our KNN model.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-1" aria-hidden="true" tabindex="-1"></a>knn <span class="sc">%&gt;%</span> <span class="fu">predict</span>(train)</span>
+<span id="cb21-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2,051 × 1</span></span>
+<span id="cb21-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="do">##      .pred</span></span>
+<span id="cb21-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="do">##      &lt;dbl&gt;</span></span>
+<span id="cb21-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 194967.</span></span>
+<span id="cb21-6"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 192240 </span></span>
+<span id="cb21-7"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 174220 </span></span>
+<span id="cb21-8"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 269760 </span></span>
+<span id="cb21-9"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 113617.</span></span>
+<span id="cb21-10"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 173672 </span></span>
+<span id="cb21-11"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 174820 </span></span>
+<span id="cb21-12"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 120796 </span></span>
+<span id="cb21-13"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 114560 </span></span>
+<span id="cb21-14"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 121346 </span></span>
+<span id="cb21-15"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 2,041 more rows</span></span>
+<span id="cb21-16"><a href="lesson-1a-first-model-with-tidymodels.html#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows</span></span></code></pre></div>
+<div id="knowledge-check-2" class="section level3 hasAnchor" number="2.5.1">
+<h3><span class="header-section-number">2.5.1</span> Knowledge check<a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check-2" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<ol style="list-style-type: decimal">
+<li>
+Make predictions on the <strong>test</strong> data using the
+logistic regression model you built on the <code>attrition</code>
+data.
+</li>
+<li>
+Now make predictions using the K-nearest neighbor model.
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="evaluating-model-performance" class="section level2 hasAnchor" number="2.6">
+<h2><span class="header-section-number">2.6</span> Evaluating model performance<a href="lesson-1a-first-model-with-tidymodels.html#evaluating-model-performance" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>It is important to understand how our model is performing. With ML models, measuring performance means understanding the predictive accuracy – the difference between a predicted value and the actual value. We measure predictive accuracy with <strong><em>loss functions</em></strong>.</p>
+<p>There are many loss functions to choose from when assessing the performance of a predictive model, each providing a unique understanding of the predictive accuracy and differing between regression and classification models. Furthermore, the way a loss function is computed will tend to emphasize certain types of errors over others and can lead to drastic differences in how we interpret the “optimal model”. Its important to consider the problem context when identifying the preferred performance metric to use. And when comparing multiple models, we need to compare them across the same metric.</p>
+<div id="regression-models" class="section level3 hasAnchor" number="2.6.1">
+<h3><span class="header-section-number">2.6.1</span> Regression models<a href="lesson-1a-first-model-with-tidymodels.html#regression-models" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The most common loss functions for regression models include:</p>
+<ul>
+<li><p><strong>MSE</strong>: Mean squared error is the average of the squared error (<span class="math inline">\(MSE = \frac{1}{n} \sum^n_{i=1}(y_i - \hat y_i)^2\)</span>)<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. The squared component results in larger errors having larger penalties. <strong>Objective: minimize</strong></p></li>
+<li><p><strong>RMSE</strong>: Root mean squared error. This simply takes the square root of the MSE metric (<span class="math inline">\(RMSE = \sqrt{\frac{1}{n} \sum^n_{i=1}(y_i - \hat y_i)^2}\)</span>) so that your error is in the same units as your response variable. If your response variable units are dollars, the units of MSE are dollars-squared, but the RMSE will be in dollars. <strong>Objective: minimize</strong></p></li>
+</ul>
+<p>Let’s compute the RMSE of our OLS regression model. Remember, we want to assess our model’s performance on the test data not the training data since that gives us a better idea of how our model generalizes. To do so, the following:</p>
+<ol style="list-style-type: decimal">
+<li>Makes predictions with our test data,</li>
+<li>Adds the actual <code>Sale_Price</code> values from our test data,</li>
+<li>Computes the RMSE.</li>
+</ol>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-1" aria-hidden="true" tabindex="-1"></a>lm_ols <span class="sc">%&gt;%</span> </span>
+<span id="cb22-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(test) <span class="sc">%&gt;%</span></span>
+<span id="cb22-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bind_cols</span>(test <span class="sc">%&gt;%</span> <span class="fu">select</span>(Sale_Price)) <span class="sc">%&gt;%</span></span>
+<span id="cb22-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rmse</span>(<span class="at">truth =</span> Sale_Price, <span class="at">estimate =</span> .pred)</span>
+<span id="cb22-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
+<span id="cb22-6"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator .estimate</span></span>
+<span id="cb22-7"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb22-8"><a href="lesson-1a-first-model-with-tidymodels.html#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard      45445.</span></span></code></pre></div>
+<p>The RMSE value suggests that, on average, our model mispredicts the expected sale price of a home by about $45K.</p>
+</div>
+<div id="classification-models" class="section level3 hasAnchor" number="2.6.2">
+<h3><span class="header-section-number">2.6.2</span> Classification models<a href="lesson-1a-first-model-with-tidymodels.html#classification-models" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>There are many loss functions used for classification models. For simplicity we’ll just focus on the overall classification accuracy. I’ll illustrate with the attrition data. Here, we build a logistic regression model that seeks to predicts <code>Attrition</code> based on all available features.</p>
+<div class="tip">
+<p>
+In R, using a “.” as in <code>Attrition ~ .</code> is a shortcut for
+saying use all available features to predict <code>Attrition</code>.
+</p>
+</div>
+<p>We then follow the same process as above to make predictions on the test data, add the actual test values for <code>Attrition</code>, and then compute the accuracy rate.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-1" aria-hidden="true" tabindex="-1"></a>logit <span class="ot">&lt;-</span> <span class="fu">logistic_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb23-2"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(Attrition <span class="sc">~</span> ., <span class="at">data =</span> train_strat)</span>
+<span id="cb23-3"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-4" aria-hidden="true" tabindex="-1"></a>logit <span class="sc">%&gt;%</span> </span>
+<span id="cb23-5"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(test_strat) <span class="sc">%&gt;%</span></span>
+<span id="cb23-6"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bind_cols</span>(test_strat <span class="sc">%&gt;%</span> <span class="fu">select</span>(Attrition)) <span class="sc">%&gt;%</span></span>
+<span id="cb23-7"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">accuracy</span>(<span class="at">truth =</span> Attrition, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb23-8"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
+<span id="cb23-9"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric  .estimator .estimate</span></span>
+<span id="cb23-10"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb23-11"><a href="lesson-1a-first-model-with-tidymodels.html#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 accuracy binary         0.876</span></span></code></pre></div>
+</div>
+<div id="knowledge-check-3" class="section level3 hasAnchor" number="2.6.3">
+<h3><span class="header-section-number">2.6.3</span> Knowledge check<a href="lesson-1a-first-model-with-tidymodels.html#knowledge-check-3" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<ol style="list-style-type: decimal">
+<li>
+Compute the accuracy rate of your logistic regression model for the
+<code>attrition</code> data.
+</li>
+<li>
+Now compute the accuracy rate of your K-nearest neighbor model.
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="exercises-1" class="section level2 hasAnchor" number="2.7">
+<h2><span class="header-section-number">2.7</span> Exercises<a href="lesson-1a-first-model-with-tidymodels.html#exercises-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="todo">
+<p>
+For this exercise we’ll use the Boston housing data set. The Boston
+Housing data set is derived from information collected by the U.S.
+Census Service concerning housing in the area of Boston MA. Originally
+published in <span class="citation"><span class="citation">Harrison Jr and Rubinfeld (<a href="#ref-harrison1978hedonic" role="doc-biblioref">1978</a>)</span></span>, it
+contains 13 attributes to predict the median property value.
+</p>
+<p>
+Data attributes:
+</p>
+<ul>
+<li>
+<strong>problem type</strong>: supervised regression
+</li>
+<li>
+<strong>response variable</strong>: <code>medv</code> median value
+of owner-occupied homes in USD 1000’s (i.e. 21.8, 24.5)
+</li>
+<li>
+<strong>features</strong>: 13
+</li>
+<li>
+<strong>observations</strong>: 506
+</li>
+<li>
+<strong>objective</strong>: use property attributes to predict the
+median value of owner-occupied homes
+</li>
+</ul>
+<p>
+Modeling tasks:
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Import the Boston housing data set (boston.csv) and split it into a
+training set and test set using a 70-30% split.
+</li>
+<li>
+How many observations are in the training set and test set?
+</li>
+<li>
+Compare the distribution of <code>cmedv</code> between the training
+set and test set.
+</li>
+<li>
+Fit a linear regression model using all available features to
+predict <code>cmedv</code> and compute the RMSE on the test data.
+</li>
+<li>
+Fit a K-nearest neighbor model that uses all available features to
+predict <code>cmedv</code> and compute the RMSE on the test data.
+</li>
+<li>
+How do these models compare?
+</li>
+</ol>
+</div>
+
+</div>
+</div>
+
+
+
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-harrison1978hedonic" class="csl-entry">
+Harrison Jr, David, and Daniel L Rubinfeld. 1978. <span>“Hedonic Housing Prices and the Demand for Clean Air.”</span> <em>Journal of Environmental Economics and Management</em> 5 (1): 81–102.
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol start="2">
+<li id="fn2"><p>This deviates slightly from the usual definition of MSE in ordinary linear regression, where we divide by <span class="math inline">\(n-p\)</span> (to adjust for bias) as opposed to <span class="math inline">\(n\)</span>.<a href="lesson-1a-first-model-with-tidymodels.html#fnref2" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="overview.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="computing-environment.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/bradleyboehmke/uc-bana-4080/edit/master/module-1/lesson-1.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "section"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
