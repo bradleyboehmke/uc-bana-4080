@@ -1,292 +1,414 @@
-# Lesson 1a: R & RStudio
+# Lesson 1a: Intro to machine learning
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
-  fig.align = "center",
-  collapse = TRUE
-)
+   echo = TRUE, 
+   warning = FALSE, 
+   message = FALSE,
+   collapse = TRUE
+   )
 ```
 
-This lesson is designed to help you get up and running with R and RStudio. It will also provide you with some tips for getting help as you start writing R code and differentiating errors, warnings, and messages (because we _will_ experience these daily!).
+Machine learning (ML) continues to grow in importance for many organizations across nearly all domains. Some example applications of machine learning in practice include:
+
+* Predicting the likelihood of a patient returning to the hospital (_readmission_) within 30 days of discharge.
+* Segmenting customers based on common attributes or purchasing behavior for targeted marketing.
+* Predicting coupon redemption rates for a given marketing campaign.
+* Predicting customer churn so an organization can perform preventative intervention.
+* And many more!
+
+In essence, these tasks all seek to learn from data.  To address each scenario, we can use a given set of _features_ to train an algorithm and extract insights. These algorithms, or _learners_, can be classified according to the amount and type of supervision needed during training.  
 
 ## Learning objectives
 
-Upon completing this module you will:
+This lesson will introduce you to some fundamental concepts around ML and this class. By the end of this lesson you will:
 
-- Understand the difference between R and RStudio.
-- Have R and RStudio installed on your computer.
-- Be able to navigate the RStudio IDE.
-- Know how to get help as you first start learning R.
-- Differentiate errors, warnings, and messages.
-- Know what additional resources are available to go deeper.
+1. Be able to explain the difference between supervised and unsupervised learning.
+2. Know when a problem is considered a regression or classification problem.
+3. Be able to import and explore the data sets we'll use through various examples.
 
-## R vs. RStudio
+## Supervised learning
 
-When students first learn about [R](https://cran.r-project.org/) and [RStudio](https://www.rstudio.com/), they are often confused on how the two differentiate. R is a programming language that runs computations, while RStudio is an _integrated development environment (IDE)_ that provides an interface by adding many convenient features and tools. An analogy used by @ismay2019statistical helps put this into perspective. _"R is like a car’s engine while RStudio is like a car’s dashboard...just as the way of having access to a speedometer, rearview mirrors, and a navigation system makes driving much easier, using RStudio’s interface makes using R much easier as well."_
+A ___predictive model___ is used for tasks that involve the prediction of a given output (or target) using other variables (or features) in the data set. The learning algorithm in a predictive model attempts to discover and model the relationships among the <font color="red">target</font> variable (the variable being predicted) and the other <font color="blue">features</font> (aka predictor variables). Examples of predictive modeling include:
 
-```{r r-vs-rstuio, echo=FALSE, fig.cap='Analogy of difference between R and RStudio [@ismay2019statistical]', fig.align='center'}
-knitr::include_graphics("images/R_vs_RStudio_1.png")
+* using <font color="blue">customer attributes</font> to predict the probability of the <font color="red">customer churning</font> in the next 6 weeks;
+* using <font color="blue">home attributes</font> to predict the <font color="red">sales price</font>;
+* using <font color="blue">employee attributes</font> to predict the likelihood of <font color="red">attrition</font>;
+* using <font color="blue">patient attributes</font> and symptoms to predict the risk of <font color="red">readmission</font>;
+* using <font color="blue">production attributes</font> to predict <font color="red">time to market</font>.
+
+Each of these examples has a defined learning task; they each intend to use attributes ($X$) to predict an outcome measurement ($Y$).
+
+```{block, type='note'}
+Throughout this course we'll use various terms interchangeably for
+
+* $X$: "predictor variable", "independent variable", "attribute", "feature", "predictor"
+* $Y$: "target variable", "dependent variable", "response", "outcome measurement"
 ```
 
-It is important to note that one can write R and do nearly everything you are going to do in this course without using RStudio. However, RStudio has lots of features that make writing, executing, and organizing your R code so much easier. Moreover, realize that there are other IDEs and platforms that you can use (i.e. [VS code](https://code.visualstudio.com/), [Radiant](https://radiant-rstats.github.io/docs/), [jupyter](https://jupyter.org/)) to write and execute R code; however, RStudio has become the defacto IDE for R and is heavily used throughout the R community. 
+The predictive modeling examples above describe what is known as _supervised learning_.  The supervision refers to the fact that the target values provide a supervisory role, which indicates to the learner the task it needs to learn. Specifically, given a set of data, the learning algorithm attempts to optimize a function (the algorithmic steps) to find the combination of feature values that results in a predicted value that is as close to the actual target output as possible.
 
-```{block, type = "tip"}
-Since RStudio has lots of features, it takes time to learn them. A good resource to learn more about RStudio are the [R Studio Essentials](https://www.rstudio.com/collections/rstudio-essentials/) collection of videos.
+```{block, type='note'}
+In supervised learning, the training data you feed the algorithm includes the target values.  Consequently, the solutions can be used to help _supervise_ the training process to find the optimal algorithm parameters.
 ```
 
-## Installing R and RStudio
+Most supervised learning problems can be bucketed into one of two categories, _regression_ or _classification_, which we discuss next.
 
-It is important that you install R first and then install RStudio. You can download and install R from CRAN, the Comprehensive R Archive Network. It is highly recommended to install a precompiled binary distribution for your operating system (OS); follow these instructions:
+### Regression problems
 
-1. Go to https://cloud.r-project.org/
-2. Select the installer for your operating system:
-   - If you are a Windows user: Click on "Download R for Windows", then click on "base", then click on the Download link.
-   - If you are macOS user: Click on "Download R for (Mac) OS X", then under "Latest release:" click on R-X.X.X.pkg, where R-X.X.X is the version number. For example, the latest version of R as of April 25, 2022 was R-4.2.0.
-   - If you are a Linux user: Click on "Download R for Linux" and choose your distribution for more information on installing R for your setup.
-3. Follow the instructions of the installer.
+When the objective of our supervised learning is to predict a numeric outcome, we refer to this as a ___regression problem___ (not to be confused with linear regression modeling).  Regression problems revolve around predicting output that falls on a continuum. In the examples above, predicting home sales prices and time to market reflect a regression problem because the output is numeric and continuous.  This means, given the combination of predictor values, the response value could fall anywhere along some continuous spectrum (e.g., the predicted sales price of a particular home could be between \$80,000 and \$755,000).  The figure below illustrates average home sales prices as a function of two home features: year built and total square footage. Depending on the combination of these two features, the expected home sales price could fall anywhere along a plane.
 
-Next, you can download RStudio’s IDE by following these instructions: 
-
-1. Go to RStudio for desktop https://www.rstudio.com/products/rstudio/download/
-2. Scroll down to "Installers for Supported Platforms" near the bottom of the page.
-2. Select the install file for your OS.
-3. Follow the instructions of the installer.
-
-```{block, type = 'note'}
-Installing R and RStudio should be fairly straightforward. However, a great set of detailed [step-by-step instructions](https://rafalab.github.io/dsbook/installing-r-rstudio.html) is in Rafael Irizarry’s Introduction to Data Science book [@irizarry2019introduction].
-```
-
-
-After you install R and RStudio on your computer, you’ll have two new programs (also called applications) you can open. The R application icon looks like the left image below while the RStudio icon looks like the right image. We’ll always work in RStudio and not in the R application so be sure to select the correct icon.
-
-```{r r-vs-rstudio-icons, echo=FALSE, fig.cap='Use the RStudio icon (right) and not the R icon (left) to launch your R project. [@ismay2019statistical]', fig.align='center'}
-knitr::include_graphics("images/R_vs_RStudio_icons.png")
-```
-
-```{block, type = 'tip'}
-If your OS allows, pin the RStudio icon to your desktop or Dock and keep the R icon in another location (i.e. Applications for Mac users). This makes it natural and efficient to always go to the RStudio icon on your desktop for launching the program. 
-```
-
-After you open RStudio, you should see something similar to the following image. Note that slight differences might exist depending on the version of your RStudio interface.
-
-```{r rstudio-interface, echo=FALSE, fig.cap='RStudio interface to R.', fig.align='center'}
-knitr::include_graphics("images/rstudio-interface.png")
-```
-
-You are now ready to start programming!
-
-## Understanding the RStudio IDE
-
-The RStudio IDE is where all the action happens. There are four fundamental windows in the IDE, each with their own purpose. I discuss each briefly below but I highly suggest Oscar Torres-Reyna’s Introduction to RStudio for a thorough understanding of the console^[You can access this tutorial at http://dss.princeton.edu/training/RStudio101.pdf. Note that although it is from 2013 it still is very applicable and does a very thorough introduction].
-
-```{r rstudio-console-notation, echo=FALSE, fig.cap='The four fundamental windows within the RStudio IDE', fig.align='center'}
-knitr::include_graphics("images/rstudio-console-notation.png")
-```
-
-### Script Editor
-
-The top left window is where your script files will display. There are multiple forms of script files but the basic one to start with is the .R file. To create a new file you use the __File » New File__ menu. To open an existing file you use either the __File » Open File…__ menu or the __Recent Files__ menu to select from recently opened files. RStudio’s source editor includes a variety of productivity enhancing features including syntax highlighting, code completion, multiple-file editing, and find/replace. A good introduction to the script editor was written by RStudio’s Josh Paulson^[You can assess the script editor tutorial at https://support.rstudio.com/hc/en-us/articles/200484448-Editing-and-Executing-Code].
-
-The script editor is a great place to put code you care about. Keep experimenting in the console, but once you have written code that works and does what you want, put it in the script editor. RStudio will automatically save the contents of the editor when you quit RStudio, and will automatically load it when you re-open. Nevertheless, it’s a good idea to save your scripts regularly and to back them up.
-
-To execute the code in the script editor you have two options:
-
-1. Place the cursor on the line that you would like to execute and execute Cmd/Ctrl + Enter. Alternatively, you could hit the __Run__ button in the toolbar.
-2. If you want to run _all_ lines of code in the script then you can highlight the lines you want to run and then execute one of the options in #1.
-
-```{r rstudio-script-runner, echo=FALSE, fig.cap='Execute lines of code in your script with Cmd/Ctrl + Enter or using the Run button.', fig.align='center'}
-knitr::include_graphics("images/run-code.png")
-```
-
-### Workspace Environment
-
-The top right window is the workspace environment which captures much of your your current R working environment and includes any user-defined objects (vectors, matrices, data frames, lists, functions). When saving your R working session, these are the components along with the script files that will be saved in your working directory, which is the default location for all file inputs and outputs. To get or set your working directory so you can direct where your files are saved:
-
-```{r, eval=FALSE}
-# returns path for the current working directory
-getwd()                  
-
-# set the working directory to a specified directory
-setwd("path/of/directory")   
-```
-
-For example, if I call `getwd()` the file path "/Users/b294776/Desktop" is returned. If I want to set the working directory to the “Workspace” folder within the “Desktop” directory I would use `setwd("/Users/b294776/Desktop/Workspace")`. Now if I call `getwd()` again it returns “/Users/b294776/Desktop/Workspace”. An alternative solution is to go to the following location in your toolbar __Session » Set Working Directory » Choose Directory__ and select the directory of choice (much easier!).
-
-The workspace environment will also list your user defined objects such as vectors, matrices, data frames, lists, and functions. For example, if you type the following in your console:
-
-```{r, eval=FALSE}
-x <- 2
-y <- 3
-```
-
-You will now see `x` and `y` listed in your workspace environment. To identify or remove the objects (i.e. vectors, data frames, user defined functions, etc.) in your current R environment:
-
-```{r, eval=FALSE}
-# list all objects
-ls()              
-
-# identify if an R object with a given name is present
-exists("x")        
-
-# remove defined object from the environment
-rm(x)            
-
-# you can remove multiple objects
-rm(x, y)  
-
-# basically removes everything in the working environment -- use with caution!
-rm(list = ls())    
-```
-
-```{block, type='tip'}
-If you have a lot of objects in your workspace environment you can use the 🧹 icon in the workspace environment tab to clear out everything.
-```
-
-You can also view previous commands in the workspace environment by clicking the __History__ tab, by simply pressing the up arrow on your keyboard, or by typing into the console:
-
-```{r, eval=FALSE}
-# default shows 25 most recent commands
-history()        
-
-# show 100 most recent commands
-history(100)     
-
-# show entire saved history
-history(Inf)  
-```
-
-### Console
-
-The bottom left window contains the console. You can code directly in this window but it will not save your code. It is best to use this window when you are simply wanting to perform calculator type functions. This is also where your outputs will be presented when you run code in your script. Go ahead and type the following in your console:
-
-```{r, eval=FALSE}
-2 * 3 + 8 / 2
-```
-
-### Misc. Displays
-
-The bottom right window contains multiple tabs. The __Files__ tab allows you to see which files are available in your working directory. The __Plots__ tab will display any plots/graphics that are produced by your code. The __Packages__ tab will list all packages downloaded to your computer and also the ones that are loaded (more on this later). And the __Help__ tab allows you to search for topics you need help on and will also display any help responses (more on this later as well).
-
-### Workspace Options & Shortcuts
-
-There are multiple options available for you to set and customize both R and your RStudio console. For R, you can read about, and set, available options for the current R session with the following code. For now you don’t need to worry about making any adjustments, just know that many options do exist.
-
-```{r, eval=FALSE}
-# learn about available options
-help(options)
-
-# view current option settings
-options()            
-
-# change a specific option (i.e. number of digits to print on output)
-options(digits=3)  
-```
-
-For a thorough tutorial regarding the RStudio console and how to customize different components check out this [tutorial](http://dss.princeton.edu/training/RStudio101.pdf). You can also find the RStudio console cheatsheet shown below by going to __Help menu » Cheatsheets__. As with most computer programs, there are numerous keyboard shortcuts for working with the console. To access a menu displaying all the shortcuts in RStudio you can use option + shift + k. Within RStudio you can also access them in the __Help menu » Keyboard Shortcuts Help__.
-
-```{r rstudio-cheat-sheet, echo=FALSE, fig.cap='RStudio IDE cheat sheet.', fig.align='center'}
-knitr::include_graphics("images/rstudio-cheatsheet.png")
-```
-
-### Knowledge check
-
-```{block, type = 'todo'}
-1. Identify which working directory you are working out of.
-2. Create a folder on your computer titled _Learning R_. Within RStudio, set your working directory to this folder.
-3. Type `pi` in the console. Set the option to show 8 digits. Re-type `pi` in the console.
-4. Type `?pi` in the console. Note that documentation on this object pops up in the Help tab in the Misc. Display.
-5. Now check out your code History tab.
-6. Create a new .R file and save this as _my-first-script_ (note how this now appears in your _Learning R_ folder). Type `pi` in line 1 of this script, `option(digits = 8)` in line 2, and `pi` again in line three. Execute this code one line at a time and then re-execute all lines at once.
+```{r intro-regression-problem, echo=FALSE, fig.cap="Average home sales price as a function of year built and total square footage."}
+library(plotly)
+df <- AmesHousing::make_ames()
+x <- matrix(sort(df$Gr_Liv_Area)[floor(seq(1, nrow(df), length.out = 15))], 15, 1)
+y <- matrix(sort(df$Year_Built)[floor(seq(1, nrow(df), length.out = 15))], 1, 15)
+z <- 25051 + 3505*(log(x^.9) %*% log(y)) - 5*as.vector(x) 
+c <- matrix(c(.92, .95, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, .95), 1, 15)
+z <- sweep(z, MARGIN = 2, c, `*`)
+plot_ly(x = as.vector(x), y = as.vector(y), z = z, showscale = FALSE) %>%  
+    add_surface() %>%
+    layout(
+        scene = list(
+            xaxis = list(title = "Feature: square footage"),
+            yaxis = list(title = "Feature: year built"),
+            zaxis = list(title = "Response: sale price")
+        )
+    )
+# code for 3D print version
+# par(mar = c(0.1, 0.1, 0.1, 0.1))  # remove extra white space
+# persp(
+#   x = x,
+#   y = y,
+#   z = z,
+#   xlab = "Square footage",
+#   ylab = "Year built",
+#   zlab = "Sale price",
+#   theta = -45,
+#   phi = 25,
+#   col = viridis::viridis(100)
+# )
 ```
 
 
-## Getting help
+### Classification problems
 
-The help documentation and support in R is comprehensive and easily accessible from the the console. 
+When the objective of our supervised learning is to predict a categorical outcome, we refer to this as a ___classification problem___.  Classification problems most commonly revolve around predicting a binary or multinomial response measure such as:
 
-### General Help
+* Did a customer redeem a coupon (coded as yes/no or 1/0)?
+* Did a customer churn (coded as yes/no or 1/0)?
+* Did a customer click on our online ad (coded as yes/no or 1/0)?
+* Classifying customer reviews:
+    * Binary: positive vs. negative.
+    * Multinomial: extremely negative to extremely positive on a 0--5 Likert scale.
+    
+```{r classification-problem, echo=FALSE, out.width="50%", out.height="50%", fig.cap="Classification problem modeling 'Yes'/'No' response based on three features.", cache=FALSE}
+## code to create graphic
+library(DiagrammeR)
+grViz("
 
-To leverage general help resources you can use:
+  digraph boxes_and_circles {
+    node [shape = circle]
+    x1; x2; x3;
 
-```{r, eval=FALSE}
-# provides general help links
-help.start()   
+    node [shape = box]
+    Model;
 
-# searches the help system for documentation matching a given character string
-help.search("linear regression") 
+    node [shape = triangle]
+    Yes; No;
+
+    x1->Model; x2->Model; x3->Model; Model->No; Model->Yes;
+}")
+```
+
+However, when we apply machine learning models for classification problems, rather than predict a particular class (i.e., "yes" or "no"), we often want to predict the _probability_ of a particular class (i.e., yes: 0.65, no: 0.35).  By default, the class with the highest predicted probability becomes the predicted class.  Consequently, even though we are performing a classification problem, we are still predicting a numeric output (probability).  However, the essence of the problem still makes it a classification problem.
+
+Although there are machine learning algorithms that can be applied to regression problems but not classification and vice versa, many of the supervised learning algorithms we cover in this class can be applied to both.  These algorithms have become the most popular machine learning applications in recent years. 
+
+
+## Unsupervised learning
+
+___Unsupervised learning___, in contrast to supervised learning, includes a set of statistical tools to better understand and describe your data, but performs the analysis without a target variable.  In essence, unsupervised learning is concerned with identifying groups in a data set. The groups may be defined by the rows (i.e., *clustering*) or the columns (i.e., *dimension reduction*); however, the motive in each case is quite different.
+
+The goal of ___clustering___ is to segment observations into similar groups based on the observed variables; for example, to divide consumers into different homogeneous groups, a process known as market segmentation.  In __dimension reduction__, we are often concerned with reducing the number of variables in a data set. For example, classical linear regression models break down in the presence of highly correlated features.  Some dimension reduction techniques can be used to reduce the feature set to a potentially smaller set of uncorrelated variables. Such a reduced feature set is often used as input to downstream supervised learning models (e.g., principal component regression).
+
+Unsupervised learning is often performed as part of an exploratory data analysis (EDA). However, the exercise tends to be more subjective, and there is no simple goal for the analysis, such as prediction of a response. Furthermore, it can be hard to assess the quality of results obtained from unsupervised learning methods. The reason for this is simple. If we fit a predictive model using a supervised learning technique (i.e., linear regression), then it is possible to check our work by seeing how well our model predicts the response _Y_ on observations not used in fitting the model. However, in unsupervised learning, there is no way to check our work because we don’t know the true answer---the problem is unsupervised!  
+
+Despite its subjectivity, the importance of unsupervised learning should not be overlooked and such techniques are often used in organizations to: 
+
+- Divide consumers into different homogeneous groups so that tailored marketing strategies can be developed and deployed for each segment.
+- Identify groups of online shoppers with similar browsing and purchase histories, as well as items that are of particular interest to the shoppers within each group. Then an individual shopper can be preferentially shown the items in which he or she is particularly likely to be interested, based on the purchase histories of similar shoppers.
+- Identify products that have similar purchasing behavior so that managers can manage them as product groups.
+
+These questions, and many more, can be addressed with unsupervised learning.  Moreover, the outputs of unsupervised learning models can be used as inputs to downstream supervised learning models.
+
+## Machine Learning in `r fontawesome::fa("r-project")`
+
+Historically, the R ecosystem provides a wide variety of ML algorithm implementations. This has its benefits; however, this also has drawbacks as it requires the users to learn many different formula interfaces and syntax nuances. 
+
+More recently, development on a group of packages called [**Tidymodels**](https://www.tidymodels.org/) has helped to make implementation easier. The **tidymodels** collection allows you to perform discrete parts of the ML workflow with discrete packages:
+
+- [rsample](https://rsample.tidymodels.org/) for data splitting and resampling
+- [recipes](https://recipes.tidymodels.org/) for data pre-processing and feature engineering
+- [parsnip](https://parsnip.tidymodels.org/) for applying algorithms
+- [tune](https://tune.tidymodels.org/) for hyperparameter tuning
+- [yardstick](https://yardstick.tidymodels.org/) for measuring model performance
+- and several others!
+
+Throughout this course you'll be exposed to several of these packages. Go ahead and make sure you have the following packages installed. 
+
+```{block, type='note'}
+Just like the **tidyverse** package, when you install **tidymodels** you are actually installing several packages that exist in the **tidymodels** ecosystem as discussed above.
+```
+
+```r
+# common data wrangling and visualization
+install.packages("tidyverse")
+install.packages("vip")
+install.packages("here")
+
+# modeling
+install.packages("tidymodels")
+```
+
+```{r, message=TRUE}
+packageVersion("tidymodels")
+
+library(tidymodels)
+```
+
+## The data sets
+
+The data sets chosen for this course allow us to illustrate the different features of the presented machine learning algorithms.  Since the goal of this course is to demonstrate how to implement ML workflows, we make the assumption that you have already spent significant time wrangling, cleaning and getting to know your data via exploratory data analysis. This would allow you to perform many necessary tasks prior to the ML tasks outlined in this course such as:
+
+* Feature selection (i.e., removing unnecessary variables and retaining only those variables you wish to include in your modeling process).
+* Recoding variable names and values so that they are meaningful and more interpretable.
+* Tidying data so that each column is a discrete variable and each row is an individual observation.
+* Recoding, removing, or some other approach to handling missing values.
+
+Consequently, the exemplar data sets we use throughout this book have, for the most part, gone through the necessary cleaning processes. As mentioned above, these data sets are fairly common data sets that provide good benchmarks to compare and illustrate ML workflows. Although some of these data sets are available in R, we will import these data sets from a .csv file to ensure consistency over time.
+
+### Boston housing
+
+The Boston Housing data set is derived from information collected by the U.S. Census Service concerning housing in the area of Boston MA. Originally published in @harrison1978hedonic [`r fontawesome::fa("link")`](https://deepblue.lib.umich.edu/handle/2027.42/22636), it contains 13 attributes to predict the median property value.
+
+- __problem type__: supervised regression
+- __response variable__: `medv` median value of owner-occupied homes in USD 1000's (i.e. 21.8, 24.5)
+- __features__: 13 
+- __observations__: 506
+- __objective__: use property attributes to predict the median value of owner-occupied homes
+
+
+```{r}
+# data file path
+library(here)
+data_path <- here("data")
+
+# access data
+boston <- readr::read_csv(here(data_path, "boston.csv"))
+
+# initial dimension
+dim(boston)
+
+# features
+dplyr::select(boston, -cmedv)
+
+# response variable
+head(boston$cmedv)
 ```
 
 
-Note that the `help.search("some text here")` function requires a character string enclosed in quotation marks. So if you are in search of time series functions in R, using `help.search("time series")` will pull up a healthy list of vignettes and code demonstrations that illustrate packages and functions that work with time series data.
+### Pima Indians Diabetes
+
+A population of women who were at least 21 years old, of Pima Indian heritage and living near Phoenix, Arizona, was tested for diabetes according to World Health Organization criteria. The data were collected by the US National Institute of Diabetes and Digestive and Kidney Diseases and published in smith1988using [`r fontawesome::fa("link")`](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2245318/pdf/procascamc00018-0276.pdf), it contains 8 attributes to predict the presence of diabetes.
+
+- __problem type__: supervised binary classification
+- __response variable__: `diabetes` positive or negative response (i.e. "pos", "neg")
+- __features__: 8 
+- __observations__: 768
+- __objective__: use biological attributes to predict the presence of diabetes
 
 
-For more direct help on functions that are installed on your computer you can use the following. Test these out in your console:
+```{r}
+# access data
+pima <- readr::read_csv(here(data_path, "pima.csv"))
 
-```{r, eval=FALSE}
-help(mean)      # provides details for specific function 
-?mean           # provides same information as help(functionname) 
-example(mean)   # provides examples for said function
+# initial dimension
+dim(pima)
+
+# features
+dplyr::select(pima, -diabetes)
+
+# response variable
+head(pima$diabetes)
 ```
 
-Note that the `help()` and `?` function calls only work for functions within loaded packages. You’ll understand what this means shortly.
 
-### Getting Help From the Web
+### Iris flowers
 
-Typically, a problem you may be encountering is not new and others have faced, solved, and documented the same issue online. The following resources can be used to search for online help. Although, I typically just Google the problem and find answers relatively quickly.
+The Iris flower data set is a multivariate data set introduced by the British statistician and biologist Ronald Fisher in his 1936 paper [@fisher1936use] [`r fontawesome::fa("link")`](https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1469-1809.1936.tb02137.x). It is sometimes called Anderson's Iris data set because Edgar Anderson collected the data to quantify the morphologic variation of Iris flowers of three related species. The data set consists of 50 samples from each of three species of Iris (Iris Setosa, Iris virginica, and Iris versicolor). Four features were measured from each sample: the length and the width of the sepals and petals, in centimeters.
 
-* `RSiteSearch("key phrase")`: searches for the key phrase in help manuals and archived mailing lists on the [R Project website](https://www.r-project.org/).
-* [Stack Overflow](http://stackoverflow.com/): a searchable Q&A site oriented toward programming issues. 75% of my answers typically come from Stack Overflow.
-* [Cross Validated](http://stats.stackexchange.com/): a searchable Q&A site oriented toward statistical analysis.
-* [RStudio Community](https://community.rstudio.com/): a community for all things R and RStudio where you can get direct answers to your problems and also give back by helping to solve and answer other's questions.
-* [R-seek](http://rseek.org/): a Google custom search that is focused on R-specific websites
-* [R-bloggers](http://www.r-bloggers.com/): a central hub of content collected from over 500 bloggers who provide news and tutorials about R.
+- __problem type__: supervised multinomial classification
+- __response variable__: `species` (i.e. "setosa", "virginica", "versicolor")
+- __features__: 4 
+- __observations__: 150
+- __objective__: use plant leaf attributes to predict the type of flower
 
-```{block, type='warning'}
-Twitter has a thriving R community ([#rstats](https://twitter.com/hashtag/rstats?src=hashtag_click)) and is definitely worth following. However, it is not the place to ask for help on specific code functionality. 
+
+```{r}
+# access data
+iris <- readr::read_csv(here(data_path, "iris.csv"))
+
+# initial dimension
+dim(iris)
+
+# features
+dplyr::select(iris, -Species)
+
+# response variable
+head(iris$Species)
 ```
 
-### Knowledge check
 
-```{block, type = 'todo'}
-1. Does `help.start()` provide a link to an introduction to R manual?
-2. Does R's `mode` function compute the statistical mode?
-3. Review at least 5 [Stack Overflow questions about R](https://stackoverflow.com/questions/tagged/r).
+### Ames housing
+
+The Ames housing data set is an alternative to the Boston housing data set and provides a more comprehensive set of home features to predict sales price. More information can be found in @de2011ames [`r fontawesome::fa("link")`](http://jse.amstat.org/v19n3/decock.pdf).
+
+- __problem type__: supervised regression
+- __response variable__: `Sale_Price` (i.e., \$195,000, \$215,000)
+- __features__: 80 
+- __observations__: 2,930
+- __objective__: use property attributes to predict the sale price of a home
+    
+
+```{r}
+# access data
+ames <- readr::read_csv(here(data_path, "ames.csv"))
+
+# initial dimension
+dim(ames)
+
+# features
+dplyr::select(ames, -Sale_Price)
+
+# response variable
+head(ames$Sale_Price)
+```
+    
+
+### Attrition
+
+The employee attrition data set was originally provided by [IBM Watson Analytics Lab](https://www.ibm.com/communities/analytics/watson-analytics-blog/hr-employee-attrition/) and is a fictional data set created by IBM data scientists to explore what employee attributes influence attrition.
+
+- __problem type__: supervised binomial classification
+- __response variable__: `Attrition` (i.e., "Yes", "No")
+- __features__: 30 
+- __observations__: 1,470
+- __objective__: use employee attributes to predict if they will attrit (leave the company)
+
+
+```{r import-attrition-data}
+# access data
+attrition <- readr::read_csv(here(data_path, "attrition.csv"))
+
+# initial dimension
+dim(attrition)
+
+# features
+dplyr::select(attrition, -Attrition)
+
+# response variable
+head(attrition$Attrition)
+```    
+    
+### Hitters
+
+This dataset was originally taken from the StatLib library which is maintained at Carnegie Mellon University. The idea was to illustrate if and how major league baseball player's batting performance could predict their salary. The salary data were originally from Sports Illustrated, April 20, 1987. The 1986 and career statistics were obtained from The 1987 Baseball Encyclopedia Update published by Collier Books, Macmillan Publishing Company, New York. Note that the data does contain the players name but this should be removed during analysis and is not a valid feature.
+
+- __problem type__: supervised regression
+- __response variable__: `Salary`
+- __features__: 19 
+- __observations__: 322
+- __objective__: use baseball player's batting attributes to predict their salary.
+
+
+```{r import-hitters-r}
+# access data
+hitters <- readr::read_csv(here(data_path, "hitters.csv"))
+
+# initial dimension
+dim(hitters)
+
+# features
+dplyr::select(hitters, -Salary, -Player)
+
+# response variable
+head(hitters$Salary)
 ```
 
-## Errors, warnings, and messages
 
-One thing that intimidates new R users (and new programmers in general) is when they run into _errors_, _warnings_, and _messages_. R reports errors, warnings, and messages in the following way. Don't worry about what the code is doing, just get familiar with the differences in how _errors_, _warnings_, and _messages_ are reported.
+## What You'll Learn Next
 
-* __Errors__: When the red text is a legitimate error, it will be prefaced with "Error in..." and will try to explain what went wrong. Generally when there’s an error, the code will not run. Think of errors as a red traffic light: something is wrong!
-   ```{block, type = 'note'}
-For references on common errors, check out the following links by [Noam Ross](https://github.com/noamross/zero-dependency-problems/blob/master/misc/stack-overflow-common-r-errors.md), [David Smith](http://blog.revolutionanalytics.com/2015/03/the-most-common-r-error-messages.html), and [Chester Ismay](https://rbasics.netlify.app/6-errors.html).
-   ```
-   ```{r, error=TRUE}
-# Example of an error
-1 + 'a'
-   ```
-* __Warnings__: Warning messages will be prefaced with "Warning:" and R will try to explain why there’s a warning. Generally your code will still work, but with some caveats. Think of warnings as a yellow traffic light: everything is working, but watch out/pay attention. Typically when you get a warning you want to figure out what is throwing the warning because the end result may not be what you had intended!
-   ```{r, warning=TRUE}
-x <- 1:2
-y <- 1:3
+The lessons that follow are designed to help you understand the individual sub-tasks of an ML project. The focus is to have an intuitive understanding of each discrete sub-task and algorithm. Once you understand when, where, and why these sub-tasks are performed you will be able to transfer this knowledge to other projects. The concepts you will learn include:
 
-# Example of a warning
-x + y
-   ```
-* __Messages__: When the text doesn’t start with either “Error” or “Warning”, it’s just a friendly message. You’ll often see these messages when you load R packages or make certain function calls. Think of messages as a green traffic light: everything is working fine and keep on going!
-   ```{r, eval=FALSE}
-# Example of a message
-library(completejourney)
-## Welcome to the completejourney package! Learn more about these data
-## sets at http://bit.ly/completejourney.
-   ```
+1. Provide an overview of the ML modeling process:
+   - data splitting
+   - model fitting
+   - model validation and tuning 
+   - performance measurement
+   - feature engineering
 
+2. Cover common supervised learners:
+   - linear regression
+   - regularized regression
+   - K-nearest neighbors
+   - decision trees
+   - bagging & random forests
+   - gradient boosting
+   
+3. Cover common unsupervised learners:
+   - K-means clustering
+   - Principal component analysis
+
+4. Along the way you'll learn about:
+   - each algorithm's hyperparameters
+   - model interpretation
+   - feature importance
+   - and more!
+   
 ## Exercises
 
-```{block, type = 'todo'}
-1. What differentiates R and RStudio?
-2. What are the four main panes in RStudio?
-3. What function tells you what directory your are operating in?
-4. How could you change the directory to a new folder?
-5. How could you access R documentation to learn more about the `lm()` function?
+```{block, type='todo'}
+1. Identify four real-life applications of supervised and unsupervised problems.
+   - Explain what makes these problems supervised versus unsupervised.
+   - For each problem identify the target variable (if applicable) and potential
+     features.
+
+2. Identify and contrast a regression problem with a classification problem.
+   - What is the target variable in each problem and why would being able to
+     accurately predict this target be beneficial to society?
+   - What are potential features and where could you collect this information?
+   - What is determining if the problem is a regression or a classification
+     problem?
+
+3. Identify three open source data sets suitable for machine learning (e.g.,
+   https://bit.ly/35wKu5c).
+   - Explain the type of machine learning models that could be constructed from
+     the data (e.g., supervised versus unsupervised and regression versus
+     classification).
+   - What are the dimensions of the data?
+   - Is there a code book that explains who collected the data, why it was
+     originally collected, and what each variable represents?
+   - If the data set is suitable for supervised learning, which variable(s) could
+     be considered as a useful target? Which variable(s) could be considered as
+     features?
+
+4. Identify examples of misuse of machine learning in society. What was the
+   ethical concern?
 ```
+
+
+```{r, include=FALSE}
+rm(list = ls())
+```
+

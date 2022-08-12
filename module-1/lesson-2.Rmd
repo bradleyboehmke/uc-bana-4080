@@ -1,482 +1,340 @@
-# Lesson 1b: R fundamentals
+# Lesson 1b: First model with Tidymodels
 
-```{r setup-1c, include=FALSE}
+```{r setup-1a, include=FALSE}
 # clean up saved items that may carry over from previous lessons
 rm(list = ls())
 
 knitr::opts_chunk$set(
   fig.align = "center",
-  collapse = TRUE
+  fig.height = 3.5,
+  fig.width = 6,
+  collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  cache = FALSE
 )
 ```
 
-This lesson serves to introduce you to many of the basics of R to get you comfortable. This includes understanding how to assign and evaluate expressions, performing basic calculator-like activities, the idea of vectorization and packages. Finally, I offer some basic styling guidelines to help you write code that is easier to digest by others. 
+Much like exploratory data analysis (EDA), the machine learning (ML) process is very iterative and heuristic-based. With minimal knowledge of the problem or data at hand, it is difficult to know which ML method will perform best. This is known as the no free lunch theorem for ML [@wolpert1996lack]. Consequently, it is common for many ML approaches to be applied, evaluated, and modified before a final, optimal model can be determined. Performing this process correctly provides great confidence in our outcomes. If not, the results will be useless and, potentially, damaging.^[See https://www.fatml.org/resources/relevant-scholarship for many discussions regarding implications of poorly applied and interpreted ML.]
+
+Approaching ML modeling correctly means approaching it strategically by spending our data wisely on learning and validation procedures, properly pre-processing the feature variables, minimizing data leakage, tuning hyperparameters, and assessing model performance. Many books and courses portray the modeling process as a short sprint. A better analogy would be a marathon where many iterations of these steps are repeated before eventually finding the final optimal model. This process is illustrated below. 
+
+```{r modeling-process, echo=FALSE, fig.align='center', fig.cap="General predictive machine learning process."}
+knitr::include_graphics("images/modeling_process.png")
+```
+
+Before introducing specific algorithms, this lesson, along with the next module, introduces concepts that are fundamental to the ML modeling process and that you’ll see briskly covered in future modeling lessons.
+
+More specifically, this lesson is designed to get you acquainted with building predictive models using the [Tidymodels](https://www.tidymodels.org/) construct. We'll focus on the process of splitting our data for improved generalizability, using Tidymodel's **parsnip** package for constructing our models, along with **yardstick** to measure model performance.
+
+```{block, type='note'}
+The tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles.
+```
+
 
 ## Learning objectives
 
-Upon completing this module you will be able to:
+By the end of this lesson you will be able to:
 
-- Assign values to variables and evaluate them.
-- Perform basic mathematical operations.
-- Explain what packages and be able to install and load them.
-- Understand and apply basic styling guidelines to your code.
+1. Split your data into training and test sets.
+2. Instantiate, train, fit, and evaluate a basic model.
 
-## Assignment & evaluation
+## Prerequisites
 
-### Assignment
-
-The first operator you’ll run into is the __assignment operator__. The assignment operator is used to _assign_ a value. For instance we can assign the value 3 to the variable `x` using the `<-` assignment operator.
+For this lesson we'll primarily use the **tidymodels** package.
 
 ```{r}
-# idiomatic assignment
-x <- 3
+library(tidymodels)
+library(here)
 ```
+
+The two data sets we'll use are `ames` and `attrition`. 
+
+```{r}
+data_path <- here("data")
+ames <- readr::read_csv(here(data_path, "ames.csv"))
+attrition <- readr::read_csv(here(data_path, "attrition.csv"))
+```
+
+```{block, type = "note"}
+When performing classification models our response variable needs to be a factor (or sometimes as 0 vs. 1). Consequently, the code chunk below sets the `Attrition` response variable as a factor rather than as a character.
+```
+
+```{r}
+attrition <- attrition %>%
+   dplyr::mutate(Attrition = as.factor(Attrition))
+```
+
+
+## Data splitting
+
+A major goal of the machine learning process is to find an algorithm $f\left(X\right)$ that most accurately predicts future values ($\hat{Y}$) based on a set of features ($X$).  In other words, we want an algorithm that not only fits well to our past data, but more importantly, one that predicts a future outcome accurately.  This is called the ___generalizability___ of our algorithm.  How we "spend" our data will help us understand how well our algorithm generalizes to unseen data.  
+
+To provide an accurate understanding of the generalizability of our final optimal model, we can split our data into training and test data sets:
+
+*  __Training set__: these data are used to develop feature sets, train our algorithms, tune hyperparameters, compare models, and all of the other activities required to choose a final model (e.g., the model we want to put into production).
+*  __Test set__: having chosen a final model, these data are used to estimate an unbiased assessment of the model’s performance, which we refer to as the _generalization error_. 
+
+```{r modeling-process-split, echo=FALSE, fig.align='center', fig.cap="Splitting data into training and test sets.", out.height="30%", out.width="30%"}
+knitr::include_graphics("images/data_split.png")
+```
+
+Given a fixed amount of data, typical recommendations for splitting your data into training-test splits include 60% (training)--40% (testing), 70%--30%, or 80%--20%. Generally speaking, these are appropriate guidelines to follow; however, it is good to keep the following points in mind:
+
+* Spending too much in training (e.g., $>80\%$) won't allow us to get a good assessment of predictive performance.  We may find a model that fits the training data very well, but is not generalizable (_overfitting_).
+* Sometimes too much spent in testing ($>40\%$) won't allow us to get a good assessment of model parameters.
+
+Other factors should also influence the allocation proportions. For example, very large training sets (e.g., $n > 100\texttt{K}$) often result in only marginal gains compared to smaller sample sizes.  Consequently, you may use a smaller training sample to increase computation speed (e.g., models built on larger training sets often take longer to score new data sets in production).  In contrast, as $p \geq n$ (where $p$ represents the number of features), larger samples sizes are often required to identify consistent signals in the features.
+
+The two most common ways of splitting data include ___simple random sampling___ and ___stratified sampling___.
+
+### Simple random sampling
+
+The simplest way to split the data into training and test sets is to take a simple random sample. This does not control for any data attributes, such as the distribution of your response variable ($Y$). 
+
+```{block, type = "note"}
+Sampling is a random process so setting the random number generator with a common seed allows for reproducible results.  Throughout this course we'll often use the seed `123` for reproducibility but the number itself has no special meaning.
+```
+
+```{r}
+# create train/test split
+set.seed(123)  # for reproducibility
+split  <- initial_split(ames, prop = 0.7)
+train  <- training(split)
+test   <- testing(split)
+
+# dimensions of training data
+dim(train)
+```
+
+With sufficient sample size, this sampling approach will typically result in a similar distribution of $Y$ (e.g., `Sale_Price` in the `ames` data) between your <font color="blue">training</font> and <font color="red">test</font> sets, as illustrated below.
+
+```{r r-random-sampling}
+train %>% 
+  mutate(id = 'train') %>% 
+  bind_rows(test %>% mutate(id = 'test')) %>%
+  ggplot(aes(Sale_Price, color = id)) +
+  geom_density()
+```
+
+### Stratified sampling 
+
+If we want to explicitly control the sampling so that our training and test sets have similar $Y$ distributions, we can use stratified sampling.  This is more common with classification problems where the response variable may be severely imbalanced (e.g., 90% of observations with response "Yes" and 10% with response "No"). However, we can also apply stratified sampling to regression problems for data sets that have a small sample size and where the response variable deviates strongly from normality.  With a continuous response variable, stratified sampling will segment $Y$ into quantiles and randomly sample from each. 
+
+To perform stratified sampling we simply apply the `strata` argument in `initial_split`.
+
+```{r}
+set.seed(123)
+split_strat <- initial_split(attrition, prop = 0.7, strata = "Attrition")
+train_strat <- training(split_strat)
+test_strat  <- testing(split_strat)
+```
+
+The following illustrates that in our original employee attrition data we have an imbalanced response (No: 84%, Yes: 16%). By enforcing stratified sampling, both our training and testing sets have approximately equal response distributions. 
+
+```{r}
+# original response distribution
+table(attrition$Attrition) %>% prop.table()
+
+# response distribution for training data
+table(train_strat$Attrition) %>% prop.table()
+
+# response distribution for test data
+table(test_strat$Attrition) %>% prop.table()
+```
+
+### Knowledge check
+
+```{block, type='todo'}
+1. Import the penguins data from the **modeldata** package
+2. Create a 70-30 stratified train-test split (`species` is the target variable).
+3. What are the response variable proportions for the train and test data sets?
+```
+
+## Building models
+
+The R ecosystem provides a wide variety of ML algorithm implementations. This makes many powerful algorithms available at your fingertips. Moreover, there are almost always more than one package to perform each algorithm (e.g., there are over 20 packages for fitting random forests). There are pros and cons to this wide selection; some implementations may be more computationally efficient while others may be more flexible. This also has resulted in some drawbacks as there are inconsistencies in how algorithms allow you to define the formula of interest and how the results and predictions are supplied.
+
+Fortunately, the tidymodels ecosystem is simplifying this and, in particular, the [Parsnip package](https://parsnip.tidymodels.org/index.html) provides one common interface to train many different models supplied by other packages. Consequently, we'll focus on building models the tidymodels way.
+
+To create and fit a model with parsnip we follow 3 steps:
+
+1. Create a model type 
+2. Choose an "engine"
+3. Fit our model
+
+Let's illustrate by building a linear regression model. For our first model we will simply use two features from our training data - total square feet of the home (`Gr_Liv_Area`) and year built (`Year_Built`) to predict the sale price (`Sale_Price`).
+
+```{block, type='tip'}
+We can use `tidy()` to get results of our model's parameter estimates and their statistical properties. Although the `summary()` function can provide this output, it gives the results back in an unwieldy format. Go ahead, and run `summary(lm_ols)` to compare the results to what we see below.
+
+Many models have a `tidy()` method that provides the summary results in a more predictable and useful format (e.g. a data frame with standard column names)
+```
+
+
+```{r}
+lm_ols <- linear_reg() %>%
+   fit(Sale_Price ~ Gr_Liv_Area + Year_Built, data = train)
+
+tidy(lm_ols)
+```
+
+Now, you may have noticed that I only applied two of the three steps I mentioned previously:
+
+1. Create a model type 
+2. ~~Choose an "engine"~~
+3. Fit our model
+
+The reason is because most model objects (`linear_reg()` in this example) have a default engine. `linear_reg()` by default uses `lm` for ordinary least squares. But we can always change the engine. For example, say I wanted to use keras to perform gradient descent linear regression, then I could change the engine to keras but use the same code workflow.
+
+```{block, type='warning'}
+For this code to run successfully on your end you need to have the **keras** and **tensorflow** packages installed on your machine. Depending on your current setup this could be an easy process or you could run into problems. If you run into problems don't fret, this is primarily just to illustrate how we can change engines.
+```
+
+
+```{r}
+lm_sgd <- linear_reg() %>%
+   set_engine('keras') %>%
+   fit(Sale_Price ~ Gr_Liv_Area + Year_Built, data = train)
+```
+
+```{block, type='tip'}
+When we talk about 'engines' we're really just referring to packages that provide the desired algorithm. Each model object has different engines available to use and they are all documented. For example check out the help file for `linear_reg` (`?linear_reg`) and you'll see the different engines available (lm, brulee, glm, glmnet, etc.)
+```
+
+The beauty of this workflow is that if we want to explore different models we can simply change the model object. For example, say we wanted to run a K-nearest neighbor model. We can just use `nearest_neighbor()`. 
+
+In this example we have pretty much the same code as above except we added the line of code `set_mode()`. This is because most algorithms require you to specify if you are building a regression model or a classification model.
 
 ```{block, type='note'}
-R is a dynamically typed programming language which means it will perform the process of verifying and enforcing the constraints of types at run-time. If you are unfamiliar with dynamically versus statically-typed languages then do not worry about this detail. Just realize that dynamically typed languages allow for the simplicity of running the above command and R automatically inferring that `3` should be a numeric type rather than a character string.
+When you run this code you'll probably get an error message saying that _"This engine requires some package installs: 'kknn'."_ This just means you need to `install.packages('kknn')` and then you should be able to successfully run this code.
 ```
 
-Interestingly, R actually allows for five assignment operators^[There are even more provided by third party packages such as __zeallot__.]:
-
-```{r, eval=FALSE}
-# leftward assignment
-x <- value
-x = value
-x <<- value
-
-# rightward assignment
-value -> x
-value ->> x
-```
-
-The original assignment operator in R was `<-` and has continued to be the preferred among R users. The `=` assignment operator was [added in 2001](http://developer.r-project.org/equalAssign.html) primarily because it is the accepted assignment operator in many other languages and beginners to R coming from other languages were so prone to use it. Using `=` is not _wrong_, just realize that most R programmers prefer to keep `=` reserved for argument association and use `<-` for assignment.
-
-The operators `<<-` is normally only used in functions or looping constructs which we will not get into the details. And the rightward assignment operators perform the same as their leftward counterparts, they just assign the value in an opposite direction.
-
-Overwhelmed yet? Don’t be. This is just meant to show you that there are options and you will likely come across them sooner or later. My suggestion is to stick with the tried, true, and idiomatic `<-` operator. This is the most conventional assignment operator used and is what you will find in all the base R source code…which means it should be good enough for you.
-
-### Evaluation
-
-We can then evaluate the variable by simply typing x at the command line which will return the value of `x`. Note that prior to the value returned you’ll see `## [1]` in the console. This simply implies that the output returned is the first output. Note that you can type any comments in your code by preceding the comment with the hash tag (`#`) symbol. Any values, symbols, and texts following `#` will not be evaluated.
 
 ```{r}
-# evaluation
-x
+knn <- nearest_neighbor() %>%
+   set_engine("kknn") %>%
+   set_mode("regression") %>%
+   fit(Sale_Price ~ Gr_Liv_Area + Year_Built, data = train)
 ```
 
 
-### Case Sensitivity
-
-Lastly, note that R is a case sensitive programming language. Meaning all variables, functions, and objects must be called by their exact spelling:
-
-```{r, error=TRUE, collapse=TRUE}
-x <- 1 
-y <- 3 
-z <- 4
-x * y * z
-
-x * Y * z 
+```{block, type='tip'}
+You can see all the different model objects available at https://parsnip.tidymodels.org/reference/index.html
 ```
-
-
-### Knowledge check
-
-```{block, type = 'todo'}
-1. Assign the value 5 to variable `x` (note how this shows up in your Global Environment).
-2. Assign the character `“abc”` to variable `y`.
-3. Evaluate the value of `x` and `y` at in the console.
-4. Now use the `rm()` function to remove these objects from you working environment.
-```
-
-## R as a calculator
-
-### Basic Arithmetic
-
-At its most basic function R can be used as a calculator. When applying basic arithmetic, the PEMDAS order of operations applies: **p**arentheses first followed by **e**xponentiation, **m**ultiplication and **d**ivision, and finally **a**ddition and **s**ubtraction.
-
-```{r}
-8 + 9 / 5 ^ 2
-
-8 + 9 / (5 ^ 2)
-
-8 + (9 / 5) ^ 2
-
-(8 + 9) / 5 ^ 2
-```
-
-By default R will display seven digits but this can be changed using `options()` as previously outlined.
-
-```{r}
-1 / 7
-
-options(digits = 3)
-1 / 7
-```
-
-Also, large numbers will be expressed in scientific notation which can also be adjusted using `options()`.
-
-```{r}
-888888 * 888888
-
-options(digits = 10)
-888888 * 888888
-```
-
-Note that the largest number of digits that can be displayed is 22. Requesting any larger number of digits will result in an error message.
-
-```{r, error=TRUE}
-pi
-
-options(digits = 22)
-pi
-
-options(digits = 23)
-pi
-```
-
-We can also perform integer divide (`%/%`) and modulo (`%%`) functions. The integer divide function will give the integer part of a fraction while the modulo will provide the remainder.
-
-```{r}
-# regular division
-42 / 4
-
-# integer division
-42 %/% 4
-
-# modulo (remainder)
-42 %% 4
-```
-
-
-### Miscellaneous Mathematical Functions
-
-There are many built-in functions to be aware of. These include but are not limited to the following. Go ahead and run this code in your console. 
-
-```{r, eval=FALSE}
-x <- 10
-
-abs(x)      # absolute value
-sqrt(x)     # square root
-exp(x)      # exponential transformation
-log(x)      # logarithmic transformation
-cos(x)      # cosine and other trigonometric functions
-```
-
-### Infinite, and NaN Numbers
-
-When performing undefined calculations, R will produce `Inf` (infinity) and `NaN` (not a number) outputs. These can easily pop up in regular data wrangling tasks and later modules will discuss how to work with these types of outputs along with missing values.
-
-```{r, error=TRUE}
-# infinity
-1 / 0
-
-# infinity minus infinity
-Inf - Inf
-
-# negative infinity
--1 / 0
-
-# not a number
-0 / 0
-
-# square root of -9
-sqrt(-9)
-```
-
-
-### Knowledge check
-
-```{block, type = 'todo'}
-1. Assign the values 1000, 5, and 0.05 to variables `D`, `K`, and `h` respectively.
-2. Compute $2 \times D \times K$.
-3. Compute $\frac{2 \times D \times K}{h}$.
-4. Now put this together to compute the Economic Order Quantity, which is $\sqrt{\frac{2 \times D \times K}{h}}$. Save the output as `Q`.
-```
-
-## Working with packages
-
-In R, the fundamental unit of shareable code is the package. A package bundles together code, data, documentation, and tests and provides an easy method to share with others [@wickham2015r]. As of April 2022 there were nearly 19,000 packages available on [CRAN](https://cran.r-project.org/), 2,000 on [Bioconductor](https://www.bioconductor.org/), and countless more available through [GitHub](https://github.com/). This huge variety of packages is one of the reasons that R is so successful: chances are that someone has already solved a problem that you’re working on, and you can benefit from their work by downloading and using their package.
-
-### Installing Packages
-
-The most common place to get packages is from CRAN. To install packages from CRAN you use `install.packages("packagename")`. For instance, if you want to install the __ggplot2__ package, which is a very popular visualization package you would type the following in the console:
-
-```{r, eval=FALSE}
-# install package from CRAN
-install.packages("ggplot2") 
-```
-
-As previously stated, packages are also available through Bioconductor and GitHub. Bioconductor provides R packages primarily for genomic data analyses and packages on GitHub are usually under development but have not gone through all the checks and balances to be loaded onto CRAN (aka download and use these packages at your discretion). You can learn how to install Bioconductor packages [here](https://www.bioconductor.org/install/) and GitHub packages [here](https://cran.r-project.org/web/packages/githubinstall/vignettes/githubinstall.html).
-
-### Loading Packages
-
-Once the package is downloaded to your computer you can access the functions and resources provided by the package in two different ways:
-
-```{r, eval=FALSE}
-# load the package to use in the current R session
-library(packagename)         
-
-# use a particular function within a package without loading the package
-packagename::functionname   
-```
-
-For instance, if you want to have full access to the __dplyr__ package you would use `library(dplyr)`; however, if you just wanted to use the `filter()` function which is provided by the __dplyr__ package without fully loading __dplyr__ you can use `dplyr::filter(...)`^[Here, `...` just represents the arguments that you would include in this function].
-
-### Getting Help on Packages
-
-For more direct help on packages that are installed on your computer you can use the `help` and `vignette` functions. Here we can get help on the __ggplot2__ package with the following:
-
-```{r, eval=FALSE}
-help(package = "ggplot2")      # provides details regarding contents of a package
-vignette(package = "ggplot2")  # list vignettes available for a specific package
-vignette("ggplot2-specs")      # view specific vignette
-vignette()                     # view all vignettes on your computer
-```
-
-Note that some packages will have multiple vignettes. For instance `vignette(package = "grid")` will list the 13 vignettes available for the __grid__ package. To access one of the specific vignettes you simply use `vignette("vignettename")`.
-
-### Useful Packages
-
-There are thousands of helpful R packages for you to use, but navigating them all can be a challenge. To help you out, RStudio compiled a [guide](https://support.rstudio.com/hc/en-us/articles/201057987-Quick-list-of-useful-R-packages) to some of the best packages for loading, manipulating, visualizing, analyzing, and reporting data. In addition, their list captures packages that specialize in spatial data, time series and financial data, increasing spead and performance, and developing your own R packages.
 
 ### Knowledge check
 
 ```{block, type='todo'}
-* Install the __completejourney__ package.
-* Load the __completejourney__ package.
-* Access the help documentation for the __completejourney__ package.
-* Check out the vignette(s) for __completejourney__.
-* Call the `get_transactions()` function provided by __completejourney__ and save the output to a `transactions` variable (note that this takes a little time as you are trying to download 1.5 million transactions!).
+1. If you haven't already done so, create a 70-30 stratified train-test split on the `attrition` data (note: `Attrition` is the response variable).
+2. Using the `logistic_reg()` model object, fit a model using `Age`, `DistanceFromHome`, and `JobLevel` as the features.
+3. Now train a K-nearest neighbor model using the 'kknn' engine and be sure to set the mode to be a classification model.
 ```
 
-### Tidyverse
+## Making predictions
 
-The tidyverse is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures; and this group of packages has become extremely popular and common across the data science community.  You will learn about many of these packages throughout this course.
+We have fit a few different models. Now, if we want to see our predictions we can simply apply `predict()` and feed it the data set we want to make predictions on. Here, we can see the predictions made on our training data for our ordinary least square linear regression model.
 
-```{block, type='tip'}
-Take a little time to familiarize yourself with the [Tidyverse](https://www.tidyverse.org/). Not only will you find high-level descriptions of the different [tidyverse packages](https://www.tidyverse.org/packages/) but you will also find a lot of educational content that you can and should take advantage of!
+```{r}
+lm_ols %>% predict(train)
 ```
 
-```{r tidyverse, echo=FALSE, fig.cap='Tidyverse is a collection of packages designed to simplify many tasks throughout the data analysis process.', fig.align='center'}
-knitr::include_graphics("images/what-is-tidyverse.png")
+And here we get the predicted values for our KNN model.
+
+```{r}
+knn %>% predict(train)
 ```
 
-Let's go ahead and install the __tidyverse__ package, which will actually install a bunch of other packages for us.
-
-```{r, eval=FALSE}
-install.packages("tidyverse")
-```
-
-```{block, type='tip'}
-The single line of code above 👆...
-
-is equivalent to running the 29 lines of code below 👇!
-```
-
-```{r, eval=FALSE}
-install.packages("ggplot2")
-install.packages("tibble")
-install.packages("tidyr")
-install.packages("readr")
-install.packages("purrr")
-install.packages("dplyr")
-install.packages("stringr")
-install.packages("forcats")
-install.packages("cli")
-install.packages("crayon")
-install.packages("dbplyr")
-install.packages("dtplyr")
-install.packages("googledrive")
-install.packages("googlesheets4")
-install.packages("haven")
-install.packages("hms")
-install.packages("httr")
-install.packages("jsonlite")
-install.packages("lubridate")
-install.packages("magrittr")
-install.packages("modelr")
-install.packages("pillar")
-install.packages("readxl")
-install.packages("reprex")
-install.packages("rlang")
-install.packages("rstudioapi")
-install.packages("rvest")
-install.packages("xml2")
-```
-
-If we load the __tidyverse__ package we will see that it loads 8 packages for us: __ggplot2___, __tibble__, __tidyr__, __readr__, __purrr__, __dplyr__, __stringr__, and __forcats__.  These are packages that we will tend to use in almost any data analysis project.
-
-```{r, message=TRUE}
-library(tidyverse)
-```
-
-```{block, type='tip'}
-The single line of code above 👆...
-
-is equivalent to running the 8 lines of code below 👇!
-```
-
-```{r, eval=FALSE}
-library(ggplot2) 
-library(tibble) 
-library(tidyr) 
-library(readr) 
-library(purrr) 
-library(dplyr) 
-library(stringr) 
-library(forcats)
-```
-
-
-## Style guide
-
-> _"Good coding style is like using correct punctuation. You can manage without it, but it sure makes things easier to read."_ - Hadley Wickham
-
-As a medium of communication, its important to realize that the readability of code does in fact make a difference. Well styled code has many benefits to include making it easy to i) read, ii) extend, and iii) debug. Unfortunately, R does not come with official guidelines for code styling but such is an inconvenient truth of most open source software. However, this should not lead you to believe there is no style to be followed and over time implicit guidelines for proper code styling have been documented. 
-
-What follows are a few of the basic guidelines from the [tidyverse style guide](https://style.tidyverse.org/). These suggestions will help you get started with good styling suggestions as you begin this book but as you progress you should leverage the far more detailed tidyverse style guide along with useful packages such as [__lintr__](https://github.com/jimhester/lintr) and [__styler__](http://styler.r-lib.org/) to help enforce good code syntax on yourself.
-
-### Notation and Naming
-
-File names should be meaningful and end with a `.R` extension.
-
-```{r, eval=FALSE}
-# Good
-weather-analysis.R
-emerson-text-analysis.R
-lesson-1b-homework.R
-
-# Bad
-basic-stuff.r
-detail.r
-```
-
-If files need to be run in sequence, prefix them with numbers:
-
-```{r, eval=FALSE}
-0-download.R
-1-preprocessing.R
-2-explore.R
-3-fit-model.R
-```
-
-In R, naming conventions for variables and functions are famously muddled. They include the following:
-
-```{r, eval=FALSE}
-namingconvention        # all lower case; no separator
-naming.convention       # period separator
-naming_convention       # underscore separator (aka snake case)
-namingConvention        # lower camel case
-NamingConvention        # upper camel case
-```
-
-Historically, there has been no clearly preferred approach with multiple naming styles sometimes used within a single package. Bottom line, your naming convention will be driven by your preference but the ultimate goal should be consistency.
-
-```{block, type='tip'}
-Vast majority of the R community uses lowercase with an underscore ("_") to separate words within a variable/function name ('snake_case'). Furthermore, variable names should be nouns and function names should be verbs to help distinguish their purpose. Also, refrain from using existing names of functions (i.e. mean, sum, true).
-```
-
-### Organization
-
-Organization of your code is also important. There’s nothing like trying to decipher 500 lines of code that has no organization. The easiest way to achieve organization is to comment your code. When you have large sections within your script you should separate them to make it obvious of the distinct purpose of the code.
-
-```{r, eval=FALSE}
-# Download Data -------------------------------------------------------------------
-lines of code here
-
-# Preprocess Data -----------------------------------------------------------------
-lines of code here
-
-# Exploratory Analysis ------------------------------------------------------------
-lines of code here
-```
-
-```{block, type='tip'}
-You can easily add these section breaks within RStudio wth Cmd+Shift+R.
-```
-
-Then comments for specific lines of code can be done as follows:
-
-```{r, eval=FALSE}
-code_1  # short comments can be placed to the right of code 
-code_2  # blah
-code_3  # blah
-
-# or comments can be placed above a line of code
-code_4
-
-# Or extremely long lines of commentary that go beyond the suggested 80 
-# characters per line can be broken up into multiple lines. Just don't forget
-# to use the hash on each.
-code_5
-```
-
-```{block, type='tip'}
-You can easily comment or uncomment lines by highlighting the line and then pressing Cmd+Shift+C.
-```
-
-### Syntax
-
-The maximum number of characters on a single line of code should be 80 or less. If you are using RStudio you can have a margin displayed so you know when you need to break to a new line^[__Tools » Global Options » Code » Display__]. Also, when indenting your code use two spaces rather than using tabs. The only exception is if a line break occurs inside parentheses. In this case it is common to do either of the following:
-
-```{r, eval=FALSE}
-# option 1
-super_long_name <- seq(ymd_hm("2015-1-1 0:00"), 
-                       ymd_hm("2015-1-1 12:00"), 
-                       by = "hour")
-
-# option 2
-super_long_name <- seq(
-  ymd_hm("2015-1-1 0:00"),
-  ymd_hm("2015-1-1 12:00"),
-  by = "hour"
-)
-```
-
-
-Proper spacing within your code also helps with readability. Place spaces around all infix operators (`=`, `+`, `-`, `<-`, etc.). The same rule applies when using `=` in function calls. Always put a space after a comma, and never before.
-
-```{r, eval=FALSE}
-# Good
-average <- mean(feet / 12 + inches, na.rm = TRUE)
-
-# Bad
-average<-mean(feet/12+inches,na.rm=TRUE)
-```
-
-There’s a small exception to this rule: `:`, `::` and `:::` don’t need spaces around them.
-
-```{r, eval=FALSE}
-# Good
-x <- 1:10
-base::get
-
-# Bad
-x <- 1 : 10
-base :: get
-```
-
-It is important to think about style when communicating any form of language. Writing code is no exception and is especially important if your code will be read by others. Following these basic style guides will get you on the right track for writing code that can be easily communicated to others.
 
 ### Knowledge check
 
 ```{block, type='todo'}
-1. Review chapters 1 & 2 in the [Tidyverse Style Guide](https://style.tidyverse.org/index.html).
-2. Go back through the script you’ve been writing to execute the exercises in this module and make sure
-   - your naming conventions are consistent,
-   - your code is nicely organized and annotated,
-   - your syntax includes proper spacing.
+1. Make predictions on the **test** data using the logistic regression model you built on the `attrition` data.
+2. Now make predictions using the K-nearest neighbor model.
 ```
+
+
+## Evaluating model performance
+
+
+It is important to understand how our model is performing. With ML models, measuring performance means understanding the predictive accuracy -- the difference between a predicted value and the actual value. We measure predictive accuracy with ___loss functions___.
+
+There are many loss functions to choose from when assessing the performance of a predictive model, each providing a unique understanding of the predictive accuracy and differing between regression and classification models. Furthermore, the way a loss function is computed will tend to emphasize certain types of errors over others and can lead to drastic differences in how we interpret the “optimal model”. Its important to consider the problem context when identifying the preferred performance metric to use. And when comparing multiple models, we need to compare them across the same metric.
+
+### Regression models
+
+The most common loss functions for regression models include:
+
+* __MSE__: Mean squared error\index{mean squared error} is the average of the squared error ($MSE = \frac{1}{n} \sum^n_{i=1}(y_i - \hat y_i)^2$)^[This deviates slightly from the usual definition of MSE in ordinary linear regression, where we divide by $n-p$ (to adjust for bias) as opposed to $n$.]. The squared component results in larger errors having larger penalties. __Objective: minimize__
+
+* __RMSE__: Root mean squared error\index{root mean squared error}.  This simply takes the square root of the MSE metric ($RMSE = \sqrt{\frac{1}{n} \sum^n_{i=1}(y_i - \hat y_i)^2}$) so that your error is in the same units as your response variable. If your response variable units are dollars, the units of MSE are dollars-squared, but the RMSE will be in dollars. __Objective: minimize__
+
+Let's compute the RMSE of our OLS regression model. Remember, we want to assess our model's performance on the test data not the training data since that gives us a better idea of how our model generalizes. To do so, the following:
+
+1. Makes predictions with our test data,
+2. Adds the actual `Sale_Price` values from our test data,
+3. Computes the RMSE.
+
+```{r}
+lm_ols %>% 
+   predict(test) %>%
+   bind_cols(test %>% select(Sale_Price)) %>%
+   rmse(truth = Sale_Price, estimate = .pred)
+```
+
+The RMSE value suggests that, on average, our model mispredicts the expected sale price of a home by about \$45K.
+
+### Classification models
+
+There are many loss functions used for classification models. For simplicity we'll just focus on the overall classification accuracy. I'll illustrate with the attrition data. Here, we build a logistic regression model that seeks to predict `Attrition` based on all available features.
+
+```{block, type='tip'}
+In R, using a "." as in `Attrition ~ .` is a shortcut for saying use all available features to predict `Attrition`.
+```
+
+We then follow the same process as above to make predictions on the test data, add the actual test values for `Attrition`, and then compute the accuracy rate.
+
+```{r}
+logit <- logistic_reg() %>%
+   fit(Attrition ~ ., data = train_strat)
+
+logit %>% 
+   predict(test_strat) %>%
+   bind_cols(test_strat %>% select(Attrition)) %>%
+   accuracy(truth = Attrition, estimate = .pred_class)
+```
+
+### Knowledge check
+
+```{block, type='todo'}
+1. Compute the accuracy rate of your logistic regression model for the `attrition` data.
+2. Now compute the accuracy rate of your K-nearest neighbor model.
+```
+
 
 ## Exercises
 
 ```{block, type='todo'}
-1. Say you have a 12" pizza. Compute the area of the pizza and assign that value to the variable `area`. Now say the `cost` of the pizza was $8. Compute the cost per square inch and assign that value to a variable `ppsi`.
-2. Based on the style guide section rename the `ppsi` variable in question 1 to be more meaningful.
-3. If you did not already do so, install the __tidyverse__ package. 
-4. How many vignettes does the __dplyr__ package have?
-5. Where can you go to learn more about the __tidyverse__ packages? 
-6. When you load the __tidyverse__ packages what other packages is it automatically loading for you?
-7. Using the resource in #5, explain at a high-level what the packages in #6 do. 
+For this exercise we'll use the Boston housing data set. The Boston Housing data set is derived from information collected by the U.S. Census Service concerning housing in the area of Boston MA. Originally published in @harrison1978hedonic, it contains 13 attributes to predict the median property value.
+
+Data attributes:
+
+- __problem type__: supervised regression
+- __response variable__: `medv` median value of owner-occupied homes in USD 1000's (i.e. 21.8, 24.5)
+- __features__: 13 
+- __observations__: 506
+- __objective__: use property attributes to predict the median value of owner-occupied homes
+
+Modeling tasks:
+
+1. Import the Boston housing data set (boston.csv) and split it into a training set and test set using a 70-30% split.
+2. How many observations are in the training set and test set?
+3. Compare the distribution of `cmedv` between the training set and test set.
+4. Fit a linear regression model using all available features to predict `cmedv` and compute the RMSE on the test data.
+5. Fit a K-nearest neighbor model that uses all available features to predict `cmedv` and compute the RMSE on the test data.
+6. How do these models compare?
 ```
 
+```{r, include=FALSE}
+rm(list = ls())
+```
