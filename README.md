@@ -45,33 +45,37 @@ Upon successfully completing this course, you will be able to:
 | **6**         | **Creating Efficient Code in R**                    |
 |               | Control statements & iteration                      |
 |               | Writing functions                                   |
-|               | **MACHINE LEARNING**                                  |
+|               | **MACHINE LEARNING**                                |
 | **7**         | **Introduction to Applied Modeling**                |
+|               | Introduction to machine learning                    |
 |               | Introduction to tidymodels                          |
-|               | Feature engineering & model evaluation/selection    |
-| **8**         | **First regression models**                         |
+| **8**         | **Modeling process continued**                      |
+|               | Feature engineering                                 |
+|               | Model evaluation & selection                        |
+| **9**         | **First regression models**                         |
 |               | Ordinary least squares (OLS)                        |
 |               | OLS cousins                                         |
-| **9**         | **First classification models**                     |
+| **10**        | **First classification models**                     |
 |               | Logistic regression                                 |
 |               | Assessing classification models                     |
-| **10**         | **More regression cousins**                         |
+| **11**        | **More regression cousins**                         |
 |               | Regularized regression                              |
 |               | Multi-adaptive Regression Splines (MARS)            |
-| **11**         | **Venturing away from linearity**                   |
+| **12**        | **Venturing away from linearity**                   |
 |               | K-Nearest neighbor                                  |
 |               | Decision trees                                      |
-| **12**        | **Ensembling trees**                                |
+| **13**        | **Ensembling trees**                                |
 |               | Bagging                                             |
 |               | Random forests                                      |
-| **13**        | **Ensembling trees continued**                      |
+| **14**        | **Ensembling trees continued**                      |
 |               | Gradient boosting                                   |
 |               | XGBoost and other variants                          |
-| **14**        | **Deep learning**                                   |
+| **15**        | **TBD**: one of...                                  |
+|               | **Deep learning**                                   |
 |               | Feedforward neural nets                             |
 |               | A survey of deep learning extensions                |
-| **15**        | **Unsupervised Learning** |
-|               | Clustering.                                         |
+|               | **Unsupervised Learning**                           |
+|               | Clustering,                                         |
 |               | Dimension reductions                                |
 
 ## Getting Started
