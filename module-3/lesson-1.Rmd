@@ -1,0 +1,472 @@
+# Lesson 3a: Linear Regression
+
+```{r setup-3a, include=FALSE}
+# clean up saved items that may carry over from previous lessons
+rm(list = ls())
+
+knitr::opts_chunk$set(
+  fig.align = "center",
+  fig.height = 3.5,
+  fig.width = 6,
+  collapse = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  cache = FALSE
+)
+
+library(kableExtra)
+library(here)
+img_path <- here("images")
+```
+
+_Linear regression_, a staple of classical statistical modeling, is one of the simplest algorithms for doing supervised learning. Though it may seem somewhat dull compared to some of the more modern statistical learning approaches described in later modules, linear regression is still a useful and widely applied statistical learning method. Moreover, it serves as a good starting point for more advanced approaches; as we will see in later modules, many of the more sophisticated statistical learning approaches can be seen as generalizations to or extensions of ordinary linear regression. Consequently, it is important to have a good understanding of linear regression before studying more complex learning methods. This module introduces linear regression with an emphasis on prediction, rather than inference. An excellent and comprehensive overview of linear regression is provided in @kutner-2005-applied. See @faraway-2016-linear for a discussion of linear regression in R.
+
+## Learning objectives
+
+* TBD
+* TBD
+
+## Prerequisites
+
+This lesson leverages the following packages:
+
+```{r lm-pkgs, message=FALSE}
+# Helper packages
+library(dplyr)    # for data manipulation
+library(ggplot2)  # for awesome graphics
+
+# Modeling packages
+library(tidymodels)
+
+# Model interpretability packages
+library(vip)      # variable importance
+```
+
+We'll also continue working with the `ames` data set:
+
+```{r lm-ames-train}
+# stratified sampling with the rsample package
+ames <- AmesHousing::make_ames()
+
+set.seed(123)
+split  <- initial_split(ames, prop = 0.7, strata = "Sale_Price")
+ames_train  <- training(split)
+ames_test   <- testing(split)
+```
+
+## Simple linear regression
+
+Pearson's correlation coefficient is often used to quantify the strength of the linear association between two continuous variables. In this section, we seek to fully characterize that linear relationship. _Simple linear regression_ (SLR) assumes that the statistical relationship between two continuous variables (say $X$ and $Y$) is (at least approximately) linear:
+
+\begin{equation}
+  Y_i = \beta_0 + \beta_1 X_i + \epsilon_i, \quad \text{for } i = 1, 2, \dots, n,
+\end{equation}
+
+where $Y_i$ represents the _i_-th response value, $X_i$ represents the _i_-th feature value, $\beta_0$ and $\beta_1$ are fixed, but unknown constants (commonly referred to as coefficients or parameters) that represent the intercept and slope of the regression line, respectively, and $\epsilon_i$ represents noise or random error. In this module, we'll assume that the errors are normally distributed with mean zero and constant variance $\sigma^2$, denoted $\stackrel{iid}{\sim} \left(0, \sigma^2\right)$. Since the random errors are centered around zero (i.e., $E\left(\epsilon\right) = 0$), linear regression is really a problem of estimating a _conditional mean_:
+
+\begin{equation}
+  E\left(Y_i | X_i\right) = \beta_0 + \beta_1 X_i.
+\end{equation}
+
+For brevity, we often drop the conditional piece and write $E\left(Y | X\right) = E\left(Y\right)$. Consequently, the interpretation of the coefficients is in terms of the average, or mean response. For example, the intercept $\beta_0$ represents the average response value when $X = 0$ (it is often not meaningful or of interest and is sometimes referred to as a _bias term_). The slope $\beta_1$ represents the increase in the average response per one-unit increase in $X$ (i.e., it is a _rate of change_).
+
+## Estimation
+
+Ideally, we want estimates of $\beta_0$ and $\beta_1$ that give us the "best fitting" line. But what is meant by "best fitting"? The most common approach is to use the method of _least squares_\index{least squares} (LS) estimation; this form of linear regression is often referred to as ordinary least squares (OLS) regression. There are multiple ways to measure "best fitting", but the LS criterion finds the "best fitting" line by minimizing the _residual sum of squares_\index{residual sum of squares} (RSS):
+
+\begin{equation}
+  RSS\left(\beta_0, \beta_1\right) = \sum_{i=1}^n\left[Y_i - \left(\beta_0 + \beta_1 X_i\right)\right]^2 = \sum_{i=1}^n\left(Y_i - \beta_0 - \beta_1 X_i\right)^2.
+\end{equation}
+
+The LS estimates of $\beta_0$ and $\beta_1$ are denoted as $\widehat{\beta}_0$ and $\widehat{\beta}_1$, respectively. Once obtained, we can generate predicted values, say at $X = X_{new}$, using the estimated regression equation:
+
+\begin{equation}
+  \widehat{Y}_{new} = \widehat{\beta}_0 + \widehat{\beta}_1 X_{new},
+\end{equation}
+
+where $\widehat{Y}_{new} = \widehat{E\left(Y_{new} | X = X_{new}\right)}$ is the estimated mean response at $X = X_{new}$.
+
+With the Ames housing data, suppose we wanted to model a linear relationship between the total above ground living space of a home (`Gr_Liv_Area`) and sale price (`Sale_Price`). To perform an OLS regression model in R we can use the `linear_reg()` model object, which by default will use the **lm** engine:
+
+```{r lm-model1}
+model1 <- linear_reg() %>%
+   fit(Sale_Price ~ Gr_Liv_Area, data = ames_train)
+```
+
+The fitted model (`model1`) is displayed in the left plot below where the points represent the values of `Sale_Price` in the training data. In the right plot, the vertical lines represent the individual errors, called _residuals_\index{residuals}, associated with each observation. The OLS criterion identifies the "best fitting" line that minimizes the sum of squares of these residuals.
+
+```{r lm-visualize-model1, eval=TRUE, fig.width=10, fig.height=3.5, echo=FALSE, fig.cap="The least squares fit from regressing sale price on living space for the the Ames housing data. Left: Fitted regression line. Right: Fitted regression line with vertical grey bars representing the residuals."}
+# Fitted regression line (full training data)
+p1 <- model1$fit %>%
+  broom::augment() %>%
+  ggplot(aes(Gr_Liv_Area, Sale_Price)) + 
+  geom_point(size = 1, alpha = 0.3) +
+  geom_smooth(se = FALSE, method = "lm") +
+  scale_y_continuous(labels = scales::dollar) +
+  ggtitle("Fitted regression line")
+
+# Fitted regression line (restricted range)
+p2 <- model1$fit %>%
+  broom::augment() %>%
+  ggplot(aes(Gr_Liv_Area, Sale_Price)) + 
+  geom_segment(aes(x = Gr_Liv_Area, y = Sale_Price,
+                   xend = Gr_Liv_Area, yend = .fitted), 
+               alpha = 0.3) +
+  geom_point(size = 1, alpha = 0.3) +
+  geom_smooth(se = FALSE, method = "lm") +
+  scale_y_continuous(labels = scales::dollar) +
+  ggtitle("Fitted regression line (with residuals)")
+
+# Side-by-side plots
+grid.arrange(p1, p2, nrow = 1)
+```
+
+We can extract our fitted model results with `tidy()`:
+
+```{r lm-model1-summary}
+tidy(model1) 
+```
+
+The estimated coefficients from our model are $\widehat{\beta}_0 =$ `r format(round(coef(model1$fit)[1L], digits = 2), scientific=FALSE)` and $\widehat{\beta}_1 =$ `r round(coef(model1$fit)[2L], digits = 2)`. To interpret, we estimate that the mean selling price increases by `r round(coef(model1$fit)[2L], digits = 2)` for each additional one square foot of above ground living space. This simple description of the relationship between the sale price and square footage using a single number (i.e., the slope) is what makes linear regression such an intuitive and popular modeling tool.
+
+One drawback of the LS procedure in linear regression is that it only provides estimates of the coefficients; it does not provide an estimate of the error variance $\sigma^2$! LS also makes no assumptions about the random errors. These assumptions are important for inference and in estimating the error variance which we're assuming is a constant value $\sigma^2$. One way to estimate $\sigma^2$ (which is required for characterizing the variability of our fitted model), is to use the method of _maximum likelihood_ (ML) estimation (see @kutner-2005-applied Section 1.7 for details). The ML procedure requires that we assume a particular distribution for the random errors. Most often, we assume the errors to be normally distributed. In practice, under the usual assumptions stated above, an unbiased estimate of the error variance is given as the sum of the squared residuals divided by $n - p$ (where $p$ is the number of regression coefficients or parameters in the model):
+
+\begin{equation}
+  \widehat{\sigma}^2 = \frac{1}{n - p}\sum_{i = 1} ^ n r_i ^ 2,
+\end{equation}
+
+where $r_i = \left(Y_i - \widehat{Y}_i\right)$ is referred to as the $i$th residual (i.e., the difference between the $i$th observed and predicted response value). The quantity $\widehat{\sigma}^2$ is also referred to as the _mean square error_ (MSE) and its square root is denoted RMSE (see [here](https://bradleyboehmke.github.io/uc-bana-4080/lesson-1b-first-model-with-tidymodels.html#regression-models) for discussion on these metrics). 
+
+```{block, type='note'}
+Typically, these error metrics are computed on a separate validation set or using cross-validation; however, they can also be computed on the same training data the model was trained on as illustrated here.
+```
+
+In R, the RMSE of a linear model, along with many other model metrics, can be extracted with `glance()`. `sigma` in the results below is the RMSE value, which is `r format(glance(model1)[['sigma']], scientific=FALSE)`. This means that, on average, our model's predicted values are \$`r format(glance(model1)[['sigma']], scientific=FALSE)` off from the actual price!  Not very impressive.
+
+```{r lm-model1-sigma}
+# RMSE
+glance(model1)
+
+# We can compute the MSE by simply squaring RMSE (sigma)
+glance(model1) %>% 
+   mutate(MSE = sigma^2) %>%
+   select(sigma, MSE, everything())
+```
+
+## Inference
+
+How accurate are the LS of $\beta_0$ and $\beta_1$? Point estimates by themselves are not very useful. It is often desirable to associate some measure of an estimates variability. The variability of an estimate is often measured by its _standard error_ (SE)---the square root of its variance. If we assume that the errors in the linear regression model are $\stackrel{iid}{\sim} \left(0, \sigma^2\right)$, then simple expressions for the SEs of the estimated coefficients exist and are displayed in the column labeled `std.error` in the output from `tidy()`. From this, we can also derive simple $t$-tests to understand if the individual coefficients are statistically significant from zero. The _t_-statistics for such a test are nothing more than the estimated coefficients divided by their corresponding estimated standard errors (i.e., in the output from `tidy()`, `t value (aka statistic)` = `estimate` / `std.error`). The reported _t_-statistics measure the number of standard deviations each coefficient is away from 0. Thus, large _t_-statistics (greater than two in absolute value, say) roughly indicate statistical significance at the $\alpha = 0.05$ level. The _p_-values for these tests are also reported by `tidy()` in the column labeled `p.value`. 
+
+Under the same assumptions, we can also derive confidence intervals for the coefficients. The formula for the traditional $100\left(1 - \alpha\right)$% confidence interval for $\beta_j$ is
+
+\begin{equation}
+  \widehat{\beta}_j \pm t_{1 - \alpha / 2, n - p} \widehat{SE}\left(\widehat{\beta}_j\right).
+\end{equation}
+
+In R, we can construct such (one-at-a-time) confidence intervals for each coefficient using `confint()` on the `model1$fit` object. For example, a 95% confidence intervals for the coefficients in our SLR example can be computed using
+
+```{r lm-model1-confint}
+confint(model1$fit, level = 0.95)
+```
+
+To interpret, we estimate with 95% confidence that the mean selling price increases between `r round(confint(model1$fit)[2L, 1L], digits = 2)` and `r round(confint(model1$fit)[2L, 2L], digits = 2)` for each additional one square foot of above ground living space. We can also conclude that the slope $\beta_1$ is significantly different from zero (or any other pre-specified value not included in the interval) at the $\alpha = 0.05$ level. This is also supported by the output from `tidy()`.
+
+
+```{block, type='note'}
+Most statistical software, including R, will include estimated standard errors, t-statistics, etc. as part of its regression output. However, it is important to remember that such quantities depend on three major assumptions of the linear regression model:
+
+1. Independent observations
+2. The random errors have mean zero, and constant variance
+3. The random errors are normally distributed
+
+If any or all of these assumptions are violated, then remedial measures need to be taken. For instance, weighted least squares (and other procedures) can be used when the constant variance assumption is violated. Transformations (of both the response and features) can also help to correct departures from these assumptions. The residuals are extremely useful in helping to identify how parametric models depart from such assumptions.
+```
+
+## Multiple linear regression
+
+In practice, we often have more than one predictor. For example, with the Ames housing data, we may wish to understand if above ground square footage (`Gr_Liv_Area`) and the year the house was built (`Year_Built`) are (linearly) related to sale price (`Sale_Price`). We can extend the SLR model so that it can directly accommodate multiple predictors; this is referred to as the _multiple linear regression_ (MLR) model. With two predictors, the MLR model becomes: 
+
+\begin{equation}
+  Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \epsilon,
+\end{equation}
+
+where $X_1$ and $X_2$ are features of interest. In our Ames housing example, $X_1$ represents `Gr_Liv_Area` and $X_2$ represents `Year_Built`. 
+
+In R, multiple linear regression models can be fit by separating all the features of interest with a `+`:
+
+```{r lm-model2, linewidth=56}
+model2 <- linear_reg() %>%
+   fit(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
+
+tidy(model2)
+```
+
+The LS estimates of the regression coefficients are $\widehat{\beta}_1 =$ `r round(coef(model2$fit)[2L], digits = 3)` and $\widehat{\beta}_2 =$ `r round(coef(model2$fit)[3L], digits = 3)` (the estimated intercept is `r round(coef(model2$fit)[1L], digits = 3)`. In other words, every one square foot increase to above ground square footage is associated with an additional `r scales::dollar(coef(model2$fit)[2L])` in __mean selling price__ when holding the year the house was built constant. Likewise, for every year newer a home is there is approximately an increase of `r scales::dollar(coef(model2$fit)[3L])` in selling price when holding the above ground square footage constant.
+
+Now, instead of modeling sale price with the  the "best fitting" line that minimizes residuals, we are modeling sale price with the best fitting hyperplane that minimizes the residuals, which is illustrated below.
+
+```{r lm-mls-plane, echo=FALSE, fig.cap="Average home sales price as a function of year built and total square footage."}
+library(plotly)
+library(reshape2)
+# model
+model2 <- lm(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
+# Setup Axis
+axis_x <- seq(min(ames_train$Gr_Liv_Area), max(ames_train$Gr_Liv_Area), by = 50)
+axis_y <- seq(min(ames_train$Year_Built), max(ames_train$Year_Built), by = 10)
+# Sample points
+lm_surface <- expand.grid(Gr_Liv_Area = axis_x, Year_Built = axis_y, KEEP.OUT.ATTRS = F)
+lm_surface$Sale_Price <- predict.lm(model2, newdata = lm_surface)
+lm_surface <- acast(lm_surface, Year_Built ~ Gr_Liv_Area, value.var = "Sale_Price")
+# plot
+ames_plot <- plot_ly(ames_train,
+                     x = ~ Gr_Liv_Area, 
+                     y = ~ Year_Built, 
+                     z = ~ Sale_Price,
+                     type = "scatter3d", 
+                     mode = "markers",
+                     marker = list(
+                       size = 5,
+                       opacity = 0.25
+                     ),
+                     showlegend = F
+                     )
+# add surface
+ames_plot <- add_trace(p = ames_plot,
+                       z = lm_surface,
+                       x = axis_x,
+                       y = axis_y,
+                       type = "surface")
+ames_plot
+```
+
+You may notice that the fitted plane in the above image is flat; there is no curvature. This is true for all linear models that include only _main effects_ (i.e., terms involving only a single predictor). One way to model curvature is to include _interaction effects_. An interaction occurs when the effect of one predictor on the response depends on the values of other predictors. In linear regression, interactions can be captured via products of features (i.e., $X_1 \times X_2$). A model with two main effects can also include a two-way interaction. For example, to include an interaction between $X_1 =$ `Gr_Liv_Area` and $X_2 =$ `Year_Built`, we introduce an additional product term:
+
+\begin{equation}
+  Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 X_1 X_2 + \epsilon.
+\end{equation}
+
+Note that in R, we use the `:` operator to include an interaction (technically, we could use `*` as well, but `x1 * x2` is shorthand for `x1 + x2 + x1:x2` so is slightly redundant):
+
+```{r lm-model2-w-interaction}
+interaction_model <- linear_reg() %>%
+   fit(Sale_Price ~ Gr_Liv_Area + Year_Built + Gr_Liv_Area:Year_Built, data = ames_train)
+
+tidy(interaction_model)
+```
+
+The curvature that interactions capture can be illustrated in the contour plot below. The left plot illustrates a regression model with main effects only. Note how the fitted regression surface is flat (i.e., it does not twist or bend). While the fitted regression surface with interaction is displayed in the right side plot and you can see the curvature of the relationship induced.
+
+```{block, type='note'}
+Interaction effects are quite prevalent in predictive modeling. Since linear models are an example of parametric modeling, it is up to the analyst to decide if and when to include interaction effects. In later chapters, we'll discuss algorithms that can automatically detect and incorporate interaction effects (albeit in different ways). It is also important to understand a concept called the ***hierarchy principle***---which demands that all lower-order terms corresponding to an interaction be retained in the model---when considering interaction effects in linear regression models.
+```
+
+```{r lm-mlr-fit, echo=FALSE, fig.width=10, fig.height=4.5, fig.cap="In a three-dimensional setting, with two predictors and one response, the least squares regression line becomes a plane. The 'best-fit' plane minimizes the sum of squared errors between the actual sales price (individual dots) and the predicted sales price (plane)."}
+# Fitted models
+fit1 <- lm(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
+fit2 <- lm(Sale_Price ~ Gr_Liv_Area * Year_Built, data = ames_train)
+
+# Regression plane data
+plot_grid <- expand.grid(
+  Gr_Liv_Area = seq(from = min(ames_train$Gr_Liv_Area), to = max(ames_train$Gr_Liv_Area), 
+                    length = 100), 
+  Year_Built = seq(from = min(ames_train$Year_Built), to = max(ames_train$Year_Built), 
+                   length = 100)
+)
+plot_grid$y1 <- predict(fit1, newdata = plot_grid)
+plot_grid$y2 <- predict(fit2, newdata = plot_grid)
+
+# Level plots
+p1 <- ggplot(plot_grid, aes(x = Gr_Liv_Area, y = Year_Built, 
+                            z = y1, fill = y1)) +
+  geom_tile() +
+  geom_contour(color = "white") +
+  viridis::scale_fill_viridis(name = "Predicted\nvalue", option = "inferno") +
+  theme_bw() +
+  ggtitle("Main effects only")
+p2 <- ggplot(plot_grid, aes(x = Gr_Liv_Area, y = Year_Built, 
+                            z = y2, fill = y1)) +
+  geom_tile() +
+  geom_contour(color = "white") +
+  viridis::scale_fill_viridis(name = "Predicted\nvalue", option = "inferno") +
+  theme_bw() +
+  ggtitle("Main effects with two-way interaction")
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+
+In general, we can include as many predictors as we want, as long as we have more rows than parameters! The general multiple linear regression model with _p_ distinct predictors is
+
+\begin{equation}
+  Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p + \epsilon,
+\end{equation}
+
+where $X_i$ for $i = 1, 2, \dots, p$ are the predictors of interest. Note some of these may represent interactions (e.g., $X_3 = X_1 \times X_2$) between or transformations^[Transformations of the features serve a number of purposes (e.g., modeling nonlinear relationships or alleviating departures from common regression assumptions). See @kutner-2005-applied for details.] (e.g., $X_4 = \sqrt{X_1}$) of the original features. Unfortunately, visualizing beyond three dimensions is not practical as our best-fit plane becomes a hyperplane. However, the motivation remains the same where the best-fit hyperplane is identified by minimizing the RSS. The code below creates a third model where we use all features in our data set as main effects (i.e., no interaction terms) to predict `Sale_Price`.
+
+```{r lm-model3}
+# include all possible main effects
+model3 <- linear_reg() %>%
+   fit(Sale_Price ~ ., data = ames_train) 
+
+# print estimated coefficients in a tidy data frame
+tidy(model3)  
+```
+
+## Assessing model accuracy
+
+We've fit three main effects models to the Ames housing data: a single predictor, two predictors, and all possible predictors. But the question remains, which model is "best"? To answer this question we have to define what we mean by "best". In our case, we'll use the [RMSE metric](https://bradleyboehmke.github.io/uc-bana-4080/lesson-1b-first-model-with-tidymodels.html#regression-models) and [cross-validation](https://bradleyboehmke.github.io/uc-bana-4080/lesson-2b-model-evaluation-selection.html#resampling-cross-validation) to determine the "best" model. 
+
+```{block, type='note'}
+In essence, we are going to train our three different models using k-fold cross validation. The model that has the lowest average cross validation RMSE is considered the model that generalizes to new data the best.
+```
+
+First, we'll perform 10-fold cross validation on the single predictor model (`Sales_Price ~ Gr_Liv_Area`):
+
+```{r lm-model1-accuracy}
+# create our 10-fold cross validation object
+set.seed(8451)
+kfolds <- vfold_cv(ames_train, v = 10)
+
+# create our linear regression model object
+lm_mod <- linear_reg()
+
+# add model object and our formula spec to a workflow object
+lm_wflow <- workflow() %>% 
+   add_model(lm_mod) %>%
+   add_formula(Sale_Price ~ Gr_Liv_Area)
+
+# fit our model across the 10-fold CV
+lm_fit_cv <- lm_wflow %>%
+   fit_resamples(kfolds)
+
+# assess results
+results <- collect_metrics(lm_fit_cv)
+results
+```
+
+The resulting cross-validated RMSE is `r scales::dollar(results[1, 'mean'][[1]])` (this is the average RMSE across the 10 CV folds). How should we interpret this? When applied to unseen data, the predictions this model makes are, on average, about `r scales::dollar(results[1, 'mean'][[1]])` off from the actual sale price. 
+
+We can perform cross-validation on the other two models in a similar fashion, which we do in the code chunk below. 
+
+```{r lm-mult-models-cv, warning=FALSE, message=FALSE}
+# two predictor variables
+workflow() %>% 
+   add_model(lm_mod) %>%
+   add_formula(Sale_Price ~ Gr_Liv_Area + Year_Built) %>%
+   fit_resamples(kfolds) %>%
+   collect_metrics()
+
+# using all available predictor variables
+workflow() %>% 
+   add_model(lm_mod) %>%
+   add_formula(Sale_Price ~ .) %>%
+   fit_resamples(kfolds) %>%
+   collect_metrics()
+```
+
+Extracting the results for each model, we see that by adding more information via more predictors, we are able to improve the out-of-sample cross validation performance metrics. Specifically, our cross-validated RMSE reduces from \$46,634 (the model with two predictors) down to \$39,318 (for our full model). In this case, the model with all possible main effects performs the "best" (compared with the other two).
+
+Now, this process of comparing multiple models is fairly common. And when we look at the code above we see a similar process - basically we want to train a linear regression using k-fold resampling across three different formula specifications (1 predictor, 2 predictors, and all available predictors).  
+
+Rather than re-use the same workflow code we can:
+
+1. Create three different model specifications (aka recipes)
+2. Combine these different recipes along with the model(s) of interest into a workflow set object. 
+```{block, type='note'}
+We could pass multiple models to train across each formula but here we are only interested in training a linear regression model (`linear_reg()`) on each formula specification.
+```
+
+
+```{r lm-mult-models-workflowset}
+# create three different model recipes
+one_pred <- recipe(Sale_Price ~ Gr_Liv_Area, data = ames_train)
+two_pred <- recipe(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
+all_pred <- recipe(Sale_Price ~ ., data = ames_train) %>%
+   step_other(all_nominal_predictors(), threshold = 0.05)
+
+# combine into a list
+model_specs <- list(
+   model1 = one_pred,
+   model2 = two_pred,
+   model3 = all_pred
+   )
+
+lm_models <- workflow_set(model_specs, list(lm = linear_reg()), cross = FALSE)
+lm_models
+```
+
+Next, we’d like to train our models using k-fold cross validation -- or in essence, fit these models using resampling. To do so, we will use a purrr-like function called `workflow_map()`. This function takes an initial argument of the function to apply (`fit_resamples()` to the workflows, followed by options to that function (i.e. `kfolds`).
+
+```{block, type='note'}
+Basically we are using `workflow_map()` like a `for` loop or `map` function to iterate over each formula specification and perform some task - `fit_resamples()` in this example.
+```
+
+```{r lm-mult-models-workflowset-results}
+lm_results <- lm_models %>%
+   workflow_map("fit_resamples", resamples = kfolds)
+
+collect_metrics(lm_results) %>% 
+  filter(.metric == "rmse")
+```
+As we add more model comparisons it can be helpful to visualize the results, which we can do with `autoplot()`. Here we just see that model3 has the highest RMSE value compared to model2 and model1. 
+
+```{block, type='note'}
+This isn't the most informative plot right now but as we get into other models and start tuning hyperparameters we'll see how this plot becomes more useful.
+```
+
+
+```{r lm-cv-results, fig.width=8, fig.height=3}
+autoplot(lm_results)
+```
+
+
+## Feature importance
+
+Ok, so we found a linear regression model that performs best compared to other linear regression models. Our next goal is often to interpret the model structure. Linear regression models provide a very intuitive model structure as they assume a monotonic linear relationship between the predictor variables and the response. The linear relationship part of that statement just means, for a given predictor variable, it assumes for every one unit change in a given predictor variable there is a constant change in the response. As discussed earlier in the lesson, this constant rate of change is provided by the coefficient for a predictor. The monotonic relationship means that a given predictor variable will always have a positive or negative relationship. But how do we determine the most influential variables?
+
+Variable importance seeks to identify those variables that are most influential in our model. For linear regression models, this is most often measured by the absolute value of the t-statistic for each model parameter used. Rather than search through each of the 
+
+We can use `vip::vip()` to extract and plot the most important variables. The importance measure is normalized from 100 (most important) to 0 (least important). The plot below illustrates that the top 5 most important variables are `Second_Flr_SF`, `First_Flr_SF`, `Kitchen_QualTypical`, `KitchenQualGood`, and `Mist_Val` respectively.  
+
+```{r lm-vip, fig.height=4.5}
+# extract best performing model and
+# train it on the train/test split
+# and extract the final fit model
+best_lm_model <- lm_results %>% 
+   extract_workflow(id = 'model3_lm') %>%
+   last_fit(split) %>%
+   extract_fit_parsnip()
+
+# plot top 10 influential features
+best_lm_model %>%
+   vip(num_features = 20)
+```
+
+This is basically saying that our model finds that these are the most influential features in our data set that have the largest impact on the predicted outcome. If we order our data based on the t-statistic we see similar results. 
+
+```{r lm-best-model-t-stat}
+tidy(best_lm_model) %>%
+   arrange(desc(statistic))
+```
+We can also use these results above to see the impact that these features have on the predicted value. For example, for every one additional unit of `Second_Flr_SF` our model adds \$67.98 to the predicted `Sale_Price`. 
+
+## Final thoughts
+
+Linear regression is usually the first supervised learning algorithm you will learn. The approach provides a solid fundamental understanding of the supervised learning task; however, as we’ll discuss in the next lesson there are several concerns that result from the assumptions required by linear regression. Future lessons will demonstrate extensions of linear regression that integrate dimension reduction steps into the algorithm that help address some of the problems with linear regression, and we'll see how more advanced supervised algorithms can provide greater flexibility and improved accuracy. Nonetheless, understanding linear regression provides a foundation that will serve you well in learning these more advanced methods.
+
+## Exercises
+
+```{block, type='todo'}
+Using the Boston housing data set where the response feature is the median value of homes within a census tract (`cmedv`):
+
+1. Pick a single feature and apply a simple linear regression model.
+   - Interpret the feature's coefficient
+   - What is the model's performance? 
+2. Pick another feature to add to the model.
+   - Before applying the model why do you think this feature will help?
+   - Apply a linear regression model with the two features and compare to the simple linear model.
+   - Interpret the coefficients.
+3. Now apply a model that includes all the predictors.
+   - How does this model compare to the previous two?
+4. Compare the above three models using 10-fold cross validation.
+   - Which model do you think will generalize to unseen data the best?
+   - Using the best model from this resampling procedure, identify the top 3 most influential features for this model and interpret their coefficients.
+```
