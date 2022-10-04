@@ -1,6 +1,6 @@
-# Lesson 2b: Model evaluation & selection
+# Lesson 3b: Multiple linear regression
 
-```{r setup-2b, include=FALSE}
+```{r setup-3b, include=FALSE}
 # clean up saved items that may carry over from previous lessons
 rm(list = ls())
 
@@ -19,435 +19,381 @@ library(here)
 img_path <- here("images")
 ```
 
-The last couple of lessons gave you a good introduction to building predictive models using the tidymodels construct. This lesson is going to go deeper into the idea of model evaluation & selection. We’ll discuss how to incorporate cross-validation procedures to give you a more robust assessment of model performance. We’ll also discuss the concept of hyperparameter tuning, the bias-variance tradeoff, and how to implement a tuning strategy to find a model the maximizes generalizability.
+In the last lesson we learned how to use one predictor variable to predict a numeric response. However, we often have more than one predictor. For example, with the Ames housing data, we may wish to understand if above ground square footage (`Gr_Liv_Area`) and the year the house was built (`Year_Built`) are (linearly) related to sale price (`Sale_Price`). We can extend the SLR model so that it can directly accommodate multiple predictors; this is referred to as the _multiple linear regression_ (MLR) model and is the focus for this lesson.
 
 ## Learning objectives
 
-By the end of this lesson you will be able to:
+By the end of this lesson you will know how to:
 
-1. Perform cross-validation procedures for more robust model performance assessment.
-2. Execute hyperparameter tuning to find optimal model parameter settings.
+* Fit, interpret, and assess the performance of a multiple linear regression model.
+* Include categorical features in a linear regression model and interpret their results.
+* Asses the most influential predictor variables in a linear regression model.
 
 ## Prerequisites
 
-For this lesson we'll use several packages provided via **tidymodels** and we'll use the `ames` housing data. However, for this module we'll use the Ames housing data provided by the **AmesHousing** package. 
+This lesson leverages the following packages:
 
-```{block, type='note'}
-Take a minute to check out the Ames data from `AmesHousing::make_ames()`. It is very similar to the Ames data provided in the CSV. Note that the various quality/condition variables (i.e. `Overall_Qual`) are already encoded as ordinal factors.
-```
+```{r mlr-pkgs, message=FALSE}
+# Data wrangling & visualization packages
+library(tidyverse)
 
-```{r}
+# Modeling packages
 library(tidymodels)
+```
 
+We'll also continue working with the `ames` data set:
+
+```{r mlr-ames-train}
+# stratified sampling with the rsample package
 ames <- AmesHousing::make_ames()
+
+set.seed(123)
+split  <- initial_split(ames, prop = 0.7, strata = "Sale_Price")
+ames_train  <- training(split)
+ames_test   <- testing(split)
 ```
 
-Let's go ahead and create our train-test split:
+## Adding additional predictors
 
-```{r 2b-train-test-split}
-# create train/test split
-set.seed(123)  # for reproducibility
-split  <- initial_split(ames, prop = 0.7)
-train  <- training(split)
-test   <- testing(split)
-```
-
-
-## Resampling & cross-validation
-
-In the previous lessons we split our data into training and testing sets and we assessed the performance of our model on the test set. Unfortunately, there are a few pitfalls to this approach:
-
-1. If our dataset is small, a single test set may not provide realistic expectations of our model’s performance on unseen data.
-2. A single test set does not provide us any insight on variability of our model’s performance.
-3. Using our test set to drive our model building process can bias our results via data leakage.
-
-Resampling methods provide an alternative approach by allowing us to repeatedly fit a model of interest to parts of the training data and test its performance on other parts of the training data.
-
-```{r 2b-resampling, echo=FALSE, out.width='90%', out.height='90%', fig.cap="Illustration of resampling."}
-knitr::include_graphics(here(img_path, "resampling.svg"))
-```
-
-```{block, type='note'}
-This allows us to train and validate our model entirely on the training data and not touch the test data until we have selected a final “optimal” model.
-```
-
-The two most commonly used resampling methods include **k-fold cross-validation** and **bootstrap sampling**. This lesson focuses on using k-fold cross-validation.
-
-## K-fold cross-validation
-
-Cross-validation consists of repeating the procedure such that the training and testing sets are different each time. Generalization performance metrics are collected for each repetition and then aggregated. As a result we can get an estimate of the variability of the model’s generalization performance.
-
-k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into *k* groups (aka folds) of approximately equal size.
-
-```{r 2b-cv-diagram, echo=FALSE, fig.cap="Illustration of k-fold sampling across a data sets index.", out.width='90%', out.height='90%'}
-knitr::include_graphics(here(img_path, "cross_validation_diagram.png"))
-```
-
-The model is fit on $k-1$ folds and then the remaining fold is used to compute model performance.  This procedure is repeated _k_ times; each time, a different fold is treated as the validation set. Consequently, with _k_-fold CV, every observation in the training data will be held out one time to be included in the assessment/validation set. This process results in _k_ estimates of the generalization error (say $\epsilon_1, \epsilon_2, \dots, \epsilon_k$). Thus, the _k_-fold CV estimate is computed by averaging the _k_ test errors, providing us with an approximation of the error we might expect on unseen data.
-
-```{r 2b-modeling-process-cv-diagram, echo=FALSE, out.width='90%', out.height='90%', fig.cap="Illustration of a 5-fold cross validation procedure."}
-knitr::include_graphics(here(img_path, "cv.png"))
-```
-
-```{block, type='tip'}
-In practice, one typically uses k=5 or k=10. There is no formal rule as to the size of k; however, as k gets larger, the difference between the estimated performance and the true performance to be seen on the test set will decrease.
-```
-
-To implement k-fold CV we first make a resampling object. In this example we create a 10-fold resampling object.
+In the last lesson we saw how we could use the above ground square footage (`Gr_Liv_Area`) of a house to predict the sale price (`Sale_Price`). 
 
 ```{r}
-kfolds <- vfold_cv(train, v = 10)
+model1 <- linear_reg() %>%
+   fit(Sale_Price ~ Gr_Liv_Area, data = ames_train)
+
+tidy(model1)
 ```
+From our model we interpreted the results as that the mean selling price increases by `r round(coef(model1$fit)[2L], digits = 2)` for each additional one square foot of above ground living space.  We also determined that the `Gr_Liv_Area` coefficient is statistically different from zero based on the `p.value`.
 
-We can now create our random forest model object and create a workflow object as we did in the previous lesson. To fit our model across our 10-folds we just use `fit_resamples()`.
+And, we saw that our model has a generalization RMSE value of 55942, which means that on average, our model's predicted sales price differs from the actual sale price by \$55,942.
 
-```{r 2b-rf-cv}
-# create our random forest model object
-rf_mod <- rand_forest() %>%
-   set_mode('regression')
-
-# add model object and our formula spec to a workflow object
-rf_wflow <- workflow() %>% 
-   add_model(rf_mod) %>%
-   add_formula(Sale_Price ~ .)
-
-# fit our model across the 10-fold CV
-rf_fit_cv <- rf_wflow %>%
-   fit_resamples(kfolds)
-```
-
-We can then get our average 10-fold cross validation error with `collect_metrics()`:
-
-```{r 2b-overall-cv-results}
-collect_metrics(rf_fit_cv)
-```
-
-If we want to see the model evaluation metric (i.e. RMSE) for each fold we just need to unnest the `rf_fit_cv` object. 
-
-```{block, type='tip'}
-We have not discussed nested data frames but you can read about them [here](https://tidyr.tidyverse.org/articles/nest.html) 
-```
-
-```{r 2b-cv-fold-results}
-rf_fit_cv %>% 
-   unnest(.metrics) %>%
-   filter(.metric == 'rmse')
-```
-
-## Hyperparameter tuning
-
-Say you have the below relationship between a response variable and some predictor variable `x` (gray dots). Given two different models fit to this relationship (blue line), which model do you prefer?
-
-```{r 2b-bias-variance-comparison, echo=FALSE, out.width='90%', out.height='90%', fig.cap="Between model A and B, which do you think is better?"}
-knitr::include_graphics(here(img_path, "bias-variance-comparison.png"))
-```
-
-The image above illustrates the fact that prediction errors can be decomposed into two main subcomponents we care about:
-
-* error due to “bias”
-* error due to “variance”
-
-Understanding how different sources of error lead to bias and variance helps us improve the data fitting process resulting in more accurate models.
-
-### Bias
-
-Error due to ***bias*** is the difference between the expected (or average) prediction of our model and the correct value which we are trying to predict. It measures how far off in general a model’s predictions are from the correct value, which provides a sense of how well a model can conform to the underlying structure of the data.
-
-The left image below illustrates an example where a polynomial model does not capture the underlying relationship well. Linear models are classical examples of high bias models as they are less flexible and rarely capture non-linear, non-monotonic relationships.
-
-We also need to think of bias-variance in relation to resampling. Models with high bias are rarely affected by the noise introduced by resampling. If a model has high bias, it will have consistency in its resampling performance as illustrated by the right plot below.
-
-```{r modeling-process-bias-model, echo=FALSE, fig.height=4, fig.width=10, fig.cap="A biased polynomial model fit to a single data set does not capture the underlying non-linear, non-monotonic data structure (left).  Models fit to 25 bootstrapped replicates of the data are underterred by the noise and generates similar, yet still biased, predictions (right).", warning=FALSE, message=FALSE}
-# Simulate some nonlinear monotonic data
-set.seed(123)  # for reproducibility
-x <- seq(from = 0, to = 2 * pi, length = 500)
-y <- sin(x) + rnorm(length(x), sd = 0.3)
-df <- data.frame(x, y) %>%
-  filter(x < 4.5)
-# Single model fit
-bias_model <- lm(y ~ I(x^3), data = df)
-df$predictions <- predict(bias_model, df)
-p1 <- ggplot(df, aes(x, y)) +
-  geom_point(alpha = .3) +
-  geom_line(aes(x, predictions), size = 1.5, color = "dodgerblue") +
-  scale_y_continuous("Response", limits = c(-1.75, 1.75), expand = c(0, 0)) +
-  scale_x_continuous(limits = c(0, 4.5), expand = c(0, 0)) +
-  ggtitle("Single biased model fit")
-# Bootstrapped model fit
-bootstrap_n <- 25
-bootstrap_results <- NULL
-for(i in seq_len(bootstrap_n)) {
-  set.seed(i)  # for reproducibility
-  index <- sample(seq_len(nrow(df)), nrow(df), replace = TRUE)
-  df_sim <- df[index, ]
-  fit <- lm(y ~ I(x^3), data = df_sim)
-  df_sim$predictions <- predict(fit, df_sim)
-  df_sim$model <- paste0("model", i)
-  df_sim$ob <- index
-  bootstrap_results <- rbind(bootstrap_results, df_sim)
-}
-p2 <- ggplot(bootstrap_results, aes(x, predictions, color = model)) +
-  geom_line(show.legend = FALSE, size = .5) +
-  scale_y_continuous("Response", limits = c(-1.75, 1.75), expand = c(0, 0)) +
-  scale_x_continuous(limits = c(0, 4.5), expand = c(0, 0)) +
-  ggtitle("25 biased models fit to bootstrap samples")
-gridExtra::grid.arrange(p1, p2, nrow = 1)
-```
-
-### Variance
-
-Error due to ***variance*** is the variability of a model prediction for a given data point.
-
-Many models (e.g., k-nearest neighbor, decision trees, gradient boosting machines) are very adaptable and offer extreme flexibility in the patterns that they can fit to. However, these models offer their own problems as they run the risk of overfitting to the training data. Although you may achieve very good performance on your training data, the model will not automatically generalize well to unseen data.
-
-```{r modeling-process-variance-model, echo=FALSE, fig.height=4, fig.width=10, fig.cap="A high variance _k_-nearest neighbor model fit to a single data set captures the underlying non-linear, non-monotonic data structure well but also overfits to individual data points (left).  Models fit to 25 bootstrapped replicates of the data are deterred by the noise and generate highly variable predictions (right).", warning=FALSE, message=FALSE}
-library(caret)
-
-# Simulate some nonlinear monotonic data
-set.seed(123)  # for reproducibility
-x <- seq(from = 0, to = 2 * pi, length = 500)
-y <- sin(x) + rnorm(length(x), sd = 0.3)
-df <- data.frame(x, y) %>%
-  filter(x < 4.5)
-# Single model fit
-variance_model <- knnreg(y ~ x, k = 3, data = df)
-df$predictions <- predict(variance_model, df)
-p1 <- ggplot(df, aes(x, y)) +
-  geom_point(alpha = .3) +
-  geom_line(aes(x, predictions), size = 1.5, color = "dodgerblue") +
-  scale_y_continuous("Response", limits = c(-1.75, 1.75), expand = c(0, 0)) +
-  scale_x_continuous(limits = c(0, 4.5), expand = c(0, 0)) +
-  ggtitle("Single high variance model fit")
-# Bootstrapped model fit
-bootstrap_n <- 25
-bootstrap_results <- NULL
-for(i in seq_len(bootstrap_n)) {
-  set.seed(i)  # for reproducibility
-  index <- sample(seq_len(nrow(df)), nrow(df), replace = TRUE)
-  df_sim <- df[index, ]
-  fit <- knnreg(y ~ x, k = 3, data = df_sim)
-  df_sim$predictions <- predict(fit, df_sim)
-  df_sim$model <- paste0("model", i)
-  df_sim$ob <- index
-  bootstrap_results <- rbind(bootstrap_results, df_sim)
-}
-p2 <- ggplot(bootstrap_results, aes(x, predictions, color = model)) +
-  geom_line(show.legend = FALSE) +
-  scale_y_continuous("Response", limits = c(-1.75, 1.75), expand = c(0, 0)) +
-  scale_x_continuous(limits = c(0, 4.5), expand = c(0, 0)) +
-  ggtitle("25 high variance models fit to bootstrap samples")
-gridExtra::grid.arrange(p1, p2, nrow = 1)
-```
-
-Since high variance models are more prone to overfitting, using resampling procedures are critical to reduce this risk. Moreover, many algorithms that are capable of achieving high generalization performance have lots of hyperparameters that control the level of model complexity (i.e., the tradeoff between bias and variance).
-
-```{block, type='note'}
-Many high performing models (i.e. random forests, gradient boosting machines, deep learning) are very flexible in the patterns they can conform to due to the many hyperparameters they have. However, this also means they are prone to overfitting (aka can have high variance error).
-```
-
-### Hyperparameters
-
-***Hyperparameters*** (aka tuning parameters) are the “knobs to twiddle” to control the complexity of machine learning algorithms and, therefore, the ***bias-variance trade-off***. Not all algorithms have hyperparameters (e.g., ordinary least squares8); however, most have at least one or more.
-
-Some models have very few hyperparameters. For example, *k*-nearest neighbor models have a single hyperparameter (*k*) that determines the predicted value to be made based on the k nearest observations in the training data to the one being predicted. If k is small (e.g., $k = 3$), the model will make a prediction for a given observation based on the average of the response values for the 3 observations in the training data most similar to the observation being predicted. This often results in highly variable predicted values because we are basing the prediction (in this case, an average) on a very small subset of the training data. As *k* gets bigger, we base our predictions on an average of a larger subset of the training data, which naturally reduces the variance in our predicted values (remember this for later, averaging often helps to reduce variance!).
-
-The plot below illustrates this point. Smaller *k* values (e.g., 2, 5, or 10) lead to high variance (but lower bias) and larger values (e.g., 150) lead to high bias (but lower variance). The optimal *k* value might exist somewhere between 20–50, but how do we know which value of k to use?
-
-```{r modeling-process-knn-options, fig.width=10, fig.height=5, echo=FALSE, fig.cap="_k_-nearest neighbor model with differing values for _k_.", warning=FALSE, message=FALSE}
-k_results <- NULL
-k <- c(2, 5, 10, 20, 50, 150)
-
-# Simulate some nonlinear monotonic data
-set.seed(123)  # for reproducibility
-x <- seq(from = 0, to = 2 * pi, length = 500)
-y <- sin(x) + rnorm(length(x), sd = 0.3)
-df <- data.frame(x, y) %>%
-  filter(x < 4.5)
-
-# Fit many different models
-for(i in seq_along(k)) {
-  df_sim <- df
-  fit <- caret::knnreg(y ~ x, k = k[i], data = df_sim)
-  df_sim$predictions <- predict(fit, df_sim)
-  df_sim$model <- paste0("k = ", stringr::str_pad(k[i], 3, pad = " "))
-  k_results <- rbind(k_results, df_sim)
-}
-ggplot() +
-  geom_point(data = df, aes(x, y), alpha = .3) +
-  geom_line(data = k_results, aes(x, predictions), color = "dodgerblue", size = 1.5) +
-  scale_y_continuous("Response", limits = c(-1.75, 1.75), expand = c(0, 0)) +
-  scale_x_continuous(limits = c(0, 4.5), expand = c(0, 0)) +
-  facet_wrap(~ model)
-```
-
-```{block, type='tip'}
-Some algorithms such as ordinary least squares don't have any hyperparameters. Some algorithms such as *k*-nearest neighbor have one or two hyperparameters. And some algorithms such as gradient boosted machines (GBMs) and deep learning models have many.
-```
-
-***Hyperparameter tuning*** is the process of screening hyperparameter values (or combinations of hyperparameter values) to find a model that balances bias & variance so that the model generalizes well to unseen data.
-
-Let's illustrate by using decision trees. One of the key hyperparameters in decision trees is the depth of the tree. 
-
-```{block, type='tip'}
-This lesson does not dig into the decision tree algorithm but if you want to better understand the hyperparameters for decision trees you can read about them [here](https://bradleyboehmke.github.io/HOML/DT.html#how-deep)
-```
- 
-Say we wanted to assess what happens when we grow the decision tree 5 levels deep. We could do this manually:
-
-```{r 2b-dt-tree-depth5}
-# create our decision tree model object
-dt_mod <- decision_tree(tree_depth = 5) %>%
-   set_mode('regression')
-
-# add model object and our formula spec to a workflow object
-dt_wflow <- workflow() %>% 
-   add_model(dt_mod) %>%
-   add_formula(Sale_Price ~ .)
-
-# fit our model across the 10-fold CV
-dt_fit_cv <- dt_wflow %>%
-   fit_resamples(kfolds)
-
-# assess results
-collect_metrics(dt_fit_cv)
-```
-
-But what if we wanted to assess and compare different `tree_depth` values. Moreover, decision trees have another key hyperparameter `cost_complexity`. So what if we wanted to assess a few values of that hyperaparameter in combination with `tree_depth`? Adjusting these values manually would be painstakingly burdensome.
-
-```{block, type = 'note'}
-Again, don't worry if you have no idea what these hyperparameters mean. Just realize we want to toggle these values to try find an optimal model.
-```
-
-### Full cartesian grid search
-
-For this we could use a ***full cartesian grid search***. A full cartesian grid search takes the values provided for each hyperparameter and assesses every combination. 
-
-First, let's rebuild our decision tree model object; however, this time we'll create a model specification that identifies which hyperparameters we plan to tune.
-
-```{r 2b-dt-tune}
-dt_mod <- decision_tree(
-    cost_complexity = tune(), # <-- these are hyperparameters we want to tune
-    tree_depth = tune()       # <-- these are hyperparameters we want to tune
-  ) %>% 
-  set_engine("rpart") %>% 
-  set_mode("regression")
-```
-
-```{block, type='note'}
-Think of `tune()` here as a placeholder. After the tuning process, we will select a single numeric value for each of these hyperparameters. For now, we specify our parsnip model object and identify the hyperparameters we will `tune()`.
-```
-
-Next, we create our tuning grid of hyperparameter values we want to assess. The function `grid_regular()` is from the **dials** package. It chooses sensible values to try for each hyperparameter; here, we asked for 3 of each. Since we have two to tune, `grid_regular()` returns $3 \times 3 = 9$ different possible tuning combinations to try.
-
-```{block, type='tip'}
-A full cartesian grid search can explode as you add more hyperparameters and values to assess. When this happens its best to start using `grid_random` or `grid_latin_hypercube` to reduce combinatorial explosion and computation time.
-```
-
-
-```{r 2b-create-grid}
-dt_grid <- grid_regular(
-   cost_complexity(),
-   tree_depth(),
-   levels = 3
-   )
-
-dt_grid
-```
-
-Now that we have our tuning grid and model object defined we can:
-
-1. Create our k-fold CV object (5-fold in this example),
-2. Add our model to a workflow object and specify the formula,
-3. Apply `tune_grid()` to execute our hyperparameter tuning.
-
-```{r 2b-tune-dt}
-# 5-fold instead of 10-fold to reduce computation time
-kfolds <- vfold_cv(train, v = 5)
-
-# add model object and our formula spec to a workflow object
-dt_wflow <- workflow() %>% 
-   add_model(dt_mod) %>%
-   add_formula(Sale_Price ~ .)
-
-# fit our model across the 5-fold CV
-dt_grid_search <- dt_wflow %>%
-   tune_grid(
-      resamples = kfolds,
-      grid = dt_grid
-   )
-```
-
-We can check out the hyperparameter combinations that resulted in the best model performance with `show_best()`. Here we look at the top 5 models and we can see that the top 4 all tend to perform very similarly. It appears that deeper trees with smaller cost complexity factor tend to perform best on this data set.
-
-```{r 2b-best-results}
-dt_grid_search %>%
-   show_best(metric = 'rmse')
-```
-
-## Finalizing our model
-
-If we are satisfied with our results and we want to use the best hyperparameter values for our best decision tree model, we can select it with `select_best()`:
-
-```{r 2b-best-model}
-# select best model based on RMSE metric
-best_tree <- dt_grid_search %>%
-   select_best(metric = 'rmse')
-
-best_tree
-```
-We can then update (or “finalize”) our workflow object `dt_wflow` with the values from `select_best()`.
-
-```{r 2b-final-workflow}
-final_wflow <- dt_wflow %>%
-   finalize_workflow(best_tree)
-```
-
-Finally, let’s fit this final model to the training data and use our test data to estimate the model performance we expect to see with new data. We can use the function `last_fit()` with our finalized model; this function fits the finalized model on the full training data set and evaluates the finalized model on the testing data.
-
-```{block, type='note'}
-We pass the initial train-test split object we created at the beginning of this lesson to `last_fit`.
-```
-
-
-```{r 2b-final-fit}
-final_fit <- final_wflow %>%
-   last_fit(split)
-
-final_fit %>%
-   collect_predictions() %>%
+```{r}
+model1 %>%
+   predict(ames_test) %>%
+   bind_cols(ames_test) %>%
    rmse(truth = Sale_Price, estimate = .pred)
 ```
 
-As we can see our test RMSE is less than our CV RMSE. This indicates that we did not overfit during our tuning procedure, which is a good thing.
+However, we are only using a single predictor variable to try predict the sale price.  In reality, we likely can use other home attributes to do a better job at predicting sale price. For example, we may wish to understand if above ground square footage (`Gr_Liv_Area`) and the year the house was built (`Year_Built`) are (linearly) related to sale price (`Sale_Price`). We can extend the SLR model so that it can directly accommodate multiple predictors; this is referred to as the _multiple linear regression_ (MLR) model.
 
-Perhaps we would also like to understand what variables are important in this final model. We can use the **vip** package to estimate variable importance based on the model’s structure.
+With two predictors, the MLR model becomes: 
+
+\begin{equation}
+  \widehat{y} = b_0 + b_1 x_1 + b_2 x_2,
+\end{equation}
+
+where $x_1$ and $x_2$ are features of interest. In our Ames housing example, $x_1$ can represent `Gr_Liv_Area` and $x_2$ can represent `Year_Built`. 
+
+In R, multiple linear regression models can be fit by separating all the features of interest with a `+`:
+
+```{r lm-model2, linewidth=56}
+model2 <- linear_reg() %>%
+   fit(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
+
+tidy(model2)
+```
+
+The LS estimates of the regression coefficients are $\widehat{b}_1 =$ `r round(coef(model2$fit)[2L], digits = 3)` and $\widehat{b}_2 =$ `r round(coef(model2$fit)[3L], digits = 3)` (the estimated intercept is `r round(coef(model2$fit)[1L], digits = 3)`. In other words, every one square foot increase to above ground square footage is associated with an additional `r scales::dollar(coef(model2$fit)[2L])` in mean selling price ___when holding the year the house was built constant___. Likewise, for every year newer a home is there is approximately an increase of `r scales::dollar(coef(model2$fit)[3L])` in selling price ___when holding the above ground square footage constant___.
+
+As our model results show above, the `p.value`s for our two coefficients suggest that both are stastically different than zero. This can also be confirmed by computing our confidence intervals around these coefficient estimates as we did before. 
+
+```{r}
+confint(model2$fit)
+```
+
+
+Now, instead of modeling sale price with the  the "best fitting" line that minimizes residuals, we are modeling sale price with the best fitting hyperplane that minimizes the residuals, which is illustrated below.
+
+```{r lm-mls-plane, echo=FALSE, fig.cap="Average home sales price as a function of year built and total square footage."}
+library(plotly)
+library(reshape2)
+# model
+model2 <- lm(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
+# Setup Axis
+axis_x <- seq(min(ames_train$Gr_Liv_Area), max(ames_train$Gr_Liv_Area), by = 50)
+axis_y <- seq(min(ames_train$Year_Built), max(ames_train$Year_Built), by = 10)
+# Sample points
+lm_surface <- expand.grid(Gr_Liv_Area = axis_x, Year_Built = axis_y, KEEP.OUT.ATTRS = F)
+lm_surface$Sale_Price <- predict.lm(model2, newdata = lm_surface)
+lm_surface <- acast(lm_surface, Year_Built ~ Gr_Liv_Area, value.var = "Sale_Price")
+# plot
+ames_plot <- plot_ly(ames_train,
+                     x = ~ Gr_Liv_Area, 
+                     y = ~ Year_Built, 
+                     z = ~ Sale_Price,
+                     type = "scatter3d", 
+                     mode = "markers",
+                     marker = list(
+                       size = 5,
+                       opacity = 0.25
+                     ),
+                     showlegend = F
+                     )
+# add surface
+ames_plot <- add_trace(p = ames_plot,
+                       z = lm_surface,
+                       x = axis_x,
+                       y = axis_y,
+                       type = "surface")
+ames_plot
+```
+
+
+### Knowledge check
+
+```{block, type='todo'}
+Using the `ames_train` data:
+
+1. Fit a MLR model where `Sale_Price` is a function of `Gr_Liv_Area` and `Garage_Cars`.
+2. Interpret the coefficients. Are they both statistically different from zero?
+3. Compute and interpret the ***generalization*** RMSE for this model.
+4. How does this model compare to the model based on just `Gr_Liv_Area`?
+```
+
+## Interactions
+
+You may notice that the fitted plane in the above image is flat; there is no curvature. This is true for all linear models that include only _main effects_ (i.e., terms involving only a single predictor). One way to model curvature is to include _interaction effects_. An interaction occurs when the effect of one predictor on the response depends on the values of other predictors. 
+
+Suppose that when people buy older homes they care more about the historical nature and beauty of the home rather than the total square footage.  However, as older historical homes grow larger in size we see a compounding impact to the value of the home. This is known as a synergy effect -- as one feature changes there is a larger or smaller effect of the other feature. 
+
+In linear regression, interactions can be captured via products of features (i.e., $x_1 \times x_2$). A model with two main effects can also include a two-way interaction. For example, to include an interaction between $x_1 =$ `Gr_Liv_Area` and $x_2 =$ `Year_Built`, we introduce an additional product term:
+
+\begin{equation}
+  \widehat{y} = b_0 + b_1 x_1 + b_2 x_2 + b_3 x_1 x_2.
+\end{equation}
+
+Note that in R, we use the `:` operator to include an interaction (technically, we could use `*` as well, but `x1 * x2` is shorthand for `x1 + x2 + x1:x2` so is slightly redundant):
+
+```{r lm-model2-w-interaction}
+interaction_model <- linear_reg() %>%
+   fit(Sale_Price ~ Gr_Liv_Area + Year_Built + Gr_Liv_Area:Year_Built, data = ames_train)
+
+tidy(interaction_model)
+```
+
+In this example, we see that the two main effects (`Gr_Liv_Area` & `Year_Built`) are statistically significant and so is the interaction term (`Gr_Liv_Area:Year_Built`). So how do we interpret these results?  
+
+Well, we can say that for every 1 additional square feet in `Gr_Liv_Area`, the `Sale_Price` of a home increases by $b_1 + b_3 \times \text{Year_Built}$ = -728.5084 + 0.4168489 x `Year_Built`. Likewise, for each additional year that a home was built, the `Sale_Price` of a home increases by $b_2 + b_3 \times \text{Gr_Liv_Area}$ = 430.8755 + 0.4168489 x `Gr_Liv_Area`.
+
+Adding an interaction term now makes the change in one variable non-linear because it includes an additional change based on another feature. This non-linearity (or curvature) that interactions capture can be illustrated in the contour plot below. The left plot illustrates a regression model with main effects only. Note how the fitted regression surface is flat (i.e., it does not twist or bend). While the fitted regression surface with interaction is displayed in the right side plot and you can see the curvature of the relationship induced.
+
+```{r lm-mlr-fit, echo=FALSE, fig.width=10, fig.height=4.5, fig.cap="In a three-dimensional setting, with two predictors and one response, the least squares regression line becomes a plane. The 'best-fit' plane minimizes the sum of squared errors between the actual sales price (individual dots) and the predicted sales price (plane)."}
+# Fitted models
+fit1 <- lm(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
+fit2 <- lm(Sale_Price ~ Gr_Liv_Area * Year_Built, data = ames_train)
+
+# Regression plane data
+plot_grid <- expand.grid(
+  Gr_Liv_Area = seq(from = min(ames_train$Gr_Liv_Area), to = max(ames_train$Gr_Liv_Area), 
+                    length = 100), 
+  Year_Built = seq(from = min(ames_train$Year_Built), to = max(ames_train$Year_Built), 
+                   length = 100)
+)
+plot_grid$y1 <- predict(fit1, newdata = plot_grid)
+plot_grid$y2 <- predict(fit2, newdata = plot_grid)
+
+# Level plots
+p1 <- ggplot(plot_grid, aes(x = Gr_Liv_Area, y = Year_Built, 
+                            z = y1, fill = y1)) +
+  geom_tile() +
+  geom_contour(color = "white") +
+  viridis::scale_fill_viridis(name = "Predicted\nvalue", option = "inferno") +
+  theme_bw() +
+  ggtitle("Main effects only")
+p2 <- ggplot(plot_grid, aes(x = Gr_Liv_Area, y = Year_Built, 
+                            z = y2, fill = y1)) +
+  geom_tile() +
+  geom_contour(color = "white") +
+  viridis::scale_fill_viridis(name = "Predicted\nvalue", option = "inferno") +
+  theme_bw() +
+  ggtitle("Main effects with two-way interaction")
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
 
 ```{block, type='note'}
-Don't worry, we'll talk about **vip** more later on and just how this measure of importance is computed.
+Interaction effects are quite prevalent in predictive modeling. Since linear models are an example of parametric modeling, it is up to the analyst to decide if and when to include interaction effects. This becomes quite tedious and unrealistic for larger data sets.
+
+In later lessons, we'll discuss algorithms that can automatically detect and incorporate interaction effects (albeit in different ways). For now, just realize that adding interactions is possible with MLR models.
+```
+
+## Qualitative predictors
+
+In our discussion so far, we have assumed that all variables in our linear regression model are *quantitative*. But in practice, this is not necessarily the case; often some predictors are *qualitative*.
+
+For example, the Credit data set provided by the **ISLR** package records the balance (average credit card debt for a number of individuals) as well as several quantitative predictors: age, cards (number of credit cards), education (years of education), income (in thousands of dollars), limit (credit limit), and rating (credit rating).
+
+```{r}
+credit <- as_tibble(ISLR::Credit)
+credit
 ```
 
 
-```{r 2b-vip}
-library(vip)
+Suppose that we wish to investigate differences in credit card balance between males and females, ignoring the other variables for the moment. If a qualitative predictor (also known as a factor) only has two levels, or possible values, then incorporating it into a regression model is very simple. We simply create an indicator or dummy variable that takes on two possible numerical values. For example, based on the gender, we can create a new variable that takes the form
 
-final_fit %>% 
-   extract_fit_parsnip() %>% 
-   vip()
+$$
+x_i = \Bigg\{ \genfrac{}{}{0pt}{}{1 \hspace{.5cm}\text{ if }i\text{th person is female}\hspace{.25cm}}{0 \hspace{.5cm}\text{ if }i\text{th person is male}}
+$$
+
+and use this variable as a predictor in the regression equation. This results in the model
+
+$$
+y_i = b_0 + b_1x_i = \Bigg\{ \genfrac{}{}{0pt}{}{b_0 + b_1 \hspace{.5cm}\text{ if }i\text{th person is female}\hspace{.3cm}}{b_0 \hspace{1.5cm}\text{ if }i\text{th person is male}}
+$$
+Now $b_0$ can be interpreted as the average credit card balance among males, $b_0 + b_1$ as the average credit card balance among females, and $b_1$ as the average difference in credit card balance between females and males.  We can produce this model in R using the same syntax as we saw earlier:
+
+```{r}
+qual_model <- linear_reg() %>%
+   fit(Balance ~ Gender, data = credit)
+
+tidy(qual_model)
 ```
 
+The results above suggest that males are estimated to carry \$509.80 in credit card debt where females carry \$509.80 - $19.73 = \$490.07.
+
+The decision to code males as 0 and females as 1 is arbitrary, and has no effect on the regression fit, but does alter the interpretation of the coefficients.  If we want to change the reference variable (the variable coded as 0) we can change the factor levels. 
+
+```{r}
+credit$Gender <- factor(credit$Gender, levels = c("Female", " Male"))
+
+qual_model <- linear_reg() %>%
+   fit(Balance ~ Gender, data = credit)
+
+tidy(qual_model)
+```
+
+A similar process ensues for qualitative predictor categories with more than two levels.  For instance, if we go back to our Ames housing data we'll see that there is a `Neighborhood` variable. In our data there are 28 different neighborhoods.
+
+```{r}
+ames_train %>%
+   count(Neighborhood)
+```
+
+Most people are aware that different neighborhoods can generate significantly different home prices than other neighborhoods. In this data we can visualize this by looking at the distribution of `Sale_Price` across neighborhoods. We see that the Stone Brook neighborhood has the highest average sale price whereas Meadow Village has the lowest. This could be for many reasons (i.e. age of the neighborhood, amenities provided by the neighborhood, proximity to undesirable things such as manufacturing plants).
+
+```{r, fig.height=8, fig.width=8}
+ggplot(ames_train, aes(fct_reorder(Neighborhood, Sale_Price), Sale_Price)) +
+   geom_boxplot() +
+   xlab(NULL) +
+   scale_y_continuous("Sale Price", labels = scales::dollar) +
+   coord_flip()
+```
+
+So, naturally, we can assume there is some relationship between `Neighborhood` and `Sale_Price`. We can assess this relationship by running the following model.  
+
+Based on the results we see that the reference Neighborhood (which is North Ames based on `levels(ames_train$Neighborhood)`) has an average `Sale_Price` of \$143,516.75 (based on the intercept).  Whereas College Creek has a `Sale_Price` of \$143,516.75 + \$57,006.75 = \$200,523.50. The `p.value` for College Creek is very small suggesting that this difference between North Ames and College Creek is statistically significant.
+
+However, look at the results for the Sawyer neighborhood. The coefficient suggests that the average `Sale_Price` for the Sawyer neighborhood is \$143,516.75 - \$4,591.68 = \$148,108.40. However, the `p.value` is 0.43 which suggests that there is no statistical difference between the reference neighborhood (North Ames) and Sawyer.
+
+```{r}
+neighborhood_model <- linear_reg() %>%
+   fit(Sale_Price ~ Neighborhood, data = ames_train)
+
+tidy(neighborhood_model)
+```
+
+### Knowledge check
+
+```{block, type='todo'}
+The Ames housing data has an `Overall_Qual` variable that measures the overall quality of a home (Very Poor, Poor, ..., Excellent, Very Excellent).
+
+1. Plot the relationship between `Sale_Price` and the `Overall_Qual` variable. Does there look to be a relationship between the quality of a home and its sale price?
+2. Model this relationship with a simple linear regression model.
+3. Interpret the coefficients.
+```
+
+
+## Including many predictors
+
+In general, we can include as many predictors as we want, as long as we have more rows than parameters! The general multiple linear regression model with _p_ distinct predictors is
+
+\begin{equation}
+  \widehat{y} = b_0 + b_1 x_1 + b_2 x_2 + \cdots + b_p x_p,
+\end{equation}
+
+where $x_i$ for $i = 1, 2, \dots, p$ are the predictors of interest. Unfortunately, visualizing beyond three dimensions is not practical as our best-fit plane becomes a hyperplane. However, the motivation remains the same where the best-fit hyperplane is identified by minimizing the RSS. 
+
+The code below creates a model where we use all features in our data set as main effects (i.e., no interaction terms) to predict `Sale_Price`. 
+
+```{block, type='note'}
+However, note that we remove a few variables first. This is because these variables introduce some new problems that require us to do some feature engineering steps. We'll discuss this in a future lesson but for now we'll just put these feature variables to the side.
+```
+
+```{r mlr-model3}
+# remove some trouble variables
+trbl_vars <- c("MS_SubClass", "Condition_2", "Exterior_1st", 
+               "Exterior_2nd", "Misc_Feature")
+ames_train <- ames_train %>%
+   select(-trbl_vars)
+
+# include all possible main effects
+model3 <- linear_reg() %>%
+   fit(Sale_Price ~ ., data = ames_train) 
+
+# print estimated coefficients in a tidy data frame
+tidy(model3)  
+```
+
+You'll notice that our model's results includes the intercept plus 248 predictor variable coefficients. However, our `ames_train` data only includes 75 predictor variables after removing those 5 troublesome variables! What gives?
+
+```{r}
+ames_train %>%
+   select(-Sale_Price) %>%
+   dim()
+```
+
+The reason is that 41 of our predictor variables are qualitative and many of these include several levels. So the dummy encoding procedure discussed in the last section causes us to have many more coefficients than initial predictor variables.
+
+```{r}
+ames_train %>%
+   select_if(is.factor) %>%
+   colnames()
+```
+
+If we wanted to assess which features have a relationship we could easily filter our model results to find which coefficients have `p.values` less than 0.05. In this model we see that 67 (68 minus the intercept) features have a statistical relationship with `Sale_Price`.
+
+```{r}
+tidy(model3) %>%
+   filter(p.value < 0.05)
+```
+
+How does our model with all available predictors perform? We can compute the generalization error to assess.
+
+```{r, error=TRUE}
+model3 %>%
+   predict(ames_test) %>%
+   bind_cols(ames_test) %>%
+   rmse(truth = Sale_Price, estimate = .pred)
+```
+
+Not too shabby! Using all the predictor variables in our model has drastically reduced our test RMSE!
+
+## Feature importance
+
+Ok, so we found a linear regression model that performs pretty good compared to the other linear regression models we trained. Our next goal is often to interpret the model structure. Linear regression models provide a very intuitive model structure as they assume a monotonic linear relationship between the predictor variables and the response. The linear relationship part of that statement just means, for a given predictor variable, it assumes for every one unit change in a given predictor variable there is a constant change in the response. As discussed earlier in the lesson, this constant rate of change is provided by the coefficient for a predictor. The monotonic relationship means that a given predictor variable will always have a positive or negative relationship. But how do we determine the most influential variables?
+
+Variable importance seeks to identify those variables that are most influential in our model. For linear regression models, this is most often measured by the absolute value of the t-statistic for each model parameter used. Rather than search through each of the variables to compare their t-statistic values, we can use `vip::vip()` to extract and plot the most important variables. The importance measure is normalized from 100 (most important) to 0 (least important). The plot below illustrates the top 20 most influential variables. We see that the top 4 most important variables have to do with roofing material followed by the total square footage on the second floor.  
+
+```{r lm-vip, fig.height=4.5}
+# plot top 10 influential features
+model3 %>%
+   vip::vip(num_features = 20)
+```
+
+This is basically saying that our model finds that these are the most influential features in our data set that have the largest impact on the predicted outcome. If we order our data based on the t-statistic we see similar results. 
+
+```{r lm-best-model-t-stat}
+tidy(model3) %>%
+   arrange(desc(statistic))
+```
 
 ## Exercises
 
 ```{block, type='todo'}
-Import the dataset blood_transfusion.csv:
+Using the Boston housing data set where the response feature is the median value of homes within a census tract (`cmedv`):
 
-1. The column “Class” contains the target variable. Investigate this variable. Is this a regression or classification problem?
-2. Why is it relevant to add a preprocessing step to standardize the features? What `step_xxx()` function would you use to do so?
-3. Perform a k-nearest neighbor model on this data with `neighbors = 10`. Be sure to add a preprocessing step to standardize the features.
-4. Perform a 5-fold cross validation with the above model workflow. What is your average CV score?
-5. Now perform hyperparameter tuning to understand the effect of the parameter `neighbors` on the model score. Assess 10 values for `neighbors` between the range of 1-100. Again, perform a 5-fold cross validation. Which hyperparameter value performed the best and what was the CV score?
+1. Split the data into 70-30 training-test sets.
+2. Train an MLR model that includes all the predictor variables.
+3. Assess and interpret the coefficients. Are all predictor variables statistically significant? Explain why or why not.
+4. What is the generalization error of this model?
+5. Which features are most influential in this model and which features are not?
 ```
-
-## Additional resources
-
-This module provided a very high-level introduction to predictive modeling with **tidymodels**.  To build on this knowledge you can find many great resources at https://www.tidymodels.org/.

@@ -1,6 +1,6 @@
-# Lesson 3a: Linear Regression
+# Lesson 2a: Feature engineering
 
-```{r setup-3a, include=FALSE}
+```{r setup-2a, include=FALSE}
 # clean up saved items that may carry over from previous lessons
 rm(list = ls())
 
@@ -19,458 +19,372 @@ library(here)
 img_path <- here("images")
 ```
 
-_Linear regression_, a staple of classical statistical modeling, is one of the simplest algorithms for doing supervised learning. Though it may seem somewhat dull compared to some of the more modern statistical learning approaches described in later modules, linear regression is still a useful and widely applied statistical learning method. Moreover, it serves as a good starting point for more advanced approaches; as we will see in later modules, many of the more sophisticated statistical learning approaches can be seen as generalizations to or extensions of ordinary linear regression. Consequently, it is important to have a good understanding of linear regression before studying more complex learning methods. This module introduces linear regression with an emphasis on prediction, rather than inference. An excellent and comprehensive overview of linear regression is provided in @kutner-2005-applied. See @faraway-2016-linear for a discussion of linear regression in R.
+Data preprocessing and engineering techniques generally refer to the addition, deletion, or transformation of data. In this lesson we introduce you to another tidymodels package, [**recipes**](https://recipes.tidymodels.org/), which is designed to help you preprocess your data before training your model. Recipes are built as a series of preprocessing steps, such as:
+
+* converting qualitative predictors to indicator variables (also known as dummy variables),
+* transforming data to be on a different scale (e.g., taking the logarithm of a variable),
+* transforming whole groups of predictors together,
+ extracting key features from raw variables (e.g., getting the day of the week out of a date variable),
+
+and so on. Although there is an ever-growing number of ways to preprocess your data, we'll focus on a few common feature engineering steps applied to numeric and categorical data. This will provide you with a foundation of how to perform feature engineering.
 
 ## Learning objectives
 
-By the end of this lesson you will know how to:
+By the end of this lesson you’ll be able to:
 
-* Fit simple and multiple linear regression models.
-* Interpret results of linear regression models.
-* Compare performance across multiple models using resampling.
-* Asses the most influential predictor variables in a linear regression model.
+* Explain how to apply feature engineering steps with the **recipes** package.
+* Filter out low informative features.
+* Normalize and standardize numeric features.
+* Pre-process nominal and ordinal features.
+* Combine multiple feature engineering steps into one recipe and train a model with it.
 
 ## Prerequisites
 
-This lesson leverages the following packages:
+For this lesson we'll use the **recipes** package with is automatically loaded with **tidymodels** and we'll use the `ames` housing data.
 
-```{r lm-pkgs, message=FALSE}
-# Helper packages
-library(dplyr)    # for data manipulation
-library(ggplot2)  # for awesome graphics
-
-# Modeling packages
+```{r}
 library(tidymodels)
+library(tidyverse)
 
-# Model interpretability packages
-library(vip)      # variable importance
+ames_data_path <- here::here("data", "ames.csv")
+ames <- readr::read_csv(ames_data_path)
 ```
 
-We'll also continue working with the `ames` data set:
+Let's go ahead and create our train-test split:
 
-```{r lm-ames-train}
-# stratified sampling with the rsample package
-ames <- AmesHousing::make_ames()
+```{r 7b-train-test-split}
+# create train/test split
+set.seed(123)  # for reproducibility
+split  <- initial_split(ames, prop = 0.7)
+train  <- training(split)
+test   <- testing(split)
+```
 
+
+## Create a recipe
+
+To get started, let’s create a model recipe that we will build upon and apply in a model downstream. Before training the model, we can use a recipe to create and/or modify predictors and conduct some preprocessing required by the model.
+
+```{r 7b-create-recipe}
+ames_recipe <- recipe(Sale_Price ~ ., data = train)
+```
+
+Now we can start adding steps onto our recipe using the pipe operator and applying specific feature engineering tasks. The sections that follow provide some discussion as to why we apply each feature engineering step and then we demonstrate how to add it to our recipe.
+
+## Feature filtering
+
+In many data analyses and modeling projects we end up with hundreds or even thousands of collected features. From a practical perspective, a model with more features often becomes harder to interpret and is costly to compute.  Some models are more resistant to non-informative predictors (e.g., the Lasso and tree-based methods) than others.
+
+Although the performance of some of our models are not significantly affected by non-informative predictors, the time to train these models can be negatively impacted as more features are added. Consequently, filtering or reducing features prior to modeling may significantly speed up training time.
+
+Zero and near-zero variance variables are low-hanging fruit to eliminate. Zero variance variables, meaning the feature only contains a single unique value, provides no useful information to a model.  Some algorithms are unaffected by zero variance features.  However, features that have near-zero variance also offer very little, if any, information to a model. Furthermore, they can cause problems during resampling as there is a high probability that a given sample will only contain a single unique value (the dominant value) for that feature. 
+
+```{block, type = "tip"}
+A rule of thumb for detecting near-zero variance features are identifying and removing features with $\leq 5-10$% variance.
+```
+
+For the Ames data, we do not have any zero variance predictors but there are many features that meet the near-zero threshold. The following shows all features where there is less than 5% variance in distinct values.
+
+```{r 7b-nzv-id, echo=FALSE}
+caret::nearZeroVar(train, saveMetrics = TRUE, uniqueCut = 5) %>% 
+   tibble::rownames_to_column() %>% 
+   filter(nzv) %>%
+   arrange(percentUnique) %>%
+   kbl() %>%
+   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"))
+```
+
+We can filter out near-zero variance features with `step_nzv()`. Within `step_nzv()` we specify which features to apply this to. There are several helper functions to make it easy to apply the step to `all_predictors()`, `all_numeric()` variables, `all_nominal()` variables, and more.
+
+```{block, type='tip'}
+See the different variable selectors [here](https://recipes.tidymodels.org/reference/has_role.html#ref-usage).
+```
+
+In this example we filter out all predictor variables that have less than 10% variance in values.
+
+```{r}
+nzv <- ames_recipe %>%
+   step_nzv(all_predictors(), unique_cut = 10) # threshold as % (10%)
+```
+
+
+```{block, type='note'}
+The result of the above code is not to actually apply the feature engineering steps but, rather, to create an object that holds the feature engineering logic (or recipe) to be applied later on.
+```
+
+## Numeric features
+
+Numeric features can create a host of problems for certain models when their distributions are skewed, contain outliers, or have a wide range in magnitudes. Tree-based models are quite immune to these types of problems in the feature space, but many other models (e.g., GLMs, regularized regression, KNN, support vector machines, neural networks) can be greatly hampered by these issues. Normalizing and standardizing heavily skewed features can help minimize these concerns.
+
+### Skewness
+
+Parametric models that have distributional assumptions (e.g., GLMs, and regularized models) can benefit from minimizing the skewness of numeric features.  When normalizing many variables, it's best to use the Box-Cox (when feature values are strictly positive) or Yeo-Johnson (when feature values are not strictly positive) procedures as these methods will identify if a transformation is required and what the optimal transformation will be.
+
+```{block, type="tip"}
+Non-parametric models are rarely affected by skewed features; however, normalizing features will not have a negative effect on these models' performance.  For example, normalizing features will only shift the optimal split points in tree-based algorithms.  Consequently, when in doubt, normalize.
+```
+
+We can normalize our numeric predictor variables with `step_YeoJohnson()`:
+
+```{r 7b-normalizing}
+# Normalize all numeric features
+X_norm <- ames_recipe %>%
+   step_YeoJohnson(all_predictors(), all_numeric())                 
+```
+
+### Standardization
+
+We must also consider the scale on which the individual features are measured. What are the largest and smallest values across all features and do they span several orders of magnitude? Models that incorporate smooth functions of input features are sensitive to the scale of the inputs. For example, $5X+2$ is a simple linear function of the input _X_, and the scale of its output depends directly on the scale of the input. Many algorithms use linear functions within their algorithms, some more obvious (e.g., GLMs and regularized regression) than others (e.g., neural networks, support vector machines, and principal components analysis). Other examples include algorithms that use distance measures such as the Euclidean distance (e.g., _k_ nearest neighbor, _k_-means clustering, and hierarchical clustering). 
+
+For these models and modeling components, it is often a good idea to standardize the features. Standardizing features includes _centering_ and _scaling_ so that numeric variables have zero mean and unit variance, which provides a common comparable unit of measure across all the variables.
+
+```{r engineering-standardizing, echo=FALSE, fig.cap="Standardizing features allows all features to be compared on a common value scale regardless of their real value differences.", fig.height=3, fig.width=8}
 set.seed(123)
-split  <- initial_split(ames, prop = 0.7, strata = "Sale_Price")
-ames_train  <- training(split)
-ames_test   <- testing(split)
-```
-
-## Simple linear regression
-
-Pearson's correlation coefficient is often used to quantify the strength of the linear association between two continuous variables. In this section, we seek to fully characterize that linear relationship. _Simple linear regression_ (SLR) assumes that the statistical relationship between two continuous variables (say $X$ and $Y$) is (at least approximately) linear:
-
-\begin{equation}
-  Y_i = \beta_0 + \beta_1 X_i + \epsilon_i, \quad \text{for } i = 1, 2, \dots, n,
-\end{equation}
-
-where $Y_i$ represents the _i_-th response value, $X_i$ represents the _i_-th feature value, $\beta_0$ and $\beta_1$ are fixed, but unknown constants (commonly referred to as coefficients or parameters) that represent the intercept and slope of the regression line, respectively, and $\epsilon_i$ represents noise or random error. In this module, we'll assume that the errors are normally distributed with mean zero and constant variance $\sigma^2$, denoted $\stackrel{iid}{\sim} \left(0, \sigma^2\right)$. Since the random errors are centered around zero (i.e., $E\left(\epsilon\right) = 0$), linear regression is really a problem of estimating a _conditional mean_:
-
-\begin{equation}
-  E\left(Y_i | X_i\right) = \beta_0 + \beta_1 X_i.
-\end{equation}
-
-For brevity, we often drop the conditional piece and write $E\left(Y | X\right) = E\left(Y\right)$. Consequently, the interpretation of the coefficients is in terms of the average, or mean response. For example, the intercept $\beta_0$ represents the average response value when $X = 0$ (it is often not meaningful or of interest and is sometimes referred to as a _bias term_). The slope $\beta_1$ represents the increase in the average response per one-unit increase in $X$ (i.e., it is a _rate of change_).
-
-## Estimation
-
-Ideally, we want estimates of $\beta_0$ and $\beta_1$ that give us the "best fitting" line. But what is meant by "best fitting"? The most common approach is to use the method of _least squares_\index{least squares} (LS) estimation; this form of linear regression is often referred to as ordinary least squares (OLS) regression. There are multiple ways to measure "best fitting", but the LS criterion finds the "best fitting" line by minimizing the _residual sum of squares_\index{residual sum of squares} (RSS):
-
-\begin{equation}
-  RSS\left(\beta_0, \beta_1\right) = \sum_{i=1}^n\left[Y_i - \left(\beta_0 + \beta_1 X_i\right)\right]^2 = \sum_{i=1}^n\left(Y_i - \beta_0 - \beta_1 X_i\right)^2.
-\end{equation}
-
-The LS estimates of $\beta_0$ and $\beta_1$ are denoted as $\widehat{\beta}_0$ and $\widehat{\beta}_1$, respectively. Once obtained, we can generate predicted values, say at $X = X_{new}$, using the estimated regression equation:
-
-\begin{equation}
-  \widehat{Y}_{new} = \widehat{\beta}_0 + \widehat{\beta}_1 X_{new},
-\end{equation}
-
-where $\widehat{Y}_{new} = \widehat{E\left(Y_{new} | X = X_{new}\right)}$ is the estimated mean response at $X = X_{new}$.
-
-With the Ames housing data, suppose we wanted to model a linear relationship between the total above ground living space of a home (`Gr_Liv_Area`) and sale price (`Sale_Price`). To perform an OLS regression model in R we can use the `linear_reg()` model object, which by default will use the **lm** engine:
-
-```{r lm-model1}
-model1 <- linear_reg() %>%
-   fit(Sale_Price ~ Gr_Liv_Area, data = ames_train)
-```
-
-The fitted model (`model1`) is displayed in the left plot below where the points represent the values of `Sale_Price` in the training data. In the right plot, the vertical lines represent the individual errors, called _residuals_\index{residuals}, associated with each observation. The OLS criterion identifies the "best fitting" line that minimizes the sum of squares of these residuals.
-
-```{r lm-visualize-model1, eval=TRUE, fig.width=10, fig.height=3.5, echo=FALSE, fig.cap="The least squares fit from regressing sale price on living space for the the Ames housing data. Left: Fitted regression line. Right: Fitted regression line with vertical grey bars representing the residuals."}
-# Fitted regression line (full training data)
-p1 <- model1$fit %>%
-  broom::augment() %>%
-  ggplot(aes(Gr_Liv_Area, Sale_Price)) + 
-  geom_point(size = 1, alpha = 0.3) +
-  geom_smooth(se = FALSE, method = "lm") +
-  scale_y_continuous(labels = scales::dollar) +
-  ggtitle("Fitted regression line")
-
-# Fitted regression line (restricted range)
-p2 <- model1$fit %>%
-  broom::augment() %>%
-  ggplot(aes(Gr_Liv_Area, Sale_Price)) + 
-  geom_segment(aes(x = Gr_Liv_Area, y = Sale_Price,
-                   xend = Gr_Liv_Area, yend = .fitted), 
-               alpha = 0.3) +
-  geom_point(size = 1, alpha = 0.3) +
-  geom_smooth(se = FALSE, method = "lm") +
-  scale_y_continuous(labels = scales::dollar) +
-  ggtitle("Fitted regression line (with residuals)")
-
-# Side-by-side plots
-grid.arrange(p1, p2, nrow = 1)
-```
-
-We can extract our fitted model results with `tidy()`:
-
-```{r lm-model1-summary}
-tidy(model1) 
-```
-
-The estimated coefficients from our model are $\widehat{\beta}_0 =$ `r format(round(coef(model1$fit)[1L], digits = 2), scientific=FALSE)` and $\widehat{\beta}_1 =$ `r round(coef(model1$fit)[2L], digits = 2)`. To interpret, we estimate that the mean selling price increases by `r round(coef(model1$fit)[2L], digits = 2)` for each additional one square foot of above ground living space. This simple description of the relationship between the sale price and square footage using a single number (i.e., the slope) is what makes linear regression such an intuitive and popular modeling tool.
-
-One drawback of the LS procedure in linear regression is that it only provides estimates of the coefficients; it does not provide an estimate of the error variance $\sigma^2$! LS also makes no assumptions about the random errors. These assumptions are important for inference and in estimating the error variance which we're assuming is a constant value $\sigma^2$. One way to estimate $\sigma^2$ (which is required for characterizing the variability of our fitted model), is to use the method of _maximum likelihood_ (ML) estimation (see @kutner-2005-applied Section 1.7 for details). The ML procedure requires that we assume a particular distribution for the random errors. Most often, we assume the errors to be normally distributed. In practice, under the usual assumptions stated above, an unbiased estimate of the error variance is given as the sum of the squared residuals divided by $n - p$ (where $p$ is the number of regression coefficients or parameters in the model):
-
-\begin{equation}
-  \widehat{\sigma}^2 = \frac{1}{n - p}\sum_{i = 1} ^ n r_i ^ 2,
-\end{equation}
-
-where $r_i = \left(Y_i - \widehat{Y}_i\right)$ is referred to as the $i$th residual (i.e., the difference between the $i$th observed and predicted response value). The quantity $\widehat{\sigma}^2$ is also referred to as the _mean square error_ (MSE) and its square root is denoted RMSE (see [here](https://bradleyboehmke.github.io/uc-bana-4080/lesson-1b-first-model-with-tidymodels.html#regression-models) for discussion on these metrics). 
-
-```{block, type='note'}
-Typically, these error metrics are computed on a separate validation set or using cross-validation; however, they can also be computed on the same training data the model was trained on as illustrated here.
-```
-
-In R, the RMSE of a linear model, along with many other model metrics, can be extracted with `glance()`. `sigma` in the results below is the RMSE value, which is `r format(glance(model1)[['sigma']], scientific=FALSE)`. This means that, on average, our model's predicted values are \$`r format(glance(model1)[['sigma']], scientific=FALSE)` off from the actual price!  Not very impressive.
-
-```{r lm-model1-sigma}
-# RMSE
-glance(model1)
-
-# We can compute the MSE by simply squaring RMSE (sigma)
-glance(model1) %>% 
-   mutate(MSE = sigma^2) %>%
-   select(sigma, MSE, everything())
-```
-
-## Inference
-
-How accurate are the LS of $\beta_0$ and $\beta_1$? Point estimates by themselves are not very useful. It is often desirable to associate some measure of an estimates variability. The variability of an estimate is often measured by its _standard error_ (SE)---the square root of its variance. If we assume that the errors in the linear regression model are $\stackrel{iid}{\sim} \left(0, \sigma^2\right)$, then simple expressions for the SEs of the estimated coefficients exist and are displayed in the column labeled `std.error` in the output from `tidy()`. From this, we can also derive simple $t$-tests to understand if the individual coefficients are statistically significant from zero. The _t_-statistics for such a test are nothing more than the estimated coefficients divided by their corresponding estimated standard errors (i.e., in the output from `tidy()`, `t value (aka statistic)` = `estimate` / `std.error`). The reported _t_-statistics measure the number of standard deviations each coefficient is away from 0. Thus, large _t_-statistics (greater than two in absolute value, say) roughly indicate statistical significance at the $\alpha = 0.05$ level. The _p_-values for these tests are also reported by `tidy()` in the column labeled `p.value`. 
-
-Under the same assumptions, we can also derive confidence intervals for the coefficients. The formula for the traditional $100\left(1 - \alpha\right)$% confidence interval for $\beta_j$ is
-
-\begin{equation}
-  \widehat{\beta}_j \pm t_{1 - \alpha / 2, n - p} \widehat{SE}\left(\widehat{\beta}_j\right).
-\end{equation}
-
-In R, we can construct such (one-at-a-time) confidence intervals for each coefficient using `confint()` on the `model1$fit` object. For example, a 95% confidence intervals for the coefficients in our SLR example can be computed using
-
-```{r lm-model1-confint}
-confint(model1$fit, level = 0.95)
-```
-
-To interpret, we estimate with 95% confidence that the mean selling price increases between `r round(confint(model1$fit)[2L, 1L], digits = 2)` and `r round(confint(model1$fit)[2L, 2L], digits = 2)` for each additional one square foot of above ground living space. We can also conclude that the slope $\beta_1$ is significantly different from zero (or any other pre-specified value not included in the interval) at the $\alpha = 0.05$ level. This is also supported by the output from `tidy()`.
-
-
-```{block, type='note'}
-Most statistical software, including R, will include estimated standard errors, t-statistics, etc. as part of its regression output. However, it is important to remember that such quantities depend on three major assumptions of the linear regression model:
-
-1. Independent observations
-2. The random errors have mean zero, and constant variance
-3. The random errors are normally distributed
-
-If any or all of these assumptions are violated, then remedial measures need to be taken. For instance, weighted least squares (and other procedures) can be used when the constant variance assumption is violated. Transformations (of both the response and features) can also help to correct departures from these assumptions. The residuals are extremely useful in helping to identify how parametric models depart from such assumptions.
-```
-
-## Multiple linear regression
-
-In practice, we often have more than one predictor. For example, with the Ames housing data, we may wish to understand if above ground square footage (`Gr_Liv_Area`) and the year the house was built (`Year_Built`) are (linearly) related to sale price (`Sale_Price`). We can extend the SLR model so that it can directly accommodate multiple predictors; this is referred to as the _multiple linear regression_ (MLR) model. With two predictors, the MLR model becomes: 
-
-\begin{equation}
-  Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \epsilon,
-\end{equation}
-
-where $X_1$ and $X_2$ are features of interest. In our Ames housing example, $X_1$ represents `Gr_Liv_Area` and $X_2$ represents `Year_Built`. 
-
-In R, multiple linear regression models can be fit by separating all the features of interest with a `+`:
-
-```{r lm-model2, linewidth=56}
-model2 <- linear_reg() %>%
-   fit(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
-
-tidy(model2)
-```
-
-The LS estimates of the regression coefficients are $\widehat{\beta}_1 =$ `r round(coef(model2$fit)[2L], digits = 3)` and $\widehat{\beta}_2 =$ `r round(coef(model2$fit)[3L], digits = 3)` (the estimated intercept is `r round(coef(model2$fit)[1L], digits = 3)`. In other words, every one square foot increase to above ground square footage is associated with an additional `r scales::dollar(coef(model2$fit)[2L])` in __mean selling price__ when holding the year the house was built constant. Likewise, for every year newer a home is there is approximately an increase of `r scales::dollar(coef(model2$fit)[3L])` in selling price when holding the above ground square footage constant.
-
-Now, instead of modeling sale price with the  the "best fitting" line that minimizes residuals, we are modeling sale price with the best fitting hyperplane that minimizes the residuals, which is illustrated below.
-
-```{r lm-mls-plane, echo=FALSE, fig.cap="Average home sales price as a function of year built and total square footage."}
-library(plotly)
-library(reshape2)
-# model
-model2 <- lm(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
-# Setup Axis
-axis_x <- seq(min(ames_train$Gr_Liv_Area), max(ames_train$Gr_Liv_Area), by = 50)
-axis_y <- seq(min(ames_train$Year_Built), max(ames_train$Year_Built), by = 10)
-# Sample points
-lm_surface <- expand.grid(Gr_Liv_Area = axis_x, Year_Built = axis_y, KEEP.OUT.ATTRS = F)
-lm_surface$Sale_Price <- predict.lm(model2, newdata = lm_surface)
-lm_surface <- acast(lm_surface, Year_Built ~ Gr_Liv_Area, value.var = "Sale_Price")
-# plot
-ames_plot <- plot_ly(ames_train,
-                     x = ~ Gr_Liv_Area, 
-                     y = ~ Year_Built, 
-                     z = ~ Sale_Price,
-                     type = "scatter3d", 
-                     mode = "markers",
-                     marker = list(
-                       size = 5,
-                       opacity = 0.25
-                     ),
-                     showlegend = F
-                     )
-# add surface
-ames_plot <- add_trace(p = ames_plot,
-                       z = lm_surface,
-                       x = axis_x,
-                       y = axis_y,
-                       type = "surface")
-ames_plot
-```
-
-You may notice that the fitted plane in the above image is flat; there is no curvature. This is true for all linear models that include only _main effects_ (i.e., terms involving only a single predictor). One way to model curvature is to include _interaction effects_. An interaction occurs when the effect of one predictor on the response depends on the values of other predictors. In linear regression, interactions can be captured via products of features (i.e., $X_1 \times X_2$). A model with two main effects can also include a two-way interaction. For example, to include an interaction between $X_1 =$ `Gr_Liv_Area` and $X_2 =$ `Year_Built`, we introduce an additional product term:
-
-\begin{equation}
-  Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 X_1 X_2 + \epsilon.
-\end{equation}
-
-Note that in R, we use the `:` operator to include an interaction (technically, we could use `*` as well, but `x1 * x2` is shorthand for `x1 + x2 + x1:x2` so is slightly redundant):
-
-```{r lm-model2-w-interaction}
-interaction_model <- linear_reg() %>%
-   fit(Sale_Price ~ Gr_Liv_Area + Year_Built + Gr_Liv_Area:Year_Built, data = ames_train)
-
-tidy(interaction_model)
-```
-
-The curvature that interactions capture can be illustrated in the contour plot below. The left plot illustrates a regression model with main effects only. Note how the fitted regression surface is flat (i.e., it does not twist or bend). While the fitted regression surface with interaction is displayed in the right side plot and you can see the curvature of the relationship induced.
-
-```{block, type='note'}
-Interaction effects are quite prevalent in predictive modeling. Since linear models are an example of parametric modeling, it is up to the analyst to decide if and when to include interaction effects. In later chapters, we'll discuss algorithms that can automatically detect and incorporate interaction effects (albeit in different ways). It is also important to understand a concept called the ***hierarchy principle***---which demands that all lower-order terms corresponding to an interaction be retained in the model---when considering interaction effects in linear regression models.
-```
-
-```{r lm-mlr-fit, echo=FALSE, fig.width=10, fig.height=4.5, fig.cap="In a three-dimensional setting, with two predictors and one response, the least squares regression line becomes a plane. The 'best-fit' plane minimizes the sum of squared errors between the actual sales price (individual dots) and the predicted sales price (plane)."}
-# Fitted models
-fit1 <- lm(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
-fit2 <- lm(Sale_Price ~ Gr_Liv_Area * Year_Built, data = ames_train)
-
-# Regression plane data
-plot_grid <- expand.grid(
-  Gr_Liv_Area = seq(from = min(ames_train$Gr_Liv_Area), to = max(ames_train$Gr_Liv_Area), 
-                    length = 100), 
-  Year_Built = seq(from = min(ames_train$Year_Built), to = max(ames_train$Year_Built), 
-                   length = 100)
+x1 <- tibble(
+  variable = "x1",
+  `Real value` = runif(25, min = -30, max = 5),
+  `Standardized value` = scale(`Real value`) %>% as.numeric()
 )
-plot_grid$y1 <- predict(fit1, newdata = plot_grid)
-plot_grid$y2 <- predict(fit2, newdata = plot_grid)
-
-# Level plots
-p1 <- ggplot(plot_grid, aes(x = Gr_Liv_Area, y = Year_Built, 
-                            z = y1, fill = y1)) +
-  geom_tile() +
-  geom_contour(color = "white") +
-  viridis::scale_fill_viridis(name = "Predicted\nvalue", option = "inferno") +
-  theme_bw() +
-  ggtitle("Main effects only")
-p2 <- ggplot(plot_grid, aes(x = Gr_Liv_Area, y = Year_Built, 
-                            z = y2, fill = y1)) +
-  geom_tile() +
-  geom_contour(color = "white") +
-  viridis::scale_fill_viridis(name = "Predicted\nvalue", option = "inferno") +
-  theme_bw() +
-  ggtitle("Main effects with two-way interaction")
-gridExtra::grid.arrange(p1, p2, nrow = 1)
+set.seed(456)
+x2 <- tibble(
+  variable = "x2",
+  `Real value` = rlnorm(25, log(25)),
+  `Standardized value` = scale(`Real value`) %>% as.numeric()
+)
+set.seed(789)
+x3 <- tibble(
+  variable = "x3",
+  `Real value` = rnorm(25, 150, 15),
+  `Standardized value` = scale(`Real value`) %>% as.numeric()
+)
+x1 %>%
+  bind_rows(x2) %>%
+  bind_rows(x3) %>%
+  gather(key, value, -variable) %>%
+  mutate(variable = factor(variable, levels = c("x3", "x2", "x1"))) %>%
+  ggplot(aes(value, variable)) +
+    geom_point(alpha = .6) +
+    facet_wrap(~ key, scales = "free_x") +
+    ylab("Feature") +
+    xlab("Value")
 ```
 
-In general, we can include as many predictors as we want, as long as we have more rows than parameters! The general multiple linear regression model with _p_ distinct predictors is
+We can standardize our numeric features in one of two ways -- note that `step_normalize()` is just a wrapper that combines `step_center()` and `step_scale()`.
 
-\begin{equation}
-  Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p + \epsilon,
-\end{equation}
+```{r 7b-standardize}
+# option 1
+std <- ames_recipe %>%
+   step_center(predictors(), all_numeric()) %>%
+   step_scale(predictors(), all_numeric())
 
-where $X_i$ for $i = 1, 2, \dots, p$ are the predictors of interest. Note some of these may represent interactions (e.g., $X_3 = X_1 \times X_2$) between or transformations^[Transformations of the features serve a number of purposes (e.g., modeling nonlinear relationships or alleviating departures from common regression assumptions). See @kutner-2005-applied for details.] (e.g., $X_4 = \sqrt{X_1}$) of the original features. Unfortunately, visualizing beyond three dimensions is not practical as our best-fit plane becomes a hyperplane. However, the motivation remains the same where the best-fit hyperplane is identified by minimizing the RSS. The code below creates a third model where we use all features in our data set as main effects (i.e., no interaction terms) to predict `Sale_Price`.
-
-```{r lm-model3}
-# include all possible main effects
-model3 <- linear_reg() %>%
-   fit(Sale_Price ~ ., data = ames_train) 
-
-# print estimated coefficients in a tidy data frame
-tidy(model3)  
-```
-
-## Assessing model accuracy
-
-We've fit three main effects models to the Ames housing data: a single predictor, two predictors, and all possible predictors. But the question remains, which model is "best"? To answer this question we have to define what we mean by "best". In our case, we'll use the [RMSE metric](https://bradleyboehmke.github.io/uc-bana-4080/lesson-1b-first-model-with-tidymodels.html#regression-models) and [cross-validation](https://bradleyboehmke.github.io/uc-bana-4080/lesson-2b-model-evaluation-selection.html#resampling-cross-validation) to determine the "best" model. 
-
-```{block, type='note'}
-In essence, we are going to train our three different models using k-fold cross validation. The model that has the lowest average cross validation RMSE is considered the model that generalizes to new data the best.
-```
-
-First, we'll perform 10-fold cross validation on the single predictor model (`Sales_Price ~ Gr_Liv_Area`):
-
-```{r lm-model1-accuracy}
-# create our 10-fold cross validation object
-set.seed(8451)
-kfolds <- vfold_cv(ames_train, v = 10)
-
-# create our linear regression model object
-lm_mod <- linear_reg()
-
-# add model object and our formula spec to a workflow object
-lm_wflow <- workflow() %>% 
-   add_model(lm_mod) %>%
-   add_formula(Sale_Price ~ Gr_Liv_Area)
-
-# fit our model across the 10-fold CV
-lm_fit_cv <- lm_wflow %>%
-   fit_resamples(kfolds)
-
-# assess results
-results <- collect_metrics(lm_fit_cv)
-results
-```
-
-The resulting cross-validated RMSE is `r scales::dollar(results[1, 'mean'][[1]])` (this is the average RMSE across the 10 CV folds). How should we interpret this? When applied to unseen data, the predictions this model makes are, on average, about `r scales::dollar(results[1, 'mean'][[1]])` off from the actual sale price. 
-
-We can perform cross-validation on the other two models in a similar fashion, which we do in the code chunk below. 
-
-```{r lm-mult-models-cv, warning=FALSE, message=FALSE}
-# two predictor variables
-workflow() %>% 
-   add_model(lm_mod) %>%
-   add_formula(Sale_Price ~ Gr_Liv_Area + Year_Built) %>%
-   fit_resamples(kfolds) %>%
-   collect_metrics()
-
-# using all available predictor variables
-workflow() %>% 
-   add_model(lm_mod) %>%
-   add_formula(Sale_Price ~ .) %>%
-   fit_resamples(kfolds) %>%
-   collect_metrics()
-```
-
-Extracting the results for each model, we see that by adding more information via more predictors, we are able to improve the out-of-sample cross validation performance metrics. Specifically, our cross-validated RMSE reduces from \$46,634 (the model with two predictors) down to \$39,318 (for our full model). In this case, the model with all possible main effects performs the "best" (compared with the other two).
-
-Now, this process of comparing multiple models is fairly common. And when we look at the code above we see a similar process - basically we want to train a linear regression using k-fold resampling across three different formula specifications (1 predictor, 2 predictors, and all available predictors).  
-
-Rather than re-use the same workflow code we can:
-
-1. Create three different model specifications (aka recipes)
-2. Combine these different recipes along with the model(s) of interest into a workflow set object. 
-```{block, type='note'}
-We could pass multiple models to train across each formula but here we are only interested in training a linear regression model (`linear_reg()`) on each formula specification.
+# option 2
+std <- ames_recipe %>%
+   step_normalize(predictors(), all_numeric())
 ```
 
 
-```{r lm-mult-models-workflowset}
-# create three different model recipes
-one_pred <- recipe(Sale_Price ~ Gr_Liv_Area, data = ames_train)
-two_pred <- recipe(Sale_Price ~ Gr_Liv_Area + Year_Built, data = ames_train)
-all_pred <- recipe(Sale_Price ~ ., data = ames_train) %>%
-   step_other(all_nominal_predictors(), threshold = 0.05)
+## Categorical features
 
-# combine into a list
-model_specs <- list(
-   model1 = one_pred,
-   model2 = two_pred,
-   model3 = all_pred
-   )
+Most models require that the predictors take numeric form.  There are exceptions; for example, tree-based models naturally handle numeric or categorical features.  However, even tree-based models can benefit from pre-processing categorical features.  The following sections will discuss a few of the more common approaches to engineer categorical features.
 
-lm_models <- workflow_set(model_specs, list(lm = linear_reg()), cross = FALSE)
-lm_models
+### One-hot & dummy encoding
+
+There are many ways to recode categorical variables as numeric. The most common is referred to as one-hot encoding, where we transpose our categorical variables so that each level of the feature is represented as a boolean value.  For example, one-hot encoding the left data frame in the below figure results in `X` being converted into three columns, one for each level. This is called less than _full rank_ encoding .  However, this creates perfect collinearity which causes problems with some predictive modeling algorithms (e.g., ordinary linear regression and neural networks).  Alternatively, we can create a full-rank encoding by dropping one of the levels (level `c` has been dropped). This is referred to as _dummy_ encoding. 
+
+```{r engineering-one-hot, echo=FALSE, fig.cap='Eight observations containing a categorical feature X and the difference in how one-hot and dummy encoding transforms this feature.', out.height="99%", out.width="99%"}
+knitr::include_graphics(here(img_path, "ohe-vs-dummy.png"))
 ```
 
-Next, we’d like to train our models using k-fold cross validation -- or in essence, fit these models using resampling. To do so, we will use a purrr-like function called `workflow_map()`. This function takes an initial argument of the function to apply (`fit_resamples()` to the workflows, followed by options to that function (i.e. `kfolds`).
+We can use `step_dummy()` to add a one-hot or dummy encoding to our recipe:
 
-```{block, type='note'}
-Basically we are using `workflow_map()` like a `for` loop or `map` function to iterate over each formula specification and perform some task - `fit_resamples()` in this example.
-```
+```{r 7b-engineering-ohe}
+# one-hot encode
+ohe <- ames_recipe %>%
+  step_dummy(all_nominal(), one_hot = TRUE)
 
-```{r lm-mult-models-workflowset-results}
-lm_results <- lm_models %>%
-   workflow_map("fit_resamples", resamples = kfolds)
-
-collect_metrics(lm_results) %>% 
-  filter(.metric == "rmse")
-```
-As we add more model comparisons it can be helpful to visualize the results, which we can do with `autoplot()`. Here we just see that model3 has the highest RMSE value compared to model2 and model1. 
-
-```{block, type='note'}
-This isn't the most informative plot right now but as we get into other models and start tuning hyperparameters we'll see how this plot becomes more useful.
+# dummy encode
+de <- ames_recipe %>%
+  step_dummy(all_nominal(), one_hot = FALSE)
 ```
 
 
-```{r lm-cv-results, fig.width=8, fig.height=3}
-autoplot(lm_results)
+### Ordinal encoding
+
+If a categorical feature is naturally ordered then numerically encoding the feature based on its order is a natural choice (most commonly referred to as ordinal encoding).  For example, the various quality features in the Ames housing data are ordinal in nature (ranging from `Very_Poor` to `Very_Excellent`).
+
+```{r engineering-qual-variables}
+train %>% select(matches('Qual$|QC$|_Cond$'))
 ```
 
+Ordinal encoding these features provides a natural and intuitive interpretation and can logically be applied to all models.
 
-## Feature importance
+If your features are already ordered factors then you can simply apply `step_ordinalscore()` to ordinal encode:
 
-Ok, so we found a linear regression model that performs best compared to other linear regression models. Our next goal is often to interpret the model structure. Linear regression models provide a very intuitive model structure as they assume a monotonic linear relationship between the predictor variables and the response. The linear relationship part of that statement just means, for a given predictor variable, it assumes for every one unit change in a given predictor variable there is a constant change in the response. As discussed earlier in the lesson, this constant rate of change is provided by the coefficient for a predictor. The monotonic relationship means that a given predictor variable will always have a positive or negative relationship. But how do we determine the most influential variables?
+```{r}
+ord <- ames_recipe %>%
+   step_ordinalscore(matches('Qual$|QC$|_Cond$'))
+```
 
-Variable importance seeks to identify those variables that are most influential in our model. For linear regression models, this is most often measured by the absolute value of the t-statistic for each model parameter used. Rather than search through each of the 
+However, if we look at our quality features we see they are characters instead of factors and their levels are not ordered. Moreover, some have a unique value that represents that feature doesn't exist in the house (i.e. `No_Basement`).
 
-We can use `vip::vip()` to extract and plot the most important variables. The importance measure is normalized from 100 (most important) to 0 (least important). The plot below illustrates that the top 5 most important variables are `Second_Flr_SF`, `First_Flr_SF`, `Kitchen_QualTypical`, `KitchenQualGood`, and `Mist_Val` respectively.  
+```{r}
+train %>% pull(Bsmt_Qual) %>% unique()
+```
 
-```{r lm-vip, fig.height=4.5}
-# extract best performing model and
-# train it on the train/test split
-# and extract the final fit model
-best_lm_model <- lm_results %>% 
-   extract_workflow(id = 'model3_lm') %>%
-   last_fit(split) %>%
+So in this case we're going to apply several feature engineering steps to:
+
+1. convert quality features to factors with specified levels,
+2. convert any missed levels (i.e. No_Basement, No_Pool) to "None",
+3. convert factor level to integer value ('Very_Poor' = 1, 'Poor' = 2, ..., 
+'Excellent' = 10, 'Very_Excellent' = 11)
+
+
+```{r}
+# specify levels in order
+lvls <- c("Very_Poor", "Poor", "Fair", "Below_Average", "Average", "Typical", 
+          "Above_Average", "Good", "Very_Good", "Excellent", "Very_Excellent")
+
+# apply ordinal encoding to quality features
+ord_lbl <- ames_recipe %>%
+   # 1. convert quality features to factors with specified levels
+   step_string2factor(matches('Qual$|QC$|_Cond$'), levels = lvls, ordered = TRUE) %>% 
+   # 2. convert any missed levels (i.e. No_Basement, No_Pool) to "None"
+   step_unknown(matches('Qual$|QC$|_Cond$'), new_level = "None") %>%
+   # 3. convert factor level to integer value
+   step_ordinalscore(matches('Qual$|QC$|_Cond$'))
+```
+
+Did this work, let's take a look. If we want to apply a recipe to a data set we can apply:
+
+* `prep`:  estimate feature engineering parameters based on training data.
+* `bake`: apply the prepped recipe to new, or the existing (`new_data = NULL`) data.
+
+We can see that our quality variables are now ordinal encoded.
+
+```{r check-ord-encoding}
+baked_recipe <- ord_lbl %>%
+   prep(strings_as_factor = FALSE) %>%
+   bake(new_data = NULL)
+
+baked_recipe %>% select(matches('Qual$|QC$|_Cond$'))
+```
+
+And if we want to see how the numeric values are mapped to the original data we can. Here, I just focus on the original `Overall_Qual` values and how they compare to the encoded values.
+
+```{r}
+encoded_Overall_Qual <- baked_recipe %>% 
+   select(Overall_Qual) %>%
+   rename(encoded_Overall_Qual = Overall_Qual)
+
+train %>%
+   select(Overall_Qual) %>%
+   bind_cols(encoded_Overall_Qual) %>%
+   count(Overall_Qual, encoded_Overall_Qual)
+```
+
+### Lumping
+
+Sometimes features will contain levels that have very few observations.  For example, there are 28 unique neighborhoods represented in the Ames housing data but several of them only have a few observations.   
+
+```{r engineering-overall-qual-levels, echo=FALSE}
+count(train, Neighborhood) %>% arrange(n)
+```
+
+Sometimes we can benefit from collapsing, or "lumping" these into a lesser number of categories.  In the above examples, we may want to collapse all levels that are observed in less than 1% of the training sample into an "other" category.  We can use `step_other()` to do so.  However, lumping should be used sparingly as there is often a loss in model performance [@apm].  
+
+```{block, type="tip"}
+Tree-based models often perform exceptionally well with high cardinality features and are not as impacted by levels with small representation.
+```
+
+The following lumps all neighborhoods that represent less than 1% of observations into an "other" category.
+
+```{r}
+# Lump levels for two features
+rare_encoder <- ames_recipe %>%
+   step_other(Neighborhood, threshold = 0.01, other = "other")
+```
+
+## Fit a model with a recipe
+
+Let's combine these feature engineering tasks into one recipe and then train a model with it.
+
+```{r final_recipe}
+final_recipe <- recipe(Sale_Price ~ ., data = train) %>%
+   step_nzv(all_predictors(), unique_cut = 10) %>%
+   step_YeoJohnson(all_numeric_predictors()) %>%
+   step_normalize(all_numeric_predictors()) %>%
+   step_string2factor(matches('Qual$|QC$|_Cond$'), levels = lvls, ordered = TRUE) %>% 
+   step_unknown(matches('Qual$|QC$|_Cond$'), new_level = "None") %>%
+   step_integer(matches('Qual$|QC$|_Cond$')) %>%
+   step_other(all_nominal_predictors(), threshold = 0.01, other = "other")
+```
+
+Let's go ahead and build a random forest model using the ranger engine (which is the default).
+
+```{r rf_model_final}
+rf_mod <- rand_forest() %>%
+   set_mode('regression')
+```
+
+We will want to use our recipe across several steps as we train and test our model. We will:
+
+1. **Process the recipe using the training set**: This involves any estimation or calculations based on the training set. For our recipe, the training set will be used to determine which predictors will have zero-variance in the training set, and should be slated for removal, what the mean and scale is in order to standardize the numeric features, etc.
+
+2. **Apply the recipe to the training set**: We create the final predictor set on the training set.
+
+3. **Apply the recipe to the test set**: We create the final predictor set on the test set. Nothing is recomputed and no information from the test set is used here; the feature engineering statistics computed from the training set are applied to the test set.
+
+To simplify this process, we can use a model workflow, which pairs a model and recipe together. This is a straightforward approach because different recipes are often needed for different models, so when a model and recipe are bundled, it becomes easier to train and test workflows. We’ll use the [**workflows** package](https://workflows.tidymodels.org/) from tidymodels to bundle our parsnip model (`rf_mod`) with our recipe (`ames_recipe`).
+
+```{r rf_model_workflow}
+rf_wflow <- workflow() %>% 
+  add_model(rf_mod) %>% 
+  add_recipe(final_recipe)
+
+rf_wflow
+```
+
+Now, there is a single function that can be used to prepare the recipe and train the model from the resulting predictors:
+
+```{r fit_workflow}
+rf_fit <- rf_wflow %>%
+   fit(data = train)
+```
+
+The `rf_fit` object has the finalized recipe and fitted model objects inside. You may want to extract the model or recipe objects from the workflow. To do this, you can use the helper functions `extract_fit_parsnip()` and `extract_recipe()`.
+
+```{r}
+rf_fit %>%
    extract_fit_parsnip()
-
-# plot top 10 influential features
-best_lm_model %>%
-   vip(num_features = 20)
 ```
 
-This is basically saying that our model finds that these are the most influential features in our data set that have the largest impact on the predicted outcome. If we order our data based on the t-statistic we see similar results. 
+Just as in the last lesson, we can make predictions with our fit model object and evaluate the model performance. Here, we compute the RMSE on our test data and we see we have a much better performance than previous models.
 
-```{r lm-best-model-t-stat}
-tidy(best_lm_model) %>%
-   arrange(desc(statistic))
+```{r}
+rf_fit %>%
+   predict(test) %>%
+   bind_cols(test %>% select(Sale_Price)) %>%
+   rmse(truth = Sale_Price, estimate = .pred)
 ```
-We can also use these results above to see the impact that these features have on the predicted value. For example, for every one additional unit of `Second_Flr_SF` our model adds \$67.98 to the predicted `Sale_Price`. 
 
-## Final thoughts
-
-Linear regression is usually the first supervised learning algorithm you will learn. The approach provides a solid fundamental understanding of the supervised learning task; however, as we’ll discuss in the next lesson there are several concerns that result from the assumptions required by linear regression. Future lessons will demonstrate extensions of linear regression that integrate dimension reduction steps into the algorithm that help address some of the problems with linear regression, and we'll see how more advanced supervised algorithms can provide greater flexibility and improved accuracy. Nonetheless, understanding linear regression provides a foundation that will serve you well in learning these more advanced methods.
+```{block, type='note'}
+This improved performance could be a result of using a model that fits the data better, using more features, or from the feature engineering.  Or, most likely, a combination of all the above!
+```
 
 ## Exercises
 
-```{block, type='todo'}
-Using the Boston housing data set where the response feature is the median value of homes within a census tract (`cmedv`):
+```{block, type = 'todo'}
+Using the ames housing data...
 
-1. Pick a single feature and apply a simple linear regression model.
-   - Interpret the feature's coefficient
-   - What is the model's performance? 
-2. Pick another feature to add to the model.
-   - Before applying the model why do you think this feature will help?
-   - Apply a linear regression model with the two features and compare to the simple linear model.
-   - Interpret the coefficients.
-3. Now apply a model that includes all the predictors.
-   - How does this model compare to the previous two?
-4. Compare the above three models using 10-fold cross validation.
-   - Which model do you think will generalize to unseen data the best?
-   - Using the best model from this resampling procedure, identify the top 3 most influential features for this model and interpret their coefficients.
+1. Rather than ordinal encode the quality and condition features, one-hot encode these features.
+2. What is the difference in the number of features in your training set?
+3. Apply this new recipe to the same random forest model and compute the test RMSE. How does the performance differ?
+4. Identify three new feature engineering steps that are provided by [recipes](https://recipes.tidymodels.org/):
+   - Why would these feature engineering steps be applicable to the Ames data?
+   - Apply these feature engineering steps along with the same random forest model. How do your results change?
 ```
+
+```{r, include=FALSE}
+rm(list = ls())
+```
+
