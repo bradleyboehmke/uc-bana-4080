@@ -1,6 +1,6 @@
-# Lesson 3a: Resampling
+# Lesson 3b: Resampling
 
-```{r setup-3a, include=FALSE}
+```{r setup-3b, include=FALSE}
 # clean up saved items that may carry over from previous lessons
 rm(list = ls())
 
@@ -27,49 +27,48 @@ By the end of this lesson you will be able to:
 
 1. Explain the reasoning for resampling procedures and when/why we should incorporate them into our ML workflow.
 2. Implement _k_-fold cross-validation procedures for more robust model evaluation.
+2. Implement bootstrap resampling procedures for more robust model evaluation.
 
 ## Prerequisites
 
-This lesson leverages the following packages and data. Recall in the last lesson we removed 5 variables since they cause some problems.  In the next lesson we'll learn how to take care of these issues but for now we'll just remove them as we did before.
+This lesson leverages the following packages and data. 
 
 ```{r}
 library(tidymodels)
 
 ames <- AmesHousing::make_ames()
-
-# remove some trouble variables
-trbl_vars <- c("MS_SubClass", "Condition_2", "Exterior_1st", 
-               "Exterior_2nd", "Misc_Feature")
-ames <- ames %>%
-   select(-trbl_vars)
 ```
 
 Let's go ahead and create our train-test split:
 
-```{r 3a-train-test-split}
+```{r 3b-train-test-split}
 # create train/test split
 set.seed(123)  # for reproducibility
-split  <- initial_split(ames, prop = 0.7)
+split  <- initial_split(ames, prop = 0.7, strata = Sale_Price)
 ames_train  <- training(split)
 ames_test   <- testing(split)
 ```
 
 ## Resampling & cross-validation
 
-In the previous lessons we split our data into training and testing sets and we assessed the performance of our model on the test set. Recall that the last model we trained and evaluated had a 
+In the previous lessons we split our data into a train and test set and we assessed the performance of our model on the test set. If we use a little feature engineering to take care of novel categorical levels, we see that our generalization RMSE based on the test set is \$26,144.
 
 ```{r}
-mlr <- linear_reg() %>%
-   fit(Sale_Price ~ ., data = ames_train) 
+mlr_recipe <- recipe(Sale_Price ~ ., data = ames_train) %>%
+   step_other(all_nominal_predictors(), threshold = 0.02, other = "other")
 
-# generalization error based on test set
-mlr %>%
+mlr_wflow <- workflow() %>%
+  add_model(linear_reg()) %>% 
+  add_recipe(mlr_recipe)
+
+mlr_fit <- mlr_wflow %>%
+   fit(data = ames_train)
+
+mlr_fit %>%
    predict(ames_test) %>%
-   bind_cols(ames_test) %>%
+   bind_cols(ames_test %>% select(Sale_Price)) %>%
    rmse(truth = Sale_Price, estimate = .pred)
 ```
-
-
 
 
 Unfortunately, there are a few pitfalls to this approach:
@@ -80,12 +79,11 @@ Unfortunately, there are a few pitfalls to this approach:
 
 ```{block, type='warning'}
 It is critical that the test set not be used prior to selecting your final model. Assessing results on the test set prior to final model selection biases the model selection process since the testing data will have become part of the model development process.
-
 ```
 
 ___Resampling methods___ provide an alternative approach by allowing us to repeatedly fit a model of interest to parts of the training data and test its performance on other parts of the training data.
 
-```{r 2b-resampling, echo=FALSE, out.width='90%', out.height='90%', fig.cap="Illustration of resampling. [@tidymodels]"}
+```{r 3b-resampling, echo=FALSE, out.width='90%', out.height='90%', fig.cap="Illustration of resampling. [@tidymodels]"}
 knitr::include_graphics(here(img_path, "resampling.svg"))
 ```
 
@@ -101,13 +99,13 @@ Cross-validation consists of repeating the procedure such that the training and 
 
 k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into *k* groups (aka folds) of approximately equal size.
 
-```{r 2b-cv-diagram, echo=FALSE, fig.cap="Illustration of k-fold sampling across a data sets index.", out.width='90%', out.height='90%'}
+```{r 3b-cv-diagram, echo=FALSE, fig.cap="Illustration of k-fold sampling across a data sets index.", out.width='90%', out.height='90%'}
 knitr::include_graphics(here(img_path, "cross_validation_diagram.png"))
 ```
 
 The model is fit on $k-1$ folds and then the remaining fold is used to compute model performance.  This procedure is repeated _k_ times; each time, a different fold is treated as the validation set. Consequently, with _k_-fold CV, every observation in the training data will be held out one time to be included in the assessment/validation set. This process results in _k_ estimates of the generalization error (say $\epsilon_1, \epsilon_2, \dots, \epsilon_k$). Thus, the _k_-fold CV estimate is computed by averaging the _k_ test errors, providing us with an approximation of the error we might expect on unseen data.
 
-```{r 2b-modeling-process-cv-diagram, echo=FALSE, out.width='90%', out.height='90%', fig.cap="Illustration of a 5-fold cross validation procedure."}
+```{r 3b-modeling-process-cv-diagram, echo=FALSE, out.width='90%', out.height='90%', fig.cap="Illustration of a 5-fold cross validation procedure."}
 knitr::include_graphics(here(img_path, "cv.png"))
 ```
 
@@ -118,48 +116,177 @@ In practice, one typically uses k=5 or k=10. There is no formal rule as to the s
 To implement k-fold CV we first make a resampling object. In this example we create a 10-fold resampling object.
 
 ```{r}
-kfolds <- vfold_cv(train, v = 10)
+set.seed(35)
+kfolds <- vfold_cv(ames_train, v = 10, strata = Sale_Price)
 ```
 
-We can now create our random forest model object and create a workflow object as we did in the previous lesson. To fit our model across our 10-folds we just use `fit_resamples()`.
+We can now create our multiple linear regression workflow object as we did previously and fit our model across our 10-folds; we just use `fit_resamples()` rather than `fit()`.
 
-```{r 2b-rf-cv, eval=FALSE}
-# create our random forest model object
-rf_mod <- rand_forest() %>%
-   set_mode('regression')
+```{r 3b-rf-cv}
+mlr_recipe <- recipe(Sale_Price ~ ., data = ames_train) %>%
+   step_other(all_nominal_predictors(), threshold = 0.03, other = "other")
 
-# add model object and our formula spec to a workflow object
-rf_wflow <- workflow() %>% 
-   add_model(rf_mod) %>%
-   add_formula(Sale_Price ~ .)
+mlr_wflow <- workflow() %>%
+  add_model(linear_reg()) %>% 
+  add_recipe(mlr_recipe)
 
 # fit our model across the 10-fold CV
-rf_fit_cv <- rf_wflow %>%
+mlr_fit_cv <- mlr_wflow %>%
    fit_resamples(kfolds)
 ```
 
 We can then get our average 10-fold cross validation error with `collect_metrics()`:
 
-```{r 2b-overall-cv-results, eval=FALSE}
-collect_metrics(rf_fit_cv)
+```{r 3b-overall-cv-results}
+collect_metrics(mlr_fit_cv)
 ```
 
-If we want to see the model evaluation metric (i.e. RMSE) for each fold we just need to unnest the `rf_fit_cv` object. 
+If we want to see the model evaluation metric (i.e. RMSE) for each fold we just need to include `summarize = FALSE`. 
 
-```{block, type='tip'}
-We have not discussed nested data frames but you can read about them [here](https://tidyr.tidyverse.org/articles/nest.html) 
-```
 
-```{r 2b-cv-fold-results, eval=FALSE}
-rf_fit_cv %>% 
-   unnest(.metrics) %>%
+```{r 3b-cv-fold-results}
+collect_metrics(mlr_fit_cv, summarize = FALSE) %>%
    filter(.metric == 'rmse')
 ```
 
-## Bootstrapping
+If we compare these results to our previous generalization error based on the test set, we see some differences. We now see that our average generalization RMSE across the ten holdout sets is \$32,547 and individual validation set RMSEs range from \$24,794 - \$47,136. This provides us a little more robust expectations around how our model will perform on future unseen data. And it actually shows us that our single test set RMSE may have been biased and too optimistic!
 
+One other item to note - often, people assume that when creating the *k*-folds that R just selects the first *n* observations to be the first fold, the next *n* observations to be in the second fold, etc.  However, this is not the case. Rather, R will randomly assign observations to each fold but will also ensure that each observation is only assigned to a single fold for validation purposes.  The following illustrates a 10-fold cross validation on a dataset with 32 observations. Each observation is used once for validation and nine times for training.
+
+```{r, echo=FALSE, fig.align='center', fig.width=7, fig.height=5.5, fig.cap="10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training."}
+cv <- vfold_cv(mtcars, 10)
+
+cv$splits %>%
+  map2_dfr(seq_along(cv$splits), ~ mtcars %>% mutate(
+    Resample = paste0("Fold_", str_pad(.y, 2, pad = 0)),
+    ID = row_number(),
+    Data = ifelse(ID %in% .x$in_id, "Training", "Validation"))
+    ) %>%
+  ggplot(aes(Resample, ID, fill = Data)) +
+  geom_tile() +
+  scale_fill_manual(values = c("#f2f2f2", "#AAAAAA")) +
+  scale_y_reverse("Observation ID", breaks = 1:nrow(mtcars), expand = c(0, 0)) +
+  scale_x_discrete(NULL, expand = c(0, 0)) +
+  theme_classic() +
+  theme(legend.title=element_blank())
+```
+
+### Knowledge check
+
+```{block, type='todo'}
+Using the `boston.csv` data...
+
+1. Create a multiple linear regression model using all predictors (without any feature engineering); however, rather than computing the generalization error using the test data, apply 10-fold cross-validation.
+2. What is the average cross-validation RMSE?
+3. What is the range of cross-validation RMSE values across all ten folds?
+```
+
+
+## Bootstrap resampling
+
+A bootstrap sample is a random sample of the data taken _with replacement_ [@efron1986bootstrap].  This means that, after a data point is selected for inclusion in the subset, it's still available for further selection. A bootstrap sample is the same size as the original data set from which it was constructed. Figure \@ref(fig:modeling-process-bootstrapscheme) provides a schematic of bootstrap sampling where each bootstrap sample contains 12 observations just as in the original data set. Furthermore, bootstrap sampling will contain approximately the same distribution of values (represented by colors) as the original data set.
+
+```{r modeling-process-bootstrapscheme, echo=FALSE, out.width='70%', out.height='70%', fig.cap="Illustration of the bootstrapping process."}
+knitr::include_graphics(here(img_path, "bootstrap-scheme.png"))
+```
+
+Since samples are drawn with replacement, each bootstrap sample is likely to contain duplicate values. In fact, on average, $\approx 63.21$% of the original sample ends up in any particular bootstrap sample. The original observations not contained in a particular bootstrap sample are considered _out-of-bag_ (OOB). When bootstrapping, a model can be built on the selected samples and validated on the OOB samples; this is often done, for example, in random forests (which we'll discuss in a later module).
+
+Since observations are replicated in bootstrapping, there tends to be less variability in the error measure compared with _k_-fold CV [@efron1983estimating]. However, this can also increase the bias of your error estimate (we'll discuss the concept of bias versus variance in a future module).  This can be problematic with smaller data sets; however, for most average-to-large data sets (say $n \geq 1,000$) this concern is often negligible. 
+
+Figure \@ref(fig:modeling-process-sampling-comparison) compares bootstrapping to 10-fold CV on a small data set with $n = 32$ observations. A thorough introduction to the bootstrap and its use in R is provided in @davison1997bootstrap.
+
+```{r modeling-process-sampling-comparison, echo=FALSE, fig.width=12, fig.height=5.5, fig.cap="Bootstrap sampling (left) versus 10-fold cross validation (right) on 32 observations. For bootstrap sampling, the observations that have zero replications (white) are the out-of-bag observations used for validation."}
+boots <- rsample::bootstraps(mtcars, 10)
+
+boots_plot <- boots$splits %>%
+  map2_dfr(seq_along(boots$splits), ~ mtcars %>% 
+             mutate(
+               Resample = paste0("Bootstrap_", str_pad(.y, 2, pad = 0)),
+               ID = row_number()
+             ) %>%
+             group_by(ID) %>%
+             mutate(Replicates = factor(sum(ID == .x$in_id)))) %>%
+  ggplot(aes(Resample, ID, fill = Replicates)) +
+  geom_tile() +
+  scale_fill_manual(values = c("#FFFFFF", "#F5F5F5", "#C8C8C8", "#A0A0A0", "#707070", "#505050", "#000000")) +
+  scale_y_reverse("Observation ID", breaks = 1:nrow(mtcars), expand = c(0, 0)) +
+  scale_x_discrete(NULL, expand = c(0, 0)) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggtitle("Bootstrap sampling") 
+
+cv <- vfold_cv(mtcars, 10)
+
+cv_plot <- cv$splits %>%
+  map2_dfr(seq_along(cv$splits), ~ mtcars %>% mutate(
+    Resample = paste0("Fold_", str_pad(.y, 2, pad = 0)),
+    ID = row_number(),
+    Data = ifelse(ID %in% .x$in_id, "Training", "Validation"))
+    ) %>%
+  ggplot(aes(Resample, ID, fill = Data)) +
+  geom_tile() +
+  scale_fill_manual(values = c("#f2f2f2", "#AAAAAA")) +
+  scale_y_reverse("Observation ID", breaks = 1:nrow(mtcars), expand = c(0, 0)) +
+  scale_x_discrete(NULL, expand = c(0, 0)) +
+  theme_classic() +
+  theme(legend.title=element_blank()) + 
+  ggtitle("10-fold cross validation") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+cowplot::plot_grid(boots_plot, cv_plot, align = "h", nrow = 1)
+```
+
+We can create bootstrap samples easily with `bootstraps()`, as illustrated in the code chunk below.
+
+```{r modeling-process-create-bootstraps}
+set.seed(35)
+bs_samples <- bootstraps(ames_train, times = 10, strata = Sale_Price)
+```
+
+Once we've created our bootstrap samples we can reuse the same `mlr_wflow` object we created earlier and refit it with the bootstrap samples. Our results again show that our average resampling RMSE is \$38,765 -- again, much higher than the single test set RMSE we obtained previously.
+
+```{r 3b-mlr-bs}
+# fit our model across the bootstrapped samples
+mlr_fit_bs <- mlr_wflow %>%
+   fit_resamples(bs_samples)
+
+
+collect_metrics(mlr_fit_bs)
+```
+
+Bootstrapping is, typically, more of an internal resampling procedure that is naturally built into certain ML algorithms.  This will become more apparent in later modules where we discuss bagging and random forests.
+
+### Knowledge check
+
+```{block, type='todo'}
+Using the `boston.csv` data...
+
+1. Create a multiple linear regression model using all predictors (without any feature engineering) and use bootstrap resampling with 10 boostrap samples.
+2. What is the average cross-validation RMSE?
+3. What is the range of cross-validation RMSE values across all ten folds?
+4. How do the results compare to the 10-fold cross validation you performed earlier?
+```
 
 ## Alternative methods
 
+It is important to note that there are other useful resampling procedures. If you're working with time-series specific data then you will want to incorporate rolling origin and other time series resampling procedures. @hyndman2018forecasting is the dominant, R-focused, time series resource^[See their open source book at https://www.otexts.org/fpp2].
+
+Additionally, @efron1983estimating developed the "632 method" and @efron1997improvements discuss the "632+ method"; both approaches seek to minimize biases experienced with bootstrapping on smaller data sets.
+
+Other methods exist but K-fold cross validation and bootstrapping are the dominant methods used and are often sufficient.
 
 ## Exercises
+
+```{block, type='todo'}
+Use the Advertising.csv data to complete the following tasks.  The Advertising.csv data contains three predictor variables - `TV`, `Radio`, and `Newspaper`, which represents a companies advertising budget for these respective mediums across 200 metropolitan markets. It also contains the response variable - `Sales`, which represents the total sales in thousands of units for a given product.
+
+* Split the data into 70-30 training-test sets.
+* Using 10-fold cross-validation, create a multiple linear regression model where `Sales` is a function of all three predictors (without any feature engineering).
+   - What is the average cross-validation RMSE?
+   - What is the range of cross-validation RMSE values across all ten folds?
+* Using boostrap resampling with 10 bootstrap samples, create a multiple linear regression model where `Sales` is a function of all three predictors (without any feature engineering).
+   - What is the average bootstrap RMSE?
+   - What is the range of bootstrap RMSE values across all ten bootstrap samples?
+```
+

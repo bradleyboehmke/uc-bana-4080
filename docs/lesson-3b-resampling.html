@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>9 Lesson 3b: Resampling | Data Mining with R</title>
+  <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="9 Lesson 3b: Resampling | Data Mining with R" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="github-repo" content="bradleyboehmke/uc-bana-7025" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="9 Lesson 3b: Resampling | Data Mining with R" />
+  <meta name="twitter:site" content="@bradleyboehmke" />
+  <meta name="twitter:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  
+
+<meta name="author" content="Bradley Boehmke" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="lesson-3a-feature-engineering.html"/>
+<link rel="next" href="computing-environment.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<script src="libs/viz-1.8.2/viz.js"></script>
+<link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">UC BANA 4080: Data Mining</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Syllabus</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#learning-objectives"><i class="fa fa-check"></i>Learning Objectives</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#material"><i class="fa fa-check"></i>Material</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#class-structure"><i class="fa fa-check"></i>Class Structure</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#schedule"><i class="fa fa-check"></i>Schedule</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#conventions-used-in-this-book"><i class="fa fa-check"></i>Conventions used in this book</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#feedback"><i class="fa fa-check"></i>Feedback</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#acknowledgements"><i class="fa fa-check"></i>Acknowledgements</a></li>
+</ul></li>
+<li class="part"><span><b>I Module 1</b></span></li>
+<li class="chapter" data-level="1" data-path="overview.html"><a href="overview.html"><i class="fa fa-check"></i><b>1</b> Overview</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="overview.html"><a href="overview.html#learning-objectives-1"><i class="fa fa-check"></i><b>1.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="1.2" data-path="overview.html"><a href="overview.html#estimated-time-requirement"><i class="fa fa-check"></i><b>1.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="1.3" data-path="overview.html"><a href="overview.html#tasks"><i class="fa fa-check"></i><b>1.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html"><i class="fa fa-check"></i><b>2</b> Lesson 1a: Intro to machine learning</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#learning-objectives-2"><i class="fa fa-check"></i><b>2.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="2.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#supervised-learning"><i class="fa fa-check"></i><b>2.2</b> Supervised learning</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#regression-problems"><i class="fa fa-check"></i><b>2.2.1</b> Regression problems</a></li>
+<li class="chapter" data-level="2.2.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#classification-problems"><i class="fa fa-check"></i><b>2.2.2</b> Classification problems</a></li>
+<li class="chapter" data-level="2.2.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check"><i class="fa fa-check"></i><b>2.2.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#unsupervised-learning"><i class="fa fa-check"></i><b>2.3</b> Unsupervised learning</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check-1"><i class="fa fa-check"></i><b>2.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#machine-learning-in"><i class="fa fa-check"></i><b>2.4</b> Machine Learning in <svg aria-hidden="true" role="img" viewBox="0 0 581 512" style="height:1em;width:1.13em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M581 226.6C581 119.1 450.9 32 290.5 32S0 119.1 0 226.6C0 322.4 103.3 402 239.4 418.1V480h99.1v-61.5c24.3-2.7 47.6-7.4 69.4-13.9L448 480h112l-67.4-113.7c54.5-35.4 88.4-84.9 88.4-139.7zm-466.8 14.5c0-73.5 98.9-133 220.8-133s211.9 40.7 211.9 133c0 50.1-26.5 85-70.3 106.4-2.4-1.6-4.7-2.9-6.4-3.7-10.2-5.2-27.8-10.5-27.8-10.5s86.6-6.4 86.6-92.7-90.6-87.9-90.6-87.9h-199V361c-74.1-21.5-125.2-67.1-125.2-119.9zm225.1 38.3v-55.6c57.8 0 87.8-6.8 87.8 27.3 0 36.5-38.2 28.3-87.8 28.3zm-.9 72.5H365c10.8 0 18.9 11.7 24 19.2-16.1 1.9-33 2.8-50.6 2.9v-22.1z"/></svg></a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check-2"><i class="fa fa-check"></i><b>2.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#the-data-sets"><i class="fa fa-check"></i><b>2.5</b> The data sets</a>
+<ul>
+<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing</a></li>
+<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes</a></li>
+<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers</a></li>
+<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing</a></li>
+<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition</a></li>
+<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters</a></li>
+</ul></li>
+<li class="chapter" data-level="2.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#what-youll-learn-next"><i class="fa fa-check"></i><b>2.6</b> What You’ll Learn Next</a></li>
+<li class="chapter" data-level="2.7" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#exercises"><i class="fa fa-check"></i><b>2.7</b> Exercises</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html"><i class="fa fa-check"></i><b>3</b> Lesson 1b: First model with Tidymodels</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#learning-objectives-3"><i class="fa fa-check"></i><b>3.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="3.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#prerequisites"><i class="fa fa-check"></i><b>3.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="3.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#data-splitting"><i class="fa fa-check"></i><b>3.3</b> Data splitting</a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#simple-random-sampling"><i class="fa fa-check"></i><b>3.3.1</b> Simple random sampling</a></li>
+<li class="chapter" data-level="3.3.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#stratified-sampling"><i class="fa fa-check"></i><b>3.3.2</b> Stratified sampling</a></li>
+<li class="chapter" data-level="3.3.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-3"><i class="fa fa-check"></i><b>3.3.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#building-models"><i class="fa fa-check"></i><b>3.4</b> Building models</a>
+<ul>
+<li class="chapter" data-level="3.4.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-4"><i class="fa fa-check"></i><b>3.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#making-predictions"><i class="fa fa-check"></i><b>3.5</b> Making predictions</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-5"><i class="fa fa-check"></i><b>3.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#evaluating-model-performance"><i class="fa fa-check"></i><b>3.6</b> Evaluating model performance</a>
+<ul>
+<li class="chapter" data-level="3.6.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#regression-models"><i class="fa fa-check"></i><b>3.6.1</b> Regression models</a></li>
+<li class="chapter" data-level="3.6.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#classification-models"><i class="fa fa-check"></i><b>3.6.2</b> Classification models</a></li>
+<li class="chapter" data-level="3.6.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-6"><i class="fa fa-check"></i><b>3.6.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.7" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#exercises-1"><i class="fa fa-check"></i><b>3.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>II Module 2</b></span></li>
+<li class="chapter" data-level="4" data-path="overview-1.html"><a href="overview-1.html"><i class="fa fa-check"></i><b>4</b> Overview</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="overview-1.html"><a href="overview-1.html#learning-objectives-4"><i class="fa fa-check"></i><b>4.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="4.2" data-path="overview-1.html"><a href="overview-1.html#estimated-time-requirement-1"><i class="fa fa-check"></i><b>4.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="4.3" data-path="overview-1.html"><a href="overview-1.html#tasks-1"><i class="fa fa-check"></i><b>4.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html"><i class="fa fa-check"></i><b>5</b> Lesson 2a: Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#learning-objectives-5"><i class="fa fa-check"></i><b>5.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="5.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#prerequisites-1"><i class="fa fa-check"></i><b>5.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="5.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#correlation"><i class="fa fa-check"></i><b>5.3</b> Correlation</a>
+<ul>
+<li class="chapter" data-level="5.3.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-7"><i class="fa fa-check"></i><b>5.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#simple-linear-regression"><i class="fa fa-check"></i><b>5.4</b> Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="5.4.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#best-fit-line"><i class="fa fa-check"></i><b>5.4.1</b> Best fit line</a></li>
+<li class="chapter" data-level="5.4.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#estimating-best-fit"><i class="fa fa-check"></i><b>5.4.2</b> Estimating “best fit”</a></li>
+<li class="chapter" data-level="5.4.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#inference"><i class="fa fa-check"></i><b>5.4.3</b> Inference</a></li>
+<li class="chapter" data-level="5.4.4" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-8"><i class="fa fa-check"></i><b>5.4.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#making-predictions-1"><i class="fa fa-check"></i><b>5.5</b> Making predictions</a></li>
+<li class="chapter" data-level="5.6" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#assessing-model-accuracy"><i class="fa fa-check"></i><b>5.6</b> Assessing model accuracy</a>
+<ul>
+<li class="chapter" data-level="5.6.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#training-data-accuracy"><i class="fa fa-check"></i><b>5.6.1</b> Training data accuracy</a></li>
+<li class="chapter" data-level="5.6.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#test-data-accuracy"><i class="fa fa-check"></i><b>5.6.2</b> Test data accuracy</a></li>
+<li class="chapter" data-level="5.6.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-9"><i class="fa fa-check"></i><b>5.6.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.7" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#exercises-2"><i class="fa fa-check"></i><b>5.7</b> Exercises</a></li>
+<li class="chapter" data-level="5.8" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#other-resources"><i class="fa fa-check"></i><b>5.8</b> Other resources</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html"><i class="fa fa-check"></i><b>6</b> Lesson 2b: Multiple linear regression</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#learning-objectives-6"><i class="fa fa-check"></i><b>6.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="6.2" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#prerequisites-2"><i class="fa fa-check"></i><b>6.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="6.3" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#adding-additional-predictors"><i class="fa fa-check"></i><b>6.3</b> Adding additional predictors</a>
+<ul>
+<li class="chapter" data-level="6.3.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#knowledge-check-10"><i class="fa fa-check"></i><b>6.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="6.4" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#interactions"><i class="fa fa-check"></i><b>6.4</b> Interactions</a></li>
+<li class="chapter" data-level="6.5" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#qualitative-predictors"><i class="fa fa-check"></i><b>6.5</b> Qualitative predictors</a>
+<ul>
+<li class="chapter" data-level="6.5.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#knowledge-check-11"><i class="fa fa-check"></i><b>6.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#including-many-predictors"><i class="fa fa-check"></i><b>6.6</b> Including many predictors</a></li>
+<li class="chapter" data-level="6.7" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#feature-importance"><i class="fa fa-check"></i><b>6.7</b> Feature importance</a></li>
+<li class="chapter" data-level="6.8" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#exercises-3"><i class="fa fa-check"></i><b>6.8</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>III Module 3</b></span></li>
+<li class="chapter" data-level="7" data-path="overview-2.html"><a href="overview-2.html"><i class="fa fa-check"></i><b>7</b> Overview</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="overview-2.html"><a href="overview-2.html#learning-objectives-7"><i class="fa fa-check"></i><b>7.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="7.2" data-path="overview-2.html"><a href="overview-2.html#estimated-time-requirement-2"><i class="fa fa-check"></i><b>7.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="7.3" data-path="overview-2.html"><a href="overview-2.html#tasks-2"><i class="fa fa-check"></i><b>7.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html"><i class="fa fa-check"></i><b>8</b> Lesson 3a: Feature engineering</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#learning-objectives-8"><i class="fa fa-check"></i><b>8.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="8.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#prerequisites-3"><i class="fa fa-check"></i><b>8.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="8.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#create-a-recipe"><i class="fa fa-check"></i><b>8.3</b> Create a recipe</a></li>
+<li class="chapter" data-level="8.4" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#numeric-features"><i class="fa fa-check"></i><b>8.4</b> Numeric features</a>
+<ul>
+<li class="chapter" data-level="8.4.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#standardizing"><i class="fa fa-check"></i><b>8.4.1</b> Standardizing</a></li>
+<li class="chapter" data-level="8.4.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#normalizing"><i class="fa fa-check"></i><b>8.4.2</b> Normalizing</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#categorical-features"><i class="fa fa-check"></i><b>8.5</b> Categorical features</a>
+<ul>
+<li class="chapter" data-level="8.5.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#one-hot-dummy-encoding"><i class="fa fa-check"></i><b>8.5.1</b> One-hot &amp; dummy encoding</a></li>
+<li class="chapter" data-level="8.5.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#ordinal-encoding"><i class="fa fa-check"></i><b>8.5.2</b> Ordinal encoding</a></li>
+<li class="chapter" data-level="8.5.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#lumping"><i class="fa fa-check"></i><b>8.5.3</b> Lumping</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#fit-a-model-with-a-recipe"><i class="fa fa-check"></i><b>8.6</b> Fit a model with a recipe</a></li>
+<li class="chapter" data-level="8.7" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#exercises-4"><i class="fa fa-check"></i><b>8.7</b> Exercises</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html"><i class="fa fa-check"></i><b>9</b> Lesson 3b: Resampling</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#learning-objectives-9"><i class="fa fa-check"></i><b>9.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="9.2" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#prerequisites-4"><i class="fa fa-check"></i><b>9.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="9.3" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#resampling-cross-validation"><i class="fa fa-check"></i><b>9.3</b> Resampling &amp; cross-validation</a></li>
+<li class="chapter" data-level="9.4" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#k-fold-cross-validation"><i class="fa fa-check"></i><b>9.4</b> K-fold cross-validation</a>
+<ul>
+<li class="chapter" data-level="9.4.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#knowledge-check-12"><i class="fa fa-check"></i><b>9.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="9.5" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#bootstrap-resampling"><i class="fa fa-check"></i><b>9.5</b> Bootstrap resampling</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#knowledge-check-13"><i class="fa fa-check"></i><b>9.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="9.6" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#alternative-methods"><i class="fa fa-check"></i><b>9.6</b> Alternative methods</a></li>
+<li class="chapter" data-level="9.7" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#exercises-5"><i class="fa fa-check"></i><b>9.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>IV Additional Content</b></span></li>
+<li class="chapter" data-level="" data-path="computing-environment.html"><a href="computing-environment.html"><i class="fa fa-check"></i>Computing Environment</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://www.uc.edu/" target="blank">University of Cincinnati</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Data Mining with R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="lesson-3b-resampling" class="section level1 hasAnchor" number="9">
+<h1><span class="header-section-number">9</span> Lesson 3b: Resampling<a href="lesson-3b-resampling.html#lesson-3b-resampling" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>The last several lessons gave you a good introduction to building predictive models using the tidymodels construct. And as we trained our models we evaluated their performance on the test set, which we called the <em>generalization error</em>. However, the approach we’ve taken thus far to evaluate the generalization error can have some pitfalls. This lesson is going to go deeper into the idea of model evaluation and we’ll discuss how to incorporate <strong><em>resampling</em></strong> procedures to give you a more robust assessment of model performance.</p>
+<div id="learning-objectives-9" class="section level2 hasAnchor" number="9.1">
+<h2><span class="header-section-number">9.1</span> Learning objectives<a href="lesson-3b-resampling.html#learning-objectives-9" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>By the end of this lesson you will be able to:</p>
+<ol style="list-style-type: decimal">
+<li>Explain the reasoning for resampling procedures and when/why we should incorporate them into our ML workflow.</li>
+<li>Implement <em>k</em>-fold cross-validation procedures for more robust model evaluation.</li>
+<li>Implement bootstrap resampling procedures for more robust model evaluation.</li>
+</ol>
+</div>
+<div id="prerequisites-4" class="section level2 hasAnchor" number="9.2">
+<h2><span class="header-section-number">9.2</span> Prerequisites<a href="lesson-3b-resampling.html#prerequisites-4" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>This lesson leverages the following packages and data.</p>
+<div class="sourceCode" id="cb91"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb91-1"><a href="lesson-3b-resampling.html#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb91-2"><a href="lesson-3b-resampling.html#cb91-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-3"><a href="lesson-3b-resampling.html#cb91-3" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span></code></pre></div>
+<p>Let’s go ahead and create our train-test split:</p>
+<div class="sourceCode" id="cb92"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb92-1"><a href="lesson-3b-resampling.html#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create train/test split</span></span>
+<span id="cb92-2"><a href="lesson-3b-resampling.html#cb92-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb92-3"><a href="lesson-3b-resampling.html#cb92-3" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> Sale_Price)</span>
+<span id="cb92-4"><a href="lesson-3b-resampling.html#cb92-4" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb92-5"><a href="lesson-3b-resampling.html#cb92-5" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
+</div>
+<div id="resampling-cross-validation" class="section level2 hasAnchor" number="9.3">
+<h2><span class="header-section-number">9.3</span> Resampling &amp; cross-validation<a href="lesson-3b-resampling.html#resampling-cross-validation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>In the previous lessons we split our data into a train and test set and we assessed the performance of our model on the test set. If we use a little feature engineering to take care of novel categorical levels, we see that our generalization RMSE based on the test set is $26,144.</p>
+<div class="sourceCode" id="cb93"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb93-1"><a href="lesson-3b-resampling.html#cb93-1" aria-hidden="true" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
+<span id="cb93-2"><a href="lesson-3b-resampling.html#cb93-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">step_other</span>(<span class="fu">all_nominal_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.02</span>, <span class="at">other =</span> <span class="st">&quot;other&quot;</span>)</span>
+<span id="cb93-3"><a href="lesson-3b-resampling.html#cb93-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-4"><a href="lesson-3b-resampling.html#cb93-4" aria-hidden="true" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb93-5"><a href="lesson-3b-resampling.html#cb93-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb93-6"><a href="lesson-3b-resampling.html#cb93-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(mlr_recipe)</span>
+<span id="cb93-7"><a href="lesson-3b-resampling.html#cb93-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-8"><a href="lesson-3b-resampling.html#cb93-8" aria-hidden="true" tabindex="-1"></a>mlr_fit <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb93-9"><a href="lesson-3b-resampling.html#cb93-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
+<span id="cb93-10"><a href="lesson-3b-resampling.html#cb93-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-11"><a href="lesson-3b-resampling.html#cb93-11" aria-hidden="true" tabindex="-1"></a>mlr_fit <span class="sc">%&gt;%</span></span>
+<span id="cb93-12"><a href="lesson-3b-resampling.html#cb93-12" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(ames_test) <span class="sc">%&gt;%</span></span>
+<span id="cb93-13"><a href="lesson-3b-resampling.html#cb93-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bind_cols</span>(ames_test <span class="sc">%&gt;%</span> <span class="fu">select</span>(Sale_Price)) <span class="sc">%&gt;%</span></span>
+<span id="cb93-14"><a href="lesson-3b-resampling.html#cb93-14" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rmse</span>(<span class="at">truth =</span> Sale_Price, <span class="at">estimate =</span> .pred)</span>
+<span id="cb93-15"><a href="lesson-3b-resampling.html#cb93-15" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
+<span id="cb93-16"><a href="lesson-3b-resampling.html#cb93-16" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator .estimate</span></span>
+<span id="cb93-17"><a href="lesson-3b-resampling.html#cb93-17" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb93-18"><a href="lesson-3b-resampling.html#cb93-18" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard      26144.</span></span></code></pre></div>
+<p>Unfortunately, there are a few pitfalls to this approach:</p>
+<ol style="list-style-type: decimal">
+<li>If our dataset is small, a single test set may not provide realistic expectations of our model’s performance on unseen data.</li>
+<li>A single test set does not provide us any insight on variability of our model’s performance.</li>
+<li>Using our test set to drive our model building process can bias our results via data leakage. Basically, the more we use the test data to assess various model performances, the less likely the test data is behaving like true, unseen data.</li>
+</ol>
+<div class="warning">
+<p>
+It is critical that the test set not be used prior to selecting your
+final model. Assessing results on the test set prior to final model
+selection biases the model selection process since the testing data will
+have become part of the model development process.
+</p>
+</div>
+<p><strong><em>Resampling methods</em></strong> provide an alternative approach by allowing us to repeatedly fit a model of interest to parts of the training data and test its performance on other parts of the training data.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:3b-resampling"></span>
+<img src="images/resampling.svg" alt="Illustration of resampling. [@tidymodels]" width="90%" height="90%" />
+<p class="caption">
+Figure 9.1: Illustration of resampling. <span class="citation">(<a href="#ref-tidymodels" role="doc-biblioref">Kuhn, Max n.d.</a>)</span>
+</p>
+</div>
+<div class="note">
+<p>
+This allows us to train and validate our model entirely on the
+training data and not touch the test data until we have selected a final
+“optimal” model.
+</p>
+</div>
+<p>The two most commonly used resampling methods include <strong>k-fold cross-validation</strong> and <strong>bootstrap sampling</strong>.</p>
+</div>
+<div id="k-fold-cross-validation" class="section level2 hasAnchor" number="9.4">
+<h2><span class="header-section-number">9.4</span> K-fold cross-validation<a href="lesson-3b-resampling.html#k-fold-cross-validation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Cross-validation consists of repeating the procedure such that the training and testing sets are different each time. Generalization performance metrics are collected for each repetition and then aggregated. As a result we can get an estimate of the variability of the model’s generalization performance.</p>
+<p>k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into <em>k</em> groups (aka folds) of approximately equal size.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:3b-cv-diagram"></span>
+<img src="images/cross_validation_diagram.png" alt="Illustration of k-fold sampling across a data sets index." width="90%" height="90%" />
+<p class="caption">
+Figure 9.2: Illustration of k-fold sampling across a data sets index.
+</p>
+</div>
+<p>The model is fit on <span class="math inline">\(k-1\)</span> folds and then the remaining fold is used to compute model performance. This procedure is repeated <em>k</em> times; each time, a different fold is treated as the validation set. Consequently, with <em>k</em>-fold CV, every observation in the training data will be held out one time to be included in the assessment/validation set. This process results in <em>k</em> estimates of the generalization error (say <span class="math inline">\(\epsilon_1, \epsilon_2, \dots, \epsilon_k\)</span>). Thus, the <em>k</em>-fold CV estimate is computed by averaging the <em>k</em> test errors, providing us with an approximation of the error we might expect on unseen data.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:3b-modeling-process-cv-diagram"></span>
+<img src="images/cv.png" alt="Illustration of a 5-fold cross validation procedure." width="90%" height="90%" />
+<p class="caption">
+Figure 9.3: Illustration of a 5-fold cross validation procedure.
+</p>
+</div>
+<div class="tip">
+<p>
+In practice, one typically uses k=5 or k=10. There is no formal rule
+as to the size of k; however, as k gets larger, the difference between
+the estimated performance and the true performance to be seen on the
+test set will decrease.
+</p>
+</div>
+<p>To implement k-fold CV we first make a resampling object. In this example we create a 10-fold resampling object.</p>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="lesson-3b-resampling.html#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">35</span>)</span>
+<span id="cb94-2"><a href="lesson-3b-resampling.html#cb94-2" aria-hidden="true" tabindex="-1"></a>kfolds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> Sale_Price)</span></code></pre></div>
+<p>We can now create our multiple linear regression workflow object as we did previously and fit our model across our 10-folds; we just use <code>fit_resamples()</code> rather than <code>fit()</code>.</p>
+<div class="sourceCode" id="cb95"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb95-1"><a href="lesson-3b-resampling.html#cb95-1" aria-hidden="true" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
+<span id="cb95-2"><a href="lesson-3b-resampling.html#cb95-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">step_other</span>(<span class="fu">all_nominal_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.03</span>, <span class="at">other =</span> <span class="st">&quot;other&quot;</span>)</span>
+<span id="cb95-3"><a href="lesson-3b-resampling.html#cb95-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-4"><a href="lesson-3b-resampling.html#cb95-4" aria-hidden="true" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb95-5"><a href="lesson-3b-resampling.html#cb95-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb95-6"><a href="lesson-3b-resampling.html#cb95-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(mlr_recipe)</span>
+<span id="cb95-7"><a href="lesson-3b-resampling.html#cb95-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb95-8"><a href="lesson-3b-resampling.html#cb95-8" aria-hidden="true" tabindex="-1"></a><span class="co"># fit our model across the 10-fold CV</span></span>
+<span id="cb95-9"><a href="lesson-3b-resampling.html#cb95-9" aria-hidden="true" tabindex="-1"></a>mlr_fit_cv <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb95-10"><a href="lesson-3b-resampling.html#cb95-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(kfolds)</span></code></pre></div>
+<p>We can then get our average 10-fold cross validation error with <code>collect_metrics()</code>:</p>
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="lesson-3b-resampling.html#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv)</span>
+<span id="cb96-2"><a href="lesson-3b-resampling.html#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb96-3"><a href="lesson-3b-resampling.html#cb96-3" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n   std_err .config             </span></span>
+<span id="cb96-4"><a href="lesson-3b-resampling.html#cb96-4" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb96-5"><a href="lesson-3b-resampling.html#cb96-5" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard   32547.       10 2455.     Preprocessor1_Model1</span></span>
+<span id="cb96-6"><a href="lesson-3b-resampling.html#cb96-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.839    10    0.0237 Preprocessor1_Model1</span></span></code></pre></div>
+<p>If we want to see the model evaluation metric (i.e. RMSE) for each fold we just need to include <code>summarize = FALSE</code>.</p>
+<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="lesson-3b-resampling.html#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv, <span class="at">summarize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb97-2"><a href="lesson-3b-resampling.html#cb97-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&#39;rmse&#39;</span>)</span>
+<span id="cb97-3"><a href="lesson-3b-resampling.html#cb97-3" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 10 × 5</span></span>
+<span id="cb97-4"><a href="lesson-3b-resampling.html#cb97-4" aria-hidden="true" tabindex="-1"></a><span class="do">##    id     .metric .estimator .estimate .config             </span></span>
+<span id="cb97-5"><a href="lesson-3b-resampling.html#cb97-5" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb97-6"><a href="lesson-3b-resampling.html#cb97-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 Fold01 rmse    standard      36485. Preprocessor1_Model1</span></span>
+<span id="cb97-7"><a href="lesson-3b-resampling.html#cb97-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 Fold02 rmse    standard      37722. Preprocessor1_Model1</span></span>
+<span id="cb97-8"><a href="lesson-3b-resampling.html#cb97-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 Fold03 rmse    standard      47136. Preprocessor1_Model1</span></span>
+<span id="cb97-9"><a href="lesson-3b-resampling.html#cb97-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 Fold04 rmse    standard      24794. Preprocessor1_Model1</span></span>
+<span id="cb97-10"><a href="lesson-3b-resampling.html#cb97-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 Fold05 rmse    standard      27203. Preprocessor1_Model1</span></span>
+<span id="cb97-11"><a href="lesson-3b-resampling.html#cb97-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 Fold06 rmse    standard      28096. Preprocessor1_Model1</span></span>
+<span id="cb97-12"><a href="lesson-3b-resampling.html#cb97-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 Fold07 rmse    standard      22781. Preprocessor1_Model1</span></span>
+<span id="cb97-13"><a href="lesson-3b-resampling.html#cb97-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 Fold08 rmse    standard      36901. Preprocessor1_Model1</span></span>
+<span id="cb97-14"><a href="lesson-3b-resampling.html#cb97-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 Fold09 rmse    standard      26510. Preprocessor1_Model1</span></span>
+<span id="cb97-15"><a href="lesson-3b-resampling.html#cb97-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 Fold10 rmse    standard      37841. Preprocessor1_Model1</span></span></code></pre></div>
+<p>If we compare these results to our previous generalization error based on the test set, we see some differences. We now see that our average generalization RMSE across the ten holdout sets is $32,547 and individual validation set RMSEs range from $24,794 - $47,136. This provides us a little more robust expectations around how our model will perform on future unseen data. And it actually shows us that our single test set RMSE may have been biased and too optimistic!</p>
+<p>One other item to note - often, people assume that when creating the <em>k</em>-folds that R just selects the first <em>n</em> observations to be the first fold, the next <em>n</em> observations to be in the second fold, etc. However, this is not the case. Rather, R will randomly assign observations to each fold but will also ensure that each observation is only assigned to a single fold for validation purposes. The following illustrates a 10-fold cross validation on a dataset with 32 observations. Each observation is used once for validation and nine times for training.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:unnamed-chunk-155"></span>
+<img src="_main_files/figure-html/unnamed-chunk-155-1.png" alt="10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training." width="672" />
+<p class="caption">
+Figure 9.4: 10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training.
+</p>
+</div>
+<div id="knowledge-check-12" class="section level3 hasAnchor" number="9.4.1">
+<h3><span class="header-section-number">9.4.1</span> Knowledge check<a href="lesson-3b-resampling.html#knowledge-check-12" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<p>
+Using the <code>boston.csv</code> data…
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Create a multiple linear regression model using all predictors
+(without any feature engineering); however, rather than computing the
+generalization error using the test data, apply 10-fold
+cross-validation.
+</li>
+<li>
+What is the average cross-validation RMSE?
+</li>
+<li>
+What is the range of cross-validation RMSE values across all ten
+folds?
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="bootstrap-resampling" class="section level2 hasAnchor" number="9.5">
+<h2><span class="header-section-number">9.5</span> Bootstrap resampling<a href="lesson-3b-resampling.html#bootstrap-resampling" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>A bootstrap sample is a random sample of the data taken <em>with replacement</em> <span class="citation">(<a href="#ref-efron1986bootstrap" role="doc-biblioref">Efron and Tibshirani 1986</a>)</span>. This means that, after a data point is selected for inclusion in the subset, it’s still available for further selection. A bootstrap sample is the same size as the original data set from which it was constructed. Figure <a href="lesson-3b-resampling.html#fig:modeling-process-bootstrapscheme">9.5</a> provides a schematic of bootstrap sampling where each bootstrap sample contains 12 observations just as in the original data set. Furthermore, bootstrap sampling will contain approximately the same distribution of values (represented by colors) as the original data set.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-bootstrapscheme"></span>
+<img src="images/bootstrap-scheme.png" alt="Illustration of the bootstrapping process." width="70%" height="70%" />
+<p class="caption">
+Figure 9.5: Illustration of the bootstrapping process.
+</p>
+</div>
+<p>Since samples are drawn with replacement, each bootstrap sample is likely to contain duplicate values. In fact, on average, <span class="math inline">\(\approx 63.21\)</span>% of the original sample ends up in any particular bootstrap sample. The original observations not contained in a particular bootstrap sample are considered <em>out-of-bag</em> (OOB). When bootstrapping, a model can be built on the selected samples and validated on the OOB samples; this is often done, for example, in random forests (which we’ll discuss in a later module).</p>
+<p>Since observations are replicated in bootstrapping, there tends to be less variability in the error measure compared with <em>k</em>-fold CV <span class="citation">(<a href="#ref-efron1983estimating" role="doc-biblioref">Efron 1983</a>)</span>. However, this can also increase the bias of your error estimate (we’ll discuss the concept of bias versus variance in a future module). This can be problematic with smaller data sets; however, for most average-to-large data sets (say <span class="math inline">\(n \geq 1,000\)</span>) this concern is often negligible.</p>
+<p>Figure <a href="lesson-3b-resampling.html#fig:modeling-process-sampling-comparison">9.6</a> compares bootstrapping to 10-fold CV on a small data set with <span class="math inline">\(n = 32\)</span> observations. A thorough introduction to the bootstrap and its use in R is provided in <span class="citation">Davison, Hinkley, et al. (<a href="#ref-davison1997bootstrap" role="doc-biblioref">1997</a>)</span>.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-sampling-comparison"></span>
+<img src="_main_files/figure-html/modeling-process-sampling-comparison-1.png" alt="Bootstrap sampling (left) versus 10-fold cross validation (right) on 32 observations. For bootstrap sampling, the observations that have zero replications (white) are the out-of-bag observations used for validation." width="1152" />
+<p class="caption">
+Figure 9.6: Bootstrap sampling (left) versus 10-fold cross validation (right) on 32 observations. For bootstrap sampling, the observations that have zero replications (white) are the out-of-bag observations used for validation.
+</p>
+</div>
+<p>We can create bootstrap samples easily with <code>bootstraps()</code>, as illustrated in the code chunk below.</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="lesson-3b-resampling.html#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">35</span>)</span>
+<span id="cb98-2"><a href="lesson-3b-resampling.html#cb98-2" aria-hidden="true" tabindex="-1"></a>bs_samples <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(ames_train, <span class="at">times =</span> <span class="dv">10</span>, <span class="at">strata =</span> Sale_Price)</span></code></pre></div>
+<p>Once we’ve created our bootstrap samples we can reuse the same <code>mlr_wflow</code> object we created earlier and refit it with the bootstrap samples. Our results again show that our average resampling RMSE is $38,765 – again, much higher than the single test set RMSE we obtained previously.</p>
+<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="lesson-3b-resampling.html#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fit our model across the bootstrapped samples</span></span>
+<span id="cb99-2"><a href="lesson-3b-resampling.html#cb99-2" aria-hidden="true" tabindex="-1"></a>mlr_fit_bs <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb99-3"><a href="lesson-3b-resampling.html#cb99-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(bs_samples)</span>
+<span id="cb99-4"><a href="lesson-3b-resampling.html#cb99-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-5"><a href="lesson-3b-resampling.html#cb99-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-6"><a href="lesson-3b-resampling.html#cb99-6" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_bs)</span>
+<span id="cb99-7"><a href="lesson-3b-resampling.html#cb99-7" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb99-8"><a href="lesson-3b-resampling.html#cb99-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n   std_err .config             </span></span>
+<span id="cb99-9"><a href="lesson-3b-resampling.html#cb99-9" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb99-10"><a href="lesson-3b-resampling.html#cb99-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard   38765.        9 1885.     Preprocessor1_Model1</span></span>
+<span id="cb99-11"><a href="lesson-3b-resampling.html#cb99-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.780     9    0.0157 Preprocessor1_Model1</span></span></code></pre></div>
+<p>Bootstrapping is, typically, more of an internal resampling procedure that is naturally built into certain ML algorithms. This will become more apparent in later modules where we discuss bagging and random forests.</p>
+<div id="knowledge-check-13" class="section level3 hasAnchor" number="9.5.1">
+<h3><span class="header-section-number">9.5.1</span> Knowledge check<a href="lesson-3b-resampling.html#knowledge-check-13" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<p>
+Using the <code>boston.csv</code> data…
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Create a multiple linear regression model using all predictors
+(without any feature engineering) and use bootstrap resampling with 10
+boostrap samples.
+</li>
+<li>
+What is the average cross-validation RMSE?
+</li>
+<li>
+What is the range of cross-validation RMSE values across all ten
+folds?
+</li>
+<li>
+How do the results compare to the 10-fold cross validation you
+performed earlier?
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="alternative-methods" class="section level2 hasAnchor" number="9.6">
+<h2><span class="header-section-number">9.6</span> Alternative methods<a href="lesson-3b-resampling.html#alternative-methods" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>It is important to note that there are other useful resampling procedures. If you’re working with time-series specific data then you will want to incorporate rolling origin and other time series resampling procedures. <span class="citation">Hyndman and Athanasopoulos (<a href="#ref-hyndman2018forecasting" role="doc-biblioref">2018</a>)</span> is the dominant, R-focused, time series resource<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>.</p>
+<p>Additionally, <span class="citation">Efron (<a href="#ref-efron1983estimating" role="doc-biblioref">1983</a>)</span> developed the “632 method” and <span class="citation">Efron and Tibshirani (<a href="#ref-efron1997improvements" role="doc-biblioref">1997</a>)</span> discuss the “632+ method”; both approaches seek to minimize biases experienced with bootstrapping on smaller data sets.</p>
+<p>Other methods exist but K-fold cross validation and bootstrapping are the dominant methods used and are often sufficient.</p>
+</div>
+<div id="exercises-5" class="section level2 hasAnchor" number="9.7">
+<h2><span class="header-section-number">9.7</span> Exercises<a href="lesson-3b-resampling.html#exercises-5" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="todo">
+<p>
+Use the Advertising.csv data to complete the following tasks. The
+Advertising.csv data contains three predictor variables -
+<code>TV</code>, <code>Radio</code>, and <code>Newspaper</code>, which
+represents a companies advertising budget for these respective mediums
+across 200 metropolitan markets. It also contains the response variable
+- <code>Sales</code>, which represents the total sales in thousands of
+units for a given product.
+</p>
+<ul>
+<li>
+Split the data into 70-30 training-test sets.
+</li>
+<li>
+Using 10-fold cross-validation, create a multiple linear regression
+model where <code>Sales</code> is a function of all three predictors
+(without any feature engineering).
+<ul>
+<li>
+What is the average cross-validation RMSE?
+</li>
+<li>
+What is the range of cross-validation RMSE values across all ten
+folds?
+</li>
+</ul>
+</li>
+<li>
+Using boostrap resampling with 10 bootstrap samples, create a
+multiple linear regression model where <code>Sales</code> is a function
+of all three predictors (without any feature engineering).
+<ul>
+<li>
+What is the average bootstrap RMSE?
+</li>
+<li>
+What is the range of bootstrap RMSE values across all ten bootstrap
+samples?
+</li>
+</ul>
+</li>
+</ul>
+</div>
+
+</div>
+</div>
+
+
+
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-davison1997bootstrap" class="csl-entry">
+Davison, Anthony Christopher, David Victor Hinkley, et al. 1997. <em>Bootstrap Methods and Their Application</em>. Vol. 1. Cambridge University Press.
+</div>
+<div id="ref-efron1983estimating" class="csl-entry">
+Efron, Bradley. 1983. <span>“Estimating the Error Rate of a Prediction Rule: Improvement on Cross-Validation.”</span> <em>Journal of the American Statistical Association</em> 78 (382): 316–31.
+</div>
+<div id="ref-efron1986bootstrap" class="csl-entry">
+Efron, Bradley, and Robert Tibshirani. 1986. <span>“Bootstrap Methods for Standard Errors, Confidence Intervals, and Other Measures of Statistical Accuracy.”</span> <em>Statistical Science</em>, 54–75.
+</div>
+<div id="ref-efron1997improvements" class="csl-entry">
+———. 1997. <span>“Improvements on Cross-Validation: The 632+ Bootstrap Method.”</span> <em>Journal of the American Statistical Association</em> 92 (438): 548–60.
+</div>
+<div id="ref-hyndman2018forecasting" class="csl-entry">
+Hyndman, Rob J, and George Athanasopoulos. 2018. <em>Forecasting: Principles and Practice</em>. OTexts.
+</div>
+<div id="ref-tidymodels" class="csl-entry">
+Kuhn, Max. n.d. <span>“Tidymodels.”</span> <a href="https://www.tidymodels.org/start/resampling/">https://www.tidymodels.org/start/resampling/</a>.
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol start="3">
+<li id="fn3"><p>See their open source book at <a href="https://www.otexts.org/fpp2" class="uri">https://www.otexts.org/fpp2</a><a href="lesson-3b-resampling.html#fnref3" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="lesson-3a-feature-engineering.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="computing-environment.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/bradleyboehmke/uc-bana-4080/edit/master/module-3/lesson-2.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "section"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
