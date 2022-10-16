@@ -95,6 +95,10 @@ The two most commonly used resampling methods include **k-fold cross-validation*
 
 ## K-fold cross-validation
 
+```{block, type='video'}
+<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_8bgm9d8t&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_6o61bgq0" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - K-fold cross validation"></iframe>
+```
+
 Cross-validation consists of repeating the procedure such that the training and testing sets are different each time. Generalization performance metrics are collected for each repetition and then aggregated. As a result we can get an estimate of the variability of the model’s generalization performance.
 
 k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into *k* groups (aka folds) of approximately equal size.
@@ -176,13 +180,41 @@ cv$splits %>%
 ```{block, type='todo'}
 Using the `boston.csv` data...
 
-1. Create a multiple linear regression model using all predictors (without any feature engineering); however, rather than computing the generalization error using the test data, apply 10-fold cross-validation.
+1. Fill in the blanks to create a multiple linear regression model using all predictors (without any feature engineering); however, rather than computing the generalization error using the test data, apply 10-fold cross-validation.
 2. What is the average cross-validation RMSE?
 3. What is the range of cross-validation RMSE values across all ten folds?
 ```
 
+```{r, eval=FALSE}
+# 1. Create a k-fold object
+set.seed(123)
+kfolds <- vfold_cv(______, v = __, strata = cmedv)
+
+# 2. Create our workflow object
+mlr_recipe <- recipe(cmedv ~ ___, data = boston_train)
+
+mlr_wflow <- workflow() %>%
+  add_model(______) %>% 
+  add_recipe(______)
+
+# 3. Fit our model on the k-fold object
+mlr_fit_cv <- mlr_wflow %>%
+   fit_______(______)
+
+# 4. Assess our average cross validation error
+collect_______(______)
+```
+
+```{block, type='video'}
+<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_1pvbvsi2&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_u70t0h90" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Knowledge check 9.4.1"></iframe>
+```
+
 
 ## Bootstrap resampling
+
+```{block, type='video'}
+<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_sw9fjuyu&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_y3b3e5mm" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Bootstrap sampling"></iframe>
+```
 
 A bootstrap sample is a random sample of the data taken _with replacement_ [@efron1986bootstrap].  This means that, after a data point is selected for inclusion in the subset, it's still available for further selection. A bootstrap sample is the same size as the original data set from which it was constructed. Figure \@ref(fig:modeling-process-bootstrapscheme) provides a schematic of bootstrap sampling where each bootstrap sample contains 12 observations just as in the original data set. Furthermore, bootstrap sampling will contain approximately the same distribution of values (represented by colors) as the original data set.
 
@@ -262,11 +294,36 @@ Bootstrapping is, typically, more of an internal resampling procedure that is na
 ```{block, type='todo'}
 Using the `boston.csv` data...
 
-1. Create a multiple linear regression model using all predictors (without any feature engineering) and use bootstrap resampling with 10 boostrap samples.
+1. Fill in the blanks to create a multiple linear regression model using all predictors (without any feature engineering); however, apply 10 bootstrap samples to compute the cross-validation RMSE.
 2. What is the average cross-validation RMSE?
 3. What is the range of cross-validation RMSE values across all ten folds?
 4. How do the results compare to the 10-fold cross validation you performed earlier?
 ```
+
+```{r, eval=FALSE}
+# 1. Create a bootstrap object
+set.seed(123)
+bs_samples <- bootstraps(______, times = ___, strata = ____) #<<
+
+# 2. Create our workflow object
+mlr_recipe <- recipe(____ ~ __, data = boston_train)
+
+mlr_wflow <- workflow() %>%
+  add_model(______) %>% 
+  add_recipe(______)
+
+# 3. Fit our model on the bootstrap object
+mlr_fit_cv <- mlr_wflow %>%
+   fit_______(______)
+
+# 4. Assess our average cross validation error
+______
+```
+
+```{block, type='video'}
+<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_scfuugcn&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_mz8lxsl2" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Knowledge check 9.5.1"></iframe>
+```
+
 
 ## Alternative methods
 
