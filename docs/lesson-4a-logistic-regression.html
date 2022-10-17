@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>11 Lesson 4a: Logistic Regression | Data Mining with R</title>
+  <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="11 Lesson 4a: Logistic Regression | Data Mining with R" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="github-repo" content="bradleyboehmke/uc-bana-7025" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="11 Lesson 4a: Logistic Regression | Data Mining with R" />
+  <meta name="twitter:site" content="@bradleyboehmke" />
+  <meta name="twitter:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  
+
+<meta name="author" content="Bradley Boehmke" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="overview-3.html"/>
+<link rel="next" href="computing-environment.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<script src="libs/viz-1.8.2/viz.js"></script>
+<link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">UC BANA 4080: Data Mining</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Syllabus</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#learning-objectives"><i class="fa fa-check"></i>Learning Objectives</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#material"><i class="fa fa-check"></i>Material</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#class-structure"><i class="fa fa-check"></i>Class Structure</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#schedule"><i class="fa fa-check"></i>Schedule</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#conventions-used-in-this-book"><i class="fa fa-check"></i>Conventions used in this book</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#feedback"><i class="fa fa-check"></i>Feedback</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#acknowledgements"><i class="fa fa-check"></i>Acknowledgements</a></li>
+</ul></li>
+<li class="part"><span><b>I Module 1</b></span></li>
+<li class="chapter" data-level="1" data-path="overview.html"><a href="overview.html"><i class="fa fa-check"></i><b>1</b> Overview</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="overview.html"><a href="overview.html#learning-objectives-1"><i class="fa fa-check"></i><b>1.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="1.2" data-path="overview.html"><a href="overview.html#estimated-time-requirement"><i class="fa fa-check"></i><b>1.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="1.3" data-path="overview.html"><a href="overview.html#tasks"><i class="fa fa-check"></i><b>1.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html"><i class="fa fa-check"></i><b>2</b> Lesson 1a: Intro to machine learning</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#learning-objectives-2"><i class="fa fa-check"></i><b>2.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="2.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#supervised-learning"><i class="fa fa-check"></i><b>2.2</b> Supervised learning</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#regression-problems"><i class="fa fa-check"></i><b>2.2.1</b> Regression problems</a></li>
+<li class="chapter" data-level="2.2.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#classification-problems"><i class="fa fa-check"></i><b>2.2.2</b> Classification problems</a></li>
+<li class="chapter" data-level="2.2.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check"><i class="fa fa-check"></i><b>2.2.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#unsupervised-learning"><i class="fa fa-check"></i><b>2.3</b> Unsupervised learning</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check-1"><i class="fa fa-check"></i><b>2.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#machine-learning-in"><i class="fa fa-check"></i><b>2.4</b> Machine Learning in <svg aria-hidden="true" role="img" viewBox="0 0 581 512" style="height:1em;width:1.13em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M581 226.6C581 119.1 450.9 32 290.5 32S0 119.1 0 226.6C0 322.4 103.3 402 239.4 418.1V480h99.1v-61.5c24.3-2.7 47.6-7.4 69.4-13.9L448 480h112l-67.4-113.7c54.5-35.4 88.4-84.9 88.4-139.7zm-466.8 14.5c0-73.5 98.9-133 220.8-133s211.9 40.7 211.9 133c0 50.1-26.5 85-70.3 106.4-2.4-1.6-4.7-2.9-6.4-3.7-10.2-5.2-27.8-10.5-27.8-10.5s86.6-6.4 86.6-92.7-90.6-87.9-90.6-87.9h-199V361c-74.1-21.5-125.2-67.1-125.2-119.9zm225.1 38.3v-55.6c57.8 0 87.8-6.8 87.8 27.3 0 36.5-38.2 28.3-87.8 28.3zm-.9 72.5H365c10.8 0 18.9 11.7 24 19.2-16.1 1.9-33 2.8-50.6 2.9v-22.1z"/></svg></a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check-2"><i class="fa fa-check"></i><b>2.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#the-data-sets"><i class="fa fa-check"></i><b>2.5</b> The data sets</a>
+<ul>
+<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing</a></li>
+<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes</a></li>
+<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers</a></li>
+<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing</a></li>
+<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition</a></li>
+<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters</a></li>
+</ul></li>
+<li class="chapter" data-level="2.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#what-youll-learn-next"><i class="fa fa-check"></i><b>2.6</b> What You’ll Learn Next</a></li>
+<li class="chapter" data-level="2.7" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#exercises"><i class="fa fa-check"></i><b>2.7</b> Exercises</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html"><i class="fa fa-check"></i><b>3</b> Lesson 1b: First model with Tidymodels</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#learning-objectives-3"><i class="fa fa-check"></i><b>3.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="3.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#prerequisites"><i class="fa fa-check"></i><b>3.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="3.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#data-splitting"><i class="fa fa-check"></i><b>3.3</b> Data splitting</a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#simple-random-sampling"><i class="fa fa-check"></i><b>3.3.1</b> Simple random sampling</a></li>
+<li class="chapter" data-level="3.3.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#stratified-sampling"><i class="fa fa-check"></i><b>3.3.2</b> Stratified sampling</a></li>
+<li class="chapter" data-level="3.3.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-3"><i class="fa fa-check"></i><b>3.3.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#building-models"><i class="fa fa-check"></i><b>3.4</b> Building models</a>
+<ul>
+<li class="chapter" data-level="3.4.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-4"><i class="fa fa-check"></i><b>3.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#making-predictions"><i class="fa fa-check"></i><b>3.5</b> Making predictions</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-5"><i class="fa fa-check"></i><b>3.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#evaluating-model-performance"><i class="fa fa-check"></i><b>3.6</b> Evaluating model performance</a>
+<ul>
+<li class="chapter" data-level="3.6.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#regression-models"><i class="fa fa-check"></i><b>3.6.1</b> Regression models</a></li>
+<li class="chapter" data-level="3.6.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#classification-models"><i class="fa fa-check"></i><b>3.6.2</b> Classification models</a></li>
+<li class="chapter" data-level="3.6.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-6"><i class="fa fa-check"></i><b>3.6.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.7" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#exercises-1"><i class="fa fa-check"></i><b>3.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>II Module 2</b></span></li>
+<li class="chapter" data-level="4" data-path="overview-1.html"><a href="overview-1.html"><i class="fa fa-check"></i><b>4</b> Overview</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="overview-1.html"><a href="overview-1.html#learning-objectives-4"><i class="fa fa-check"></i><b>4.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="4.2" data-path="overview-1.html"><a href="overview-1.html#estimated-time-requirement-1"><i class="fa fa-check"></i><b>4.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="4.3" data-path="overview-1.html"><a href="overview-1.html#tasks-1"><i class="fa fa-check"></i><b>4.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html"><i class="fa fa-check"></i><b>5</b> Lesson 2a: Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#learning-objectives-5"><i class="fa fa-check"></i><b>5.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="5.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#prerequisites-1"><i class="fa fa-check"></i><b>5.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="5.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#correlation"><i class="fa fa-check"></i><b>5.3</b> Correlation</a>
+<ul>
+<li class="chapter" data-level="5.3.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-7"><i class="fa fa-check"></i><b>5.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#simple-linear-regression"><i class="fa fa-check"></i><b>5.4</b> Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="5.4.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#best-fit-line"><i class="fa fa-check"></i><b>5.4.1</b> Best fit line</a></li>
+<li class="chapter" data-level="5.4.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#estimating-best-fit"><i class="fa fa-check"></i><b>5.4.2</b> Estimating “best fit”</a></li>
+<li class="chapter" data-level="5.4.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#inference"><i class="fa fa-check"></i><b>5.4.3</b> Inference</a></li>
+<li class="chapter" data-level="5.4.4" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-8"><i class="fa fa-check"></i><b>5.4.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#making-predictions-1"><i class="fa fa-check"></i><b>5.5</b> Making predictions</a></li>
+<li class="chapter" data-level="5.6" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#assessing-model-accuracy"><i class="fa fa-check"></i><b>5.6</b> Assessing model accuracy</a>
+<ul>
+<li class="chapter" data-level="5.6.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#training-data-accuracy"><i class="fa fa-check"></i><b>5.6.1</b> Training data accuracy</a></li>
+<li class="chapter" data-level="5.6.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#test-data-accuracy"><i class="fa fa-check"></i><b>5.6.2</b> Test data accuracy</a></li>
+<li class="chapter" data-level="5.6.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-9"><i class="fa fa-check"></i><b>5.6.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.7" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#exercises-2"><i class="fa fa-check"></i><b>5.7</b> Exercises</a></li>
+<li class="chapter" data-level="5.8" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#other-resources"><i class="fa fa-check"></i><b>5.8</b> Other resources</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html"><i class="fa fa-check"></i><b>6</b> Lesson 2b: Multiple linear regression</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#learning-objectives-6"><i class="fa fa-check"></i><b>6.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="6.2" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#prerequisites-2"><i class="fa fa-check"></i><b>6.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="6.3" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#adding-additional-predictors"><i class="fa fa-check"></i><b>6.3</b> Adding additional predictors</a>
+<ul>
+<li class="chapter" data-level="6.3.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#knowledge-check-10"><i class="fa fa-check"></i><b>6.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="6.4" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#interactions"><i class="fa fa-check"></i><b>6.4</b> Interactions</a></li>
+<li class="chapter" data-level="6.5" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#qualitative-predictors"><i class="fa fa-check"></i><b>6.5</b> Qualitative predictors</a>
+<ul>
+<li class="chapter" data-level="6.5.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#knowledge-check-11"><i class="fa fa-check"></i><b>6.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#including-many-predictors"><i class="fa fa-check"></i><b>6.6</b> Including many predictors</a></li>
+<li class="chapter" data-level="6.7" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#feature-importance"><i class="fa fa-check"></i><b>6.7</b> Feature importance</a></li>
+<li class="chapter" data-level="6.8" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#exercises-3"><i class="fa fa-check"></i><b>6.8</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>III Module 3</b></span></li>
+<li class="chapter" data-level="7" data-path="overview-2.html"><a href="overview-2.html"><i class="fa fa-check"></i><b>7</b> Overview</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="overview-2.html"><a href="overview-2.html#learning-objectives-7"><i class="fa fa-check"></i><b>7.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="7.2" data-path="overview-2.html"><a href="overview-2.html#estimated-time-requirement-2"><i class="fa fa-check"></i><b>7.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="7.3" data-path="overview-2.html"><a href="overview-2.html#tasks-2"><i class="fa fa-check"></i><b>7.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html"><i class="fa fa-check"></i><b>8</b> Lesson 3a: Feature engineering</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#learning-objectives-8"><i class="fa fa-check"></i><b>8.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="8.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#prerequisites-3"><i class="fa fa-check"></i><b>8.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="8.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#create-a-recipe"><i class="fa fa-check"></i><b>8.3</b> Create a recipe</a></li>
+<li class="chapter" data-level="8.4" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#numeric-features"><i class="fa fa-check"></i><b>8.4</b> Numeric features</a>
+<ul>
+<li class="chapter" data-level="8.4.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#standardizing"><i class="fa fa-check"></i><b>8.4.1</b> Standardizing</a></li>
+<li class="chapter" data-level="8.4.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#normalizing"><i class="fa fa-check"></i><b>8.4.2</b> Normalizing</a></li>
+<li class="chapter" data-level="8.4.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#knowledge-check-12"><i class="fa fa-check"></i><b>8.4.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#categorical-features"><i class="fa fa-check"></i><b>8.5</b> Categorical features</a>
+<ul>
+<li class="chapter" data-level="8.5.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#one-hot-dummy-encoding"><i class="fa fa-check"></i><b>8.5.1</b> One-hot &amp; dummy encoding</a></li>
+<li class="chapter" data-level="8.5.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#ordinal-encoding"><i class="fa fa-check"></i><b>8.5.2</b> Ordinal encoding</a></li>
+<li class="chapter" data-level="8.5.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#lumping"><i class="fa fa-check"></i><b>8.5.3</b> Lumping</a></li>
+<li class="chapter" data-level="8.5.4" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#knowledge-check-13"><i class="fa fa-check"></i><b>8.5.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#fit-a-model-with-a-recipe"><i class="fa fa-check"></i><b>8.6</b> Fit a model with a recipe</a>
+<ul>
+<li class="chapter" data-level="8.6.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#knowledge-check-14"><i class="fa fa-check"></i><b>8.6.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="8.7" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#exercises-4"><i class="fa fa-check"></i><b>8.7</b> Exercises</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html"><i class="fa fa-check"></i><b>9</b> Lesson 3b: Resampling</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#learning-objectives-9"><i class="fa fa-check"></i><b>9.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="9.2" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#prerequisites-4"><i class="fa fa-check"></i><b>9.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="9.3" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#resampling-cross-validation"><i class="fa fa-check"></i><b>9.3</b> Resampling &amp; cross-validation</a></li>
+<li class="chapter" data-level="9.4" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#k-fold-cross-validation"><i class="fa fa-check"></i><b>9.4</b> K-fold cross-validation</a>
+<ul>
+<li class="chapter" data-level="9.4.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#knowledge-check-15"><i class="fa fa-check"></i><b>9.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="9.5" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#bootstrap-resampling"><i class="fa fa-check"></i><b>9.5</b> Bootstrap resampling</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#knowledge-check-16"><i class="fa fa-check"></i><b>9.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="9.6" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#alternative-methods"><i class="fa fa-check"></i><b>9.6</b> Alternative methods</a></li>
+<li class="chapter" data-level="9.7" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#exercises-5"><i class="fa fa-check"></i><b>9.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>IV Module 4</b></span></li>
+<li class="chapter" data-level="10" data-path="overview-3.html"><a href="overview-3.html"><i class="fa fa-check"></i><b>10</b> Overview</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="overview-3.html"><a href="overview-3.html#learning-objectives-10"><i class="fa fa-check"></i><b>10.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="10.2" data-path="overview-3.html"><a href="overview-3.html#estimated-time-requirement-3"><i class="fa fa-check"></i><b>10.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="10.3" data-path="overview-3.html"><a href="overview-3.html#tasks-3"><i class="fa fa-check"></i><b>10.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html"><i class="fa fa-check"></i><b>11</b> Lesson 4a: Logistic Regression</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#learning-objectives-11"><i class="fa fa-check"></i><b>11.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="11.2" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#prerequisites-5"><i class="fa fa-check"></i><b>11.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="11.3" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#why-logistic-regression"><i class="fa fa-check"></i><b>11.3</b> Why logistic regression</a></li>
+<li class="chapter" data-level="11.4" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#simple-logistic-regression"><i class="fa fa-check"></i><b>11.4</b> Simple logistic regression</a></li>
+<li class="chapter" data-level="11.5" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#interpretation"><i class="fa fa-check"></i><b>11.5</b> Interpretation</a>
+<ul>
+<li class="chapter" data-level="11.5.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-17"><i class="fa fa-check"></i><b>11.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.6" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#multiple-logistic-regression"><i class="fa fa-check"></i><b>11.6</b> Multiple logistic regression</a>
+<ul>
+<li class="chapter" data-level="11.6.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-18"><i class="fa fa-check"></i><b>11.6.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.7" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#assessing-model-accuracy-1"><i class="fa fa-check"></i><b>11.7</b> Assessing model accuracy</a>
+<ul>
+<li class="chapter" data-level="11.7.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#accuracy"><i class="fa fa-check"></i><b>11.7.1</b> Accuracy</a></li>
+<li class="chapter" data-level="11.7.2" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#confusion-matrix"><i class="fa fa-check"></i><b>11.7.2</b> Confusion matrix</a></li>
+<li class="chapter" data-level="11.7.3" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#area-under-the-curve"><i class="fa fa-check"></i><b>11.7.3</b> Area under the curve</a></li>
+<li class="chapter" data-level="11.7.4" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-19"><i class="fa fa-check"></i><b>11.7.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.8" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#cross-validation-performance"><i class="fa fa-check"></i><b>11.8</b> Cross-validation performance</a>
+<ul>
+<li class="chapter" data-level="11.8.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-20"><i class="fa fa-check"></i><b>11.8.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.9" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#feature-interpretation"><i class="fa fa-check"></i><b>11.9</b> Feature interpretation</a>
+<ul>
+<li class="chapter" data-level="11.9.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-21"><i class="fa fa-check"></i><b>11.9.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.10" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#final-thoughts"><i class="fa fa-check"></i><b>11.10</b> Final thoughts</a></li>
+<li class="chapter" data-level="11.11" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#exercises-6"><i class="fa fa-check"></i><b>11.11</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>V Additional Content</b></span></li>
+<li class="chapter" data-level="" data-path="computing-environment.html"><a href="computing-environment.html"><i class="fa fa-check"></i>Computing Environment</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://www.uc.edu/" target="blank">University of Cincinnati</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Data Mining with R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="lesson-4a-logistic-regression" class="section level1 hasAnchor" number="11">
+<h1><span class="header-section-number">11</span> Lesson 4a: Logistic Regression<a href="lesson-4a-logistic-regression.html#lesson-4a-logistic-regression" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>Linear regression is used to approximate the (linear) relationship between a continuous response variable and a set of predictor variables. However, when the response variable is binary (i.e., Yes/No), linear regression is not appropriate. Fortunately, analysts can turn to an analogous method, logistic regression, which is similar to linear regression in many ways. This module explores the use of logistic regression for binary response variables. Logistic regression can be expanded for problems where the response variable has more than two categories (i.e. High/Medium/Low, Flu/Covid/Allergies, Win/Lose/Tie); however, that goes beyond our intent here (see <span class="citation">Faraway (<a href="#ref-faraway2016extending" role="doc-biblioref">2016a</a>)</span> for discussion of multinomial logistic regression in R).</p>
+<div id="learning-objectives-11" class="section level2 hasAnchor" number="11.1">
+<h2><span class="header-section-number">11.1</span> Learning objectives<a href="lesson-4a-logistic-regression.html#learning-objectives-11" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>By the end of this module you will:</p>
+<ul>
+<li>Understand why linear regression does not work for binary response variables.</li>
+<li>Know how to apply and interpret simple and multiple logistic regression models.</li>
+<li>Know how to assess model accuracy of various logistic regression models.</li>
+</ul>
+</div>
+<div id="prerequisites-5" class="section level2 hasAnchor" number="11.2">
+<h2><span class="header-section-number">11.2</span> Prerequisites<a href="lesson-4a-logistic-regression.html#prerequisites-5" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>For this section we’ll use the following packages:</p>
+<div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="lesson-4a-logistic-regression.html#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper packages</span></span>
+<span id="cb105-2"><a href="lesson-4a-logistic-regression.html#cb105-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># for data wrangling &amp; plotting</span></span>
+<span id="cb105-3"><a href="lesson-4a-logistic-regression.html#cb105-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-4"><a href="lesson-4a-logistic-regression.html#cb105-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
+<span id="cb105-5"><a href="lesson-4a-logistic-regression.html#cb105-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb105-6"><a href="lesson-4a-logistic-regression.html#cb105-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb105-7"><a href="lesson-4a-logistic-regression.html#cb105-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
+<span id="cb105-8"><a href="lesson-4a-logistic-regression.html#cb105-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vip)      <span class="co"># variable importance</span></span></code></pre></div>
+<p>To illustrate logistic regression concepts we’ll use the employee attrition data, where our intent is to predict the <code>Attrition</code> response variable (coded as <code>"Yes"</code>/<code>"No"</code>). As in the previous module, we’ll set aside 30% of our data as a test set to assess our generalizability error.</p>
+<div class="sourceCode" id="cb106"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb106-1"><a href="lesson-4a-logistic-regression.html#cb106-1" aria-hidden="true" tabindex="-1"></a>churn_data_path <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">&quot;data&quot;</span>, <span class="st">&quot;attrition.csv&quot;</span>)</span>
+<span id="cb106-2"><a href="lesson-4a-logistic-regression.html#cb106-2" aria-hidden="true" tabindex="-1"></a>churn <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(churn_data_path)</span>
+<span id="cb106-3"><a href="lesson-4a-logistic-regression.html#cb106-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb106-4"><a href="lesson-4a-logistic-regression.html#cb106-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Recode response variable as a factor</span></span>
+<span id="cb106-5"><a href="lesson-4a-logistic-regression.html#cb106-5" aria-hidden="true" tabindex="-1"></a>churn <span class="ot">&lt;-</span> <span class="fu">mutate</span>(churn, <span class="at">Attrition =</span> <span class="fu">factor</span>(Attrition))</span>
+<span id="cb106-6"><a href="lesson-4a-logistic-regression.html#cb106-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb106-7"><a href="lesson-4a-logistic-regression.html#cb106-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create training (70%) and test (30%) sets</span></span>
+<span id="cb106-8"><a href="lesson-4a-logistic-regression.html#cb106-8" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb106-9"><a href="lesson-4a-logistic-regression.html#cb106-9" aria-hidden="true" tabindex="-1"></a>churn_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(churn, <span class="at">prop =</span> .<span class="dv">7</span>, <span class="at">strata =</span> <span class="st">&quot;Attrition&quot;</span>)</span>
+<span id="cb106-10"><a href="lesson-4a-logistic-regression.html#cb106-10" aria-hidden="true" tabindex="-1"></a>churn_train <span class="ot">&lt;-</span> <span class="fu">training</span>(churn_split)</span>
+<span id="cb106-11"><a href="lesson-4a-logistic-regression.html#cb106-11" aria-hidden="true" tabindex="-1"></a>churn_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(churn_split)</span></code></pre></div>
+</div>
+<div id="why-logistic-regression" class="section level2 hasAnchor" number="11.3">
+<h2><span class="header-section-number">11.3</span> Why logistic regression<a href="lesson-4a-logistic-regression.html#why-logistic-regression" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>To provide a clear motivation for logistic regression, assume we have credit card default data for customers and we want to understand if the current credit card balance of a customer is an indicator of whether or not they’ll default on their credit card. To classify a customer as a high- vs. low-risk defaulter based on their balance we could use linear regression; however, the left plot below illustrates how linear regression would predict the probability of defaulting. Unfortunately, for balances close to zero we predict a negative probability of defaulting; if we were to predict for very large balances, we would get values bigger than 1. These predictions are not sensible, since of course the true probability of defaulting, regardless of credit card balance, must fall between 0 and 1. These inconsistencies only increase as our data become more imbalanced and the number of outliers increase. Contrast this with the logistic regression line (right plot) that is nonlinear (sigmoidal-shaped).</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:whylogit"></span>
+<img src="_main_files/figure-html/whylogit-1.png" alt="Comparing the predicted probabilities of linear regression (left) to logistic regression (right). Predicted probabilities using linear regression results in flawed logic whereas predicted values from logistic regression will always lie between 0 and 1." width="768" />
+<p class="caption">
+Figure 11.1: Comparing the predicted probabilities of linear regression (left) to logistic regression (right). Predicted probabilities using linear regression results in flawed logic whereas predicted values from logistic regression will always lie between 0 and 1.
+</p>
+</div>
+<p>To avoid the inadequacies of the linear model fit on a binary response, we must model the probability of our response using a function that gives outputs between 0 and 1 for all values of <span class="math inline">\(x\)</span>. Many functions meet this description. In logistic regression, we use the logistic function, which is defined as the following equation and produces the S-shaped curve in the right plot above.</p>
+<p><span class="math display">\[\begin{equation}
+  p\left(x\right) = \frac{e^{b_0 + b_1x}}{1 + e^{b_0 + b_1x}}
+\end{equation}\]</span></p>
+<p>The <span class="math inline">\(b_i\)</span> parameters represent the coefficients as in linear regression and <span class="math inline">\(p\left(x\right)\)</span> may be interpreted as the probability that the positive class (default in the above example) is present. The minimum for <span class="math inline">\(p\left(x\right)\)</span> is obtained at <span class="math inline">\(\lim_{a \rightarrow -\infty} \left[ \frac{e^a}{1+e^a} \right] = 0\)</span>, and the maximum for <span class="math inline">\(p\left(x\right)\)</span> is obtained at <span class="math inline">\(\lim_{a \rightarrow \infty} \left[ \frac{e^a}{1+e^a} \right] = 1\)</span> which restricts the output probabilities to 0–1. Rearranging the above equation yields the <em>logit transformation</em> (which is where logistic regression gets its name):</p>
+<p><span class="math display">\[\begin{equation}
+  g\left(x\right) = \ln \left[ \frac{p\left(x\right)}{1 - p\left(x\right)} \right] = b_0 + b_1 x
+\end{equation}\]</span></p>
+<p>Applying a logit transformation to <span class="math inline">\(p\left(x\right)\)</span> results in a linear equation similar to the mean response in a simple linear regression model. Using the logit transformation also results in an intuitive interpretation for the magnitude of <span class="math inline">\(b_1\)</span>: the odds (e.g., of defaulting) increase multiplicatively by <span class="math inline">\(\exp\left(b_1\right)\)</span> for every one-unit increase in <span class="math inline">\(x\)</span>. A similar interpretation exists if <span class="math inline">\(x\)</span> is categorical; see <span class="citation">Agresti (<a href="#ref-agresti2003categorical" role="doc-biblioref">2003</a>)</span>, Chapter 5, for more details.</p>
+<div class="note">
+<p>
+This may seem overwhelming but don’t worry, the meaning of this math
+and how you interpret the predictor variable coefficients will become
+clearer later in this lesson. Your main take-away is that logistic
+regression:
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Models the probability of our response using a function that
+restricts this probability to be between 0 and 1.
+</li>
+<li>
+The coefficients of our logistic regression represent the
+multiplicative increase in the odds of our response variable for every
+one-unit increase in <span class="math inline"><span class="math inline">\(x\)</span></span>.
+</li>
+</ol>
+</div>
+</div>
+<div id="simple-logistic-regression" class="section level2 hasAnchor" number="11.4">
+<h2><span class="header-section-number">11.4</span> Simple logistic regression<a href="lesson-4a-logistic-regression.html#simple-logistic-regression" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We will fit two logistic regression models in order to predict the probability of an employee attriting. The first predicts the probability of attrition based on their monthly income (<code>MonthlyIncome</code>) and the second is based on whether or not the employee works overtime (<code>OverTime</code>).</p>
+<div class="note">
+<p>
+To simplify the code we do not run cross validation procedures. We
+will in a later section but for now we simply want to get a grasp of
+interpreting a logistic regression model.
+</p>
+</div>
+<p>We use <code>logistic_reg()</code> for our model object. Note that we do not set the engine for this model type. This means we will use the default engine, which is the <code>glm</code> package (see <code>?logistic_reg</code> for details).</p>
+<div class="sourceCode" id="cb107"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb107-1"><a href="lesson-4a-logistic-regression.html#cb107-1" aria-hidden="true" tabindex="-1"></a>lr_mod <span class="ot">&lt;-</span> <span class="fu">logistic_reg</span>()</span>
+<span id="cb107-2"><a href="lesson-4a-logistic-regression.html#cb107-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb107-3"><a href="lesson-4a-logistic-regression.html#cb107-3" aria-hidden="true" tabindex="-1"></a><span class="co"># model 1</span></span>
+<span id="cb107-4"><a href="lesson-4a-logistic-regression.html#cb107-4" aria-hidden="true" tabindex="-1"></a>lr_fit1 <span class="ot">&lt;-</span> lr_mod <span class="sc">%&gt;%</span> </span>
+<span id="cb107-5"><a href="lesson-4a-logistic-regression.html#cb107-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Attrition <span class="sc">~</span> MonthlyIncome, <span class="at">data =</span> churn_train)</span>
+<span id="cb107-6"><a href="lesson-4a-logistic-regression.html#cb107-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb107-7"><a href="lesson-4a-logistic-regression.html#cb107-7" aria-hidden="true" tabindex="-1"></a><span class="co"># model 2</span></span>
+<span id="cb107-8"><a href="lesson-4a-logistic-regression.html#cb107-8" aria-hidden="true" tabindex="-1"></a>lr_fit2 <span class="ot">&lt;-</span> lr_mod <span class="sc">%&gt;%</span> </span>
+<span id="cb107-9"><a href="lesson-4a-logistic-regression.html#cb107-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Attrition <span class="sc">~</span> OverTime, <span class="at">data =</span> churn_train)</span></code></pre></div>
+</div>
+<div id="interpretation" class="section level2 hasAnchor" number="11.5">
+<h2><span class="header-section-number">11.5</span> Interpretation<a href="lesson-4a-logistic-regression.html#interpretation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Bear in mind that the coefficient estimates from logistic regression characterize the relationship between the predictor and response variable on a log-odds (i.e., logit) scale. Unlike, linear regression, this can make interpretation of coefficients difficult. At a macro level, larger coefficients suggest that that feature increases the odds of the response more than smaller valued coefficients.</p>
+<p>However, for our purpose, it is easier to focus on the interpretation of the output. The following predicts the probability of employee attrition based on the two models we fit. So in this example, for the first observation our model predicts there is a 78% probability that the employee will not leave and a 22% probability that they will.</p>
+<div class="sourceCode" id="cb108"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb108-1"><a href="lesson-4a-logistic-regression.html#cb108-1" aria-hidden="true" tabindex="-1"></a>lr_fit1 <span class="sc">%&gt;%</span> <span class="fu">predict</span>(churn_train, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>)</span>
+<span id="cb108-2"><a href="lesson-4a-logistic-regression.html#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1,028 × 2</span></span>
+<span id="cb108-3"><a href="lesson-4a-logistic-regression.html#cb108-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    .pred_No .pred_Yes</span></span>
+<span id="cb108-4"><a href="lesson-4a-logistic-regression.html#cb108-4" aria-hidden="true" tabindex="-1"></a><span class="do">##       &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb108-5"><a href="lesson-4a-logistic-regression.html#cb108-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  1    0.784    0.216 </span></span>
+<span id="cb108-6"><a href="lesson-4a-logistic-regression.html#cb108-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  2    0.778    0.222 </span></span>
+<span id="cb108-7"><a href="lesson-4a-logistic-regression.html#cb108-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  3    0.779    0.221 </span></span>
+<span id="cb108-8"><a href="lesson-4a-logistic-regression.html#cb108-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  4    0.834    0.166 </span></span>
+<span id="cb108-9"><a href="lesson-4a-logistic-regression.html#cb108-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  5    0.772    0.228 </span></span>
+<span id="cb108-10"><a href="lesson-4a-logistic-regression.html#cb108-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  6    0.813    0.187 </span></span>
+<span id="cb108-11"><a href="lesson-4a-logistic-regression.html#cb108-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  7    0.784    0.216 </span></span>
+<span id="cb108-12"><a href="lesson-4a-logistic-regression.html#cb108-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  8    0.906    0.0937</span></span>
+<span id="cb108-13"><a href="lesson-4a-logistic-regression.html#cb108-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  9    0.954    0.0463</span></span>
+<span id="cb108-14"><a href="lesson-4a-logistic-regression.html#cb108-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 10    0.807    0.193 </span></span>
+<span id="cb108-15"><a href="lesson-4a-logistic-regression.html#cb108-15" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 1,018 more rows</span></span>
+<span id="cb108-16"><a href="lesson-4a-logistic-regression.html#cb108-16" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows</span></span></code></pre></div>
+<p>Let’s use these predictions to assess how our logistic regression model views the relationship between our predictor variables and the response variable. In the first plot, we can see that as <code>MonthlyIncome</code> increases, the predicted probability of attrition decreases from a little over 0.25 to 0.025.</p>
+<p>If we look at the second plot, which plots the predicted probability of Attrition based on whether employees work <code>OverTime</code>. We can see that employees that work overtime have a 0.3 probability of attrition while those that don’t work overtime only have a 0.1 probability of attrition. Basically, working overtimes increases the probability of employee churn by a factor of 3!</p>
+<div class="sourceCode" id="cb109"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb109-1"><a href="lesson-4a-logistic-regression.html#cb109-1" aria-hidden="true" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> lr_fit1 <span class="sc">%&gt;%</span> </span>
+<span id="cb109-2"><a href="lesson-4a-logistic-regression.html#cb109-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">predict</span>(churn_train, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb109-3"><a href="lesson-4a-logistic-regression.html#cb109-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">mutate</span>(<span class="at">MonthlyIncome =</span> churn_train<span class="sc">$</span>MonthlyIncome) <span class="sc">%&gt;%</span></span>
+<span id="cb109-4"><a href="lesson-4a-logistic-regression.html#cb109-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">ggplot</span>(<span class="fu">aes</span>(MonthlyIncome, .pred_Yes)) <span class="sc">+</span></span>
+<span id="cb109-5"><a href="lesson-4a-logistic-regression.html#cb109-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">geom_point</span>(<span class="at">alpha =</span> .<span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb109-6"><a href="lesson-4a-logistic-regression.html#cb109-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">scale_y_continuous</span>(<span class="st">&quot;Probability of Attrition&quot;</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb109-7"><a href="lesson-4a-logistic-regression.html#cb109-7" aria-hidden="true" tabindex="-1"></a> <span class="fu">ggtitle</span>(<span class="st">&quot;Predicted probabilities for lr_fit1&quot;</span>)</span>
+<span id="cb109-8"><a href="lesson-4a-logistic-regression.html#cb109-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-9"><a href="lesson-4a-logistic-regression.html#cb109-9" aria-hidden="true" tabindex="-1"></a>p2 <span class="ot">&lt;-</span> lr_fit2 <span class="sc">%&gt;%</span> </span>
+<span id="cb109-10"><a href="lesson-4a-logistic-regression.html#cb109-10" aria-hidden="true" tabindex="-1"></a> <span class="fu">predict</span>(churn_train, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb109-11"><a href="lesson-4a-logistic-regression.html#cb109-11" aria-hidden="true" tabindex="-1"></a> <span class="fu">mutate</span>(<span class="at">OverTime =</span> churn_train<span class="sc">$</span>OverTime) <span class="sc">%&gt;%</span></span>
+<span id="cb109-12"><a href="lesson-4a-logistic-regression.html#cb109-12" aria-hidden="true" tabindex="-1"></a> <span class="fu">ggplot</span>(<span class="fu">aes</span>(OverTime, .pred_Yes, <span class="at">color =</span> OverTime)) <span class="sc">+</span></span>
+<span id="cb109-13"><a href="lesson-4a-logistic-regression.html#cb109-13" aria-hidden="true" tabindex="-1"></a> <span class="fu">geom_boxplot</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb109-14"><a href="lesson-4a-logistic-regression.html#cb109-14" aria-hidden="true" tabindex="-1"></a> <span class="fu">geom_rug</span>(<span class="at">sides =</span> <span class="st">&quot;b&quot;</span>, <span class="at">position =</span> <span class="st">&quot;jitter&quot;</span>, <span class="at">alpha =</span> <span class="fl">0.2</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb109-15"><a href="lesson-4a-logistic-regression.html#cb109-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="st">&quot;Probability of Attrition&quot;</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb109-16"><a href="lesson-4a-logistic-regression.html#cb109-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Predicted probabilities for lr_fit2&quot;</span>)</span>
+<span id="cb109-17"><a href="lesson-4a-logistic-regression.html#cb109-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-18"><a href="lesson-4a-logistic-regression.html#cb109-18" aria-hidden="true" tabindex="-1"></a>gridExtra<span class="sc">::</span><span class="fu">grid.arrange</span>(p1, p2, <span class="at">nrow =</span> <span class="dv">1</span>)</span></code></pre></div>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:unnamed-chunk-185"></span>
+<img src="_main_files/figure-html/unnamed-chunk-185-1.png" alt="Predicted probablilities of employee attrition based on monthly income (left) and overtime (right). As monthly income increases, `lr_fit1` predicts a decreased probability of attrition and if employees work overtime `lr_fit2` predicts an increased probability." width="960" />
+<p class="caption">
+Figure 11.2: Predicted probablilities of employee attrition based on monthly income (left) and overtime (right). As monthly income increases, <code>lr_fit1</code> predicts a decreased probability of attrition and if employees work overtime <code>lr_fit2</code> predicts an increased probability.
+</p>
+</div>
+<p>The table below shows the coefficient estimates and related information that result from fitting a logistic regression model in order to predict the probability of <em>Attrition = Yes</em> for our two models. Bear in mind that the coefficient estimates from logistic regression characterize the relationship between the predictor and response variable on a <em>log-odds</em> (i.e., logit) scale.</p>
+<p>For <code>lr_fit1</code>, the estimated coefficient for <code>MonthlyIncome</code> is -0.000139, which is negative, indicating that an increase in <code>MonthlyIncome</code> is associated with a decrease in the probability of attrition. Similarly, for <code>lr_fit2</code>, employees who work <code>OverTime</code> are associated with an increased probability of attrition compared to those that do not work <code>OverTime</code>.</p>
+<div class="sourceCode" id="cb110"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb110-1"><a href="lesson-4a-logistic-regression.html#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tidy</span>(lr_fit1)</span>
+<span id="cb110-2"><a href="lesson-4a-logistic-regression.html#cb110-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 5</span></span>
+<span id="cb110-3"><a href="lesson-4a-logistic-regression.html#cb110-3" aria-hidden="true" tabindex="-1"></a><span class="do">##   term           estimate std.error statistic      p.value</span></span>
+<span id="cb110-4"><a href="lesson-4a-logistic-regression.html#cb110-4" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span id="cb110-5"><a href="lesson-4a-logistic-regression.html#cb110-5" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 (Intercept)   -0.886    0.157         -5.64 0.0000000174</span></span>
+<span id="cb110-6"><a href="lesson-4a-logistic-regression.html#cb110-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 MonthlyIncome -0.000139 0.0000272     -5.10 0.000000344</span></span>
+<span id="cb110-7"><a href="lesson-4a-logistic-regression.html#cb110-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb110-8"><a href="lesson-4a-logistic-regression.html#cb110-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tidy</span>(lr_fit2)</span>
+<span id="cb110-9"><a href="lesson-4a-logistic-regression.html#cb110-9" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 5</span></span>
+<span id="cb110-10"><a href="lesson-4a-logistic-regression.html#cb110-10" aria-hidden="true" tabindex="-1"></a><span class="do">##   term        estimate std.error statistic  p.value</span></span>
+<span id="cb110-11"><a href="lesson-4a-logistic-regression.html#cb110-11" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb110-12"><a href="lesson-4a-logistic-regression.html#cb110-12" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 (Intercept)    -2.13     0.119    -17.9  1.46e-71</span></span>
+<span id="cb110-13"><a href="lesson-4a-logistic-regression.html#cb110-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 OverTimeYes     1.29     0.176      7.35 2.01e-13</span></span></code></pre></div>
+<p>As discussed earlier, it is easier to interpret the coefficients using an <code>exp()</code> transformation:</p>
+<div class="sourceCode" id="cb111"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb111-1"><a href="lesson-4a-logistic-regression.html#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(lr_fit1<span class="sc">$</span>fit))</span>
+<span id="cb111-2"><a href="lesson-4a-logistic-regression.html#cb111-2" aria-hidden="true" tabindex="-1"></a><span class="do">##   (Intercept) MonthlyIncome </span></span>
+<span id="cb111-3"><a href="lesson-4a-logistic-regression.html#cb111-3" aria-hidden="true" tabindex="-1"></a><span class="do">##     0.4122647     0.9998614</span></span>
+<span id="cb111-4"><a href="lesson-4a-logistic-regression.html#cb111-4" aria-hidden="true" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(lr_fit2<span class="sc">$</span>fit))</span>
+<span id="cb111-5"><a href="lesson-4a-logistic-regression.html#cb111-5" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept) OverTimeYes </span></span>
+<span id="cb111-6"><a href="lesson-4a-logistic-regression.html#cb111-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   0.1189759   3.6323389</span></span></code></pre></div>
+<p>Thus, the odds of an employee attriting in <code>lr_fit1</code> increase multiplicatively by 0.9999 for every one dollar increase in <code>MonthlyIncome</code>, whereas the odds of attriting in <code>lr_fit2</code> increase multiplicatively by 3.632 for employees that work <code>OverTime</code> compared to those that do not.</p>
+<p>Many aspects of the logistic regression output are similar to those discussed for linear regression. For example, we can use the estimated standard errors to get confidence intervals as we did for linear regression.</p>
+<div class="sourceCode" id="cb112"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb112-1"><a href="lesson-4a-logistic-regression.html#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(lr_fit1<span class="sc">$</span>fit) <span class="co"># for odds, you can use `exp(confint(model1))`</span></span>
+<span id="cb112-2"><a href="lesson-4a-logistic-regression.html#cb112-2" aria-hidden="true" tabindex="-1"></a><span class="do">##                       2.5 %        97.5 %</span></span>
+<span id="cb112-3"><a href="lesson-4a-logistic-regression.html#cb112-3" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)   -1.1932606571 -5.761048e-01</span></span>
+<span id="cb112-4"><a href="lesson-4a-logistic-regression.html#cb112-4" aria-hidden="true" tabindex="-1"></a><span class="do">## MonthlyIncome -0.0001948723 -8.803311e-05</span></span>
+<span id="cb112-5"><a href="lesson-4a-logistic-regression.html#cb112-5" aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(lr_fit2<span class="sc">$</span>fit)</span>
+<span id="cb112-6"><a href="lesson-4a-logistic-regression.html#cb112-6" aria-hidden="true" tabindex="-1"></a><span class="do">##                  2.5 %    97.5 %</span></span>
+<span id="cb112-7"><a href="lesson-4a-logistic-regression.html#cb112-7" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept) -2.3695727 -1.902409</span></span>
+<span id="cb112-8"><a href="lesson-4a-logistic-regression.html#cb112-8" aria-hidden="true" tabindex="-1"></a><span class="do">## OverTimeYes  0.9463761  1.635373</span></span></code></pre></div>
+<div id="knowledge-check-17" class="section level3 hasAnchor" number="11.5.1">
+<h3><span class="header-section-number">11.5.1</span> Knowledge check<a href="lesson-4a-logistic-regression.html#knowledge-check-17" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<ol style="list-style-type: decimal">
+<li>
+Load the spam data set from the kernlab package with the code below.
+Review the data documentation with <code>?spam</code>.
+</li>
+<li>
+What is the response variable?
+</li>
+<li>
+Split the data into a train and test set using a 70-30 split.
+</li>
+<li>
+Pick a single predictor variable and apply a simple logistic
+regression model that models the <code>type</code> variable as a
+function of that predictor variable.
+</li>
+<li>
+Interpret the feature’s coefficient
+</li>
+</ol>
+</div>
+<div class="sourceCode" id="cb113"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb113-1"><a href="lesson-4a-logistic-regression.html#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">&quot;kernlab&quot;</span>)</span>
+<span id="cb113-2"><a href="lesson-4a-logistic-regression.html#cb113-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kernlab)</span>
+<span id="cb113-3"><a href="lesson-4a-logistic-regression.html#cb113-3" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(spam)</span></code></pre></div>
+</div>
+</div>
+<div id="multiple-logistic-regression" class="section level2 hasAnchor" number="11.6">
+<h2><span class="header-section-number">11.6</span> Multiple logistic regression<a href="lesson-4a-logistic-regression.html#multiple-logistic-regression" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>We can also extend our model as seen in our earlier equation so that we can predict a binary response using multiple predictors:</p>
+<p><span class="math display">\[\begin{equation}
+p\left(X\right) = \frac{e^{b_0 + b_1 x_1 + \cdots + b_p x_p }}{1 + e^{b_0 + b_1 x_1 + \cdots + b_p x_p}}
+\end{equation}\]</span></p>
+<p>Let’s go ahead and fit a model that predicts the probability of <code>Attrition</code> based on the <code>MonthlyIncome</code> and <code>OverTime</code>. Our results show that both features have an impact on employee attrition; however, working <code>OverTime</code> tends to nearly double the probability of attrition!</p>
+<div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="lesson-4a-logistic-regression.html#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="co"># model 3</span></span>
+<span id="cb114-2"><a href="lesson-4a-logistic-regression.html#cb114-2" aria-hidden="true" tabindex="-1"></a>lr_fit3 <span class="ot">&lt;-</span> lr_mod <span class="sc">%&gt;%</span> </span>
+<span id="cb114-3"><a href="lesson-4a-logistic-regression.html#cb114-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Attrition <span class="sc">~</span> MonthlyIncome <span class="sc">+</span> OverTime, <span class="at">data =</span> churn_train)</span>
+<span id="cb114-4"><a href="lesson-4a-logistic-regression.html#cb114-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb114-5"><a href="lesson-4a-logistic-regression.html#cb114-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tidy</span>(lr_fit3)</span>
+<span id="cb114-6"><a href="lesson-4a-logistic-regression.html#cb114-6" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 3 × 5</span></span>
+<span id="cb114-7"><a href="lesson-4a-logistic-regression.html#cb114-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   term           estimate std.error statistic  p.value</span></span>
+<span id="cb114-8"><a href="lesson-4a-logistic-regression.html#cb114-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb114-9"><a href="lesson-4a-logistic-regression.html#cb114-9" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 (Intercept)   -1.33     0.177         -7.54 4.74e-14</span></span>
+<span id="cb114-10"><a href="lesson-4a-logistic-regression.html#cb114-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 MonthlyIncome -0.000147 0.0000280     -5.27 1.38e- 7</span></span>
+<span id="cb114-11"><a href="lesson-4a-logistic-regression.html#cb114-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 3 OverTimeYes    1.35     0.180          7.50 6.59e-14</span></span></code></pre></div>
+<div class="sourceCode" id="cb115"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb115-1"><a href="lesson-4a-logistic-regression.html#cb115-1" aria-hidden="true" tabindex="-1"></a>lr_fit3 <span class="sc">%&gt;%</span> </span>
+<span id="cb115-2"><a href="lesson-4a-logistic-regression.html#cb115-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(churn_train, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb115-3"><a href="lesson-4a-logistic-regression.html#cb115-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb115-4"><a href="lesson-4a-logistic-regression.html#cb115-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">MonthlyIncome =</span> churn_train<span class="sc">$</span>MonthlyIncome,</span>
+<span id="cb115-5"><a href="lesson-4a-logistic-regression.html#cb115-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">OverTime =</span> churn_train<span class="sc">$</span>OverTime</span>
+<span id="cb115-6"><a href="lesson-4a-logistic-regression.html#cb115-6" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb115-7"><a href="lesson-4a-logistic-regression.html#cb115-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(MonthlyIncome, .pred_Yes, <span class="at">color =</span> OverTime)) <span class="sc">+</span></span>
+<span id="cb115-8"><a href="lesson-4a-logistic-regression.html#cb115-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">size =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb115-9"><a href="lesson-4a-logistic-regression.html#cb115-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="st">&quot;Probability of Attrition&quot;</span>, <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb115-10"><a href="lesson-4a-logistic-regression.html#cb115-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">&quot;Predicted probabilities for lr_fit3&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-192-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div id="knowledge-check-18" class="section level3 hasAnchor" number="11.6.1">
+<h3><span class="header-section-number">11.6.1</span> Knowledge check<a href="lesson-4a-logistic-regression.html#knowledge-check-18" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<p>
+Using the same spam data as in the previous Knowledge check…
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Pick two predictor variables and apply a logistic regression model
+that models the <code>type</code> variable as a function of these
+predictor variables.
+</li>
+<li>
+Interpret the features’s coefficients
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="assessing-model-accuracy-1" class="section level2 hasAnchor" number="11.7">
+<h2><span class="header-section-number">11.7</span> Assessing model accuracy<a href="lesson-4a-logistic-regression.html#assessing-model-accuracy-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>With a basic understanding of logistic regression under our belt, similar to linear regression our concern now shifts to how well our models predict. As discussed in <a href="https://bradleyboehmke.github.io/uc-bana-4080/lesson-1b-first-model-with-tidymodels.html#classification-models">lesson 1b</a>, there are multiple metrics we can use for classification models.</p>
+<div id="accuracy" class="section level3 hasAnchor" number="11.7.1">
+<h3><span class="header-section-number">11.7.1</span> Accuracy<a href="lesson-4a-logistic-regression.html#accuracy" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The most basic classification metric is accuracy rate. This answers the question - <em>“Overall, how often is the classifier correct?”</em> Our objective is to maximize this metric. We can compute the accuracy with <code>accuracy()</code>.</p>
+<div class="note">
+<p>
+Here, we compute our error metric with the test data but we’ll show
+shortly how to do so using resampling procedures as we learned about in
+the last lesson.
+</p>
+</div>
+<div class="sourceCode" id="cb116"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb116-1"><a href="lesson-4a-logistic-regression.html#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="co"># accuracy of our first model</span></span>
+<span id="cb116-2"><a href="lesson-4a-logistic-regression.html#cb116-2" aria-hidden="true" tabindex="-1"></a>lr_fit1 <span class="sc">%&gt;%</span></span>
+<span id="cb116-3"><a href="lesson-4a-logistic-regression.html#cb116-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(churn_test) <span class="sc">%&gt;%</span></span>
+<span id="cb116-4"><a href="lesson-4a-logistic-regression.html#cb116-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bind_cols</span>(churn_test <span class="sc">%&gt;%</span> <span class="fu">select</span>(Attrition)) <span class="sc">%&gt;%</span></span>
+<span id="cb116-5"><a href="lesson-4a-logistic-regression.html#cb116-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">accuracy</span>(<span class="at">truth =</span> Attrition, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb116-6"><a href="lesson-4a-logistic-regression.html#cb116-6" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
+<span id="cb116-7"><a href="lesson-4a-logistic-regression.html#cb116-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric  .estimator .estimate</span></span>
+<span id="cb116-8"><a href="lesson-4a-logistic-regression.html#cb116-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb116-9"><a href="lesson-4a-logistic-regression.html#cb116-9" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 accuracy binary         0.837</span></span></code></pre></div>
+<p>Unfortunately, the accuracy rate only tells us how many predictions were correct versus not. Sometimes we may want to understand more behind how our predictions are correct vs incorrect. To do so we can use…</p>
+</div>
+<div id="confusion-matrix" class="section level3 hasAnchor" number="11.7.2">
+<h3><span class="header-section-number">11.7.2</span> Confusion matrix<a href="lesson-4a-logistic-regression.html#confusion-matrix" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>When applying classification models, we often use a <em>confusion matrix</em> to evaluate certain performance measures. A confusion matrix is simply a matrix that compares actual categorical levels (or events) to the predicted categorical levels. When we predict the right level, we refer to this as a <em>true positive</em>. However, if we predict a level or event that did not happen this is called a <em>false positive</em> (i.e. we predicted an employee would leave and they did not). Alternatively, when we do not predict a level or event and it does happen that this is called a <em>false negative</em> (i.e. an employee that we did not predict to leave does).</p>
+<p><img src="images/confusion-matrix.png" width="920" style="display: block; margin: auto;" /></p>
+<p>We can get the confusion matrix for a given fit model with <code>conf_mat()</code>. These results provide us with some very useful information. For <code>lr_fit1</code>, our model is predicting “No” for every observation!</p>
+<div class="sourceCode" id="cb117"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb117-1"><a href="lesson-4a-logistic-regression.html#cb117-1" aria-hidden="true" tabindex="-1"></a>lr_fit1 <span class="sc">%&gt;%</span></span>
+<span id="cb117-2"><a href="lesson-4a-logistic-regression.html#cb117-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(churn_test) <span class="sc">%&gt;%</span></span>
+<span id="cb117-3"><a href="lesson-4a-logistic-regression.html#cb117-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bind_cols</span>(churn_test <span class="sc">%&gt;%</span> <span class="fu">select</span>(Attrition)) <span class="sc">%&gt;%</span></span>
+<span id="cb117-4"><a href="lesson-4a-logistic-regression.html#cb117-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">conf_mat</span>(<span class="at">truth =</span> Attrition, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb117-5"><a href="lesson-4a-logistic-regression.html#cb117-5" aria-hidden="true" tabindex="-1"></a><span class="do">##           Truth</span></span>
+<span id="cb117-6"><a href="lesson-4a-logistic-regression.html#cb117-6" aria-hidden="true" tabindex="-1"></a><span class="do">## Prediction  No Yes</span></span>
+<span id="cb117-7"><a href="lesson-4a-logistic-regression.html#cb117-7" aria-hidden="true" tabindex="-1"></a><span class="do">##        No  370  72</span></span>
+<span id="cb117-8"><a href="lesson-4a-logistic-regression.html#cb117-8" aria-hidden="true" tabindex="-1"></a><span class="do">##        Yes   0   0</span></span></code></pre></div>
+<p>For a better example, let’s train a model with all predictor variables. Now when we create our confusion matrix we see that our model predicts yes’s and no’s.</p>
+<div class="sourceCode" id="cb118"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb118-1"><a href="lesson-4a-logistic-regression.html#cb118-1" aria-hidden="true" tabindex="-1"></a>lr_fit4 <span class="ot">&lt;-</span> lr_mod <span class="sc">%&gt;%</span> </span>
+<span id="cb118-2"><a href="lesson-4a-logistic-regression.html#cb118-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Attrition <span class="sc">~</span> ., <span class="at">data =</span> churn_train)</span>
+<span id="cb118-3"><a href="lesson-4a-logistic-regression.html#cb118-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb118-4"><a href="lesson-4a-logistic-regression.html#cb118-4" aria-hidden="true" tabindex="-1"></a>lr_fit4 <span class="sc">%&gt;%</span></span>
+<span id="cb118-5"><a href="lesson-4a-logistic-regression.html#cb118-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(churn_test) <span class="sc">%&gt;%</span></span>
+<span id="cb118-6"><a href="lesson-4a-logistic-regression.html#cb118-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bind_cols</span>(churn_test <span class="sc">%&gt;%</span> <span class="fu">select</span>(Attrition)) <span class="sc">%&gt;%</span></span>
+<span id="cb118-7"><a href="lesson-4a-logistic-regression.html#cb118-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">conf_mat</span>(<span class="at">truth =</span> Attrition, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb118-8"><a href="lesson-4a-logistic-regression.html#cb118-8" aria-hidden="true" tabindex="-1"></a><span class="do">##           Truth</span></span>
+<span id="cb118-9"><a href="lesson-4a-logistic-regression.html#cb118-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Prediction  No Yes</span></span>
+<span id="cb118-10"><a href="lesson-4a-logistic-regression.html#cb118-10" aria-hidden="true" tabindex="-1"></a><span class="do">##        No  353  38</span></span>
+<span id="cb118-11"><a href="lesson-4a-logistic-regression.html#cb118-11" aria-hidden="true" tabindex="-1"></a><span class="do">##        Yes  17  34</span></span></code></pre></div>
+<p>Using a confusion matrix can allow us to extract different meaningful metrics for our binary classifier. For example, given the above confusion matrix we can assess the following:</p>
+<ul>
+<li>Our model does far better at accurately predicting when an employee is <strong><em>not</em></strong> going to leave (Prediction = No &amp; Truth = No) versus accurately predicting when an employee is going to leave (Prediction = Yes &amp; Truth = Yes).</li>
+<li>When our model is inaccurate, we can see that it is from more false negatives (Prediction = No but Truth = Yes) than false positives (Prediction = Yes but Truth = No). This means our model is biased towards predicting that an employee is going to stay when in fact they end up leaving.</li>
+</ul>
+<p>When assessing model performance for a classification model, understanding how our model errors with false negatives and false positives is important. This information can be helpful to decision makers.</p>
+<p>Often, we want a classifier that has high accuracy <strong><em>and</em></strong> does well when it predicts an event will and will not occur, which minimizes false positives and false negatives. One way to capture this is with <strong><em>area under the curve</em></strong>.</p>
+</div>
+<div id="area-under-the-curve" class="section level3 hasAnchor" number="11.7.3">
+<h3><span class="header-section-number">11.7.3</span> Area under the curve<a href="lesson-4a-logistic-regression.html#area-under-the-curve" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Area under the curve (AUC) is an approach that plots the false positive rate along the x-axis and the true positive rate along the y-axis. Technically, we call this plot the Receiver Operator Curve (ROC). A line that is diagonal from the lower left corner to the upper right corner represents a random guess. The higher the line is in the upper left-hand corner, the better. The AUC metric computes the area under the ROC; so our objective is to maximize the AUC value.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-roc"></span>
+<img src="_main_files/figure-html/modeling-process-roc-1.png" alt="ROC curve." width="480" />
+<p class="caption">
+Figure 11.3: ROC curve.
+</p>
+</div>
+<p>For our logistic regression model we can get the ROC curve with the following:</p>
+<div class="note">
+<p>
+Notice how the y-axis is called “sensitivity” and the x-axis is
+“1=specificity”. These are just alternative terms referring to “true
+positive rate” and “false positive rate” respectively.
+</p>
+</div>
+<div class="sourceCode" id="cb119"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb119-1"><a href="lesson-4a-logistic-regression.html#cb119-1" aria-hidden="true" tabindex="-1"></a>lr_fit4 <span class="sc">%&gt;%</span> </span>
+<span id="cb119-2"><a href="lesson-4a-logistic-regression.html#cb119-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(churn_train, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb119-3"><a href="lesson-4a-logistic-regression.html#cb119-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">truth =</span> churn_train<span class="sc">$</span>Attrition) <span class="sc">%&gt;%</span></span>
+<span id="cb119-4"><a href="lesson-4a-logistic-regression.html#cb119-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">roc_curve</span>(truth, .pred_No) <span class="sc">%&gt;%</span></span>
+<span id="cb119-5"><a href="lesson-4a-logistic-regression.html#cb119-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">autoplot</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-200-1.png" width="576" style="display: block; margin: auto;" /></p>
+<p>And we can compute the AUC metric with <code>roc_auc()</code>:</p>
+<div class="sourceCode" id="cb120"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb120-1"><a href="lesson-4a-logistic-regression.html#cb120-1" aria-hidden="true" tabindex="-1"></a>lr_fit4 <span class="sc">%&gt;%</span> </span>
+<span id="cb120-2"><a href="lesson-4a-logistic-regression.html#cb120-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(churn_train, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb120-3"><a href="lesson-4a-logistic-regression.html#cb120-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">truth =</span> churn_train<span class="sc">$</span>Attrition) <span class="sc">%&gt;%</span></span>
+<span id="cb120-4"><a href="lesson-4a-logistic-regression.html#cb120-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">roc_auc</span>(truth, .pred_No)</span>
+<span id="cb120-5"><a href="lesson-4a-logistic-regression.html#cb120-5" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
+<span id="cb120-6"><a href="lesson-4a-logistic-regression.html#cb120-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator .estimate</span></span>
+<span id="cb120-7"><a href="lesson-4a-logistic-regression.html#cb120-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb120-8"><a href="lesson-4a-logistic-regression.html#cb120-8" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 roc_auc binary         0.886</span></span></code></pre></div>
+</div>
+<div id="knowledge-check-19" class="section level3 hasAnchor" number="11.7.4">
+<h3><span class="header-section-number">11.7.4</span> Knowledge check<a href="lesson-4a-logistic-regression.html#knowledge-check-19" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<p>
+Using the same spam data as in the previous Knowledge check…
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Apply a logistic regression model that models the <code>type</code>
+variable as a function of <strong><em>all</em></strong> predictor
+variables.
+</li>
+<li>
+Assess the accuracy of this model on the test data.
+</li>
+<li>
+Assess and interpret the confusion matrix results for this model on
+the test data.
+</li>
+<li>
+Plot the ROC curve for this model and compute the AUC (using the
+test data).
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="cross-validation-performance" class="section level2 hasAnchor" number="11.8">
+<h2><span class="header-section-number">11.8</span> Cross-validation performance<a href="lesson-4a-logistic-regression.html#cross-validation-performance" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>However, recall that our previous models were not based on cross validation procedures. If we re-perform our analysis using a 5-fold cross validation procedure we see that our average AUC metric is lower than the test set. This is probably a better indicator on how our model will perform, on average, across new data.</p>
+<div class="sourceCode" id="cb121"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb121-1"><a href="lesson-4a-logistic-regression.html#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create resampling procedure</span></span>
+<span id="cb121-2"><a href="lesson-4a-logistic-regression.html#cb121-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb121-3"><a href="lesson-4a-logistic-regression.html#cb121-3" aria-hidden="true" tabindex="-1"></a>kfold <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(churn_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb121-4"><a href="lesson-4a-logistic-regression.html#cb121-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb121-5"><a href="lesson-4a-logistic-regression.html#cb121-5" aria-hidden="true" tabindex="-1"></a><span class="co"># train model via cross validation</span></span>
+<span id="cb121-6"><a href="lesson-4a-logistic-regression.html#cb121-6" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lr_mod, Attrition <span class="sc">~</span> ., kfold)</span>
+<span id="cb121-7"><a href="lesson-4a-logistic-regression.html#cb121-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb121-8"><a href="lesson-4a-logistic-regression.html#cb121-8" aria-hidden="true" tabindex="-1"></a><span class="co"># average AUC</span></span>
+<span id="cb121-9"><a href="lesson-4a-logistic-regression.html#cb121-9" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(results) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;roc_auc&quot;</span>)</span>
+<span id="cb121-10"><a href="lesson-4a-logistic-regression.html#cb121-10" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
+<span id="cb121-11"><a href="lesson-4a-logistic-regression.html#cb121-11" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator  mean     n std_err .config             </span></span>
+<span id="cb121-12"><a href="lesson-4a-logistic-regression.html#cb121-12" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb121-13"><a href="lesson-4a-logistic-regression.html#cb121-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 roc_auc binary     0.830     5  0.0153 Preprocessor1_Model1</span></span>
+<span id="cb121-14"><a href="lesson-4a-logistic-regression.html#cb121-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb121-15"><a href="lesson-4a-logistic-regression.html#cb121-15" aria-hidden="true" tabindex="-1"></a><span class="co"># AUC across all folds</span></span>
+<span id="cb121-16"><a href="lesson-4a-logistic-regression.html#cb121-16" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(results, <span class="at">summarize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;roc_auc&quot;</span>)</span>
+<span id="cb121-17"><a href="lesson-4a-logistic-regression.html#cb121-17" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 5</span></span>
+<span id="cb121-18"><a href="lesson-4a-logistic-regression.html#cb121-18" aria-hidden="true" tabindex="-1"></a><span class="do">##   id    .metric .estimator .estimate .config             </span></span>
+<span id="cb121-19"><a href="lesson-4a-logistic-regression.html#cb121-19" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb121-20"><a href="lesson-4a-logistic-regression.html#cb121-20" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 Fold1 roc_auc binary         0.811 Preprocessor1_Model1</span></span>
+<span id="cb121-21"><a href="lesson-4a-logistic-regression.html#cb121-21" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 Fold2 roc_auc binary         0.801 Preprocessor1_Model1</span></span>
+<span id="cb121-22"><a href="lesson-4a-logistic-regression.html#cb121-22" aria-hidden="true" tabindex="-1"></a><span class="do">## 3 Fold3 roc_auc binary         0.811 Preprocessor1_Model1</span></span>
+<span id="cb121-23"><a href="lesson-4a-logistic-regression.html#cb121-23" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 Fold4 roc_auc binary         0.884 Preprocessor1_Model1</span></span>
+<span id="cb121-24"><a href="lesson-4a-logistic-regression.html#cb121-24" aria-hidden="true" tabindex="-1"></a><span class="do">## 5 Fold5 roc_auc binary         0.845 Preprocessor1_Model1</span></span></code></pre></div>
+<div id="knowledge-check-20" class="section level3 hasAnchor" number="11.8.1">
+<h3><span class="header-section-number">11.8.1</span> Knowledge check<a href="lesson-4a-logistic-regression.html#knowledge-check-20" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<p>
+Using the same spam data as in the previous Knowledge checks…
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Apply a logistic regression model that models the <code>type</code>
+variable as a function of <strong><em>all</em></strong> predictor
+variables.
+</li>
+<li>
+Use a 10-fold cross validation procedure to compute the mean
+generalization AUC.
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="feature-interpretation" class="section level2 hasAnchor" number="11.9">
+<h2><span class="header-section-number">11.9</span> Feature interpretation<a href="lesson-4a-logistic-regression.html#feature-interpretation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Similar to linear regression, once our preferred logistic regression model is identified, we need to interpret how the features are influencing the results. As with normal linear regression models, variable importance for logistic regression models can be computed using the absolute value of the <span class="math inline">\(z\)</span>-statistic for each coefficient. Using <code>vip::vip()</code> we can extract our top 20 influential variables. The following illustrates that for <code>lr_fit4</code>, working overtime is the most influential followed by the frequency of business travel and the distance from home that the employees office is.</p>
+<div class="sourceCode" id="cb122"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb122-1"><a href="lesson-4a-logistic-regression.html#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="fu">vip</span>(lr_fit4<span class="sc">$</span>fit, <span class="at">num_features =</span> <span class="dv">20</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-205-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div id="knowledge-check-21" class="section level3 hasAnchor" number="11.9.1">
+<h3><span class="header-section-number">11.9.1</span> Knowledge check<a href="lesson-4a-logistic-regression.html#knowledge-check-21" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div class="todo">
+<p>
+Using the same spam data as in the previous Knowledge checks…
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Apply a logistic regression model that models the <code>type</code>
+variable as a function of <strong><em>all</em></strong> predictor
+variables.
+</li>
+<li>
+Use <code>vip()</code> to plot the top 20 most influential
+features.
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div id="final-thoughts" class="section level2 hasAnchor" number="11.10">
+<h2><span class="header-section-number">11.10</span> Final thoughts<a href="lesson-4a-logistic-regression.html#final-thoughts" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Logistic regression provides an alternative to linear regression for binary classification problems. However, similar to linear regression, logistic regression suffers from the many assumptions involved in the algorithm (i.e. linear relationship of the coefficient, multicollinearity). Moreover, often we have more than two classes to predict which is commonly referred to as multinomial classification. Although multinomial extensions of logistic regression exist, the assumptions made only increase and, often, the stability of the coefficient estimates (and therefore the accuracy) decrease. Future modules will discuss more advanced algorithms that provide a more natural and trustworthy approach to binary and multinomial classification prediction.</p>
+</div>
+<div id="exercises-6" class="section level2 hasAnchor" number="11.11">
+<h2><span class="header-section-number">11.11</span> Exercises<a href="lesson-4a-logistic-regression.html#exercises-6" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="todo">
+<p>
+Use the <code>titanic.csv</code> dataset available via Canvas for
+these exercise questions. This dataset contains information on the fate
+of 1,043 passengers on the fatal maiden voyage of the ocean liner
+‘Titanic’. Our interest is in predicting whether or not a passenger
+survived. Because the variable we want to predict is binary (survived =
+Yes if the passenger survived and survived = No if they did not),
+logistic regression is appropriate. For this session we’ll assess three
+predictor variables: <code>pclass</code>, <code>sex</code>, and
+<code>age</code>.
+</p>
+<ul>
+<li>
+<code>survived</code> (dependent variable) = Yes if the passenger
+survived and No if they did not
+</li>
+<li>
+<code>pclass</code> (predictor variable) = the economic class of the
+passenger summarized as 1st, 2nd, 3rd, and Crew class.
+</li>
+<li>
+<code>sex</code> (predictor variable) = reported sex of the
+passenger (“male”, “female”)
+</li>
+<li>
+<code>age</code> (predictor variable) = age of passenger. Note that
+ages &lt;1 are for infants.
+</li>
+</ul>
+<ol style="list-style-type: decimal">
+<li>
+Using stratified sampling split the data into a training set and a
+test set. Use a 70/30 split (70% for the training data &amp; 30% for the
+test set).
+</li>
+<li>
+Apply a logistic regression model using all predictor variables and
+perform a 10-fold cross validation procedure.
+</li>
+<li>
+What is the mean cross-validation generalization error?
+</li>
+<li>
+Identify the influence of the three predictor variables.
+</li>
+</ol>
+</div>
+
+</div>
+</div>
+
+
+
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-agresti2003categorical" class="csl-entry">
+Agresti, Alan. 2003. <em>Categorical Data Analysis</em>. Wiley Series in Probability and Statistics. Wiley.
+</div>
+<div id="ref-faraway2016extending" class="csl-entry">
+Faraway, Julian J. 2016a. <em>Extending the Linear Model with r: Generalized Linear, Mixed Effects and Nonparametric Regression Models</em>. Vol. 124. CRC press.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="overview-3.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="computing-environment.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/bradleyboehmke/uc-bana-4080/edit/master/module-4/lesson-1.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "section"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
