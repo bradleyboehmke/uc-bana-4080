@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>14 Lesson 5a: Hyperparameter Tuning | Data Mining with R</title>
+  <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="14 Lesson 5a: Hyperparameter Tuning | Data Mining with R" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  <meta name="github-repo" content="bradleyboehmke/uc-bana-7025" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="14 Lesson 5a: Hyperparameter Tuning | Data Mining with R" />
+  <meta name="twitter:site" content="@bradleyboehmke" />
+  <meta name="twitter:description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
+  
+
+<meta name="author" content="Bradley Boehmke" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="overview-4.html"/>
+<link rel="next" href="computing-environment.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<script src="libs/viz-1.8.2/viz.js"></script>
+<link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
+<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">UC BANA 4080: Data Mining</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Syllabus</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#learning-objectives"><i class="fa fa-check"></i>Learning Objectives</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#material"><i class="fa fa-check"></i>Material</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#class-structure"><i class="fa fa-check"></i>Class Structure</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#schedule"><i class="fa fa-check"></i>Schedule</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#conventions-used-in-this-book"><i class="fa fa-check"></i>Conventions used in this book</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#feedback"><i class="fa fa-check"></i>Feedback</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#acknowledgements"><i class="fa fa-check"></i>Acknowledgements</a></li>
+</ul></li>
+<li class="part"><span><b>I Module 1</b></span></li>
+<li class="chapter" data-level="1" data-path="overview.html"><a href="overview.html"><i class="fa fa-check"></i><b>1</b> Overview</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="overview.html"><a href="overview.html#learning-objectives-1"><i class="fa fa-check"></i><b>1.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="1.2" data-path="overview.html"><a href="overview.html#estimated-time-requirement"><i class="fa fa-check"></i><b>1.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="1.3" data-path="overview.html"><a href="overview.html#tasks"><i class="fa fa-check"></i><b>1.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html"><i class="fa fa-check"></i><b>2</b> Lesson 1a: Intro to machine learning</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#learning-objectives-2"><i class="fa fa-check"></i><b>2.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="2.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#supervised-learning"><i class="fa fa-check"></i><b>2.2</b> Supervised learning</a>
+<ul>
+<li class="chapter" data-level="2.2.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#regression-problems"><i class="fa fa-check"></i><b>2.2.1</b> Regression problems</a></li>
+<li class="chapter" data-level="2.2.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#classification-problems"><i class="fa fa-check"></i><b>2.2.2</b> Classification problems</a></li>
+<li class="chapter" data-level="2.2.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check"><i class="fa fa-check"></i><b>2.2.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#unsupervised-learning"><i class="fa fa-check"></i><b>2.3</b> Unsupervised learning</a>
+<ul>
+<li class="chapter" data-level="2.3.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check-1"><i class="fa fa-check"></i><b>2.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#machine-learning-in"><i class="fa fa-check"></i><b>2.4</b> Machine Learning in <svg aria-hidden="true" role="img" viewBox="0 0 581 512" style="height:1em;width:1.13em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M581 226.6C581 119.1 450.9 32 290.5 32S0 119.1 0 226.6C0 322.4 103.3 402 239.4 418.1V480h99.1v-61.5c24.3-2.7 47.6-7.4 69.4-13.9L448 480h112l-67.4-113.7c54.5-35.4 88.4-84.9 88.4-139.7zm-466.8 14.5c0-73.5 98.9-133 220.8-133s211.9 40.7 211.9 133c0 50.1-26.5 85-70.3 106.4-2.4-1.6-4.7-2.9-6.4-3.7-10.2-5.2-27.8-10.5-27.8-10.5s86.6-6.4 86.6-92.7-90.6-87.9-90.6-87.9h-199V361c-74.1-21.5-125.2-67.1-125.2-119.9zm225.1 38.3v-55.6c57.8 0 87.8-6.8 87.8 27.3 0 36.5-38.2 28.3-87.8 28.3zm-.9 72.5H365c10.8 0 18.9 11.7 24 19.2-16.1 1.9-33 2.8-50.6 2.9v-22.1z"/></svg></a>
+<ul>
+<li class="chapter" data-level="2.4.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#knowledge-check-2"><i class="fa fa-check"></i><b>2.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="2.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#the-data-sets"><i class="fa fa-check"></i><b>2.5</b> The data sets</a>
+<ul>
+<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing</a></li>
+<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes</a></li>
+<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers</a></li>
+<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing</a></li>
+<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition</a></li>
+<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters</a></li>
+</ul></li>
+<li class="chapter" data-level="2.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#what-youll-learn-next"><i class="fa fa-check"></i><b>2.6</b> What You’ll Learn Next</a></li>
+<li class="chapter" data-level="2.7" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#exercises"><i class="fa fa-check"></i><b>2.7</b> Exercises</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html"><i class="fa fa-check"></i><b>3</b> Lesson 1b: First model with Tidymodels</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#learning-objectives-3"><i class="fa fa-check"></i><b>3.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="3.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#prerequisites"><i class="fa fa-check"></i><b>3.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="3.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#data-splitting"><i class="fa fa-check"></i><b>3.3</b> Data splitting</a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#simple-random-sampling"><i class="fa fa-check"></i><b>3.3.1</b> Simple random sampling</a></li>
+<li class="chapter" data-level="3.3.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#stratified-sampling"><i class="fa fa-check"></i><b>3.3.2</b> Stratified sampling</a></li>
+<li class="chapter" data-level="3.3.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-3"><i class="fa fa-check"></i><b>3.3.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#building-models"><i class="fa fa-check"></i><b>3.4</b> Building models</a>
+<ul>
+<li class="chapter" data-level="3.4.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-4"><i class="fa fa-check"></i><b>3.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#making-predictions"><i class="fa fa-check"></i><b>3.5</b> Making predictions</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-5"><i class="fa fa-check"></i><b>3.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#evaluating-model-performance"><i class="fa fa-check"></i><b>3.6</b> Evaluating model performance</a>
+<ul>
+<li class="chapter" data-level="3.6.1" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#regression-models"><i class="fa fa-check"></i><b>3.6.1</b> Regression models</a></li>
+<li class="chapter" data-level="3.6.2" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#classification-models"><i class="fa fa-check"></i><b>3.6.2</b> Classification models</a></li>
+<li class="chapter" data-level="3.6.3" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#knowledge-check-6"><i class="fa fa-check"></i><b>3.6.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="3.7" data-path="lesson-1b-first-model-with-tidymodels.html"><a href="lesson-1b-first-model-with-tidymodels.html#exercises-1"><i class="fa fa-check"></i><b>3.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>II Module 2</b></span></li>
+<li class="chapter" data-level="4" data-path="overview-1.html"><a href="overview-1.html"><i class="fa fa-check"></i><b>4</b> Overview</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="overview-1.html"><a href="overview-1.html#learning-objectives-4"><i class="fa fa-check"></i><b>4.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="4.2" data-path="overview-1.html"><a href="overview-1.html#estimated-time-requirement-1"><i class="fa fa-check"></i><b>4.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="4.3" data-path="overview-1.html"><a href="overview-1.html#tasks-1"><i class="fa fa-check"></i><b>4.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html"><i class="fa fa-check"></i><b>5</b> Lesson 2a: Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#learning-objectives-5"><i class="fa fa-check"></i><b>5.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="5.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#prerequisites-1"><i class="fa fa-check"></i><b>5.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="5.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#correlation"><i class="fa fa-check"></i><b>5.3</b> Correlation</a>
+<ul>
+<li class="chapter" data-level="5.3.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-7"><i class="fa fa-check"></i><b>5.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#simple-linear-regression"><i class="fa fa-check"></i><b>5.4</b> Simple linear regression</a>
+<ul>
+<li class="chapter" data-level="5.4.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#best-fit-line"><i class="fa fa-check"></i><b>5.4.1</b> Best fit line</a></li>
+<li class="chapter" data-level="5.4.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#estimating-best-fit"><i class="fa fa-check"></i><b>5.4.2</b> Estimating “best fit”</a></li>
+<li class="chapter" data-level="5.4.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#inference"><i class="fa fa-check"></i><b>5.4.3</b> Inference</a></li>
+<li class="chapter" data-level="5.4.4" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-8"><i class="fa fa-check"></i><b>5.4.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#making-predictions-1"><i class="fa fa-check"></i><b>5.5</b> Making predictions</a></li>
+<li class="chapter" data-level="5.6" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#assessing-model-accuracy"><i class="fa fa-check"></i><b>5.6</b> Assessing model accuracy</a>
+<ul>
+<li class="chapter" data-level="5.6.1" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#training-data-accuracy"><i class="fa fa-check"></i><b>5.6.1</b> Training data accuracy</a></li>
+<li class="chapter" data-level="5.6.2" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#test-data-accuracy"><i class="fa fa-check"></i><b>5.6.2</b> Test data accuracy</a></li>
+<li class="chapter" data-level="5.6.3" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#knowledge-check-9"><i class="fa fa-check"></i><b>5.6.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="5.7" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#exercises-2"><i class="fa fa-check"></i><b>5.7</b> Exercises</a></li>
+<li class="chapter" data-level="5.8" data-path="lesson-2a-simple-linear-regression.html"><a href="lesson-2a-simple-linear-regression.html#other-resources"><i class="fa fa-check"></i><b>5.8</b> Other resources</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html"><i class="fa fa-check"></i><b>6</b> Lesson 2b: Multiple linear regression</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#learning-objectives-6"><i class="fa fa-check"></i><b>6.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="6.2" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#prerequisites-2"><i class="fa fa-check"></i><b>6.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="6.3" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#adding-additional-predictors"><i class="fa fa-check"></i><b>6.3</b> Adding additional predictors</a>
+<ul>
+<li class="chapter" data-level="6.3.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#knowledge-check-10"><i class="fa fa-check"></i><b>6.3.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="6.4" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#interactions"><i class="fa fa-check"></i><b>6.4</b> Interactions</a></li>
+<li class="chapter" data-level="6.5" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#qualitative-predictors"><i class="fa fa-check"></i><b>6.5</b> Qualitative predictors</a>
+<ul>
+<li class="chapter" data-level="6.5.1" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#knowledge-check-11"><i class="fa fa-check"></i><b>6.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="6.6" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#including-many-predictors"><i class="fa fa-check"></i><b>6.6</b> Including many predictors</a></li>
+<li class="chapter" data-level="6.7" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#feature-importance"><i class="fa fa-check"></i><b>6.7</b> Feature importance</a></li>
+<li class="chapter" data-level="6.8" data-path="lesson-2b-multiple-linear-regression.html"><a href="lesson-2b-multiple-linear-regression.html#exercises-3"><i class="fa fa-check"></i><b>6.8</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>III Module 3</b></span></li>
+<li class="chapter" data-level="7" data-path="overview-2.html"><a href="overview-2.html"><i class="fa fa-check"></i><b>7</b> Overview</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="overview-2.html"><a href="overview-2.html#learning-objectives-7"><i class="fa fa-check"></i><b>7.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="7.2" data-path="overview-2.html"><a href="overview-2.html#estimated-time-requirement-2"><i class="fa fa-check"></i><b>7.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="7.3" data-path="overview-2.html"><a href="overview-2.html#tasks-2"><i class="fa fa-check"></i><b>7.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html"><i class="fa fa-check"></i><b>8</b> Lesson 3a: Feature engineering</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#learning-objectives-8"><i class="fa fa-check"></i><b>8.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="8.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#prerequisites-3"><i class="fa fa-check"></i><b>8.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="8.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#create-a-recipe"><i class="fa fa-check"></i><b>8.3</b> Create a recipe</a></li>
+<li class="chapter" data-level="8.4" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#numeric-features"><i class="fa fa-check"></i><b>8.4</b> Numeric features</a>
+<ul>
+<li class="chapter" data-level="8.4.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#standardizing"><i class="fa fa-check"></i><b>8.4.1</b> Standardizing</a></li>
+<li class="chapter" data-level="8.4.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#normalizing"><i class="fa fa-check"></i><b>8.4.2</b> Normalizing</a></li>
+<li class="chapter" data-level="8.4.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#knowledge-check-12"><i class="fa fa-check"></i><b>8.4.3</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#categorical-features"><i class="fa fa-check"></i><b>8.5</b> Categorical features</a>
+<ul>
+<li class="chapter" data-level="8.5.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#one-hot-dummy-encoding"><i class="fa fa-check"></i><b>8.5.1</b> One-hot &amp; dummy encoding</a></li>
+<li class="chapter" data-level="8.5.2" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#ordinal-encoding"><i class="fa fa-check"></i><b>8.5.2</b> Ordinal encoding</a></li>
+<li class="chapter" data-level="8.5.3" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#lumping"><i class="fa fa-check"></i><b>8.5.3</b> Lumping</a></li>
+<li class="chapter" data-level="8.5.4" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#knowledge-check-13"><i class="fa fa-check"></i><b>8.5.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#fit-a-model-with-a-recipe"><i class="fa fa-check"></i><b>8.6</b> Fit a model with a recipe</a>
+<ul>
+<li class="chapter" data-level="8.6.1" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#knowledge-check-14"><i class="fa fa-check"></i><b>8.6.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="8.7" data-path="lesson-3a-feature-engineering.html"><a href="lesson-3a-feature-engineering.html#exercises-4"><i class="fa fa-check"></i><b>8.7</b> Exercises</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html"><i class="fa fa-check"></i><b>9</b> Lesson 3b: Resampling</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#learning-objectives-9"><i class="fa fa-check"></i><b>9.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="9.2" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#prerequisites-4"><i class="fa fa-check"></i><b>9.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="9.3" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#resampling-cross-validation"><i class="fa fa-check"></i><b>9.3</b> Resampling &amp; cross-validation</a></li>
+<li class="chapter" data-level="9.4" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#k-fold-cross-validation"><i class="fa fa-check"></i><b>9.4</b> K-fold cross-validation</a>
+<ul>
+<li class="chapter" data-level="9.4.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#knowledge-check-15"><i class="fa fa-check"></i><b>9.4.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="9.5" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#bootstrap-resampling"><i class="fa fa-check"></i><b>9.5</b> Bootstrap resampling</a>
+<ul>
+<li class="chapter" data-level="9.5.1" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#knowledge-check-16"><i class="fa fa-check"></i><b>9.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="9.6" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#alternative-methods"><i class="fa fa-check"></i><b>9.6</b> Alternative methods</a></li>
+<li class="chapter" data-level="9.7" data-path="lesson-3b-resampling.html"><a href="lesson-3b-resampling.html#exercises-5"><i class="fa fa-check"></i><b>9.7</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>IV Module 4</b></span></li>
+<li class="chapter" data-level="10" data-path="overview-3.html"><a href="overview-3.html"><i class="fa fa-check"></i><b>10</b> Overview</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="overview-3.html"><a href="overview-3.html#learning-objectives-10"><i class="fa fa-check"></i><b>10.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="10.2" data-path="overview-3.html"><a href="overview-3.html#estimated-time-requirement-3"><i class="fa fa-check"></i><b>10.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="10.3" data-path="overview-3.html"><a href="overview-3.html#tasks-3"><i class="fa fa-check"></i><b>10.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html"><i class="fa fa-check"></i><b>11</b> Lesson 4a: Logistic Regression</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#learning-objectives-11"><i class="fa fa-check"></i><b>11.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="11.2" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#prerequisites-5"><i class="fa fa-check"></i><b>11.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="11.3" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#why-logistic-regression"><i class="fa fa-check"></i><b>11.3</b> Why logistic regression</a></li>
+<li class="chapter" data-level="11.4" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#simple-logistic-regression"><i class="fa fa-check"></i><b>11.4</b> Simple logistic regression</a></li>
+<li class="chapter" data-level="11.5" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#interpretation"><i class="fa fa-check"></i><b>11.5</b> Interpretation</a>
+<ul>
+<li class="chapter" data-level="11.5.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-17"><i class="fa fa-check"></i><b>11.5.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.6" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#multiple-logistic-regression"><i class="fa fa-check"></i><b>11.6</b> Multiple logistic regression</a>
+<ul>
+<li class="chapter" data-level="11.6.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-18"><i class="fa fa-check"></i><b>11.6.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.7" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#assessing-model-accuracy-1"><i class="fa fa-check"></i><b>11.7</b> Assessing model accuracy</a>
+<ul>
+<li class="chapter" data-level="11.7.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#accuracy"><i class="fa fa-check"></i><b>11.7.1</b> Accuracy</a></li>
+<li class="chapter" data-level="11.7.2" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#confusion-matrix"><i class="fa fa-check"></i><b>11.7.2</b> Confusion matrix</a></li>
+<li class="chapter" data-level="11.7.3" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#area-under-the-curve"><i class="fa fa-check"></i><b>11.7.3</b> Area under the curve</a></li>
+<li class="chapter" data-level="11.7.4" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-19"><i class="fa fa-check"></i><b>11.7.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.8" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#cross-validation-performance"><i class="fa fa-check"></i><b>11.8</b> Cross-validation performance</a>
+<ul>
+<li class="chapter" data-level="11.8.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-20"><i class="fa fa-check"></i><b>11.8.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.9" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#feature-interpretation"><i class="fa fa-check"></i><b>11.9</b> Feature interpretation</a>
+<ul>
+<li class="chapter" data-level="11.9.1" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#knowledge-check-21"><i class="fa fa-check"></i><b>11.9.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="11.10" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#final-thoughts"><i class="fa fa-check"></i><b>11.10</b> Final thoughts</a></li>
+<li class="chapter" data-level="11.11" data-path="lesson-4a-logistic-regression.html"><a href="lesson-4a-logistic-regression.html#exercises-6"><i class="fa fa-check"></i><b>11.11</b> Exercises</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html"><i class="fa fa-check"></i><b>12</b> Lesson 4b: Regularized Regression</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#learning-objectives-12"><i class="fa fa-check"></i><b>12.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="12.2" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#prerequisites-6"><i class="fa fa-check"></i><b>12.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="12.3" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#why-regularize"><i class="fa fa-check"></i><b>12.3</b> Why regularize?</a></li>
+<li class="chapter" data-level="12.4" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#ridge-penalty"><i class="fa fa-check"></i><b>12.4</b> Ridge penalty</a></li>
+<li class="chapter" data-level="12.5" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#lasso"><i class="fa fa-check"></i><b>12.5</b> Lasso penalty</a></li>
+<li class="chapter" data-level="12.6" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#elastic"><i class="fa fa-check"></i><b>12.6</b> Elastic nets</a></li>
+<li class="chapter" data-level="12.7" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#implementation"><i class="fa fa-check"></i><b>12.7</b> Implementation</a>
+<ul>
+<li class="chapter" data-level="12.7.1" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#knowledge-check-22"><i class="fa fa-check"></i><b>12.7.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="12.8" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#tuning-our-model"><i class="fa fa-check"></i><b>12.8</b> Tuning our model</a>
+<ul>
+<li class="chapter" data-level="12.8.1" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#tuning-regularization-strength"><i class="fa fa-check"></i><b>12.8.1</b> Tuning regularization strength</a></li>
+<li class="chapter" data-level="12.8.2" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#tuning-regularization-type"><i class="fa fa-check"></i><b>12.8.2</b> Tuning regularization type</a></li>
+<li class="chapter" data-level="12.8.3" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#tuning-regularization-type-strength"><i class="fa fa-check"></i><b>12.8.3</b> Tuning regularization type &amp; strength</a></li>
+<li class="chapter" data-level="12.8.4" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#knowledge-check-23"><i class="fa fa-check"></i><b>12.8.4</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="12.9" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#feature-importance-1"><i class="fa fa-check"></i><b>12.9</b> Feature importance</a>
+<ul>
+<li class="chapter" data-level="12.9.1" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#knowledge-check-24"><i class="fa fa-check"></i><b>12.9.1</b> Knowledge check</a></li>
+</ul></li>
+<li class="chapter" data-level="12.10" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#classification-problems-1"><i class="fa fa-check"></i><b>12.10</b> Classification problems</a></li>
+<li class="chapter" data-level="12.11" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#final-thoughts-1"><i class="fa fa-check"></i><b>12.11</b> Final thoughts</a></li>
+<li class="chapter" data-level="12.12" data-path="lesson-4b-regularized-regression.html"><a href="lesson-4b-regularized-regression.html#exercises-7"><i class="fa fa-check"></i><b>12.12</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>V Module 4</b></span></li>
+<li class="chapter" data-level="13" data-path="overview-4.html"><a href="overview-4.html"><i class="fa fa-check"></i><b>13</b> Overview</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="overview-4.html"><a href="overview-4.html#learning-objectives-13"><i class="fa fa-check"></i><b>13.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="13.2" data-path="overview-4.html"><a href="overview-4.html#estimated-time-requirement-4"><i class="fa fa-check"></i><b>13.2</b> Estimated time requirement</a></li>
+<li class="chapter" data-level="13.3" data-path="overview-4.html"><a href="overview-4.html#tasks-4"><i class="fa fa-check"></i><b>13.3</b> Tasks</a></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html"><i class="fa fa-check"></i><b>14</b> Lesson 5a: Hyperparameter Tuning</a>
+<ul>
+<li class="chapter" data-level="14.1" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#learning-objectives-14"><i class="fa fa-check"></i><b>14.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="14.2" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#prerequisites-7"><i class="fa fa-check"></i><b>14.2</b> Prerequisites</a></li>
+<li class="chapter" data-level="14.3" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#bias-variance-tradeoff"><i class="fa fa-check"></i><b>14.3</b> Bias-variance tradeoff</a>
+<ul>
+<li class="chapter" data-level="14.3.1" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#bias"><i class="fa fa-check"></i><b>14.3.1</b> Bias</a></li>
+<li class="chapter" data-level="14.3.2" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#variance"><i class="fa fa-check"></i><b>14.3.2</b> Variance</a></li>
+<li class="chapter" data-level="14.3.3" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#balancing-the-tradeoff"><i class="fa fa-check"></i><b>14.3.3</b> Balancing the tradeoff</a></li>
+</ul></li>
+<li class="chapter" data-level="14.4" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#hyperparameter-tuning"><i class="fa fa-check"></i><b>14.4</b> Hyperparameter tuning</a></li>
+<li class="chapter" data-level="14.5" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#implementation-1"><i class="fa fa-check"></i><b>14.5</b> Implementation</a>
+<ul>
+<li class="chapter" data-level="14.5.1" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#tuning"><i class="fa fa-check"></i><b>14.5.1</b> Tuning</a></li>
+<li class="chapter" data-level="14.5.2" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#more-tuning"><i class="fa fa-check"></i><b>14.5.2</b> More tuning</a></li>
+<li class="chapter" data-level="14.5.3" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#finalizing-our-model"><i class="fa fa-check"></i><b>14.5.3</b> Finalizing our model</a></li>
+</ul></li>
+<li class="chapter" data-level="14.6" data-path="lesson-5a-hyperparameter-tuning.html"><a href="lesson-5a-hyperparameter-tuning.html#exercises-8"><i class="fa fa-check"></i><b>14.6</b> Exercises</a></li>
+</ul></li>
+<li class="part"><span><b>VI Additional Content</b></span></li>
+<li class="chapter" data-level="" data-path="computing-environment.html"><a href="computing-environment.html"><i class="fa fa-check"></i>Computing Environment</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://www.uc.edu/" target="blank">University of Cincinnati</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Data Mining with R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="lesson-5a-hyperparameter-tuning" class="section level1 hasAnchor" number="14">
+<h1><span class="header-section-number">14</span> Lesson 5a: Hyperparameter Tuning<a href="lesson-5a-hyperparameter-tuning.html#lesson-5a-hyperparameter-tuning" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>We learned in the last lesson that hyperparameters (aka tuning parameters) are parameters that we can use to control the complexity of machine learning algorithms. The proper setting of these hyperparameters is often dependent on the data and problem at hand and cannot always be estimated by the training data alone. Consequently, we often go through iterations of testing out different values to determine which hyperparameter settings provide the optimal result. As we add more hyperparameters, this becomes quite tedious to do manually so in this lesson we’ll learn how we can automate the tuning process to find the optimal (or near-optimal) settings for hyperparameters.</p>
+<div id="learning-objectives-14" class="section level2 hasAnchor" number="14.1">
+<h2><span class="header-section-number">14.1</span> Learning objectives<a href="lesson-5a-hyperparameter-tuning.html#learning-objectives-14" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>By the end of this module you will:</p>
+<ul>
+<li>Be able to explain the two components that make up prediction errors.</li>
+<li>Understand why hyperparameter tuning is an essential part of the machine learning process.</li>
+<li>Apply efficient and effective hyperparameter tuning with Tidymodels.</li>
+</ul>
+</div>
+<div id="prerequisites-7" class="section level2 hasAnchor" number="14.2">
+<h2><span class="header-section-number">14.2</span> Prerequisites<a href="lesson-5a-hyperparameter-tuning.html#prerequisites-7" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="sourceCode" id="cb136"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb136-1"><a href="lesson-5a-hyperparameter-tuning.html#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper packages</span></span>
+<span id="cb136-2"><a href="lesson-5a-hyperparameter-tuning.html#cb136-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># for data wrangling &amp; plotting</span></span>
+<span id="cb136-3"><a href="lesson-5a-hyperparameter-tuning.html#cb136-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb136-4"><a href="lesson-5a-hyperparameter-tuning.html#cb136-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
+<span id="cb136-5"><a href="lesson-5a-hyperparameter-tuning.html#cb136-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb136-6"><a href="lesson-5a-hyperparameter-tuning.html#cb136-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb136-7"><a href="lesson-5a-hyperparameter-tuning.html#cb136-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
+<span id="cb136-8"><a href="lesson-5a-hyperparameter-tuning.html#cb136-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vip)      <span class="co"># variable importance</span></span></code></pre></div>
+<div class="sourceCode" id="cb137"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb137-1"><a href="lesson-5a-hyperparameter-tuning.html#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Stratified sampling with the rsample package</span></span>
+<span id="cb137-2"><a href="lesson-5a-hyperparameter-tuning.html#cb137-2" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
+<span id="cb137-3"><a href="lesson-5a-hyperparameter-tuning.html#cb137-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb137-4"><a href="lesson-5a-hyperparameter-tuning.html#cb137-4" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
+<span id="cb137-5"><a href="lesson-5a-hyperparameter-tuning.html#cb137-5" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb137-6"><a href="lesson-5a-hyperparameter-tuning.html#cb137-6" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
+</div>
+<div id="bias-variance-tradeoff" class="section level2 hasAnchor" number="14.3">
+<h2><span class="header-section-number">14.3</span> Bias-variance tradeoff<a href="lesson-5a-hyperparameter-tuning.html#bias-variance-tradeoff" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Prediction errors can be decomposed into two important subcomponents: error due to “bias” and error due to “variance”. There is often a tradeoff between a model’s ability to minimize bias and variance. Understanding how different sources of error lead to bias and variance helps us improve the data fitting process resulting in more accurate models.</p>
+<div id="bias" class="section level3 hasAnchor" number="14.3.1">
+<h3><span class="header-section-number">14.3.1</span> Bias<a href="lesson-5a-hyperparameter-tuning.html#bias" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p><em>Bias</em> is the difference between the expected (or average) prediction of our model and the correct value which we are trying to predict. It measures how far off in general a model’s predictions are from the correct value, which provides a sense of how well a model can conform to the underlying structure of the data. Figure <a href="lesson-5a-hyperparameter-tuning.html#fig:modeling-process-bias-model">14.1</a> illustrates an example where the polynomial model does not capture the underlying structure well. Linear models are classical examples of high bias models as they are less flexible and rarely capture non-linear, non-monotonic relationships.</p>
+<div class="note">
+<p>
+We can think of models with high bias as
+<strong><em>underfitting</em></strong> to the true patterns and
+relationships in our data. This is often because high bias models either
+oversimplify these relationships or are constrained in a way that cannot
+adequately form to the true, complex relationship that exists. These
+models tend to lead to high error on training and test data.
+</p>
+</div>
+<p>We also need to think of bias-variance in relation to resampling. Models with high bias are rarely affected by the noise introduced by resampling. If a model has high bias, it will have consistency in its resampling performance as illustrated below:</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-bias-model"></span>
+<img src="_main_files/figure-html/modeling-process-bias-model-1.png" alt="A biased polynomial model fit to a single data set does not capture the underlying non-linear, non-monotonic data structure (left).  Models fit to 25 bootstrapped replicates of the data are underterred by the noise and generates similar, yet still biased, predictions (right)." width="960" />
+<p class="caption">
+Figure 14.1: A biased polynomial model fit to a single data set does not capture the underlying non-linear, non-monotonic data structure (left). Models fit to 25 bootstrapped replicates of the data are underterred by the noise and generates similar, yet still biased, predictions (right).
+</p>
+</div>
+</div>
+<div id="variance" class="section level3 hasAnchor" number="14.3.2">
+<h3><span class="header-section-number">14.3.2</span> Variance<a href="lesson-5a-hyperparameter-tuning.html#variance" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>On the other hand, error due to <em>variance</em> is defined as the variability of a model prediction for a given data point. Many models (e.g., <em>k</em>-nearest neighbor, decision trees, gradient boosting machines) are very adaptable and offer extreme flexibility in the patterns that they can fit to. However, these models offer their own problems as they run the risk of overfitting to the training data. Although you may achieve very good performance on your training data, the model will not automatically generalize well to unseen data.</p>
+<div class="note">
+<p>
+Models with high variance can be very adaptable and will conform very
+well to the patterns and relationships in the training data. In fact,
+these models will try to overfit to patterns and relationships in the
+training data so much that they are overly personalized to the training
+data and will not generalize well to data which it hasn’t seen before.
+As a result, such models perform very well on training data but have
+high error rates on test data.
+</p>
+</div>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-variance-model"></span>
+<img src="_main_files/figure-html/modeling-process-variance-model-1.png" alt="A high variance _k_-nearest neighbor model fit to a single data set captures the underlying non-linear, non-monotonic data structure well but also overfits to individual data points (left).  Models fit to 25 bootstrapped replicates of the data are deterred by the noise and generate highly variable predictions (right)." width="960" />
+<p class="caption">
+Figure 14.2: A high variance <em>k</em>-nearest neighbor model fit to a single data set captures the underlying non-linear, non-monotonic data structure well but also overfits to individual data points (left). Models fit to 25 bootstrapped replicates of the data are deterred by the noise and generate highly variable predictions (right).
+</p>
+</div>
+<p>Since high variance models are more prone to overfitting, using resampling procedures are critical to reduce this risk. Moreover, many algorithms that are capable of achieving high generalization performance have lots of <em>hyperparameters</em> that control the level of model complexity (i.e., the tradeoff between bias and variance).</p>
+</div>
+<div id="balancing-the-tradeoff" class="section level3 hasAnchor" number="14.3.3">
+<h3><span class="header-section-number">14.3.3</span> Balancing the tradeoff<a href="lesson-5a-hyperparameter-tuning.html#balancing-the-tradeoff" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>We can think of bias and variance as two model attributes competing with one another. If our model is too simple and cannot conform to the relationships in our data then it is underfitting and will not generalize well. If our model is too flexible and overly conforms to the training data then it will also not generalize well. So our objective is to find a model with good balance that does not overfit nor underfit to the training data. This is a model that will generalize well.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:balancing-bias-variance1"></span>
+<img src="images/bias-variance-tradeoff1.png" alt="Our objective is to find a model with good balance that does not overfit nor underfit to the training data. This is a model that will generalize well." width="80%" height="80%" />
+<p class="caption">
+Figure 14.3: Our objective is to find a model with good balance that does not overfit nor underfit to the training data. This is a model that will generalize well.
+</p>
+</div>
+<p>At its root, dealing with bias and variance is really about dealing with over- and under-fitting. Bias is reduced and variance is increased in relation to model complexity. As more and more hyperparameters are added to a model, the complexity of the model rises and variance becomes our primary concern while bias steadily falls.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:balancing-bias-variance2"></span>
+<img src="images/bias-variance-tradeoff.png" alt="As more and more hyperparameters are added to a model, the complexity of the model rises and variance becomes our primary concern while bias steadily falls. The sweet spot for any model is the level of complexity that minimizes bias while keeping variance constrained." width="50%" height="50%" />
+<p class="caption">
+Figure 14.4: As more and more hyperparameters are added to a model, the complexity of the model rises and variance becomes our primary concern while bias steadily falls. The sweet spot for any model is the level of complexity that minimizes bias while keeping variance constrained.
+</p>
+</div>
+<p>Understanding bias and variance is critical for understanding the behavior of prediction models, but in general what you really care about is overall error, not the specific decomposition. The sweet spot for any model is the level of complexity that minimizes bias while keeping variance constrained. To find this we need an effective and efficient hyperparameter tuning process.</p>
+</div>
+</div>
+<div id="hyperparameter-tuning" class="section level2 hasAnchor" number="14.4">
+<h2><span class="header-section-number">14.4</span> Hyperparameter tuning<a href="lesson-5a-hyperparameter-tuning.html#hyperparameter-tuning" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Hyperparameters are the “knobs to twiddle” to control the complexity of machine learning algorithms and, therefore, the bias-variance trade-off. Not all algorithms have hyperparameters; however, as the complexity of our models increase (therefore the ability to capture and conform to more complex relationships in our data) we tend to see an increase in the number of hyperparameters.</p>
+<p>The proper setting of these hyperparameters is often dependent on the data and problem at hand and cannot always be estimated by the training data alone. Consequently, we need a method of identifying the optimal setting. For example, in the high variance example in the previous section, we illustrated a high variance <em>k</em>-nearest neighbor model. <em>k</em>-nearest neighbor models have a single hyperparameter (<em>k</em>) that determines the predicted value to be made based on the <em>k</em> nearest observations in the training data to the one being predicted. If <em>k</em> is small (e.g., <span class="math inline">\(k=3\)</span>), the model will make a prediction for a given observation based on the average of the response values for the 3 observations in the training data most similar to the observation being predicted. This often results in highly variable predicted values because we are basing the prediction (in this case, an average) on a very small subset of the training data. As <em>k</em> gets bigger, we base our predictions on an average of a larger subset of the training data, which naturally reduces the variance in our predicted values (remember this for later, averaging often helps to reduce variance!). The figure below illustrates this point. Smaller <em>k</em> values (e.g., 2, 5, or 10) lead to high variance (but lower bias) and larger values (e.g., 150) lead to high bias (but lower variance). The optimal <em>k</em> value might exist somewhere between 20–50, but how do we know which value of <em>k</em> to use?</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-knn-options"></span>
+<img src="_main_files/figure-html/modeling-process-knn-options-1.png" alt="_k_-nearest neighbor model with differing values for _k_." width="960" />
+<p class="caption">
+Figure 14.5: <em>k</em>-nearest neighbor model with differing values for <em>k</em>.
+</p>
+</div>
+<p>One way to perform hyperparameter tuning is to fiddle with hyperparameters manually until you find a great combination of hyperparameter values that result in high predictive accuracy (as measured using <em>k</em>-fold CV, for instance). However, this can be very tedious work depending on the number of hyperparameters. An alternative approach is to perform a <strong><em>grid search</em></strong>. A grid search is an automated approach to searching across many combinations of hyperparameter values.</p>
+<p>For the simple example above, a grid search would predefine a candidate set of values for <em>k</em> (e.g., <span class="math inline">\(k = 1, 2, \dots, j\)</span>) and perform a resampling method (e.g., <em>k</em>-fold CV) to estimate which <em>k</em> value generalizes the best to unseen data. The plots in the below examples illustrate the results from a grid search to assess <span class="math inline">\(k = 3, 5, \dots, 150\)</span> using repeated 10-fold CV. The error rate displayed represents the average error for each value of <em>k</em> across all the repeated CV folds. On average, <span class="math inline">\(k=46\)</span> was the optimal hyperparameter value to minimize error (in this case, RMSE which will be discussed shortly) on unseen data.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-knn-tune"></span>
+<img src="_main_files/figure-html/modeling-process-knn-tune-1.png" alt="Results from a grid search for a _k_-nearest neighbor model assessing values for _k_ ranging from 3-25.  We see high error values due to high model variance when _k_ is small and we also see high errors values due to high model bias when _k_ is large.  The optimal model is found at _k_ = 46." width="672" />
+<p class="caption">
+Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model assessing values for <em>k</em> ranging from 3-25. We see high error values due to high model variance when <em>k</em> is small and we also see high errors values due to high model bias when <em>k</em> is large. The optimal model is found at <em>k</em> = 46.
+</p>
+</div>
+<p>Throughout this course you’ll be exposed to different approaches to performing grid searches. In the above example, we used a <em>full cartesian grid search</em>, which assesses every hyperparameter value manually defined. However, as models get more complex and offer more hyperparameters, this approach can become computationally burdensome and requires you to define the optimal hyperparameter grid settings to explore. Additional approaches we’ll illustrate include <em>random grid searches</em> <span class="citation">(<a href="#ref-bergstra2012random" role="doc-biblioref">Bergstra and Bengio 2012</a>)</span> which explores randomly selected hyperparameter values from a range of possible values, <em>early stopping</em> which allows you to stop a grid search once reduction in the error stops marginally improving, <em>adaptive resampling</em> via futility analysis <span class="citation">(<a href="#ref-kuhn2014futility" role="doc-biblioref">Kuhn 2014</a>)</span> which adaptively resamples candidate hyperparameter values based on approximately optimal performance, and more.</p>
+</div>
+<div id="implementation-1" class="section level2 hasAnchor" number="14.5">
+<h2><span class="header-section-number">14.5</span> Implementation<a href="lesson-5a-hyperparameter-tuning.html#implementation-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Recall our regularized regression model from the last lesson. With that model there are two two main hyperparameters that we need to tune:</p>
+<ul>
+<li><code>mixture</code>: the type of regularization (ridge, lasso, elastic net) we want to apply and,</li>
+<li><code>penalty</code>: the strength of the regularization parameter (<span class="math inline">\(\lambda\)</span>).</li>
+</ul>
+<p>Initially, we set <code>mixture = 0</code> (Ridge model) and the strength of our regularization to <code>penalty = 1000</code>.</p>
+<div class="sourceCode" id="cb138"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb138-1"><a href="lesson-5a-hyperparameter-tuning.html#cb138-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: create regularized model object</span></span>
+<span id="cb138-2"><a href="lesson-5a-hyperparameter-tuning.html#cb138-2" aria-hidden="true" tabindex="-1"></a>reg_mod <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">0</span>, <span class="at">penalty =</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb138-3"><a href="lesson-5a-hyperparameter-tuning.html#cb138-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">set_engine</span>(<span class="st">&quot;glmnet&quot;</span>)</span>
+<span id="cb138-4"><a href="lesson-5a-hyperparameter-tuning.html#cb138-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb138-5"><a href="lesson-5a-hyperparameter-tuning.html#cb138-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: create model &amp; preprocessing recipe</span></span>
+<span id="cb138-6"><a href="lesson-5a-hyperparameter-tuning.html#cb138-6" aria-hidden="true" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
+<span id="cb138-7"><a href="lesson-5a-hyperparameter-tuning.html#cb138-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb138-8"><a href="lesson-5a-hyperparameter-tuning.html#cb138-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>())</span>
+<span id="cb138-9"><a href="lesson-5a-hyperparameter-tuning.html#cb138-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb138-10"><a href="lesson-5a-hyperparameter-tuning.html#cb138-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3. create resampling object</span></span>
+<span id="cb138-11"><a href="lesson-5a-hyperparameter-tuning.html#cb138-11" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb138-12"><a href="lesson-5a-hyperparameter-tuning.html#cb138-12" aria-hidden="true" tabindex="-1"></a>kfolds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">strata =</span> Sale_Price)</span>
+<span id="cb138-13"><a href="lesson-5a-hyperparameter-tuning.html#cb138-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb138-14"><a href="lesson-5a-hyperparameter-tuning.html#cb138-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 4: fit model workflow</span></span>
+<span id="cb138-15"><a href="lesson-5a-hyperparameter-tuning.html#cb138-15" aria-hidden="true" tabindex="-1"></a>reg_fit <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb138-16"><a href="lesson-5a-hyperparameter-tuning.html#cb138-16" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb138-17"><a href="lesson-5a-hyperparameter-tuning.html#cb138-17" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_model</span>(reg_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb138-18"><a href="lesson-5a-hyperparameter-tuning.html#cb138-18" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(kfolds)</span>
+<span id="cb138-19"><a href="lesson-5a-hyperparameter-tuning.html#cb138-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb138-20"><a href="lesson-5a-hyperparameter-tuning.html#cb138-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 5: assess results</span></span>
+<span id="cb138-21"><a href="lesson-5a-hyperparameter-tuning.html#cb138-21" aria-hidden="true" tabindex="-1"></a>reg_fit <span class="sc">%&gt;%</span></span>
+<span id="cb138-22"><a href="lesson-5a-hyperparameter-tuning.html#cb138-22" aria-hidden="true" tabindex="-1"></a>   <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb138-23"><a href="lesson-5a-hyperparameter-tuning.html#cb138-23" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&#39;rmse&#39;</span>)</span>
+<span id="cb138-24"><a href="lesson-5a-hyperparameter-tuning.html#cb138-24" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
+<span id="cb138-25"><a href="lesson-5a-hyperparameter-tuning.html#cb138-25" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator   mean     n std_err .config             </span></span>
+<span id="cb138-26"><a href="lesson-5a-hyperparameter-tuning.html#cb138-26" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb138-27"><a href="lesson-5a-hyperparameter-tuning.html#cb138-27" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard   31373.     5   3012. Preprocessor1_Model1</span></span></code></pre></div>
+<p>We then manually iterated through different values of <code>mixture</code> and <code>penalty</code> to try find the optimal setting. Which is less than efficient.</p>
+<div id="tuning" class="section level3 hasAnchor" number="14.5.1">
+<h3><span class="header-section-number">14.5.1</span> Tuning<a href="lesson-5a-hyperparameter-tuning.html#tuning" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Rather than specify set values for <code>mixture</code> and <code>penalty</code>, let’s instead build our model in a way that uses placeholders for values. We can do this using the <code>tune()</code> function:</p>
+<div class="sourceCode" id="cb139"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb139-1"><a href="lesson-5a-hyperparameter-tuning.html#cb139-1" aria-hidden="true" tabindex="-1"></a>reg_mod <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="fu">tune</span>(), <span class="at">penalty =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb139-2"><a href="lesson-5a-hyperparameter-tuning.html#cb139-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">set_engine</span>(<span class="st">&quot;glmnet&quot;</span>)</span></code></pre></div>
+<p>We can create a regular grid of values to try using some convenience functions for each hyperparameter:</p>
+<div class="sourceCode" id="cb140"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb140-1"><a href="lesson-5a-hyperparameter-tuning.html#cb140-1" aria-hidden="true" tabindex="-1"></a>reg_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(<span class="fu">mixture</span>(), <span class="fu">penalty</span>(), <span class="at">levels =</span> <span class="dv">5</span>)</span></code></pre></div>
+<p>The function <code>grid_regular()</code> is from the <a href="https://dials.tidymodels.org/">dials</a> package. It chooses sensible values to try for each hyperparameter; here, we asked for 5 values each. Since we have two to tune, <code>grid_regular()</code> returns <span class="math inline">\(5 \times 5 = 25\)</span> different possible tuning combinations to try in a data frame.</p>
+<div class="sourceCode" id="cb141"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb141-1"><a href="lesson-5a-hyperparameter-tuning.html#cb141-1" aria-hidden="true" tabindex="-1"></a>reg_grid</span>
+<span id="cb141-2"><a href="lesson-5a-hyperparameter-tuning.html#cb141-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 25 × 2</span></span>
+<span id="cb141-3"><a href="lesson-5a-hyperparameter-tuning.html#cb141-3" aria-hidden="true" tabindex="-1"></a><span class="do">##    mixture      penalty</span></span>
+<span id="cb141-4"><a href="lesson-5a-hyperparameter-tuning.html#cb141-4" aria-hidden="true" tabindex="-1"></a><span class="do">##      &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span id="cb141-5"><a href="lesson-5a-hyperparameter-tuning.html#cb141-5" aria-hidden="true" tabindex="-1"></a><span class="do">##  1    0    0.0000000001</span></span>
+<span id="cb141-6"><a href="lesson-5a-hyperparameter-tuning.html#cb141-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  2    0.25 0.0000000001</span></span>
+<span id="cb141-7"><a href="lesson-5a-hyperparameter-tuning.html#cb141-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  3    0.5  0.0000000001</span></span>
+<span id="cb141-8"><a href="lesson-5a-hyperparameter-tuning.html#cb141-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  4    0.75 0.0000000001</span></span>
+<span id="cb141-9"><a href="lesson-5a-hyperparameter-tuning.html#cb141-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  5    1    0.0000000001</span></span>
+<span id="cb141-10"><a href="lesson-5a-hyperparameter-tuning.html#cb141-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  6    0    0.0000000316</span></span>
+<span id="cb141-11"><a href="lesson-5a-hyperparameter-tuning.html#cb141-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  7    0.25 0.0000000316</span></span>
+<span id="cb141-12"><a href="lesson-5a-hyperparameter-tuning.html#cb141-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  8    0.5  0.0000000316</span></span>
+<span id="cb141-13"><a href="lesson-5a-hyperparameter-tuning.html#cb141-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  9    0.75 0.0000000316</span></span>
+<span id="cb141-14"><a href="lesson-5a-hyperparameter-tuning.html#cb141-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 10    1    0.0000000316</span></span>
+<span id="cb141-15"><a href="lesson-5a-hyperparameter-tuning.html#cb141-15" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 15 more rows</span></span>
+<span id="cb141-16"><a href="lesson-5a-hyperparameter-tuning.html#cb141-16" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows</span></span></code></pre></div>
+<p>Now that we have our model with hyperparameter value placeholders and a grid of hyperparameter values to assess we can create a workflow object as we’ve done in the past and use <code>tune_grid()</code> to train our 25 models using our k-fold cross validation resamples.</p>
+<div class="sourceCode" id="cb142"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb142-1"><a href="lesson-5a-hyperparameter-tuning.html#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tune</span></span>
+<span id="cb142-2"><a href="lesson-5a-hyperparameter-tuning.html#cb142-2" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb142-3"><a href="lesson-5a-hyperparameter-tuning.html#cb142-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb142-4"><a href="lesson-5a-hyperparameter-tuning.html#cb142-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_model</span>(reg_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb142-5"><a href="lesson-5a-hyperparameter-tuning.html#cb142-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tune_grid</span>(<span class="at">resamples =</span> kfolds, <span class="at">grid =</span> reg_grid)</span>
+<span id="cb142-6"><a href="lesson-5a-hyperparameter-tuning.html#cb142-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb142-7"><a href="lesson-5a-hyperparameter-tuning.html#cb142-7" aria-hidden="true" tabindex="-1"></a><span class="co"># assess results</span></span>
+<span id="cb142-8"><a href="lesson-5a-hyperparameter-tuning.html#cb142-8" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
+<span id="cb142-9"><a href="lesson-5a-hyperparameter-tuning.html#cb142-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb142-10"><a href="lesson-5a-hyperparameter-tuning.html#cb142-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb142-11"><a href="lesson-5a-hyperparameter-tuning.html#cb142-11" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 25 × 8</span></span>
+<span id="cb142-12"><a href="lesson-5a-hyperparameter-tuning.html#cb142-12" aria-hidden="true" tabindex="-1"></a><span class="do">##         penalty mixture .metric .estimator   mean     n std_err .config  </span></span>
+<span id="cb142-13"><a href="lesson-5a-hyperparameter-tuning.html#cb142-13" aria-hidden="true" tabindex="-1"></a><span class="do">##           &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;    </span></span>
+<span id="cb142-14"><a href="lesson-5a-hyperparameter-tuning.html#cb142-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 0.0000000001    0    rmse    standard   31373.     5   3012. Preproce…</span></span>
+<span id="cb142-15"><a href="lesson-5a-hyperparameter-tuning.html#cb142-15" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 0.0000000316    0    rmse    standard   31373.     5   3012. Preproce…</span></span>
+<span id="cb142-16"><a href="lesson-5a-hyperparameter-tuning.html#cb142-16" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 0.00001         0    rmse    standard   31373.     5   3012. Preproce…</span></span>
+<span id="cb142-17"><a href="lesson-5a-hyperparameter-tuning.html#cb142-17" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 0.00316         0    rmse    standard   31373.     5   3012. Preproce…</span></span>
+<span id="cb142-18"><a href="lesson-5a-hyperparameter-tuning.html#cb142-18" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 1               0    rmse    standard   31373.     5   3012. Preproce…</span></span>
+<span id="cb142-19"><a href="lesson-5a-hyperparameter-tuning.html#cb142-19" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 0.0000000001    0.25 rmse    standard   37912.     5   4728. Preproce…</span></span>
+<span id="cb142-20"><a href="lesson-5a-hyperparameter-tuning.html#cb142-20" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 0.0000000316    0.25 rmse    standard   37912.     5   4728. Preproce…</span></span>
+<span id="cb142-21"><a href="lesson-5a-hyperparameter-tuning.html#cb142-21" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 0.00001         0.25 rmse    standard   37912.     5   4728. Preproce…</span></span>
+<span id="cb142-22"><a href="lesson-5a-hyperparameter-tuning.html#cb142-22" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 0.00316         0.25 rmse    standard   37912.     5   4728. Preproce…</span></span>
+<span id="cb142-23"><a href="lesson-5a-hyperparameter-tuning.html#cb142-23" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 1               0.25 rmse    standard   37912.     5   4728. Preproce…</span></span>
+<span id="cb142-24"><a href="lesson-5a-hyperparameter-tuning.html#cb142-24" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 15 more rows</span></span>
+<span id="cb142-25"><a href="lesson-5a-hyperparameter-tuning.html#cb142-25" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows</span></span></code></pre></div>
+<p>We can assess our best models with <code>show_best()</code>, which by default will show the top 5 performing models based on the desired metric. In this case we see that our top 5 models use the Ridge regularization (<code>mixture = 0</code>) and across all the penalties we get the same cross-validation RMSE (31,373).</p>
+<div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="lesson-5a-hyperparameter-tuning.html#cb143-1" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
+<span id="cb143-2"><a href="lesson-5a-hyperparameter-tuning.html#cb143-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb143-3"><a href="lesson-5a-hyperparameter-tuning.html#cb143-3" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 8</span></span>
+<span id="cb143-4"><a href="lesson-5a-hyperparameter-tuning.html#cb143-4" aria-hidden="true" tabindex="-1"></a><span class="do">##        penalty mixture .metric .estimator   mean     n std_err .config   </span></span>
+<span id="cb143-5"><a href="lesson-5a-hyperparameter-tuning.html#cb143-5" aria-hidden="true" tabindex="-1"></a><span class="do">##          &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;     </span></span>
+<span id="cb143-6"><a href="lesson-5a-hyperparameter-tuning.html#cb143-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 0.0000000001       0 rmse    standard   31373.     5   3012. Preproces…</span></span>
+<span id="cb143-7"><a href="lesson-5a-hyperparameter-tuning.html#cb143-7" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 0.0000000316       0 rmse    standard   31373.     5   3012. Preproces…</span></span>
+<span id="cb143-8"><a href="lesson-5a-hyperparameter-tuning.html#cb143-8" aria-hidden="true" tabindex="-1"></a><span class="do">## 3 0.00001            0 rmse    standard   31373.     5   3012. Preproces…</span></span>
+<span id="cb143-9"><a href="lesson-5a-hyperparameter-tuning.html#cb143-9" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 0.00316            0 rmse    standard   31373.     5   3012. Preproces…</span></span>
+<span id="cb143-10"><a href="lesson-5a-hyperparameter-tuning.html#cb143-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 5 1                  0 rmse    standard   31373.     5   3012. Preproces…</span></span></code></pre></div>
+<p>We can also use the <code>select_best()</code> function to pull out the single set of hyperparameter values for our best regularization model:</p>
+<div class="sourceCode" id="cb144"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb144-1"><a href="lesson-5a-hyperparameter-tuning.html#cb144-1" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
+<span id="cb144-2"><a href="lesson-5a-hyperparameter-tuning.html#cb144-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb144-3"><a href="lesson-5a-hyperparameter-tuning.html#cb144-3" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
+<span id="cb144-4"><a href="lesson-5a-hyperparameter-tuning.html#cb144-4" aria-hidden="true" tabindex="-1"></a><span class="do">##        penalty mixture .config              </span></span>
+<span id="cb144-5"><a href="lesson-5a-hyperparameter-tuning.html#cb144-5" aria-hidden="true" tabindex="-1"></a><span class="do">##          &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb144-6"><a href="lesson-5a-hyperparameter-tuning.html#cb144-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 0.0000000001       0 Preprocessor1_Model01</span></span></code></pre></div>
+</div>
+<div id="more-tuning" class="section level3 hasAnchor" number="14.5.2">
+<h3><span class="header-section-number">14.5.2</span> More tuning<a href="lesson-5a-hyperparameter-tuning.html#more-tuning" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Based on the above results, we may wish to do another iteration and adjust the hyperparameter values to assess. Since all our best models were Ridge models we may want to set our model to use a Ridge penalty but then just tune the strength of the penalty.</p>
+<p>Here, we create another hyperparameter grid but we specify the range we want to search through. Note that <code>penalty</code> automatically applies a log transformation so by saying <code>range = c(0, 5)</code> I am actually saying to search between 1 - 100,000.</p>
+<div class="sourceCode" id="cb145"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb145-1"><a href="lesson-5a-hyperparameter-tuning.html#cb145-1" aria-hidden="true" tabindex="-1"></a>reg_mod <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>(<span class="at">mixture =</span> <span class="dv">0</span>, <span class="at">penalty =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb145-2"><a href="lesson-5a-hyperparameter-tuning.html#cb145-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">set_engine</span>(<span class="st">&quot;glmnet&quot;</span>)</span>
+<span id="cb145-3"><a href="lesson-5a-hyperparameter-tuning.html#cb145-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb145-4"><a href="lesson-5a-hyperparameter-tuning.html#cb145-4" aria-hidden="true" tabindex="-1"></a>reg_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(<span class="fu">penalty</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>)), <span class="at">levels =</span> <span class="dv">10</span>)</span></code></pre></div>
+<p>Now we can search again and we see that by using slightly higher <code>penalty</code> values we improve our performance.</p>
+<div class="sourceCode" id="cb146"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb146-1"><a href="lesson-5a-hyperparameter-tuning.html#cb146-1" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb146-2"><a href="lesson-5a-hyperparameter-tuning.html#cb146-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb146-3"><a href="lesson-5a-hyperparameter-tuning.html#cb146-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_model</span>(reg_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb146-4"><a href="lesson-5a-hyperparameter-tuning.html#cb146-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">tune_grid</span>(<span class="at">resamples =</span> kfolds, <span class="at">grid =</span> reg_grid)</span>
+<span id="cb146-5"><a href="lesson-5a-hyperparameter-tuning.html#cb146-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb146-6"><a href="lesson-5a-hyperparameter-tuning.html#cb146-6" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
+<span id="cb146-7"><a href="lesson-5a-hyperparameter-tuning.html#cb146-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb146-8"><a href="lesson-5a-hyperparameter-tuning.html#cb146-8" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 7</span></span>
+<span id="cb146-9"><a href="lesson-5a-hyperparameter-tuning.html#cb146-9" aria-hidden="true" tabindex="-1"></a><span class="do">##    penalty .metric .estimator   mean     n std_err .config              </span></span>
+<span id="cb146-10"><a href="lesson-5a-hyperparameter-tuning.html#cb146-10" aria-hidden="true" tabindex="-1"></a><span class="do">##      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb146-11"><a href="lesson-5a-hyperparameter-tuning.html#cb146-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 27826.   rmse    standard   30633.     5   2503. Preprocessor1_Model09</span></span>
+<span id="cb146-12"><a href="lesson-5a-hyperparameter-tuning.html#cb146-12" aria-hidden="true" tabindex="-1"></a><span class="do">## 2  7743.   rmse    standard   31160.     5   2903. Preprocessor1_Model08</span></span>
+<span id="cb146-13"><a href="lesson-5a-hyperparameter-tuning.html#cb146-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 3     1    rmse    standard   31373.     5   3012. Preprocessor1_Model01</span></span>
+<span id="cb146-14"><a href="lesson-5a-hyperparameter-tuning.html#cb146-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 4     3.59 rmse    standard   31373.     5   3012. Preprocessor1_Model02</span></span>
+<span id="cb146-15"><a href="lesson-5a-hyperparameter-tuning.html#cb146-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 5    12.9  rmse    standard   31373.     5   3012. Preprocessor1_Model03</span></span></code></pre></div>
+</div>
+<div id="finalizing-our-model" class="section level3 hasAnchor" number="14.5.3">
+<h3><span class="header-section-number">14.5.3</span> Finalizing our model<a href="lesson-5a-hyperparameter-tuning.html#finalizing-our-model" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>We can update (or “finalize”) our workflow object with the values from <code>select_best()</code>. This now creates a final model workflow with the optimal hyperparameter values.</p>
+<div class="sourceCode" id="cb147"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb147-1"><a href="lesson-5a-hyperparameter-tuning.html#cb147-1" aria-hidden="true" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> <span class="fu">select_best</span>(tuning_results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb147-2"><a href="lesson-5a-hyperparameter-tuning.html#cb147-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb147-3"><a href="lesson-5a-hyperparameter-tuning.html#cb147-3" aria-hidden="true" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb147-4"><a href="lesson-5a-hyperparameter-tuning.html#cb147-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb147-5"><a href="lesson-5a-hyperparameter-tuning.html#cb147-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_model</span>(reg_mod) <span class="sc">%&gt;%</span> </span>
+<span id="cb147-6"><a href="lesson-5a-hyperparameter-tuning.html#cb147-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
+<span id="cb147-7"><a href="lesson-5a-hyperparameter-tuning.html#cb147-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb147-8"><a href="lesson-5a-hyperparameter-tuning.html#cb147-8" aria-hidden="true" tabindex="-1"></a>final_wf</span>
+<span id="cb147-9"><a href="lesson-5a-hyperparameter-tuning.html#cb147-9" aria-hidden="true" tabindex="-1"></a><span class="do">## ══ Workflow ═════════════════════════════════════════════════════════════</span></span>
+<span id="cb147-10"><a href="lesson-5a-hyperparameter-tuning.html#cb147-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Preprocessor: Recipe</span></span>
+<span id="cb147-11"><a href="lesson-5a-hyperparameter-tuning.html#cb147-11" aria-hidden="true" tabindex="-1"></a><span class="do">## Model: linear_reg()</span></span>
+<span id="cb147-12"><a href="lesson-5a-hyperparameter-tuning.html#cb147-12" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb147-13"><a href="lesson-5a-hyperparameter-tuning.html#cb147-13" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Preprocessor ─────────────────────────────────────────────────────────</span></span>
+<span id="cb147-14"><a href="lesson-5a-hyperparameter-tuning.html#cb147-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 Recipe Steps</span></span>
+<span id="cb147-15"><a href="lesson-5a-hyperparameter-tuning.html#cb147-15" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb147-16"><a href="lesson-5a-hyperparameter-tuning.html#cb147-16" aria-hidden="true" tabindex="-1"></a><span class="do">## • step_normalize()</span></span>
+<span id="cb147-17"><a href="lesson-5a-hyperparameter-tuning.html#cb147-17" aria-hidden="true" tabindex="-1"></a><span class="do">## • step_dummy()</span></span>
+<span id="cb147-18"><a href="lesson-5a-hyperparameter-tuning.html#cb147-18" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb147-19"><a href="lesson-5a-hyperparameter-tuning.html#cb147-19" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Model ────────────────────────────────────────────────────────────────</span></span>
+<span id="cb147-20"><a href="lesson-5a-hyperparameter-tuning.html#cb147-20" aria-hidden="true" tabindex="-1"></a><span class="do">## Linear Regression Model Specification (regression)</span></span>
+<span id="cb147-21"><a href="lesson-5a-hyperparameter-tuning.html#cb147-21" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb147-22"><a href="lesson-5a-hyperparameter-tuning.html#cb147-22" aria-hidden="true" tabindex="-1"></a><span class="do">## Main Arguments:</span></span>
+<span id="cb147-23"><a href="lesson-5a-hyperparameter-tuning.html#cb147-23" aria-hidden="true" tabindex="-1"></a><span class="do">##   penalty = 27825.5940220713</span></span>
+<span id="cb147-24"><a href="lesson-5a-hyperparameter-tuning.html#cb147-24" aria-hidden="true" tabindex="-1"></a><span class="do">##   mixture = 0</span></span>
+<span id="cb147-25"><a href="lesson-5a-hyperparameter-tuning.html#cb147-25" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb147-26"><a href="lesson-5a-hyperparameter-tuning.html#cb147-26" aria-hidden="true" tabindex="-1"></a><span class="do">## Computational engine: glmnet</span></span></code></pre></div>
+<p>We can then use this final workflow to do further assessments. For example, if we want to train this workflow on the entire data set and look at which predictors are most influential we can:</p>
+<div class="sourceCode" id="cb148"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb148-1"><a href="lesson-5a-hyperparameter-tuning.html#cb148-1" aria-hidden="true" tabindex="-1"></a>final_wf <span class="sc">%&gt;%</span></span>
+<span id="cb148-2"><a href="lesson-5a-hyperparameter-tuning.html#cb148-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb148-3"><a href="lesson-5a-hyperparameter-tuning.html#cb148-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb148-4"><a href="lesson-5a-hyperparameter-tuning.html#cb148-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">vip</span>()</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-254-1.png" width="576" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="exercises-8" class="section level2 hasAnchor" number="14.6">
+<h2><span class="header-section-number">14.6</span> Exercises<a href="lesson-5a-hyperparameter-tuning.html#exercises-8" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<div class="todo">
+<p>
+Using the same <code>kernlab::spam</code> data we saw in the <a
+href="https://bradleyboehmke.github.io/uc-bana-4080/lesson-4b-regularized-regression.html#classification-problems-1">section
+12.10</a>…
+</p>
+<ol style="list-style-type: decimal">
+<li>
+Split the data into 70-30 training-test sets.
+</li>
+<li>
+Apply a regularized classification model (<code>type</code> is our
+response variable) but use the <code>tune()</code> and
+<code>grid_regular()</code> approach we saw in this lesson to
+automatically tune the <code>mixture</code> and <code>penalty</code>
+hyperparameters. Use a 5-fold cross-validation procedure.
+</li>
+<li>
+Which hyperparameter values maximize the AUC (<code>roc_auc</code>)
+metric?
+</li>
+<li>
+Retrain a final model with these optimal hyperparameters and
+identify the top 10 most influential predictors.
+</li>
+</ol>
+</div>
+
+</div>
+</div>
+
+
+
+<h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-bergstra2012random" class="csl-entry">
+Bergstra, James, and Yoshua Bengio. 2012. <span>“Random Search for Hyper-Parameter Optimization.”</span> <em>Journal of Machine Learning Research</em> 13 (Feb): 281–305.
+</div>
+<div id="ref-kuhn2014futility" class="csl-entry">
+Kuhn, Max. 2014. <span>“Futility Analysis in the Cross-Validation of Machine Learning Models.”</span> <em>arXiv Preprint arXiv:1405.6974</em>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="overview-4.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="computing-environment.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": "https://github.com/bradleyboehmke/uc-bana-4080/edit/master/module-5/lesson-1.Rmd",
+"text": "Edit"
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "section"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
