@@ -1,6 +1,5 @@
 # Lesson 6b: Bagging
 
-
 ```{r setup-6b, include=FALSE}
 # clean up saved items that may carry over from previous lessons
 rm(list = ls())
@@ -23,35 +22,32 @@ img_path <- here("images")
 ggplot2::theme_set(ggplot2::theme_light())
 ```
 
-The previous modules discussed algorithms that are intrinsically linear. Many of these models can be adapted to nonlinear patterns in the data by manually adding nonlinear model terms (e.g., squared terms, interaction effects, and other transformations of the original features); however, to do so you the analyst must know the specific nature of the nonlinearities and interactions _a priori_.  Alternatively, there are numerous algorithms that are inherently nonlinear. When using these models, the exact form of the nonlinearity does not need to be known explicitly or specified prior to model training. Rather, these algorithms will search for, and discover, nonlinearities and interactions in the data that help maximize predictive accuracy. 
-
-This lesson discusses _multivariate adaptive regression splines_ (MARS) [@friedman1991multivariate], an algorithm that automatically creates a piecewise linear model which provides an intuitive stepping block into nonlinearity after grasping the concept of multiple linear regression. Future modules will focus on other nonlinear algorithms.
+In an earlier module we learned about bootstrapping as a resampling procedure, which creates *b* new bootstrap samples by drawing samples with replacement of the original training data. This module illustrates how we can use bootstrapping to create an *ensemble* of predictions. Bootstrap aggregating, also called *bagging*, is one of the first ensemble algorithms^[Also commonly referred to as a meta-algorithm.] machine learning practitioners learn and is designed to improve the stability and accuracy of regression and classification algorithms. By model averaging, bagging helps to reduce variance and minimize overfitting. Although it is usually applied to decision tree methods, it can be used with any type of method.
 
 ## Learning objectives
 
-By the end of this lesson you will know how:
+By the end of this module you will know:
 
-- MARS models incorporates non-linear relationships with hinge functions (aka "knots").
-- How to train and tune MARS models using the Tidymodels construct.
-- How to identify and visualize the most influential features in a MARS models.
+* How and why bagging improves decision tree performance.
+* How to implement bagging and ensure you are optimizing bagging performance.
+* How to identify influential features and their effects on the response variable.
 
 ## Prerequisites
-
 
 ```{r}
 # Helper packages
 library(tidyverse)   # for data wrangling & plotting
 
 # Modeling packages
-library(tidymodels)  # for fitting MARS models
+library(tidymodels) 
+library(baguette)    # you may need to install.packages this package
 
 # Model interpretability packages
 library(vip)         # for variable importance
 library(pdp)         # for variable relationships
 ```
 
-```{r MARS-ames-train}
-# Stratified sampling with the rsample package
+```{r ames-train}
 set.seed(123)
 ames <- AmesHousing::make_ames()
 split  <- rsample::initial_split(ames, prop = 0.7, strata = "Sale_Price")
@@ -59,203 +55,146 @@ ames_train  <- rsample::training(split)
 ames_test   <- rsample::testing(split)
 ```
 
-## Nonlinearity
+## Why and when bagging works
 
-In the previous modules, we focused on linear models (where the analyst has to explicitly specify any nonlinear relationships and interaction effects). We illustrated some of the advantages of linear models such as their ease and speed of computation and also the intuitive nature of interpreting their coefficients.  However, linear models make a strong assumption about linearity, and this assumption is often a poor one, which can affect predictive accuracy.
-
-We can extend linear models to capture any non-linear relationship. Typically, this is done by explicitly including polynomial terms (e.g., $x_i^2$) or step functions.  Polynomial regression is a form of regression in which the relationship between $X$ and $Y$ is modeled as a $d$th degree polynomial in $X$.  For example, the following equation represents a polynomial regression function where $Y$ is modeled as a $d$-th degree polynomial in $X$.  Generally speaking, it is unusual to use $d$ greater than 3 or 4 as the larger $d$ becomes, the easier the function fit becomes overly flexible and oddly shaped...especially near the boundaries of the range of $X$ values. Increasing $d$ also tends to increase the presence of multicollinearity.
+_Bootstrap aggregating_ (bagging) prediction models is a general method for fitting multiple versions of a prediction model and then combining (or ensembling) them into an aggregated prediction [@breiman1996bagging]. Bagging is a fairly straight forward algorithm in which _b_ bootstrap copies of the original training data are created, the regression or classification algorithm (commonly referred to as the *base learner*) is applied to each bootstrap sample and, in the regression context, new predictions are made by averaging the predictions together from the individual base learners.  When dealing with a classification problem, the base learner predictions are combined using plurality vote or by averaging the estimated class probabilities together. This is represented in the below equation where $X$ is the record for which we want to generate a prediction, $\widehat{f_{bag}}$ is the bagged prediction, and $\widehat{f_1}\left(X\right), \widehat{f_2}\left(X\right), \dots, \widehat{f_b}\left(X\right)$ are the predictions from the individual base learners.
 
 \begin{equation}
-  y_i = \beta_0 + \beta_1 x_i + \beta_2 x^2_i + \beta_3 x^3_i \dots + \beta_d x^d_i + \epsilon_i,
+  \widehat{f_{bag}} = \widehat{f_1}\left(X\right) + \widehat{f_2}\left(X\right) + \cdots + \widehat{f_b}\left(X\right)
 \end{equation}
 
-An alternative to polynomials is to use step functions. Whereas polynomial functions impose a global non-linear relationship, step functions break the range of $X$ into bins, and fit a simple constant (e.g., the mean response) in each. This amounts to converting a continuous feature into an ordered categorical variable such that our linear regression function is converted to the following equation
+Because of the aggregation process, bagging effectively reduces the variance of an individual base learner (i.e., averaging reduces variance); however, bagging does not always improve upon an individual base learner. As discussed in our [bias vs variance discussion](https://bradleyboehmke.github.io/uc-bana-4080/lesson-5a-hyperparameter-tuning.html#bias-variance-tradeoff), some models have larger variance than others. Bagging works especially well for unstable, high variance base learners---algorithms whose predicted output undergoes major changes in response to small changes in the training data [@dietterich2000ensemble; @dietterich2000experimental]. This includes algorithms such as decision trees and KNN (when _k_ is sufficiently small). However, for algorithms that are more stable or have high bias, bagging offers less improvement on predicted outputs since there is less variability (e.g., bagging a linear regression model will effectively just return the original predictions for large enough $b$). 
 
-\begin{equation}
-  y_i = \beta_0 + \beta_1 C_1(x_i) + \beta_2 C_2(x_i) + \beta_3 C_3(x_i) \dots + \beta_d C_d(x_i) + \epsilon_i,
-\end{equation}
+```{block, type='note'}
+The general idea behind bagging is referred to as the "wisdom of the crowd" effect and was popularized by @surowiecki2005wisdom. It essentially means that the aggregation of information in large diverse groups results in decisions that are often better than could have been made by any single member of the group. The more diverse the group members are then the more diverse their perspectives and predictions will be, which often leads to better aggregated information. Think of estimating the number of jelly beans in a jar at a carinival. While any individual guess is likely to be way off, you'll often find that the averaged guesses tends to be a lot closer to the true number.
+```
 
-where $C_1(x_i)$ represents $x_i$ values ranging from $c_1 \leq x_i < c_2$, $C_2\left(x_i\right)$ represents $x_i$ values ranging from $c_2 \leq x_i < c_3$, $\dots$, $C_d\left(x_i\right)$ represents $x_i$ values ranging from $c_{d-1} \leq x_i < c_d$.  The figure below contrasts linear, polynomial, and step function fits for non-linear, non-monotonic simulated data.
+This is illustrated in the below plot, which compares bagging $b = 100$ polynomial regression models, MARS models, and CART decision trees. You can see that the low variance base learner (polynomial regression) gains very little from bagging while the higher variance learner (decision trees) gains significantly more.  Not only does bagging help minimize the high variability (instability) of single trees, but it also helps to smooth out the prediction surface.
 
-
-```{r nonlinear-comparisons, echo=FALSE, fig.height=6, fig.width=8, fig.cap="Blue line represents predicted (`y`) values as a function of `x` for alternative approaches to modeling explicit nonlinear regression patterns. (A) Traditional linear regression approach does not capture any nonlinearity unless the predictor or response is transformed (i.e. log transformation). (B) Degree-2 polynomial, (C) Degree-3 polynomial, (D) Step function cutting `x` into six categorical levels."}
+```{r bagging-multiple-models, echo=FALSE, fig.width=10, fig.height=3.5}
+# Simulate some nonlinear monotonic data
 set.seed(123)  # for reproducibility
 x <- seq(from = 0, to = 2 * pi, length = 500)
 y <- sin(x) + rnorm(length(x), sd = 0.3)
 df <- data.frame(x, y) %>%
-  filter(x < 6)
+  filter(x < 4.5)
 
-p1 <- ggplot(df, aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_smooth(method = "lm", se = FALSE) +
-  ggtitle("(A) Assumed linear relationship")
+# bootstrapped polynomial model fit
+bootstrap_n <- 100
+bootstrap_results <- NULL
+for(i in seq_len(bootstrap_n)) {
+  # reproducible sampled data frames
+  set.seed(i)
+  index <- sample(seq_len(nrow(df)), nrow(df), replace = TRUE)
+  df_sim <- df[index, ]
+  
+  # fit model and add predictions to results data frame
+  fit <- lm(y ~ I(x^3), data = df_sim)
+  df_sim$predictions <- predict(fit, df_sim)
+  df_sim$model <- paste0("model", i)
+  df_sim$ob <- index
+  bootstrap_results <- rbind(bootstrap_results, df_sim)
+}
 
-p2 <- ggplot(df, aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  stat_smooth( method = "lm", se = FALSE, formula = y ~ poly(x, 2, raw = TRUE)) +
-  ggtitle("(B) Degree-2 polynomial regression")
+p1 <- ggplot(bootstrap_results, aes(x, predictions)) +
+  geom_point(data = df, aes(x, y), alpha = .25) +
+  geom_line(aes(group = model), show.legend = FALSE, size = .5, alpha = .2) +
+  stat_summary(fun = "mean", colour = "red", size = 1, geom = "line") +
+  scale_y_continuous("Response", limits = c(-2, 2), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 5), expand = c(0, 0)) +
+  ggtitle("A) Polynomial regression")
 
-p3 <- ggplot(df, aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  stat_smooth( method = "lm", se = FALSE, formula = y ~ poly(x, 3, raw = TRUE)) +
-  ggtitle("(C) Degree-3 polynomial regression")
+# bootstrapped MARS model fit
+bootstrap_n <- 100
+bootstrap_results <- NULL
+for(i in seq_len(bootstrap_n)) {
+  # reproducible sampled data frames
+  set.seed(i)
+  index <- sample(seq_len(nrow(df)), nrow(df), replace = TRUE)
+  df_sim <- df[index, ]
+  
+  # fit model and add predictions to results data frame
+  fit <- earth::earth(y ~ x, data = df_sim)
+  df_sim$predictions <- predict(fit, df_sim)
+  df_sim$model <- paste0("model", i)
+  df_sim$ob <- index
+  bootstrap_results <- rbind(bootstrap_results, df_sim)
+}
 
-# fit step function model (6 steps)
-step_fit <- lm(y ~ cut(x, 5), data = df)
-step_pred <- predict(step_fit, df)
+p2 <- ggplot(bootstrap_results, aes(x, predictions)) +
+  geom_point(data = df, aes(x, y), alpha = .25) +
+  geom_line(aes(group = model), show.legend = FALSE, size = .5, alpha = .2) +
+  stat_summary(fun = "mean", colour = "red", size = 1, geom = "line") +
+  scale_y_continuous(NULL, limits = c(-2, 2), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 5), expand = c(0, 0)) +
+  ggtitle("B) MARS")
 
-p4 <- ggplot(cbind(df, step_pred), aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = step_pred), size = 1, color = "blue") +
-  ggtitle("(D) Step function regression")
+# bootstrapped decision trees fit
+bootstrap_n <- 100
+bootstrap_results <- NULL
+for(i in seq_len(bootstrap_n)) {
+  # reproducible sampled data frames
+  set.seed(i)
+  index <- sample(seq_len(nrow(df)), nrow(df), replace = TRUE)
+  df_sim <- df[index, ]
+  
+  # fit model and add predictions to results data frame
+  fit <- rpart::rpart(y ~ x, data = df_sim)
+  df_sim$predictions <- predict(fit, df_sim)
+  df_sim$model <- paste0("model", i)
+  df_sim$ob <- index
+  bootstrap_results <- rbind(bootstrap_results, df_sim)
+}
 
-gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2)
+p3 <- ggplot(bootstrap_results, aes(x, predictions)) +
+  geom_point(data = df, aes(x, y), alpha = .25) +
+  geom_line(aes(group = model), show.legend = FALSE, size = .5, alpha = .2) +
+  stat_summary(fun = "mean", colour = "red", size = 1, geom = "line") +
+  scale_y_continuous(NULL, limits = c(-2, 2), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 5), expand = c(0, 0)) +
+  ggtitle("C) Decision trees")
+
+gridExtra::grid.arrange(p1, p2, p3, nrow = 1)
 ```
 
-Although useful, the typical implementation of polynomial regression and step functions require the user to explicitly identify and incorporate which variables should have what specific degree of interaction or at what points of a variable $X$ should cut points be made for the step functions.  Considering many data sets today can easily contain 50, 100, or more features, this would require an enormous and unnecessary time commitment from an analyst to determine these explicit non-linear settings.
+Optimal performance is often found by bagging 50--500 trees. Data sets that have a few strong predictors typically require less trees; whereas data sets with lots of noise or multiple strong predictors may need more. Using too many trees will not lead to overfitting. However, it's important to realize that since multiple models are being run, the more iterations you perform the more computational and time requirements you will have. As these demands increase, performing _k_-fold CV can become computationally burdensome.
 
-## Multivariate adaptive regression splines
-
-Multivariate adaptive regression splines (MARS) provide a convenient approach to capture the nonlinear relationships in the data by assessing cutpoints (_knots_) similar to step functions.  The procedure assesses each data point for each predictor as a knot and creates a linear regression model with the candidate feature(s).  For example, consider our non-linear, non-monotonic data above where $Y = f\left(X\right)$. The MARS procedure will first look for the single point across the range of `X` values where two different linear relationships between `Y` and `X` achieve the smallest error (e.g., smallest SSE).  What results is known as a hinge function $h\left(x-a\right)$, where $a$ is the cutpoint value. For a single knot (Figure (A)), our hinge function is $h\left(\text{x}-1.183606\right)$ such that our two linear models for `Y` are
-
-\begin{equation}
-  \text{y} = 
-  \begin{cases}
-    \beta_0 + \beta_1(1.183606 - \text{x}) & \text{x} < 1.183606, \\
-    \beta_0 + \beta_1(\text{x} - 1.183606) & \text{x} > 1.183606
-  \end{cases}
-\end{equation}
-
-Once the first knot has been found, the search continues for a second knot which is found at $x = 4.898114$ (plot B in figure below).  This results in three linear models for `y`:
-
-\begin{equation}
-  \text{y} = 
-  \begin{cases}
-    \beta_0 + \beta_1(1.183606 - \text{x}) & \text{x} < 1.183606, \\
-    \beta_0 + \beta_1(\text{x} - 1.183606) & \text{x} > 1.183606 \quad \& \quad \text{x} < 4.898114, \\
-    \beta_0 + \beta_1(4.898114 - \text{x}) & \text{x} > 4.898114
-  \end{cases}
-\end{equation}
-
-```{r examples-of-multiple-knots, echo=FALSE, fig.height=6, fig.width=8, fig.cap="Examples of fitted regression splines of one (A), two (B), three (C), and four (D) knots."}
-# one knot
-mars1 <- mda::mars(df$x, df$y, nk = 3, prune = FALSE)
-p1 <- df %>%
-  mutate(predicted = as.vector(mars1$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(A) One knot")
-
-# two knots
-mars2 <- mda::mars(df$x, df$y, nk = 5, prune = FALSE)
-p2 <- df %>%
-  mutate(predicted = as.vector(mars2$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(B) Two knots")
-
-mars3 <- mda::mars(df$x, df$y, nk = 7, prune = FALSE)
-p3 <- df %>%
-  mutate(predicted = as.vector(mars3$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(C) Three knots")
-
-mars4 <- mda::mars(df$x, df$y, nk = 9, prune = FALSE)
-p4 <- df %>%
-  mutate(predicted = as.vector(mars4$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(D) Four knots")
-
-
-gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2)
-```
-
-This procedure continues until many knots are found, producing a (potentially) highly non-linear prediction equation.  Although including many knots may allow us to fit a really good relationship with our training data, it may not generalize very well to new, unseen data. Consequently, once the full set of knots has been identified, we can sequentially remove knots that do not contribute significantly to predictive accuracy.  This process is known as "pruning" and we can use cross-validation, as we have with the previous models, to find the optimal number of knots.
-
-## Fitting a MARS model
-
-### Fitting a basic model
-
-We'll start by fitting a basic model using `Gr_Liv_Area` and `Year_Built` to predict our `Sales_Price`. In both R, the modeling algorithm will assess all potential knots across all supplied features and then will prune to the optimal number of knots based on an expected change in $R^2$ (for the training data) of less than 0.001.  This calculation is performed by the Generalized cross-validation (GCV)  procedure, which is a computational shortcut for linear models that produces an approximate leave-one-out cross-validation error metric [@golub1979generalized].  
+A benefit to creating ensembles via bagging, which is based on resampling with replacement, is that it can provide its own internal estimate of predictive performance with the out-of-bag (OOB) sample. The OOB sample can be used to test predictive performance and the results usually compare well compared to _k_-fold CV assuming your data set is sufficiently large (say $n \geq 1,000$). Consequently, as your data sets become larger and your bagging iterations increase, it is common to use the OOB error estimate as a proxy for predictive performance. 
 
 ```{block, type='note'}
-Note that MARS models do not require normalization or standardization of numeric features.
+Think of the OOB estimate of generalization performance as an unstructured, but free CV statistic.
 ```
 
-In R, we use the `parsnip::mars()` function which provides a default setting of using the `earth` package, which is the most popular package for MARS functionality in R.
+## Fitting a decision tree model
 
-```{block, type='warning'}
-When you run the below code you may get an error that states: `This engine requires some package installs: 'earth'`. This is because the engine that Tidymodels uses is the earth package. If you get this error then install the earth package with `install.packages("earth")` and rerun the code.
-```
+Recall in the decision tree module that our optimally tuned single decision tree model was obtaining a mid-\$30K RMSE. In this first implementation we'll perform the same process; however, instead of a single decision tree we'll use bagging to create and aggregate performance across **5** bagged trees.  
 
+In R we use `baguette::bag_tree` to create a bagged tree model object, which can be applied to decision tree or MARS models. Note how we do not need to perform any feature engineering as decision trees (and therefore bagged decision trees) can handle numeric and categorical features just as they are.
+
+Note how aggregating just 5 decision trees improves our RMSE to around \$30K.
 
 ```{r}
-mars_fit <- mars(mode = "regression") %>%
-  fit(Sale_Price ~ Gr_Liv_Area + Year_Built, ames_train)
+# create model recipe with all features
+model_recipe <- recipe(
+    Sale_Price ~ ., 
+    data = ames_train
+  )
 
-mars_fit
-```
+# create bagged CART model object and
+# start with 5 bagged trees
+tree_mod <- bag_tree() %>%
+  set_engine("rpart", times = 5) %>%
+  set_mode("regression")
 
-In the results above, the GCV is reported along with other metrics ($R^2$, residual sum of squares - RSS). We can use this info to compute the RMSE, which is in the low to mid \$40K range. Keep in mind that this RMSE is not a cross-validated RMSE, just the RMSE on the training data (we'll do some cross-validation shortly). 
+# create resampling procedure
+set.seed(13)
+kfold <- vfold_cv(ames_train, v = 5)
 
-```{r}
-# RMSE
-sqrt(mars_fit$fit$rss / nrow(ames_train))
-```
+# train model
+results <- fit_resamples(tree_mod, model_recipe, kfold)
 
-Looking at the coefficients below, you'll notice that we see a knot in `Gr_Liv_Area` at 3395. This suggests that as homes exceed 3395 square feet there is a change in the linear relationship between `Gr_Liv_Area` and `Sale_Price` compared to homes that are less than 3395 square feet. In fact, we can see multiple knots across the range of `Gr_Liv_Area` and `Year_Built`. Our model has taken two features (`Gr_Liv_Area` and `Year_Built`) and split them into 8 features by creating knots along these feature values.
-
-```{r}
-# coefficients
-mars_fit$fit$coefficients
-```
-
-```{block, type="tip"}
-The most important tuning parameter in a MARS model is the number of knots to use for a given feature. However, this is automatically baked into the algorithm so we get this tuning for free!
-```
-
-
-### Fitting a full model
-
-Next, lets go ahead and fit a full model to include all Ames housing features. As you'll see in the results we experience significant improvement in the training RMSE (low \$20K).  However, recall that this is not a cross-validated RMSE, but rather the RMSE for the training data in which the model was fit. Consequently, this is likely an overfit model but we'll perform a cross-validation approach in the next section to get a more accurate generalized RMSE.
-
-MARS models are no different then other algorithms where we need to convert categorical features to numeric values. In R, the MARS modeling engine "earth" will automatically one-hot encode all categorical features. This leads to over 300 features in our dataset; however, when you look at the results you will see that only a fraction of these features are used in the trained model (note it says "29 of 308 predictors"). However, there will actually be more coefficients then the features used because of the knots. For example of the 29 features, 41 coefficients are developed since many of these features are used multiple times (i.e. `h(Gr_Liv_Area-3194)`, `h(3194-Gr_Liv_Area)`).
-
-```{block, type='note'}
-We call this process of feature elimination and knot refinement as "pruning the knots".
-```
-
-```{r}
-mars_fit <- mars(mode = "regression") %>%
-  fit(Sale_Price ~ ., ames_train)
-
-mars_fit
-
-# RMSE
-sqrt(mars_fit$fit$rss / nrow(ames_train))
-
-# coefficients
-mars_fit$fit$coefficients
-```
-
-### Fitting a full model with interactions
-
-In addition to pruning the number of knots, MARS models allow us to also assess potential interactions between different hinge functions. The following example illustrates by allowing second degree interactions. You can see that now our model includes interaction terms between a maximum of two hinge functions (e.g. in the results you see `h(Year_Built-2002)*h(Gr_Liv_Area-2398)` which represents an interaction effect for those houses built after 2002 and have more than 2,398 square feet of living space).
-
-```{r}
-mars_fit <- mars(mode = "regression", prod_degree = 2) %>%
-  fit(Sale_Price ~ ., ames_train)
-
-mars_fit
-
-# coefficients
-mars_fit$fit$coefficients
+# model results
+collect_metrics(results)
 ```
 
 ### Knowledge check
@@ -263,124 +202,200 @@ mars_fit$fit$coefficients
 ```{block, type='todo'}
 Using the `boston.csv` dataset:
 
-1. Apply a MARS model where `cmedv` is the response variable and `rm` and `lstat` are the two predictor variables. 
-   - What is the training data RSS for the final model?
-   - Assess the coefficients. How many hinges/knots are there? Can you interpret the coefficients?
-2. Apply a MARS model that uses all possible predictor variables.
-   - What is the training data RSS for the final model?
-   - Assess the coefficients. How many hinges/knots are there? Can you interpret the coefficients?
-3. Apply a MARS model that uses all possible predictor variables and allows for two-way interactions.
-   - What is the training data RSS for the final model?
-   - Assess the coefficients. How many hinges/knots are there? Can you interpret the coefficients?
+Apply a bagged decision tree model where `cmedv` is the response variable and use all possible predictor variables. Use a 5-fold cross validation procedure to assess...
+   - Bagging 5 trees
+   - Bagging 10 trees
+   - Bagging 25 trees
+
+How does the model perform in each scenario? Do adding more trees improve performance?
 ```
 
 ## Tuning
 
-There are two important tuning parameters associated with MARS models: the maximum degree of interactions and the number of terms retained in the final model. We need to perform a grid search to identify the optimal combination of these hyperparameters that minimize prediction error (the above pruning process was based only on an approximation of CV model performance on the training data rather than an exact _k_-fold CV process). As in the previous lesson, we'll perform a CV grid search to identify the optimal hyperparameter mix.  Below, we set up a grid that assesses different combinations of interaction complexity and the number of terms to retain in the final model.
+One thing to note is that typically, the more trees the better. As we add more trees we’re averaging over more high variance decision trees. Early on, we see a dramatic reduction in variance (and hence our error) but eventually the error will typically flatline and stabilize signaling that a suitable number of trees has been reached. Often, we need only 50–100 trees to stabilize the error (in other cases we may need 500 or more). 
 
-```{block, type='warning'}
-Rarely is there any benefit in assessing greater than 3-rd degree interactions. Also, realize that tuning MARS models can become computationally intense. Its often beneficial to start with 10 evenly spaced values for the maximum terms and then you can always zoom in to a region once you find an approximate optimal solution.
+Consequently, we can treat the number of trees as a tuning parameter where our focus is to make sure we are using enough trees for our error metric to converge at a optimal value (minimize RMSE in our case). However, rarely do we run the risk of including too many trees as we typically will not see our error metric degrade after adding more trees than necessary. 
+
+```{block, type='tip'}
+The primary concern is compute efficiency, we want enough trees to reach an optimal resampling error; however, not more trees than necessary as it will slow down computational efficiency.
 ```
 
+In this example we use a hyperparameter grid to assess 5, 25, 50, 100, and 200 trees. We see an initial decrease but as we start using 50+ trees we only see marginal changes in our RMSE, suggesting we have likely reached enough trees to minimize the RMSE and any additional differences are likely due to the standard error that occurs during the bootstrapping process.
 
-In R, our hyperparameters are `num_terms` (number of terms retained in the model) and `prod_degrees` (maximum degree of interaction allowed). Note that in R we can use `num_terms()` and `prod_degree()` from the dials package to create a tuning grid. By default `prod_degree()` will use values of 1 and 2 (no interactions and 2 degree interactions).
+```{r cache=TRUE}
+# create model recipe with all features
+model_recipe <- recipe(
+    Sale_Price ~ ., 
+    data = ames_train
+  )
 
-Our results show that our top 5 performing models all include 2 degree interactions and between 37-49 total terms ("knots"). 
+# create bagged CART model object with
+# tuning option set for number of bagged trees
+tree_mod <- bag_tree() %>%
+  set_engine("rpart", times = tune()) %>%
+  set_mode("regression")
 
-```{r, cache=TRUE}
-# create MARS model object
-mars_mod <- mars(mode = "regression", num_terms = tune(), prod_degree = tune())
-
-# create k-fold cross validation object
-set.seed(123)
-folds <- vfold_cv(ames_train, v = 5)
-
-# create our model recipe
-model_recipe <- recipe(Sale_Price ~ ., data = ames_train)
-
-# create a hyper parameter tuning grid
-hyper_grid <- grid_regular(
- num_terms(range = c(1, 100)), 
- prod_degree(),
- levels = 50
- )
+# create the hyperparameter grid
+hyper_grid <- expand.grid(times = c(5, 25, 50, 100, 200))
 
 # train our model across the hyper parameter grid
-results <- tune_grid(mars_mod, model_recipe, resamples = folds, grid = hyper_grid)
+set.seed(123)
+results <- tune_grid(tree_mod, model_recipe, resamples = kfold, grid = hyper_grid)
 
-# get best results
+
+# model results
 show_best(results, metric = "rmse")
 ```
 
-```{r}
-autoplot(results)
+
+```{block, type="note"}
+When bagging trees we can also tune the same hyperparameters that we tuned with decision trees (`cost_complexity`, `tree_depth`, `min_n`). See `bag_tree?` for details.
+
+However, the default values for these hyperparameters is set to grow our trees to the maximum depth and not prune them at all. It has been shown that bagging many deep, overfit trees typically leads to best performance.
+```
+
+
+### Knowledge check
+
+```{block, type='todo'}
+Using the `boston.csv` dataset:
+
+Apply a bagged decision tree model where `cmedv` is the response variable and use all possible predictor variables. Use a 5-fold cross validation procedure and tune the number of trees to assess 5, 10, 25, 50, 100, and 150 trees.
+
+How does the model perform in each scenario? Do adding more trees improve performance? At what point do we experience diminishing returns in our cross-validated RMSE?
+```
+
+## Feature interpretation
+
+Unfortunately, due to the bagging process, models that are normally perceived as interpretable are no longer so. However, we can still make inferences about how features are influencing our model. Recall in the decision tree module that we measure feature importance based on the sum of the reduction in the loss function (e.g., SSE) attributed to each variable at each split in a given tree.
+
+For bagged decision trees, this process is similar. For each tree, we compute the sum of the reduction of the loss function across all splits. We then aggregate this measure across all trees for each feature. The features with the largest average decrease in SSE (for regression) are considered most important. 
+
+The following extracts the feature importance for our best performing bagged decision trees. Unfortunately, `vip::vip()` doesn't work naturally with models from `bag_tree` so we need to manually extract the variable importance scores and plot them with `ggplot`.  We see that `Overall_Qual` and `Neighborhood` are the top two most influential features. 
+
+```{r cache=TRUE}
+# identify best model
+best_hyperparameters <- results %>%
+   select_best("rmse")
+
+# finalize workflow object
+final_wf <- workflow() %>%
+   add_recipe(model_recipe) %>%
+   add_model(tree_mod) %>%
+   finalize_workflow(best_hyperparameters)
+
+# final fit on training data
+final_fit <- final_wf %>%
+   fit(data = ames_train)
+
+# plot top 20 influential variables
+vi <- final_fit %>%
+   extract_fit_parsnip() %>%
+   .[['fit']] %>%
+   var_imp() %>%
+   slice(1:20)
+
+ggplot(vi, aes(value, reorder(term, value))) +
+   geom_col() +
+   ylab(NULL) +
+   xlab("Feature importance")
+```
+
+We can then plot the partial dependence of the most influential feature to see how it influences the predicted values. We see that as overall quality increase we see a significant increase in the predicted sale price.
+
+
+```{r cache=TRUE, fig.width=10, fig.height=4.5}
+# prediction function
+pdp_pred_fun <- function(object, newdata) {
+   predict(object, newdata, type = "numeric")$.pred
+}
+
+# use the pdp package to extract partial dependence predictions
+# and then plot
+final_fit %>%
+   pdp::partial(
+     pred.var = "Overall_Qual", 
+     pred.fun = pdp_pred_fun,
+     grid.resolution = 10, 
+     train = ames_train
+   ) %>%
+  ggplot(aes(Overall_Qual, yhat)) +
+    geom_boxplot() +
+    scale_y_continuous(labels = scales::dollar)
+```
+
+Now let's plot the PDP for the `Gr_Liv_Area` and see how that variable relates to the predicted sale price.
+
+```{r cache=TRUE, fig.width=9, fig.height=4.5}
+# prediction function
+pdp_pred_fun <- function(object, newdata) {
+   mean(predict(object, newdata, type = "numeric")$.pred)
+}
+
+# use the pdp package to extract partial dependence predictions
+# and then plot
+final_fit %>%
+   pdp::partial(
+     pred.var = "Gr_Liv_Area", 
+     pred.fun = pdp_pred_fun,
+     grid.resolution = 10, 
+     train = ames_train
+   ) %>%
+   autoplot() +
+   scale_y_continuous(labels = scales::dollar)
 ```
 
 ### Knowledge check
 
 ```{block, type='todo'}
-Using the `boston.csv` dataset apply a MARS model that uses all possible predictor variables and tune for the number of terms and interactions.
-
-- Use a 5-fold cross validation procedure to tune your model.
-- For number of terms used (`num_terms`) assess values between 1-50.
-- For possible interaction degrees use the default `prod_degree()`.
-- Assess a total of 10 values from each parameter (`levels = 10`).
-
-Which model(s) provide the lowest cross validated RMSE? What hyperparameter values provide these optimal results?
+Using the `boston.csv` dataset and the model from the previous Knowledge check that performed best...
+   - Plot the top 10 most influential features.
+   - Create and explain a PDP plot of the most influential feature.
 ```
-
-## Feature interpretation
-
-MARS models use a backwards elimination feature selection routine that looks at reductions in the GCV estimate of error as each predictor is added to the model. This total reduction can be used as the variable importance measure (`"gcv"`). Since MARS will automatically include and exclude terms during the pruning process, it essentially performs automated feature selection. If a predictor was never used in any of the MARS basis functions in the final model (after pruning), it has an importance value of zero.   Alternatively, you can also monitor the change in the residual sums of squares (RSS) as terms are added (`"rss"`); however, you will often see very little difference between these methods. The following examples extract the feature importance values based on RSS.
-
-The below shows that our most influential feature `Gr_Liv_Area` followed by `Year_Built`, `Total_Bsmt_SF`, `Overall_QualExcellent`, etc. 
-
-```{r}
-best_hyperparameters <- select_best(results, metric = "rmse")
-
-final_wf <- workflow() %>%
-   add_model(mars_mod) %>%
-   add_formula(Sale_Price ~ .) %>%
-   finalize_workflow(best_hyperparameters)
-
-# plot top 20 influential variables
-final_wf %>%
-   fit(data = ames_train) %>% 
-   extract_fit_parsnip() %>%
-   vip(20, type = "rss")
-```
-
-Since our relationship between our response variable and the predictor variables are now non-linear, it becomes helpful to visualize the relationship between the most influential feature(s) and the response variable to see how they relate. We can do that with ***partial dependence plots*** (PDPs). PDPs plot the change in the average predicted value of our model ($\hat y$) as specified feature(s) vary over their marginal distribution. 
-
-We can then use the [`pdp`](https://bgreenwell.github.io/pdp/index.html) package to extract the partial dependence values in order to plot the relationship between predicted `Sale_Price` and `Gr_Liv_Area`. Don't get too hung up in the code here. But you can see that based on our PDP, as homes exceed 3,200ish square feet we see a steepening increase in the relationship. 
-
-```{r}
-# prediction function
-pdp_pred_fun <- function(object, newdata) {
-  mean(predict(object, newdata, type = "numeric")$.pred)
-}
-
-# use the pdp package to extract partial dependence predictions
-# and then plot
-final_wf %>%
-   fit(data = ames_train) %>%
-  pdp::partial(
-   pred.var = "Gr_Liv_Area", 
-   pred.fun = pdp_pred_fun,
-   grid.resolution = 10, 
-   train = ames_train
-  ) %>%
-  ggplot(aes(Gr_Liv_Area, yhat)) +
-  geom_line() +
-  scale_y_continuous(labels = scales::dollar)
-```
-
 
 ## Final thoughts
 
-There are several advantages to MARS.  First, MARS naturally handles mixed types of predictors (quantitative and qualitative). MARS considers all possible binary partitions of the categories for a qualitative predictor into two groups.^[This is very similar to CART-like decision trees which you'll be exposed to in a later module.] Each group then generates a pair of piecewise indicator functions for the two categories. MARS also requires minimal feature engineering (e.g., feature scaling) and performs automated feature selection. For example, since MARS scans each predictor to identify a split that improves predictive accuracy, non-informative features will not be chosen. Furthermore, highly correlated predictors do not impede predictive accuracy as much as they do with OLS models. 
+Bagging improves the prediction accuracy for high variance (and low bias) models at the expense of interpretability and computational speed. However, using various interpretability algorithms such as VIPs and PDPs, we can still make inferences about how our bagged model leverages feature information.  Also, since bagging consists of independent processes, the algorithm is easily parallelizable.
 
-However, one disadvantage to MARS models is that they're typically slower to train.  Since the algorithm scans each value of each predictor for potential cutpoints, computational performance can suffer as both $n$ and $p$ increase.  Also, although correlated predictors do not necessarily impede model performance, they can make model interpretation difficult. When two features are nearly perfectly correlated, the algorithm will essentially select the first one it happens to come across when scanning the features.  Then, since it randomly selected one, the correlated feature will likely not be included as it adds no additional explanatory power.
+However, when bagging trees, a problem still exists. Although the model building steps are independent, the trees in bagging are not completely independent of each other since all the original features are considered at every split of every tree. Rather, trees from different bootstrap samples typically have similar structure to each other (especially at the top of the tree) due to any underlying strong relationships.
+
+For example, if we create six decision trees with different bootstrapped samples of the Boston housing data [@harrison1978hedonic], we see a similar structure as the top of the trees.  Although there are 15 predictor variables to split on, all six trees have both `lstat` and `rm` variables driving the first few splits.  
+
+```{block, type='note'}
+We use the Boston housing data in this example because it has fewer features and shorter names than the Ames housing data. Consequently, it is easier to compare multiple trees side-by-side; however, the same tree correlation problem exists in the Ames bagged model.
+```
+
+```{r tree-correlation, message=FALSE, warning=FALSE, fig.align='center', fig.cap="Six decision trees based on different bootstrap samples.", echo=FALSE, fig.width=12, fig.height=8}
+library(caret)
+library(randomForest)
+iter = 6
+par(mfrow = c(3, 3))
+for(i in 1:iter){
+  set.seed(i+30)
+  # create train/test sets
+  train_index <- caret::createDataPartition(pdp::boston$cmedv, p = .6333,
+                                     list = FALSE,
+                                     times = 1)
+  
+  train_DF <- pdp::boston[train_index,]
+  validate_DF <- pdp::boston[-train_index,]
+  
+  train_y <- train_DF$cmedv
+  train_x <- train_DF[, setdiff(names(train_DF), "cmedv")]
+  
+  validate_y <- validate_DF$cmedv
+  validate_x <- validate_DF[, setdiff(names(validate_DF), "cmedv")]
+  
+  d_tree <- rpart::rpart(cmedv ~ ., train_DF)
+  
+  # graphs
+  
+  rpart.plot::rpart.plot(d_tree, main = paste0("Decision Tree ", i), type = 0, extra = 0) 
+  
+}
+```
+
+In the next lesson we'll see how to resolve this concern using a modification of bagged trees called ***random forest***.
 
 ## Exercises
 
@@ -388,13 +403,9 @@ However, one disadvantage to MARS models is that they're typically slower to tra
 Using the same `kernlab::spam` data we saw in the [section 12.10](https://bradleyboehmke.github.io/uc-bana-4080/lesson-4b-regularized-regression.html#classification-problems-1)...
 
 1. Split the data into 70-30 training-test sets.
-2. Apply a MARS classification model where `type` is our response variable and use all possible predictor variables. 
-   - Use a 5-fold cross-validation procedure.
-   - Tune number of terms used (`num_terms`) with values ranging 1-100.
-   - Tune number of interaction degrees with the default `prod_degree()` values.
-   - Assess a total of 50 values from each parameter (`levels = 50`).
-3. Which model(s) have the highest AUC (`roc_auc`) scores? 
-4. What hyperparameter values provide these optimal results?
-5. Use the hyperparameter values that provide the best results to finalize your workflow and and identify the top 20 most influential predictors.
-6. __Bonus__: See if you can create a PDP plot for the #1 most influential variable. What does the relationship between this feature and the response variable look like?
+2. Apply a bagged decision tree model modeling the `type` response variable as a function of all available features.
+3. How many trees are required before the loss function stabilizes?
+4. How does the model performance compare to the decision tree model applied in the previous lesson's exercise?
+5. Which 10 features are considered most influential? Are these the same features that have been influential in previous model?
+6. Create partial dependence plots for the top two most influential features. Explain the relationship between the feature and the predicted values.
 ```
