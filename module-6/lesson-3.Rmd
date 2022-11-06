@@ -23,35 +23,31 @@ img_path <- here("images")
 ggplot2::theme_set(ggplot2::theme_light())
 ```
 
-The previous modules discussed algorithms that are intrinsically linear. Many of these models can be adapted to nonlinear patterns in the data by manually adding nonlinear model terms (e.g., squared terms, interaction effects, and other transformations of the original features); however, to do so you the analyst must know the specific nature of the nonlinearities and interactions _a priori_.  Alternatively, there are numerous algorithms that are inherently nonlinear. When using these models, the exact form of the nonlinearity does not need to be known explicitly or specified prior to model training. Rather, these algorithms will search for, and discover, nonlinearities and interactions in the data that help maximize predictive accuracy. 
-
-This lesson discusses _multivariate adaptive regression splines_ (MARS) [@friedman1991multivariate], an algorithm that automatically creates a piecewise linear model which provides an intuitive stepping block into nonlinearity after grasping the concept of multiple linear regression. Future modules will focus on other nonlinear algorithms.
+_Random forests_ are a modification of bagged decision trees that build a large collection of _de-correlated_ trees to further improve predictive performance. They have become a very popular "out-of-the-box" or "off-the-shelf" learning algorithm that enjoys good predictive performance with relatively little hyperparameter tuning. Many modern implementations of random forests exist; however, Leo Breiman's algorithm [@breiman2001random] has largely become the authoritative procedure. This module will cover the fundamentals of random forests.
 
 ## Learning objectives
 
-By the end of this lesson you will know how:
+By the end of this module you will know:
 
-- MARS models incorporates non-linear relationships with hinge functions (aka "knots").
-- How to train and tune MARS models using the Tidymodels construct.
-- How to identify and visualize the most influential features in a MARS models.
+* How to implement a random forest model along with the hyperparameters that are commonly toggled in these algorithms.
+* Multiple strategies for performing a grid search.
+* How to identify influential features and their effects on the response variable.
 
 ## Prerequisites
-
 
 ```{r}
 # Helper packages
 library(tidyverse)   # for data wrangling & plotting
 
 # Modeling packages
-library(tidymodels)  # for fitting MARS models
+library(tidymodels) 
 
 # Model interpretability packages
 library(vip)         # for variable importance
 library(pdp)         # for variable relationships
 ```
 
-```{r MARS-ames-train}
-# Stratified sampling with the rsample package
+```{r ames-train-6c}
 set.seed(123)
 ames <- AmesHousing::make_ames()
 split  <- rsample::initial_split(ames, prop = 0.7, strata = "Sale_Price")
@@ -59,203 +55,68 @@ ames_train  <- rsample::training(split)
 ames_test   <- rsample::testing(split)
 ```
 
-## Nonlinearity
+## Extending bagging
 
-In the previous modules, we focused on linear models (where the analyst has to explicitly specify any nonlinear relationships and interaction effects). We illustrated some of the advantages of linear models such as their ease and speed of computation and also the intuitive nature of interpreting their coefficients.  However, linear models make a strong assumption about linearity, and this assumption is often a poor one, which can affect predictive accuracy.
+Random forests are built using the same fundamental principles as decision trees and bagging. Bagging trees introduces a random component into the tree building process by building many trees on bootstrapped copies of the training data. Bagging then aggregates the predictions across all the trees; this aggregation reduces the variance of the overall procedure and results in improved predictive performance. However, as we saw in the last module, simply bagging trees results in tree correlation that limits the effect of variance reduction. 
 
-We can extend linear models to capture any non-linear relationship. Typically, this is done by explicitly including polynomial terms (e.g., $x_i^2$) or step functions.  Polynomial regression is a form of regression in which the relationship between $X$ and $Y$ is modeled as a $d$th degree polynomial in $X$.  For example, the following equation represents a polynomial regression function where $Y$ is modeled as a $d$-th degree polynomial in $X$.  Generally speaking, it is unusual to use $d$ greater than 3 or 4 as the larger $d$ becomes, the easier the function fit becomes overly flexible and oddly shaped...especially near the boundaries of the range of $X$ values. Increasing $d$ also tends to increase the presence of multicollinearity.
+Random forests help to reduce tree correlation by injecting more randomness into the tree-growing process.^[See @esl for a mathematical explanation of the tree correlation phenomenon.] More specifically, while growing a decision tree during the bagging process, random forests perform _split-variable randomization_ where each time a split is to be performed, the search for the split variable is limited to a random subset of $m_{try}$ of the original $p$ features.  Typical default values are $m_{try} = \frac{p}{3}$ (regression) and $m_{try} = \sqrt{p}$ (classification) but this should be considered a tuning parameter.  
 
-\begin{equation}
-  y_i = \beta_0 + \beta_1 x_i + \beta_2 x^2_i + \beta_3 x^3_i \dots + \beta_d x^d_i + \epsilon_i,
-\end{equation}
+The basic algorithm for a regression or classification random forest can be generalized as follows:
 
-An alternative to polynomials is to use step functions. Whereas polynomial functions impose a global non-linear relationship, step functions break the range of $X$ into bins, and fit a simple constant (e.g., the mean response) in each. This amounts to converting a continuous feature into an ordered categorical variable such that our linear regression function is converted to the following equation
-
-\begin{equation}
-  y_i = \beta_0 + \beta_1 C_1(x_i) + \beta_2 C_2(x_i) + \beta_3 C_3(x_i) \dots + \beta_d C_d(x_i) + \epsilon_i,
-\end{equation}
-
-where $C_1(x_i)$ represents $x_i$ values ranging from $c_1 \leq x_i < c_2$, $C_2\left(x_i\right)$ represents $x_i$ values ranging from $c_2 \leq x_i < c_3$, $\dots$, $C_d\left(x_i\right)$ represents $x_i$ values ranging from $c_{d-1} \leq x_i < c_d$.  The figure below contrasts linear, polynomial, and step function fits for non-linear, non-monotonic simulated data.
-
-
-```{r nonlinear-comparisons, echo=FALSE, fig.height=6, fig.width=8, fig.cap="Blue line represents predicted (`y`) values as a function of `x` for alternative approaches to modeling explicit nonlinear regression patterns. (A) Traditional linear regression approach does not capture any nonlinearity unless the predictor or response is transformed (i.e. log transformation). (B) Degree-2 polynomial, (C) Degree-3 polynomial, (D) Step function cutting `x` into six categorical levels."}
-set.seed(123)  # for reproducibility
-x <- seq(from = 0, to = 2 * pi, length = 500)
-y <- sin(x) + rnorm(length(x), sd = 0.3)
-df <- data.frame(x, y) %>%
-  filter(x < 6)
-
-p1 <- ggplot(df, aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_smooth(method = "lm", se = FALSE) +
-  ggtitle("(A) Assumed linear relationship")
-
-p2 <- ggplot(df, aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  stat_smooth( method = "lm", se = FALSE, formula = y ~ poly(x, 2, raw = TRUE)) +
-  ggtitle("(B) Degree-2 polynomial regression")
-
-p3 <- ggplot(df, aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  stat_smooth( method = "lm", se = FALSE, formula = y ~ poly(x, 3, raw = TRUE)) +
-  ggtitle("(C) Degree-3 polynomial regression")
-
-# fit step function model (6 steps)
-step_fit <- lm(y ~ cut(x, 5), data = df)
-step_pred <- predict(step_fit, df)
-
-p4 <- ggplot(cbind(df, step_pred), aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = step_pred), size = 1, color = "blue") +
-  ggtitle("(D) Step function regression")
-
-gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2)
+```
+1.  Given a training data set
+2.  Select number of trees to build (n_trees)
+3.  for i = 1 to n_trees do
+4.  |  Generate a bootstrap sample of the original data
+5.  |  Grow a regression/classification tree to the bootstrapped data
+6.  |  for each split do
+7.  |  | Select m_try variables at random from all p variables
+8.  |  | Pick the best variable/split-point among the m_try
+9.  |  | Split the node into two child nodes
+10. |  end
+11. | Use typical tree model stopping criteria to determine when a 
+    | tree is complete (but do not prune)
+12. end
+13. Output ensemble of trees 
 ```
 
-Although useful, the typical implementation of polynomial regression and step functions require the user to explicitly identify and incorporate which variables should have what specific degree of interaction or at what points of a variable $X$ should cut points be made for the step functions.  Considering many data sets today can easily contain 50, 100, or more features, this would require an enormous and unnecessary time commitment from an analyst to determine these explicit non-linear settings.
-
-## Multivariate adaptive regression splines
-
-Multivariate adaptive regression splines (MARS) provide a convenient approach to capture the nonlinear relationships in the data by assessing cutpoints (_knots_) similar to step functions.  The procedure assesses each data point for each predictor as a knot and creates a linear regression model with the candidate feature(s).  For example, consider our non-linear, non-monotonic data above where $Y = f\left(X\right)$. The MARS procedure will first look for the single point across the range of `X` values where two different linear relationships between `Y` and `X` achieve the smallest error (e.g., smallest SSE).  What results is known as a hinge function $h\left(x-a\right)$, where $a$ is the cutpoint value. For a single knot (Figure (A)), our hinge function is $h\left(\text{x}-1.183606\right)$ such that our two linear models for `Y` are
-
-\begin{equation}
-  \text{y} = 
-  \begin{cases}
-    \beta_0 + \beta_1(1.183606 - \text{x}) & \text{x} < 1.183606, \\
-    \beta_0 + \beta_1(\text{x} - 1.183606) & \text{x} > 1.183606
-  \end{cases}
-\end{equation}
-
-Once the first knot has been found, the search continues for a second knot which is found at $x = 4.898114$ (plot B in figure below).  This results in three linear models for `y`:
-
-\begin{equation}
-  \text{y} = 
-  \begin{cases}
-    \beta_0 + \beta_1(1.183606 - \text{x}) & \text{x} < 1.183606, \\
-    \beta_0 + \beta_1(\text{x} - 1.183606) & \text{x} > 1.183606 \quad \& \quad \text{x} < 4.898114, \\
-    \beta_0 + \beta_1(4.898114 - \text{x}) & \text{x} > 4.898114
-  \end{cases}
-\end{equation}
-
-```{r examples-of-multiple-knots, echo=FALSE, fig.height=6, fig.width=8, fig.cap="Examples of fitted regression splines of one (A), two (B), three (C), and four (D) knots."}
-# one knot
-mars1 <- mda::mars(df$x, df$y, nk = 3, prune = FALSE)
-p1 <- df %>%
-  mutate(predicted = as.vector(mars1$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(A) One knot")
-
-# two knots
-mars2 <- mda::mars(df$x, df$y, nk = 5, prune = FALSE)
-p2 <- df %>%
-  mutate(predicted = as.vector(mars2$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(B) Two knots")
-
-mars3 <- mda::mars(df$x, df$y, nk = 7, prune = FALSE)
-p3 <- df %>%
-  mutate(predicted = as.vector(mars3$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(C) Three knots")
-
-mars4 <- mda::mars(df$x, df$y, nk = 9, prune = FALSE)
-p4 <- df %>%
-  mutate(predicted = as.vector(mars4$fitted.values)) %>%
-  ggplot(aes(x, y)) +
-  geom_point(size = 1, alpha = .2) +
-  geom_line(aes(y = predicted), size = 1, color = "blue") +
-  ggtitle("(D) Four knots")
-
-
-gridExtra::grid.arrange(p1, p2, p3, p4, nrow = 2)
+```{block, type='tip'}
+When $m_{try} = p$, the algorithm is equivalent to bagging decision trees.
 ```
 
-This procedure continues until many knots are found, producing a (potentially) highly non-linear prediction equation.  Although including many knots may allow us to fit a really good relationship with our training data, it may not generalize very well to new, unseen data. Consequently, once the full set of knots has been identified, we can sequentially remove knots that do not contribute significantly to predictive accuracy.  This process is known as "pruning" and we can use cross-validation, as we have with the previous models, to find the optimal number of knots.
+Since the algorithm randomly selects a bootstrap sample to train on ___and___ a random sample of features to use at each split, a more diverse set of trees is produced which tends to lessen tree correlation beyond bagged trees and often dramatically increase predictive power.
 
-## Fitting a MARS model
+## Out-of-the-box performance
 
-### Fitting a basic model
+Random forests have become popular because they tend to provide very good out-of-the-box performance. Although they have several hyperparameters that can be tuned, the default values tend to produce good results. Moreover, @probst2018tunability illustrated that among the more popular machine learning algorithms, random forests have the least variability in their prediction accuracy when tuning. 
 
-We'll start by fitting a basic model using `Gr_Liv_Area` and `Year_Built` to predict our `Sales_Price`. In both R, the modeling algorithm will assess all potential knots across all supplied features and then will prune to the optimal number of knots based on an expected change in $R^2$ (for the training data) of less than 0.001.  This calculation is performed by the Generalized cross-validation (GCV)  procedure, which is a computational shortcut for linear models that produces an approximate leave-one-out cross-validation error metric [@golub1979generalized].  
+For example, if we train a random forest model with all hyperparameters set to their default values, we get RMSEs comparable to some of the best model's we've run thus far (without any tuning).
 
-```{block, type='note'}
-Note that MARS models do not require normalization or standardization of numeric features.
-```
-
-In R, we use the `parsnip::mars()` function which provides a default setting of using the `earth` package, which is the most popular package for MARS functionality in R.
-
-```{block, type='warning'}
-When you run the below code you may get an error that states: `This engine requires some package installs: 'earth'`. This is because the engine that Tidymodels uses is the earth package. If you get this error then install the earth package with `install.packages("earth")` and rerun the code.
-```
-
-
-```{r}
-mars_fit <- mars(mode = "regression") %>%
-  fit(Sale_Price ~ Gr_Liv_Area + Year_Built, ames_train)
-
-mars_fit
-```
-
-In the results above, the GCV is reported along with other metrics ($R^2$, residual sum of squares - RSS). We can use this info to compute the RMSE, which is in the low to mid \$40K range. Keep in mind that this RMSE is not a cross-validated RMSE, just the RMSE on the training data (we'll do some cross-validation shortly). 
-
-```{r}
-# RMSE
-sqrt(mars_fit$fit$rss / nrow(ames_train))
-```
-
-Looking at the coefficients below, you'll notice that we see a knot in `Gr_Liv_Area` at 3395. This suggests that as homes exceed 3395 square feet there is a change in the linear relationship between `Gr_Liv_Area` and `Sale_Price` compared to homes that are less than 3395 square feet. In fact, we can see multiple knots across the range of `Gr_Liv_Area` and `Year_Built`. Our model has taken two features (`Gr_Liv_Area` and `Year_Built`) and split them into 8 features by creating knots along these feature values.
-
-```{r}
-# coefficients
-mars_fit$fit$coefficients
-```
-
-```{block, type="tip"}
-The most important tuning parameter in a MARS model is the number of knots to use for a given feature. However, this is automatically baked into the algorithm so we get this tuning for free!
-```
-
-
-### Fitting a full model
-
-Next, lets go ahead and fit a full model to include all Ames housing features. As you'll see in the results we experience significant improvement in the training RMSE (low \$20K).  However, recall that this is not a cross-validated RMSE, but rather the RMSE for the training data in which the model was fit. Consequently, this is likely an overfit model but we'll perform a cross-validation approach in the next section to get a more accurate generalized RMSE.
-
-MARS models are no different then other algorithms where we need to convert categorical features to numeric values. In R, the MARS modeling engine "earth" will automatically one-hot encode all categorical features. This leads to over 300 features in our dataset; however, when you look at the results you will see that only a fraction of these features are used in the trained model (note it says "29 of 308 predictors"). However, there will actually be more coefficients then the features used because of the knots. For example of the 29 features, 41 coefficients are developed since many of these features are used multiple times (i.e. `h(Gr_Liv_Area-3194)`, `h(3194-Gr_Liv_Area)`).
-
-```{block, type='note'}
-We call this process of feature elimination and knot refinement as "pruning the knots".
+```{block, type = "note"}
+In R we will want to use the [ranger](https://github.com/imbs-hl/ranger) package as our random forest engine. Similar to other examples we need to set the mode of machine learning model to either a regression or classification modeling objective.
 ```
 
 ```{r}
-mars_fit <- mars(mode = "regression") %>%
-  fit(Sale_Price ~ ., ames_train)
+# create model recipe with all features
+model_recipe <- recipe(
+    Sale_Price ~ ., 
+    data = ames_train
+  )
 
-mars_fit
+# create bagged CART model object and
+# start with 5 bagged trees
+rf_mod <- rand_forest(mode = "regression") %>%
+  set_engine("ranger")
 
-# RMSE
-sqrt(mars_fit$fit$rss / nrow(ames_train))
+# create resampling procedure
+set.seed(13)
+kfold <- vfold_cv(ames_train, v = 5)
 
-# coefficients
-mars_fit$fit$coefficients
-```
+# train model
+results <- fit_resamples(rf_mod, model_recipe, kfold)
 
-### Fitting a full model with interactions
-
-In addition to pruning the number of knots, MARS models allow us to also assess potential interactions between different hinge functions. The following example illustrates by allowing second degree interactions. You can see that now our model includes interaction terms between a maximum of two hinge functions (e.g. in the results you see `h(Year_Built-2002)*h(Gr_Liv_Area-2398)` which represents an interaction effect for those houses built after 2002 and have more than 2,398 square feet of living space).
-
-```{r}
-mars_fit <- mars(mode = "regression", prod_degree = 2) %>%
-  fit(Sale_Price ~ ., ames_train)
-
-mars_fit
-
-# coefficients
-mars_fit$fit$coefficients
+# model results
+collect_metrics(results)
 ```
 
 ### Knowledge check
@@ -263,124 +124,304 @@ mars_fit$fit$coefficients
 ```{block, type='todo'}
 Using the `boston.csv` dataset:
 
-1. Apply a MARS model where `cmedv` is the response variable and `rm` and `lstat` are the two predictor variables. 
-   - What is the training data RSS for the final model?
-   - Assess the coefficients. How many hinges/knots are there? Can you interpret the coefficients?
-2. Apply a MARS model that uses all possible predictor variables.
-   - What is the training data RSS for the final model?
-   - Assess the coefficients. How many hinges/knots are there? Can you interpret the coefficients?
-3. Apply a MARS model that uses all possible predictor variables and allows for two-way interactions.
-   - What is the training data RSS for the final model?
-   - Assess the coefficients. How many hinges/knots are there? Can you interpret the coefficients?
+Apply a random forest model where `cmedv` is the response variable and use all possible predictor variables. Use the default hyperparameter settings and apply a 5-fold cross validation procedure to assess to assess the model performance.
 ```
+
+## Hyperparameters
+
+Although random forests perform well out-of-the-box, there are several tunable hyperparameters that we should consider when training a model. Although we briefly discuss the main hyperparameters, @probst2019hyperparameters provide a much more thorough discussion.  The main hyperparameters to consider include:
+
+(1) The number of trees in the forest
+(2) The number of features to consider at any given split: $m_{try}$
+(3) The complexity (depth) of each tree
+
+### Number of trees
+
+The first consideration is the number of trees within your random forest. Although not technically a hyperparameter, the number of trees needs to be sufficiently large to stabilize the error rate. A good rule of thumb is to start with 10 times the number of features as illustrated below); however, as you adjust other hyperparameters such as $m_{try}$ and node size, more or fewer trees may be required. More trees provide more robust and stable error estimates and variable importance measures; however, the impact on computation time increases linearly with the number of trees.
+
+```{block, type='tip'}
+A good rule of thumb is to start with the number of predictor variables ($p$) times 10 ($p \times 10$) trees and adjust as necessary.
+```
+
+
+```{r tuning-trees, echo=FALSE, fig.cap="The Ames data has 80 features and starting with 10 times the number of features typically ensures the error estimate converges.", fig.height=3.5, fig.width=6, cache=TRUE}
+# number of features
+n_features <- ncol(ames_train) - 1
+
+# tuning grid
+tuning_grid <- expand.grid(
+  trees = seq(10, 1000, by = 20),
+  rmse  = NA
+)
+
+for(i in seq_len(nrow(tuning_grid))) {
+
+  # Fit a random forest
+  fit <- ranger::ranger(
+    formula = Sale_Price ~ ., 
+    data = ames_train, 
+    num.trees = tuning_grid$trees[i],
+    mtry = floor(n_features / 3),
+    respect.unordered.factors = 'order',
+    verbose = FALSE,
+    seed = 123
+  )
+  
+  # Extract OOB RMSE
+  tuning_grid$rmse[i] <- sqrt(fit$prediction.error)
+  
+}
+
+ggplot(tuning_grid, aes(trees, rmse)) +
+  geom_line(size = 1) +
+  ylab("OOB Error (RMSE)") +
+  xlab("Number of trees")
+```
+
+
+### $m_{try}$ {#mtry}
+
+The hyperparameter that controls the split-variable randomization feature of random forests is often referred to as $m_{try}$ and it helps to balance low tree correlation with reasonable predictive strength. With regression problems the default value is often $m_{try} = \frac{p}{3}$ and for classification $m_{try} = \sqrt{p}$. However, when there are fewer relevant predictors (e.g., noisy data) a higher value of $m_{try}$ tends to perform better because it makes it more likely to select those features with the strongest signal. When there are many relevant predictors, a lower $m_{try}$ might perform better.
+
+```{block, type='tip'}
+Start with five evenly spaced values of $m_{try}$ across the range 2--$p$ centered at the recommended default as illustrated below. For the Ames data, an mtry value slightly lower (21) than the default (26) improves performance.
+```
+
+```{r tuning-mtry, echo=FALSE, fig.cap="For the Ames data, an mtry value in the low to mid 20s improves performance.", fig.height=3.5, cache=TRUE}
+tuning_grid <- expand.grid(
+  trees = seq(10, 1000, by = 20),
+  mtry  = floor(c(seq(2, 80, length.out = 5), 26)),
+  rmse  = NA
+)
+for(i in seq_len(nrow(tuning_grid))) {
+  fit <- ranger(
+  formula    = Sale_Price ~ ., 
+  data       = ames_train, 
+  num.trees  = tuning_grid$trees[i],
+  mtry       = tuning_grid$mtry[i],
+  respect.unordered.factors = 'order',
+  verbose    = FALSE,
+  seed       = 123
+)
+  
+  tuning_grid$rmse[i] <- sqrt(fit$prediction.error)
+  
+}
+labels <- tuning_grid %>%
+  filter(trees == 990) %>%
+  mutate(mtry = as.factor(mtry))
+tuning_grid %>%
+  mutate(mtry = as.factor(mtry)) %>%
+  ggplot(aes(trees, rmse, color = mtry)) +
+  geom_line(size = 1, show.legend = FALSE) +
+  ggrepel::geom_text_repel(data = labels, aes(trees, rmse, label = mtry), nudge_x = 50, show.legend = FALSE) +
+  ylab("OOB Error (RMSE)") +
+  xlab("Number of trees")
+```
+
+### Tree complexity
+
+Random forests are built on individual decision trees; consequently, most random forest implementations have one or more hyperparameters that allow us to control the depth and complexity of the individual trees.  This will often include hyperparameters such as node size, max depth, max number of terminal nodes, or the required node size to allow additional splits. Node size is probably the most common hyperparameter to control tree complexity and most implementations use the default values of one for classification and five for regression as these values tend to produce good results [@diaz2006gene; @goldstein2011random]. However, @segal2004machine showed that if your data has many noisy predictors and higher $m_{try}$ values are performing best, then performance may improve by increasing node size (i.e., decreasing tree depth and complexity). Moreover, if computation time is a concern then you can often decrease run time substantially by increasing the node size and have only marginal impacts to your error estimate as illustrated below.
+
+```{block, type='tip'}
+When adjusting node size start with three values between 1--10 and adjust depending on impact to accuracy and run time. Increasing node size to reduce tree complexity will often have a larger impact on computation speed (right) than on your error estimate.
+```
+
+```{r tuning-node-size, echo=FALSE, fig.cap="Increasing node size to reduce tree complexity will often have a larger impact on computation speed (right) than on your error estimate.", fig.width=10, fig.height=3.5, message=FALSE, warning=FALSE, cache=TRUE}
+tuning_grid <- expand.grid(
+  min.node.size = 1:20,
+  run_time  = NA,
+  rmse = NA
+)
+
+for(i in seq_len(nrow(tuning_grid))) {
+  fit_time <- system.time({
+    fit <- ranger(
+    formula    = Sale_Price ~ ., 
+    data       = ames_train, 
+    num.trees  = 1000,
+    mtry       = 26,
+    min.node.size = tuning_grid$min.node.size[i],
+    respect.unordered.factors = 'order',
+    verbose    = FALSE,
+    seed       = 123
+  )
+})
+  
+  tuning_grid$run_time[i] <- fit_time[[3]]
+  tuning_grid$rmse[i] <- sqrt(fit$prediction.error)
+  
+}
+
+min_node_size <- tuning_grid %>% 
+  mutate(
+    error_first = first(rmse),
+    runtime_first = first(run_time),
+    `Error Growth` = (rmse / error_first) - 1,
+    `Run Time Reduction` = (run_time / runtime_first) - 1
+    )
+
+p1 <-  ggplot(min_node_size, aes(min.node.size, `Error Growth`)) +
+  geom_smooth(size = 1, se = FALSE, color = "black") +
+  scale_y_continuous("Percent growth in error estimate", labels = scales::percent) +
+  xlab("Minimum node size") +
+  ggtitle("A) Impact to error estimate")
+
+p2 <-  ggplot(min_node_size, aes(min.node.size, `Run Time Reduction`)) +
+  geom_smooth(size = 1, se = FALSE, color = "black") +
+  scale_y_continuous("Reduction in run time", labels = scales::percent) +
+  xlab("Minimum node size") +
+  ggtitle("B) Impact to run time")
+
+gridExtra::grid.arrange(p1, p2, nrow = 1)
+```
+
+### Others
+
+There are many other hyperparameters within random forest models; however, the above mentioned ones are the most common and, often, most influential in the performance of our model. For more discussion around random forest hyperparameters see @probst2019hyperparameters.
 
 ## Tuning
 
-There are two important tuning parameters associated with MARS models: the maximum degree of interactions and the number of terms retained in the final model. We need to perform a grid search to identify the optimal combination of these hyperparameters that minimize prediction error (the above pruning process was based only on an approximation of CV model performance on the training data rather than an exact _k_-fold CV process). As in the previous lesson, we'll perform a CV grid search to identify the optimal hyperparameter mix.  Below, we set up a grid that assesses different combinations of interaction complexity and the number of terms to retain in the final model.
+The following performs a grid search over the `mtry` (number of features to randomly use for a given tree) and `min_n` (controls tree depth) hyperparameters. Notice how we don't actually tune the `trees` parameter. Rather, setting this to a value greater than the number of features $\times$ 10 is sufficient. Since we have 80 features we set it to at least, if not greater than $80 \times 10 = 800$.
 
 ```{block, type='warning'}
-Rarely is there any benefit in assessing greater than 3-rd degree interactions. Also, realize that tuning MARS models can become computationally intense. Its often beneficial to start with 10 evenly spaced values for the maximum terms and then you can always zoom in to a region once you find an approximate optimal solution.
+The following grid search results in a search of 25 different hyperparameter combinations, which results in a grid search time of about 14 minutes!
 ```
 
-
-In R, our hyperparameters are `num_terms` (number of terms retained in the model) and `prod_degrees` (maximum degree of interaction allowed). Note that in R we can use `num_terms()` and `prod_degree()` from the dials package to create a tuning grid. By default `prod_degree()` will use values of 1 and 2 (no interactions and 2 degree interactions).
-
-Our results show that our top 5 performing models all include 2 degree interactions and between 37-49 total terms ("knots"). 
-
-```{r, cache=TRUE}
-# create MARS model object
-mars_mod <- mars(mode = "regression", num_terms = tune(), prod_degree = tune())
-
-# create k-fold cross validation object
-set.seed(123)
-folds <- vfold_cv(ames_train, v = 5)
-
-# create our model recipe
-model_recipe <- recipe(Sale_Price ~ ., data = ames_train)
-
-# create a hyper parameter tuning grid
-hyper_grid <- grid_regular(
- num_terms(range = c(1, 100)), 
- prod_degree(),
- levels = 50
- )
-
-# train our model across the hyper parameter grid
-results <- tune_grid(mars_mod, model_recipe, resamples = folds, grid = hyper_grid)
-
-# get best results
-show_best(results, metric = "rmse")
+```{block, type='note'}
+Also, note the `importance = "impurity"` code we added to `set_engine()`. We'll discuss why we add this shortly.
 ```
 
 ```{r}
-autoplot(results)
+# create model recipe with all features
+model_recipe <- recipe(
+    Sale_Price ~ ., 
+    data = ames_train
+  )
+
+# create random forest model object with tuning option
+rf_mod <- rand_forest(
+  mode = "regression", 
+  trees = 1000,
+  mtry = tune(),
+  min_n = tune()
+  ) %>%
+  set_engine("ranger", importance = "permutation")
+
+# create the hyperparameter grid
+hyper_grid <- grid_regular(
+   mtry(range = c(2, 80)),
+   min_n(range = c(1, 20)),        
+   levels = 5
+   )
+
+# train our model across the hyper parameter grid
+set.seed(123)
+results <- tune_grid(rf_mod, model_recipe, resamples = kfold, grid = hyper_grid)
+
+
+# model results
+show_best(results, metric = "rmse")
 ```
 
 ### Knowledge check
 
 ```{block, type='todo'}
-Using the `boston.csv` dataset apply a MARS model that uses all possible predictor variables and tune for the number of terms and interactions.
+Using the `boston.csv` dataset:
 
-- Use a 5-fold cross validation procedure to tune your model.
-- For number of terms used (`num_terms`) assess values between 1-50.
-- For possible interaction degrees use the default `prod_degree()`.
-- Assess a total of 10 values from each parameter (`levels = 10`).
+Apply a random forest model where `cmedv` is the response variable and use all possible predictor variables. Use a 5-fold cross validation procedure and tune `mtry`, `min_n`, and `trees`. Assess 3 levels of each hyperparameter ranging from:
 
-Which model(s) provide the lowest cross validated RMSE? What hyperparameter values provide these optimal results?
+- `trees`: use a range from 50-500
+- `mtry`: use a range from 2-15
+- `min_n`: use a range 1-10
+
+Which combination of hyperparameters perform best. What is the lowest cross-validated RMSE and how does this compare to previous models on the boston data?
 ```
 
 ## Feature interpretation
 
-MARS models use a backwards elimination feature selection routine that looks at reductions in the GCV estimate of error as each predictor is added to the model. This total reduction can be used as the variable importance measure (`"gcv"`). Since MARS will automatically include and exclude terms during the pruning process, it essentially performs automated feature selection. If a predictor was never used in any of the MARS basis functions in the final model (after pruning), it has an importance value of zero.   Alternatively, you can also monitor the change in the residual sums of squares (RSS) as terms are added (`"rss"`); however, you will often see very little difference between these methods. The following examples extract the feature importance values based on RSS.
+Computing feature importance and feature effects for random forests follow the same procedure as discussed in the bagging module. For each tree in our random forest, we compute the sum of the reduction of the loss function across all splits for a given predictor variable. We then aggregate this measure across all trees for each feature. The features with the largest average decrease in SSE (for regression) are considered most important.
 
-The below shows that our most influential feature `Gr_Liv_Area` followed by `Year_Built`, `Total_Bsmt_SF`, `Overall_QualExcellent`, etc. 
-
-```{r}
-best_hyperparameters <- select_best(results, metric = "rmse")
-
-final_wf <- workflow() %>%
-   add_model(mars_mod) %>%
-   add_formula(Sale_Price ~ .) %>%
-   finalize_workflow(best_hyperparameters)
-
-# plot top 20 influential variables
-final_wf %>%
-   fit(data = ames_train) %>% 
-   extract_fit_parsnip() %>%
-   vip(20, type = "rss")
+```{block, type = "note"}
+This is called the "impurity" method for computing feature importance. And to get this measure for our random forests we need to add `importance = "impurity"` to `set_engine()` as we did in the last section.
 ```
 
-Since our relationship between our response variable and the predictor variables are now non-linear, it becomes helpful to visualize the relationship between the most influential feature(s) and the response variable to see how they relate. We can do that with ***partial dependence plots*** (PDPs). PDPs plot the change in the average predicted value of our model ($\hat y$) as specified feature(s) vary over their marginal distribution. 
-
-We can then use the [`pdp`](https://bgreenwell.github.io/pdp/index.html) package to extract the partial dependence values in order to plot the relationship between predicted `Sale_Price` and `Gr_Liv_Area`. Don't get too hung up in the code here. But you can see that based on our PDP, as homes exceed 3,200ish square feet we see a steepening increase in the relationship. 
 
 ```{r}
+# get optimal hyperparameters
+best_hyperparameters <- select_best(results, metric = "rmse")
+
+# create final workflow object
+final_rf_wf <- workflow() %>%
+   add_recipe(model_recipe) %>%
+   add_model(rf_mod) %>%
+   finalize_workflow(best_hyperparameters)
+
+# fit final workflow object
+final_fit <- final_rf_wf %>%
+   fit(data = ames_train)
+
+# plot feature importance
+final_fit %>%
+   extract_fit_parsnip() %>%
+   vip(num_features = 20)
+```
+
+We can then plot the partial dependence of the most influential feature to see how it influences the predicted values. We see that as overall quality increase we see a significant increase in the predicted sale price.
+
+```{r cache=TRUE, fig.width=10, fig.height=4.5}
 # prediction function
 pdp_pred_fun <- function(object, newdata) {
-  mean(predict(object, newdata, type = "numeric")$.pred)
+   predict(object, newdata, type = "numeric")$.pred
 }
 
 # use the pdp package to extract partial dependence predictions
 # and then plot
-final_wf %>%
-   fit(data = ames_train) %>%
-  pdp::partial(
-   pred.var = "Gr_Liv_Area", 
-   pred.fun = pdp_pred_fun,
-   grid.resolution = 10, 
-   train = ames_train
-  ) %>%
-  ggplot(aes(Gr_Liv_Area, yhat)) +
-  geom_line() +
-  scale_y_continuous(labels = scales::dollar)
+final_fit %>%
+   pdp::partial(
+     pred.var = "Overall_Qual", 
+     pred.fun = pdp_pred_fun,
+     grid.resolution = 10, 
+     train = ames_train
+   ) %>%
+  ggplot(aes(Overall_Qual, yhat)) +
+    geom_boxplot() +
+    scale_y_continuous(labels = scales::dollar)
 ```
 
+Now let's plot the PDP for the `Gr_Liv_Area` and see how that variable relates to the predicted sale price.
+
+```{r cache=TRUE, fig.width=9, fig.height=4.5}
+# prediction function
+pdp_pred_fun <- function(object, newdata) {
+   mean(predict(object, newdata, type = "numeric")$.pred)
+}
+
+# use the pdp package to extract partial dependence predictions
+# and then plot
+final_fit %>%
+   pdp::partial(
+     pred.var = "Gr_Liv_Area", 
+     pred.fun = pdp_pred_fun,
+     grid.resolution = 10, 
+     train = ames_train
+   ) %>%
+   autoplot() +
+   scale_y_continuous(labels = scales::dollar)
+```
+
+### Knowledge check
+
+```{block, type='todo'}
+Using the `boston.csv` dataset and the model from the previous Knowledge check that performed best...
+
+- Plot the top 10 most influential features.
+- Create and explain a PDP plot of the most influential feature.
+```
 
 ## Final thoughts
 
-There are several advantages to MARS.  First, MARS naturally handles mixed types of predictors (quantitative and qualitative). MARS considers all possible binary partitions of the categories for a qualitative predictor into two groups.^[This is very similar to CART-like decision trees which you'll be exposed to in a later module.] Each group then generates a pair of piecewise indicator functions for the two categories. MARS also requires minimal feature engineering (e.g., feature scaling) and performs automated feature selection. For example, since MARS scans each predictor to identify a split that improves predictive accuracy, non-informative features will not be chosen. Furthermore, highly correlated predictors do not impede predictive accuracy as much as they do with OLS models. 
-
-However, one disadvantage to MARS models is that they're typically slower to train.  Since the algorithm scans each value of each predictor for potential cutpoints, computational performance can suffer as both $n$ and $p$ increase.  Also, although correlated predictors do not necessarily impede model performance, they can make model interpretation difficult. When two features are nearly perfectly correlated, the algorithm will essentially select the first one it happens to come across when scanning the features.  Then, since it randomly selected one, the correlated feature will likely not be included as it adds no additional explanatory power.
+Random forests provide a very powerful out-of-the-box algorithm that often has great predictive accuracy. They come with all the benefits of decision trees (with the exception of surrogate splits) and bagging but greatly reduce instability and between-tree correlation. And due to the added split variable selection attribute, random forests are also faster than bagging as they have a smaller feature search space at each tree split. However, random forests will still suffer from slow computational speed as your data sets get larger but, similar to bagging, the algorithm is built upon independent steps, and most modern implementations allow for parallelization to improve training time.
 
 ## Exercises
 
@@ -388,13 +429,9 @@ However, one disadvantage to MARS models is that they're typically slower to tra
 Using the same `kernlab::spam` data we saw in the [section 12.10](https://bradleyboehmke.github.io/uc-bana-4080/lesson-4b-regularized-regression.html#classification-problems-1)...
 
 1. Split the data into 70-30 training-test sets.
-2. Apply a MARS classification model where `type` is our response variable and use all possible predictor variables. 
-   - Use a 5-fold cross-validation procedure.
-   - Tune number of terms used (`num_terms`) with values ranging 1-100.
-   - Tune number of interaction degrees with the default `prod_degree()` values.
-   - Assess a total of 50 values from each parameter (`levels = 50`).
-3. Which model(s) have the highest AUC (`roc_auc`) scores? 
-4. What hyperparameter values provide these optimal results?
-5. Use the hyperparameter values that provide the best results to finalize your workflow and and identify the top 20 most influential predictors.
-6. __Bonus__: See if you can create a PDP plot for the #1 most influential variable. What does the relationship between this feature and the response variable look like?
+2. Apply a default random forest model modeling the `type` response variable as a function of all available features.
+3. Now tune the `trees`, `mtry`, and `min_n` hyperparameters to find the best performing combination of hyperparameters.
+4. How does the model performance compare to the decision tree model and bagged decision tree model applied in the previous two lesson exercises?
+5. Which 10 features are considered most influential? Are these the same features that have been influential in previous models?
+6. Create partial dependence plots for the top two most influential features. Explain the relationship between the feature and the predicted values.
 ```
