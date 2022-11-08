@@ -50,9 +50,9 @@ library(pdp)         # for variable relationships
 ```{r ames-train-6c}
 set.seed(123)
 ames <- AmesHousing::make_ames()
-split  <- rsample::initial_split(ames, prop = 0.7, strata = "Sale_Price")
-ames_train  <- rsample::training(split)
-ames_test   <- rsample::testing(split)
+split  <- initial_split(ames, prop = 0.7, strata = "Sale_Price")
+ames_train  <- training(split)
+ames_test   <- testing(split)
 ```
 
 ## Extending bagging
@@ -103,8 +103,7 @@ model_recipe <- recipe(
     data = ames_train
   )
 
-# create bagged CART model object and
-# start with 5 bagged trees
+# create random forest model object
 rf_mod <- rand_forest(mode = "regression") %>%
   set_engine("ranger")
 
@@ -293,12 +292,6 @@ Also, note the `importance = "impurity"` code we added to `set_engine()`. We'll 
 ```
 
 ```{r}
-# create model recipe with all features
-model_recipe <- recipe(
-    Sale_Price ~ ., 
-    data = ames_train
-  )
-
 # create random forest model object with tuning option
 rf_mod <- rand_forest(
   mode = "regression", 
@@ -318,7 +311,6 @@ hyper_grid <- grid_regular(
 # train our model across the hyper parameter grid
 set.seed(123)
 results <- tune_grid(rf_mod, model_recipe, resamples = kfold, grid = hyper_grid)
-
 
 # model results
 show_best(results, metric = "rmse")

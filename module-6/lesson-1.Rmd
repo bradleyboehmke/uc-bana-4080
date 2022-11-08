@@ -49,9 +49,9 @@ library(pdp)         # for variable relationships
 ```{r}
 set.seed(123)
 ames <- AmesHousing::make_ames()
-split  <- rsample::initial_split(ames, prop = 0.7, strata = "Sale_Price")
-ames_train  <- rsample::training(split)
-ames_test   <- rsample::testing(split)
+split  <- initial_split(ames, prop = 0.7, strata = "Sale_Price")
+ames_train  <- training(split)
+ames_test   <- testing(split)
 ```
 
 
@@ -65,7 +65,7 @@ What results is an inverted tree-like structure such as that in the below figure
 knitr::include_graphics("images/exemplar-decision-tree.png")
 ```
 
-We refer to the first subgroup at the top of the tree as the _root node_ (this node contains all of the training data). The final subgroups at the bottom of the tree are called the _terminal nodes_ or _leaves_. Every subgroup in between is referred to as an internal node. The connections between nodes are called _branches_. 
+We refer to the first subgroup at the top of the tree as the _root node_ (this node contains all of the training data). The root node shows the first feature that best splits the data into two groups. The final subgroups at the bottom of the tree are called the _terminal nodes_ or _leaves_. These terminal nodes represent predicted values once you have traversed a particular path down the tree. Every subgroup in between is referred to as an internal node. The connections between nodes are called _branches_. 
 
 ```{r decision-tree-terminology, echo=FALSE, fig.cap="Terminology of a decision tree.", out.height="80%", out.width="80%"}
 knitr::include_graphics("images/decision-tree-terminology.png")
@@ -263,7 +263,7 @@ To illustrate some of the concepts we've mentioned we'll start by implementing m
 In R we use the `decision_tree()` model and we'll use the `rpart` package as our model engine. In this example we will not set a specific depth of our tree; rather, `rpart` automatically builds a fully deep tree and then prunes it to attempt to find an optimal tree depth.
 
 ```{r}
-# Step 1: create ridge model object
+# Step 1: create decision tree model object
 dt_mod <- decision_tree(mode = "regression") %>% set_engine("rpart")
 
 # Step 2: create model recipe
@@ -340,17 +340,11 @@ Using the `boston.csv` dataset:
 
 As previously mentioned, the tree depth is the primary factor that impacts performance. We can control tree depth via a few different parameters:
 
-1. Max depth: we can explicitly state the maximum depth a tree can be grown.
-2. Minimum observations for a split: The minimum number of samples required to split an internal node. This limits a tree from continuing to grow as the number of observations in a give node becomes smaller.
-3. Cost complexity parameter: acts as a regularization mechanism by penalizing the objective function.
+1. __Max depth__: we can explicitly state the maximum depth a tree can be grown.
+2. __Minimum observations for a split__: The minimum number of samples required to split an internal node. This limits a tree from continuing to grow as the number of observations in a give node becomes smaller.
+3. __Cost complexity parameter__: acts as a regularization mechanism by penalizing the objective function.
 
 There is not one best approach to use and often different combinations of these parameter settings improves model performance. The following will demonstrate a small grid search across 3 different values for each of these parameters ($3^3 = 27$ total setting combinations). 
-
-We see the optimal model decreases our average CV RMSE into the mid \$30K range.
-
-```{block, type='tip'}
-It is common to run additional grid searches after the first grid search. These additional grid searches uses the first grid search to find parameter values that perform well and then continue to analyze additional ranges around these values.
-```
 
 ```{r}
 # create model object with tuning options
@@ -369,6 +363,17 @@ hyper_grid <- grid_regular(
   min_n()
  )
 
+# hyperparameter value combinations to be assessed
+hyper_grid
+```
+
+We can now perform our grid search using `tune_grid()`. We see the optimal model decreases our average CV RMSE into the mid \$30K range.
+
+```{block, type='tip'}
+It is common to run additional grid searches after the first grid search. These additional grid searches uses the first grid search to find parameter values that perform well and then continue to analyze additional ranges around these values.
+```
+
+```{r}
 # train our model across the hyper parameter grid
 set.seed(123)
 results <- tune_grid(dt_mod, full_model_recipe, resamples = kfold, grid = hyper_grid)
@@ -381,10 +386,11 @@ show_best(results, metric = "rmse", n = 10)
 
 ```{block, type='todo'}
 Using the `boston.csv` dataset apply a decision tree model that models `cmedv` as a function of all possible predictor variables and tune the following hyperparameters with a 5-fold cross validation procedure:
-   - Tune the cost complexity values with the default `cost_complexity()` values.
-   - Tune the depth of the tree with the default `tree_depth()` values.
-   - Tune the minimum number of observations in a node with the default `min_n()` values.
-   - Assess a total of 5 values from each parameter (`levels = 5`).
+
+- Tune the cost complexity values with the default `cost_complexity()` values.
+- Tune the depth of the tree with the default `tree_depth()` values.
+- Tune the minimum number of observations in a node with the default `min_n()` values.
+- Assess a total of 5 values from each parameter (`levels = 5`).
    
 Which model(s) provide the lowest cross validated RMSE? What hyperparameter values provide these optimal results?
 ```
@@ -457,8 +463,9 @@ final_fit %>%
 
 ```{block, type='todo'}
 Using the `boston.csv` dataset and the model from the previous Knowledge check that performed best...
-   - Plot the top 10 most influential features.
-   - Create and explain a PDP plot of the most influential feature.
+
+- Plot the top 10 most influential features.
+- Create and explain a PDP plot of the most influential feature.
 ```
 
 ## Final thoughts

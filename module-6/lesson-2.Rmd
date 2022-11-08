@@ -50,9 +50,9 @@ library(pdp)         # for variable relationships
 ```{r ames-train}
 set.seed(123)
 ames <- AmesHousing::make_ames()
-split  <- rsample::initial_split(ames, prop = 0.7, strata = "Sale_Price")
-ames_train  <- rsample::training(split)
-ames_test   <- rsample::testing(split)
+split  <- initial_split(ames, prop = 0.7, strata = "Sale_Price")
+ames_train  <- training(split)
+ames_test   <- testing(split)
 ```
 
 ## Why and when bagging works
@@ -165,7 +165,7 @@ A benefit to creating ensembles via bagging, which is based on resampling with r
 Think of the OOB estimate of generalization performance as an unstructured, but free CV statistic.
 ```
 
-## Fitting a decision tree model
+## Fitting a bagged decision tree model
 
 Recall in the decision tree module that our optimally tuned single decision tree model was obtaining a mid-\$30K RMSE. In this first implementation we'll perform the same process; however, instead of a single decision tree we'll use bagging to create and aggregate performance across **5** bagged trees.  
 
@@ -224,12 +224,6 @@ The primary concern is compute efficiency, we want enough trees to reach an opti
 In this example we use a hyperparameter grid to assess 5, 25, 50, 100, and 200 trees. We see an initial decrease but as we start using 50+ trees we only see marginal changes in our RMSE, suggesting we have likely reached enough trees to minimize the RMSE and any additional differences are likely due to the standard error that occurs during the bootstrapping process.
 
 ```{r cache=TRUE}
-# create model recipe with all features
-model_recipe <- recipe(
-    Sale_Price ~ ., 
-    data = ames_train
-  )
-
 # create bagged CART model object with
 # tuning option set for number of bagged trees
 tree_mod <- bag_tree() %>%
@@ -239,7 +233,7 @@ tree_mod <- bag_tree() %>%
 # create the hyperparameter grid
 hyper_grid <- expand.grid(times = c(5, 25, 50, 100, 200))
 
-# train our model across the hyper parameter grid
+# train our model across the hyperparameter grid
 set.seed(123)
 results <- tune_grid(tree_mod, model_recipe, resamples = kfold, grid = hyper_grid)
 
