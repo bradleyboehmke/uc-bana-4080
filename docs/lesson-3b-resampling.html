@@ -488,7 +488,7 @@ div.csl-indent {
 <li class="chapter" data-level="18.1" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#learning-objectives-18"><i class="fa fa-check"></i><b>18.1</b> Learning objectives</a></li>
 <li class="chapter" data-level="18.2" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#prerequisites-10"><i class="fa fa-check"></i><b>18.2</b> Prerequisites</a></li>
 <li class="chapter" data-level="18.3" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#why-and-when-bagging-works"><i class="fa fa-check"></i><b>18.3</b> Why and when bagging works</a></li>
-<li class="chapter" data-level="18.4" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#fitting-a-decision-tree-model"><i class="fa fa-check"></i><b>18.4</b> Fitting a decision tree model</a>
+<li class="chapter" data-level="18.4" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#fitting-a-bagged-decision-tree-model"><i class="fa fa-check"></i><b>18.4</b> Fitting a bagged decision tree model</a>
 <ul>
 <li class="chapter" data-level="18.4.1" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#knowledge-check-30"><i class="fa fa-check"></i><b>18.4.1</b> Knowledge check</a></li>
 </ul></li>
@@ -675,26 +675,27 @@ test set will decrease.
 <p>We can then get our average 10-fold cross validation error with <code>collect_metrics()</code>:</p>
 <div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="lesson-3b-resampling.html#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv)</span>
 <span id="cb99-2"><a href="lesson-3b-resampling.html#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb99-3"><a href="lesson-3b-resampling.html#cb99-3" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n   std_err .config      </span></span>
-<span id="cb99-4"><a href="lesson-3b-resampling.html#cb99-4" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;        </span></span>
-<span id="cb99-5"><a href="lesson-3b-resampling.html#cb99-5" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard   32547.       10 2455.     Preprocessor…</span></span>
-<span id="cb99-6"><a href="lesson-3b-resampling.html#cb99-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.839    10    0.0237 Preprocessor…</span></span></code></pre></div>
+<span id="cb99-3"><a href="lesson-3b-resampling.html#cb99-3" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
+<span id="cb99-4"><a href="lesson-3b-resampling.html#cb99-4" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
+<span id="cb99-5"><a href="lesson-3b-resampling.html#cb99-5" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 3.25e+4    10 2.46e+3 Prepro…</span></span>
+<span id="cb99-6"><a href="lesson-3b-resampling.html#cb99-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 8.39e-1    10 2.37e-2 Prepro…</span></span>
+<span id="cb99-7"><a href="lesson-3b-resampling.html#cb99-7" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
 <p>If we want to see the model evaluation metric (i.e. RMSE) for each fold we just need to include <code>summarize = FALSE</code>.</p>
 <div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="lesson-3b-resampling.html#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv, <span class="at">summarize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb100-2"><a href="lesson-3b-resampling.html#cb100-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&#39;rmse&#39;</span>)</span>
 <span id="cb100-3"><a href="lesson-3b-resampling.html#cb100-3" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 10 × 5</span></span>
-<span id="cb100-4"><a href="lesson-3b-resampling.html#cb100-4" aria-hidden="true" tabindex="-1"></a><span class="do">##    id     .metric .estimator .estimate .config             </span></span>
-<span id="cb100-5"><a href="lesson-3b-resampling.html#cb100-5" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb100-6"><a href="lesson-3b-resampling.html#cb100-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 Fold01 rmse    standard      36485. Preprocessor1_Model1</span></span>
-<span id="cb100-7"><a href="lesson-3b-resampling.html#cb100-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 Fold02 rmse    standard      37722. Preprocessor1_Model1</span></span>
-<span id="cb100-8"><a href="lesson-3b-resampling.html#cb100-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 Fold03 rmse    standard      47136. Preprocessor1_Model1</span></span>
-<span id="cb100-9"><a href="lesson-3b-resampling.html#cb100-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 Fold04 rmse    standard      24794. Preprocessor1_Model1</span></span>
-<span id="cb100-10"><a href="lesson-3b-resampling.html#cb100-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 Fold05 rmse    standard      27203. Preprocessor1_Model1</span></span>
-<span id="cb100-11"><a href="lesson-3b-resampling.html#cb100-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 Fold06 rmse    standard      28096. Preprocessor1_Model1</span></span>
-<span id="cb100-12"><a href="lesson-3b-resampling.html#cb100-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 Fold07 rmse    standard      22781. Preprocessor1_Model1</span></span>
-<span id="cb100-13"><a href="lesson-3b-resampling.html#cb100-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 Fold08 rmse    standard      36901. Preprocessor1_Model1</span></span>
-<span id="cb100-14"><a href="lesson-3b-resampling.html#cb100-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 Fold09 rmse    standard      26510. Preprocessor1_Model1</span></span>
-<span id="cb100-15"><a href="lesson-3b-resampling.html#cb100-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 Fold10 rmse    standard      37841. Preprocessor1_Model1</span></span></code></pre></div>
+<span id="cb100-4"><a href="lesson-3b-resampling.html#cb100-4" aria-hidden="true" tabindex="-1"></a><span class="do">##    id     .metric .estimator .estimate .config </span></span>
+<span id="cb100-5"><a href="lesson-3b-resampling.html#cb100-5" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;   </span></span>
+<span id="cb100-6"><a href="lesson-3b-resampling.html#cb100-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 Fold01 rmse    standard      36485. Preproc…</span></span>
+<span id="cb100-7"><a href="lesson-3b-resampling.html#cb100-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 Fold02 rmse    standard      37722. Preproc…</span></span>
+<span id="cb100-8"><a href="lesson-3b-resampling.html#cb100-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 Fold03 rmse    standard      47136. Preproc…</span></span>
+<span id="cb100-9"><a href="lesson-3b-resampling.html#cb100-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 Fold04 rmse    standard      24794. Preproc…</span></span>
+<span id="cb100-10"><a href="lesson-3b-resampling.html#cb100-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 Fold05 rmse    standard      27203. Preproc…</span></span>
+<span id="cb100-11"><a href="lesson-3b-resampling.html#cb100-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 Fold06 rmse    standard      28096. Preproc…</span></span>
+<span id="cb100-12"><a href="lesson-3b-resampling.html#cb100-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 Fold07 rmse    standard      22781. Preproc…</span></span>
+<span id="cb100-13"><a href="lesson-3b-resampling.html#cb100-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 Fold08 rmse    standard      36901. Preproc…</span></span>
+<span id="cb100-14"><a href="lesson-3b-resampling.html#cb100-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 Fold09 rmse    standard      26510. Preproc…</span></span>
+<span id="cb100-15"><a href="lesson-3b-resampling.html#cb100-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 Fold10 rmse    standard      37841. Preproc…</span></span></code></pre></div>
 <p>If we compare these results to our previous generalization error based on the test set, we see some differences. We now see that our average generalization RMSE across the ten holdout sets is $32,547 and individual validation set RMSEs range from $24,794 - $47,136. This provides us a little more robust expectations around how our model will perform on future unseen data. And it actually shows us that our single test set RMSE may have been biased and too optimistic!</p>
 <p>One other item to note - often, people assume that when creating the <em>k</em>-folds that R just selects the first <em>n</em> observations to be the first fold, the next <em>n</em> observations to be in the second fold, etc. However, this is not the case. Rather, R will randomly assign observations to each fold but will also ensure that each observation is only assigned to a single fold for validation purposes. The following illustrates a 10-fold cross validation on a dataset with 32 observations. Each observation is used once for validation and nine times for training.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:unnamed-chunk-171"></span>
@@ -781,10 +782,11 @@ Figure 9.6: Bootstrap sampling (left) versus 10-fold cross validation (right) on
 <span id="cb103-5"><a href="lesson-3b-resampling.html#cb103-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb103-6"><a href="lesson-3b-resampling.html#cb103-6" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_bs)</span>
 <span id="cb103-7"><a href="lesson-3b-resampling.html#cb103-7" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb103-8"><a href="lesson-3b-resampling.html#cb103-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n   std_err .config      </span></span>
-<span id="cb103-9"><a href="lesson-3b-resampling.html#cb103-9" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;        </span></span>
-<span id="cb103-10"><a href="lesson-3b-resampling.html#cb103-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard   38765.        9 1885.     Preprocessor…</span></span>
-<span id="cb103-11"><a href="lesson-3b-resampling.html#cb103-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.780     9    0.0157 Preprocessor…</span></span></code></pre></div>
+<span id="cb103-8"><a href="lesson-3b-resampling.html#cb103-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
+<span id="cb103-9"><a href="lesson-3b-resampling.html#cb103-9" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
+<span id="cb103-10"><a href="lesson-3b-resampling.html#cb103-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 3.88e+4     9 1.88e+3 Prepro…</span></span>
+<span id="cb103-11"><a href="lesson-3b-resampling.html#cb103-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 7.80e-1     9 1.57e-2 Prepro…</span></span>
+<span id="cb103-12"><a href="lesson-3b-resampling.html#cb103-12" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
 <p>Bootstrapping is, typically, more of an internal resampling procedure that is naturally built into certain ML algorithms. This will become more apparent in later modules where we discuss bagging and random forests.</p>
 <div id="knowledge-check-16" class="section level3 hasAnchor" number="9.5.1">
 <h3><span class="header-section-number">9.5.1</span> Knowledge check<a href="lesson-3b-resampling.html#knowledge-check-16" class="anchor-section" aria-label="Anchor link to header"></a></h3>

@@ -488,7 +488,7 @@ div.csl-indent {
 <li class="chapter" data-level="18.1" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#learning-objectives-18"><i class="fa fa-check"></i><b>18.1</b> Learning objectives</a></li>
 <li class="chapter" data-level="18.2" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#prerequisites-10"><i class="fa fa-check"></i><b>18.2</b> Prerequisites</a></li>
 <li class="chapter" data-level="18.3" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#why-and-when-bagging-works"><i class="fa fa-check"></i><b>18.3</b> Why and when bagging works</a></li>
-<li class="chapter" data-level="18.4" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#fitting-a-decision-tree-model"><i class="fa fa-check"></i><b>18.4</b> Fitting a decision tree model</a>
+<li class="chapter" data-level="18.4" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#fitting-a-bagged-decision-tree-model"><i class="fa fa-check"></i><b>18.4</b> Fitting a bagged decision tree model</a>
 <ul>
 <li class="chapter" data-level="18.4.1" data-path="lesson-6b-bagging.html"><a href="lesson-6b-bagging.html#knowledge-check-30"><i class="fa fa-check"></i><b>18.4.1</b> Knowledge check</a></li>
 </ul></li>
@@ -711,9 +711,10 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb138-22"><a href="lesson-5a-hyperparameter-tuning.html#cb138-22" aria-hidden="true" tabindex="-1"></a>   <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb138-23"><a href="lesson-5a-hyperparameter-tuning.html#cb138-23" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&#39;rmse&#39;</span>)</span>
 <span id="cb138-24"><a href="lesson-5a-hyperparameter-tuning.html#cb138-24" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
-<span id="cb138-25"><a href="lesson-5a-hyperparameter-tuning.html#cb138-25" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator   mean     n std_err .config           </span></span>
-<span id="cb138-26"><a href="lesson-5a-hyperparameter-tuning.html#cb138-26" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;             </span></span>
-<span id="cb138-27"><a href="lesson-5a-hyperparameter-tuning.html#cb138-27" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard   31373.     5   3012. Preprocessor1_Mod…</span></span></code></pre></div>
+<span id="cb138-25"><a href="lesson-5a-hyperparameter-tuning.html#cb138-25" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estim…¹   mean     n std_err .config</span></span>
+<span id="cb138-26"><a href="lesson-5a-hyperparameter-tuning.html#cb138-26" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
+<span id="cb138-27"><a href="lesson-5a-hyperparameter-tuning.html#cb138-27" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard 31373.     5   3012. Prepro…</span></span>
+<span id="cb138-28"><a href="lesson-5a-hyperparameter-tuning.html#cb138-28" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
 <p>We then manually iterated through different values of <code>mixture</code> and <code>penalty</code> to try find the optimal setting. Which is less than efficient.</p>
 <div id="tuning" class="section level3 hasAnchor" number="14.5.1">
 <h3><span class="header-section-number">14.5.1</span> Tuning<a href="lesson-5a-hyperparameter-tuning.html#tuning" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -751,35 +752,37 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb142-9"><a href="lesson-5a-hyperparameter-tuning.html#cb142-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb142-10"><a href="lesson-5a-hyperparameter-tuning.html#cb142-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb142-11"><a href="lesson-5a-hyperparameter-tuning.html#cb142-11" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 25 × 8</span></span>
-<span id="cb142-12"><a href="lesson-5a-hyperparameter-tuning.html#cb142-12" aria-hidden="true" tabindex="-1"></a><span class="do">##         penalty mixture .metric .esti…¹   mean     n std_err</span></span>
-<span id="cb142-13"><a href="lesson-5a-hyperparameter-tuning.html#cb142-13" aria-hidden="true" tabindex="-1"></a><span class="do">##           &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb142-14"><a href="lesson-5a-hyperparameter-tuning.html#cb142-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 0.0000000001    0    rmse    standa… 31373.     5   3012.</span></span>
-<span id="cb142-15"><a href="lesson-5a-hyperparameter-tuning.html#cb142-15" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 0.0000000316    0    rmse    standa… 31373.     5   3012.</span></span>
-<span id="cb142-16"><a href="lesson-5a-hyperparameter-tuning.html#cb142-16" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 0.00001         0    rmse    standa… 31373.     5   3012.</span></span>
-<span id="cb142-17"><a href="lesson-5a-hyperparameter-tuning.html#cb142-17" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 0.00316         0    rmse    standa… 31373.     5   3012.</span></span>
-<span id="cb142-18"><a href="lesson-5a-hyperparameter-tuning.html#cb142-18" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 1               0    rmse    standa… 31373.     5   3012.</span></span>
-<span id="cb142-19"><a href="lesson-5a-hyperparameter-tuning.html#cb142-19" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 0.0000000001    0.25 rmse    standa… 37912.     5   4728.</span></span>
-<span id="cb142-20"><a href="lesson-5a-hyperparameter-tuning.html#cb142-20" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 0.0000000316    0.25 rmse    standa… 37912.     5   4728.</span></span>
-<span id="cb142-21"><a href="lesson-5a-hyperparameter-tuning.html#cb142-21" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 0.00001         0.25 rmse    standa… 37912.     5   4728.</span></span>
-<span id="cb142-22"><a href="lesson-5a-hyperparameter-tuning.html#cb142-22" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 0.00316         0.25 rmse    standa… 37912.     5   4728.</span></span>
-<span id="cb142-23"><a href="lesson-5a-hyperparameter-tuning.html#cb142-23" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 1               0.25 rmse    standa… 37912.     5   4728.</span></span>
-<span id="cb142-24"><a href="lesson-5a-hyperparameter-tuning.html#cb142-24" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 15 more rows, 1 more variable: .config &lt;chr&gt;, and</span></span>
-<span id="cb142-25"><a href="lesson-5a-hyperparameter-tuning.html#cb142-25" aria-hidden="true" tabindex="-1"></a><span class="do">## #   abbreviated variable name ¹​.estimator</span></span>
-<span id="cb142-26"><a href="lesson-5a-hyperparameter-tuning.html#cb142-26" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows, and `colnames()` to see all variable names</span></span></code></pre></div>
+<span id="cb142-12"><a href="lesson-5a-hyperparameter-tuning.html#cb142-12" aria-hidden="true" tabindex="-1"></a><span class="do">##         penalty mixture .metric .estim…¹   mean</span></span>
+<span id="cb142-13"><a href="lesson-5a-hyperparameter-tuning.html#cb142-13" aria-hidden="true" tabindex="-1"></a><span class="do">##           &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt;</span></span>
+<span id="cb142-14"><a href="lesson-5a-hyperparameter-tuning.html#cb142-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 0.0000000001    0    rmse    standard 31373.</span></span>
+<span id="cb142-15"><a href="lesson-5a-hyperparameter-tuning.html#cb142-15" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 0.0000000316    0    rmse    standard 31373.</span></span>
+<span id="cb142-16"><a href="lesson-5a-hyperparameter-tuning.html#cb142-16" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 0.00001         0    rmse    standard 31373.</span></span>
+<span id="cb142-17"><a href="lesson-5a-hyperparameter-tuning.html#cb142-17" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 0.00316         0    rmse    standard 31373.</span></span>
+<span id="cb142-18"><a href="lesson-5a-hyperparameter-tuning.html#cb142-18" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 1               0    rmse    standard 31373.</span></span>
+<span id="cb142-19"><a href="lesson-5a-hyperparameter-tuning.html#cb142-19" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 0.0000000001    0.25 rmse    standard 37912.</span></span>
+<span id="cb142-20"><a href="lesson-5a-hyperparameter-tuning.html#cb142-20" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 0.0000000316    0.25 rmse    standard 37912.</span></span>
+<span id="cb142-21"><a href="lesson-5a-hyperparameter-tuning.html#cb142-21" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 0.00001         0.25 rmse    standard 37912.</span></span>
+<span id="cb142-22"><a href="lesson-5a-hyperparameter-tuning.html#cb142-22" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 0.00316         0.25 rmse    standard 37912.</span></span>
+<span id="cb142-23"><a href="lesson-5a-hyperparameter-tuning.html#cb142-23" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 1               0.25 rmse    standard 37912.</span></span>
+<span id="cb142-24"><a href="lesson-5a-hyperparameter-tuning.html#cb142-24" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 15 more rows, 3 more variables:</span></span>
+<span id="cb142-25"><a href="lesson-5a-hyperparameter-tuning.html#cb142-25" aria-hidden="true" tabindex="-1"></a><span class="do">## #   n &lt;int&gt;, std_err &lt;dbl&gt;, .config &lt;chr&gt;, and</span></span>
+<span id="cb142-26"><a href="lesson-5a-hyperparameter-tuning.html#cb142-26" aria-hidden="true" tabindex="-1"></a><span class="do">## #   abbreviated variable name ¹​.estimator</span></span>
+<span id="cb142-27"><a href="lesson-5a-hyperparameter-tuning.html#cb142-27" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows, and `colnames()` to see all variable names</span></span></code></pre></div>
 <p>We can assess our best models with <code>show_best()</code>, which by default will show the top 5 performing models based on the desired metric. In this case we see that our top 5 models use the Ridge regularization (<code>mixture = 0</code>) and across all the penalties we get the same cross-validation RMSE (31,373).</p>
 <div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="lesson-5a-hyperparameter-tuning.html#cb143-1" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
 <span id="cb143-2"><a href="lesson-5a-hyperparameter-tuning.html#cb143-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb143-3"><a href="lesson-5a-hyperparameter-tuning.html#cb143-3" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 8</span></span>
-<span id="cb143-4"><a href="lesson-5a-hyperparameter-tuning.html#cb143-4" aria-hidden="true" tabindex="-1"></a><span class="do">##        penalty mixture .metric .estim…¹   mean     n std_err</span></span>
-<span id="cb143-5"><a href="lesson-5a-hyperparameter-tuning.html#cb143-5" aria-hidden="true" tabindex="-1"></a><span class="do">##          &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb143-6"><a href="lesson-5a-hyperparameter-tuning.html#cb143-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 0.0000000001       0 rmse    standard 31373.     5   3012.</span></span>
-<span id="cb143-7"><a href="lesson-5a-hyperparameter-tuning.html#cb143-7" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 0.0000000316       0 rmse    standard 31373.     5   3012.</span></span>
-<span id="cb143-8"><a href="lesson-5a-hyperparameter-tuning.html#cb143-8" aria-hidden="true" tabindex="-1"></a><span class="do">## 3 0.00001            0 rmse    standard 31373.     5   3012.</span></span>
-<span id="cb143-9"><a href="lesson-5a-hyperparameter-tuning.html#cb143-9" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 0.00316            0 rmse    standard 31373.     5   3012.</span></span>
-<span id="cb143-10"><a href="lesson-5a-hyperparameter-tuning.html#cb143-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 5 1                  0 rmse    standard 31373.     5   3012.</span></span>
-<span id="cb143-11"><a href="lesson-5a-hyperparameter-tuning.html#cb143-11" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 1 more variable: .config &lt;chr&gt;, and abbreviated</span></span>
-<span id="cb143-12"><a href="lesson-5a-hyperparameter-tuning.html#cb143-12" aria-hidden="true" tabindex="-1"></a><span class="do">## #   variable name ¹​.estimator</span></span>
-<span id="cb143-13"><a href="lesson-5a-hyperparameter-tuning.html#cb143-13" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `colnames()` to see all variable names</span></span></code></pre></div>
+<span id="cb143-4"><a href="lesson-5a-hyperparameter-tuning.html#cb143-4" aria-hidden="true" tabindex="-1"></a><span class="do">##    penalty mixture .metric .esti…¹   mean     n</span></span>
+<span id="cb143-5"><a href="lesson-5a-hyperparameter-tuning.html#cb143-5" aria-hidden="true" tabindex="-1"></a><span class="do">##      &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb143-6"><a href="lesson-5a-hyperparameter-tuning.html#cb143-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 1   e-10       0 rmse    standa… 31373.     5</span></span>
+<span id="cb143-7"><a href="lesson-5a-hyperparameter-tuning.html#cb143-7" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 3.16e- 8       0 rmse    standa… 31373.     5</span></span>
+<span id="cb143-8"><a href="lesson-5a-hyperparameter-tuning.html#cb143-8" aria-hidden="true" tabindex="-1"></a><span class="do">## 3 1   e- 5       0 rmse    standa… 31373.     5</span></span>
+<span id="cb143-9"><a href="lesson-5a-hyperparameter-tuning.html#cb143-9" aria-hidden="true" tabindex="-1"></a><span class="do">## 4 3.16e- 3       0 rmse    standa… 31373.     5</span></span>
+<span id="cb143-10"><a href="lesson-5a-hyperparameter-tuning.html#cb143-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 5 1   e+ 0       0 rmse    standa… 31373.     5</span></span>
+<span id="cb143-11"><a href="lesson-5a-hyperparameter-tuning.html#cb143-11" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 2 more variables: std_err &lt;dbl&gt;,</span></span>
+<span id="cb143-12"><a href="lesson-5a-hyperparameter-tuning.html#cb143-12" aria-hidden="true" tabindex="-1"></a><span class="do">## #   .config &lt;chr&gt;, and abbreviated variable</span></span>
+<span id="cb143-13"><a href="lesson-5a-hyperparameter-tuning.html#cb143-13" aria-hidden="true" tabindex="-1"></a><span class="do">## #   name ¹​.estimator</span></span>
+<span id="cb143-14"><a href="lesson-5a-hyperparameter-tuning.html#cb143-14" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `colnames()` to see all variable names</span></span></code></pre></div>
 <p>We can also use the <code>select_best()</code> function to pull out the single set of hyperparameter values for our best regularization model:</p>
 <div class="sourceCode" id="cb144"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb144-1"><a href="lesson-5a-hyperparameter-tuning.html#cb144-1" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
 <span id="cb144-2"><a href="lesson-5a-hyperparameter-tuning.html#cb144-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="st">&quot;rmse&quot;</span>)</span>
@@ -805,13 +808,16 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb146-6"><a href="lesson-5a-hyperparameter-tuning.html#cb146-6" aria-hidden="true" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
 <span id="cb146-7"><a href="lesson-5a-hyperparameter-tuning.html#cb146-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb146-8"><a href="lesson-5a-hyperparameter-tuning.html#cb146-8" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 7</span></span>
-<span id="cb146-9"><a href="lesson-5a-hyperparameter-tuning.html#cb146-9" aria-hidden="true" tabindex="-1"></a><span class="do">##    penalty .metric .estimator   mean     n std_err .config  </span></span>
-<span id="cb146-10"><a href="lesson-5a-hyperparameter-tuning.html#cb146-10" aria-hidden="true" tabindex="-1"></a><span class="do">##      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;    </span></span>
-<span id="cb146-11"><a href="lesson-5a-hyperparameter-tuning.html#cb146-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 27826.   rmse    standard   30633.     5   2503. Preproce…</span></span>
-<span id="cb146-12"><a href="lesson-5a-hyperparameter-tuning.html#cb146-12" aria-hidden="true" tabindex="-1"></a><span class="do">## 2  7743.   rmse    standard   31160.     5   2903. Preproce…</span></span>
-<span id="cb146-13"><a href="lesson-5a-hyperparameter-tuning.html#cb146-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 3     1    rmse    standard   31373.     5   3012. Preproce…</span></span>
-<span id="cb146-14"><a href="lesson-5a-hyperparameter-tuning.html#cb146-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 4     3.59 rmse    standard   31373.     5   3012. Preproce…</span></span>
-<span id="cb146-15"><a href="lesson-5a-hyperparameter-tuning.html#cb146-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 5    12.9  rmse    standard   31373.     5   3012. Preproce…</span></span></code></pre></div>
+<span id="cb146-9"><a href="lesson-5a-hyperparameter-tuning.html#cb146-9" aria-hidden="true" tabindex="-1"></a><span class="do">##    penalty .metric .esti…¹   mean     n std_err</span></span>
+<span id="cb146-10"><a href="lesson-5a-hyperparameter-tuning.html#cb146-10" aria-hidden="true" tabindex="-1"></a><span class="do">##      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb146-11"><a href="lesson-5a-hyperparameter-tuning.html#cb146-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 27826.   rmse    standa… 30633.     5   2503.</span></span>
+<span id="cb146-12"><a href="lesson-5a-hyperparameter-tuning.html#cb146-12" aria-hidden="true" tabindex="-1"></a><span class="do">## 2  7743.   rmse    standa… 31160.     5   2903.</span></span>
+<span id="cb146-13"><a href="lesson-5a-hyperparameter-tuning.html#cb146-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 3     1    rmse    standa… 31373.     5   3012.</span></span>
+<span id="cb146-14"><a href="lesson-5a-hyperparameter-tuning.html#cb146-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 4     3.59 rmse    standa… 31373.     5   3012.</span></span>
+<span id="cb146-15"><a href="lesson-5a-hyperparameter-tuning.html#cb146-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 5    12.9  rmse    standa… 31373.     5   3012.</span></span>
+<span id="cb146-16"><a href="lesson-5a-hyperparameter-tuning.html#cb146-16" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 1 more variable: .config &lt;chr&gt;, and</span></span>
+<span id="cb146-17"><a href="lesson-5a-hyperparameter-tuning.html#cb146-17" aria-hidden="true" tabindex="-1"></a><span class="do">## #   abbreviated variable name ¹​.estimator</span></span>
+<span id="cb146-18"><a href="lesson-5a-hyperparameter-tuning.html#cb146-18" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `colnames()` to see all variable names</span></span></code></pre></div>
 </div>
 <div id="finalizing-our-model" class="section level3 hasAnchor" number="14.5.3">
 <h3><span class="header-section-number">14.5.3</span> Finalizing our model<a href="lesson-5a-hyperparameter-tuning.html#finalizing-our-model" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -824,17 +830,17 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb147-6"><a href="lesson-5a-hyperparameter-tuning.html#cb147-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
 <span id="cb147-7"><a href="lesson-5a-hyperparameter-tuning.html#cb147-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb147-8"><a href="lesson-5a-hyperparameter-tuning.html#cb147-8" aria-hidden="true" tabindex="-1"></a>final_wf</span>
-<span id="cb147-9"><a href="lesson-5a-hyperparameter-tuning.html#cb147-9" aria-hidden="true" tabindex="-1"></a><span class="do">## ══ Workflow ════════════════════════════════════════════════</span></span>
+<span id="cb147-9"><a href="lesson-5a-hyperparameter-tuning.html#cb147-9" aria-hidden="true" tabindex="-1"></a><span class="do">## ══ Workflow ═══════════════════════════════════</span></span>
 <span id="cb147-10"><a href="lesson-5a-hyperparameter-tuning.html#cb147-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Preprocessor: Recipe</span></span>
 <span id="cb147-11"><a href="lesson-5a-hyperparameter-tuning.html#cb147-11" aria-hidden="true" tabindex="-1"></a><span class="do">## Model: linear_reg()</span></span>
 <span id="cb147-12"><a href="lesson-5a-hyperparameter-tuning.html#cb147-12" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb147-13"><a href="lesson-5a-hyperparameter-tuning.html#cb147-13" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Preprocessor ────────────────────────────────────────────</span></span>
+<span id="cb147-13"><a href="lesson-5a-hyperparameter-tuning.html#cb147-13" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Preprocessor ───────────────────────────────</span></span>
 <span id="cb147-14"><a href="lesson-5a-hyperparameter-tuning.html#cb147-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 Recipe Steps</span></span>
 <span id="cb147-15"><a href="lesson-5a-hyperparameter-tuning.html#cb147-15" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb147-16"><a href="lesson-5a-hyperparameter-tuning.html#cb147-16" aria-hidden="true" tabindex="-1"></a><span class="do">## • step_normalize()</span></span>
 <span id="cb147-17"><a href="lesson-5a-hyperparameter-tuning.html#cb147-17" aria-hidden="true" tabindex="-1"></a><span class="do">## • step_dummy()</span></span>
 <span id="cb147-18"><a href="lesson-5a-hyperparameter-tuning.html#cb147-18" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb147-19"><a href="lesson-5a-hyperparameter-tuning.html#cb147-19" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Model ───────────────────────────────────────────────────</span></span>
+<span id="cb147-19"><a href="lesson-5a-hyperparameter-tuning.html#cb147-19" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Model ──────────────────────────────────────</span></span>
 <span id="cb147-20"><a href="lesson-5a-hyperparameter-tuning.html#cb147-20" aria-hidden="true" tabindex="-1"></a><span class="do">## Linear Regression Model Specification (regression)</span></span>
 <span id="cb147-21"><a href="lesson-5a-hyperparameter-tuning.html#cb147-21" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb147-22"><a href="lesson-5a-hyperparameter-tuning.html#cb147-22" aria-hidden="true" tabindex="-1"></a><span class="do">## Main Arguments:</span></span>
