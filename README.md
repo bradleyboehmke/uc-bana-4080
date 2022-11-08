@@ -21,6 +21,11 @@ Upon successfully completing this course, you will be able to:
 * Apply, compare, and contrast various predictive modeling techniques.
 * Have the resources and understanding to continue advancing your data mining and analysis capabilities.
 
+## Material
+
+This course is split into two main sections - <u>***Data Wrangling***</u> and <u>***Machine Learning***</u>. The data wrangling section will provide you the fundamental skills required to acquire, munge, transform, manipulate, and visualize data in a computing environment that fosters reproducibility. The primary course material for this section is provided via this [free online book](https://bradleyboehmke.github.io/uc-bana-7025/). 
+
+The second section focused on machine learning section will expose you to several algorithms to identify hidden patterns and relationships within your data. The primary course material for this part of the course is provided via this [free online book](https://bradleyboehmke.github.io/uc-bana-4080/).  There will also be recorded lectures and additional supplementary resources provided via Canvas. 
 
 ## Content Covered
 
@@ -45,38 +50,31 @@ Upon successfully completing this course, you will be able to:
 | **6**         | **Creating Efficient Code in R**                    |
 |               | Control statements & iteration                      |
 |               | Writing functions                                   |
+| **7**         | **Mid-term Project**                                |
 |               | **MACHINE LEARNING**                                |
-| **7**         | **Introduction to Applied Modeling**                |
+| **8**         | **Introduction to Applied Modeling**                |
 |               | Introduction to machine learning                    |
-|               | Introduction to tidymodels                          |
-| **8**         | **Modeling process continued**                      |
+|               | First model with Tidymodels                         |
+| **9**         | **First Regression Models**                         |
+|               | Simple linear regression                            |
+|               | Multiple linear regression                          |
+| **10**        | **More Modeling Processes**                         |
 |               | Feature engineering                                 |
-|               | Model evaluation & selection                        |
-| **9**         | **First regression models**                         |
-|               | Ordinary least squares (OLS)                        |
-|               | OLS cousins                                         |
-| **10**        | **First classification models**                     |
+|               | Resampling                                          |
+| **11**        | **Classification & Regularization**                 |
 |               | Logistic regression                                 |
-|               | Assessing classification models                     |
-| **11**        | **More regression cousins**                         |
 |               | Regularized regression                              |
-|               | Multi-adaptive Regression Splines (MARS)            |
-| **12**        | **Venturing away from linearity**                   |
-|               | K-Nearest neighbor                                  |
+| **12**        | **Hyperparameter Tuning & Non-linearity**           |
+|               | Hyperparameter tuning                               |
+|               | Multivariate adaptive regression splines            |
+| **13**        | **Tree-based Models**                               |
 |               | Decision trees                                      |
-| **13**        | **Ensembling trees**                                |
 |               | Bagging                                             |
 |               | Random forests                                      |
-| **14**        | **Ensembling trees continued**                      |
-|               | Gradient boosting                                   |
-|               | XGBoost and other variants                          |
-| **15**        | **TBD**: one of...                                  |
-|               | **Deep learning**                                   |
-|               | Feedforward neural nets                             |
-|               | A survey of deep learning extensions                |
-|               | **Unsupervised Learning**                           |
-|               | Clustering,                                         |
-|               | Dimension reductions                                |
+| **14**        | **Unsupervised learning**                           |
+|               | Clustering                                          |
+|               | Dimension reduction                                 |
+| **15**        | **Final Project**                                   |
 
 ## Getting Started
 
