@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>9 Lesson 3b: Resampling | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
 
   <meta property="og:title" content="9 Lesson 3b: Resampling | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,16 +51,16 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
 <link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
 <script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
-<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
-<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
 
 
 <style type="text/css">
@@ -101,7 +101,7 @@ code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -114,7 +114,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -128,6 +128,10 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
 <style type="text/css">
 /* Used with Pandoc 2.11+ new --citeproc when CSL is used */
 div.csl-bib-body { }
@@ -568,37 +572,37 @@ div.csl-indent {
 <div id="prerequisites-4" class="section level2 hasAnchor" number="9.2">
 <h2><span class="header-section-number">9.2</span> Prerequisites<a href="lesson-3b-resampling.html#prerequisites-4" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>This lesson leverages the following packages and data.</p>
-<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="lesson-3b-resampling.html#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb94-2"><a href="lesson-3b-resampling.html#cb94-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb94-3"><a href="lesson-3b-resampling.html#cb94-3" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="lesson-3b-resampling.html#cb94-1" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb94-2"><a href="lesson-3b-resampling.html#cb94-2" tabindex="-1"></a></span>
+<span id="cb94-3"><a href="lesson-3b-resampling.html#cb94-3" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span></code></pre></div>
 <p>Let’s go ahead and create our train-test split:</p>
-<div class="sourceCode" id="cb95"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb95-1"><a href="lesson-3b-resampling.html#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create train/test split</span></span>
-<span id="cb95-2"><a href="lesson-3b-resampling.html#cb95-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
-<span id="cb95-3"><a href="lesson-3b-resampling.html#cb95-3" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> Sale_Price)</span>
-<span id="cb95-4"><a href="lesson-3b-resampling.html#cb95-4" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
-<span id="cb95-5"><a href="lesson-3b-resampling.html#cb95-5" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
+<div class="sourceCode" id="cb95"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb95-1"><a href="lesson-3b-resampling.html#cb95-1" tabindex="-1"></a><span class="co"># create train/test split</span></span>
+<span id="cb95-2"><a href="lesson-3b-resampling.html#cb95-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)  <span class="co"># for reproducibility</span></span>
+<span id="cb95-3"><a href="lesson-3b-resampling.html#cb95-3" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> Sale_Price)</span>
+<span id="cb95-4"><a href="lesson-3b-resampling.html#cb95-4" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb95-5"><a href="lesson-3b-resampling.html#cb95-5" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
 </div>
 <div id="resampling-cross-validation" class="section level2 hasAnchor" number="9.3">
 <h2><span class="header-section-number">9.3</span> Resampling &amp; cross-validation<a href="lesson-3b-resampling.html#resampling-cross-validation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>In the previous lessons we split our data into a train and test set and we assessed the performance of our model on the test set. If we use a little feature engineering to take care of novel categorical levels, we see that our generalization RMSE based on the test set is $26,144.</p>
-<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="lesson-3b-resampling.html#cb96-1" aria-hidden="true" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
-<span id="cb96-2"><a href="lesson-3b-resampling.html#cb96-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">step_other</span>(<span class="fu">all_nominal_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.02</span>, <span class="at">other =</span> <span class="st">&quot;other&quot;</span>)</span>
-<span id="cb96-3"><a href="lesson-3b-resampling.html#cb96-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-4"><a href="lesson-3b-resampling.html#cb96-4" aria-hidden="true" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb96-5"><a href="lesson-3b-resampling.html#cb96-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb96-6"><a href="lesson-3b-resampling.html#cb96-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(mlr_recipe)</span>
-<span id="cb96-7"><a href="lesson-3b-resampling.html#cb96-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-8"><a href="lesson-3b-resampling.html#cb96-8" aria-hidden="true" tabindex="-1"></a>mlr_fit <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb96-9"><a href="lesson-3b-resampling.html#cb96-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
-<span id="cb96-10"><a href="lesson-3b-resampling.html#cb96-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb96-11"><a href="lesson-3b-resampling.html#cb96-11" aria-hidden="true" tabindex="-1"></a>mlr_fit <span class="sc">%&gt;%</span></span>
-<span id="cb96-12"><a href="lesson-3b-resampling.html#cb96-12" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(ames_test) <span class="sc">%&gt;%</span></span>
-<span id="cb96-13"><a href="lesson-3b-resampling.html#cb96-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">bind_cols</span>(ames_test <span class="sc">%&gt;%</span> <span class="fu">select</span>(Sale_Price)) <span class="sc">%&gt;%</span></span>
-<span id="cb96-14"><a href="lesson-3b-resampling.html#cb96-14" aria-hidden="true" tabindex="-1"></a>   <span class="fu">rmse</span>(<span class="at">truth =</span> Sale_Price, <span class="at">estimate =</span> .pred)</span>
-<span id="cb96-15"><a href="lesson-3b-resampling.html#cb96-15" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
-<span id="cb96-16"><a href="lesson-3b-resampling.html#cb96-16" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .estimator .estimate</span></span>
-<span id="cb96-17"><a href="lesson-3b-resampling.html#cb96-17" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb96-18"><a href="lesson-3b-resampling.html#cb96-18" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standard      26144.</span></span></code></pre></div>
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="lesson-3b-resampling.html#cb96-1" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
+<span id="cb96-2"><a href="lesson-3b-resampling.html#cb96-2" tabindex="-1"></a>   <span class="fu">step_other</span>(<span class="fu">all_nominal_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.02</span>, <span class="at">other =</span> <span class="st">&quot;other&quot;</span>)</span>
+<span id="cb96-3"><a href="lesson-3b-resampling.html#cb96-3" tabindex="-1"></a></span>
+<span id="cb96-4"><a href="lesson-3b-resampling.html#cb96-4" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb96-5"><a href="lesson-3b-resampling.html#cb96-5" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb96-6"><a href="lesson-3b-resampling.html#cb96-6" tabindex="-1"></a>  <span class="fu">add_recipe</span>(mlr_recipe)</span>
+<span id="cb96-7"><a href="lesson-3b-resampling.html#cb96-7" tabindex="-1"></a></span>
+<span id="cb96-8"><a href="lesson-3b-resampling.html#cb96-8" tabindex="-1"></a>mlr_fit <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb96-9"><a href="lesson-3b-resampling.html#cb96-9" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
+<span id="cb96-10"><a href="lesson-3b-resampling.html#cb96-10" tabindex="-1"></a></span>
+<span id="cb96-11"><a href="lesson-3b-resampling.html#cb96-11" tabindex="-1"></a>mlr_fit <span class="sc">%&gt;%</span></span>
+<span id="cb96-12"><a href="lesson-3b-resampling.html#cb96-12" tabindex="-1"></a>   <span class="fu">predict</span>(ames_test) <span class="sc">%&gt;%</span></span>
+<span id="cb96-13"><a href="lesson-3b-resampling.html#cb96-13" tabindex="-1"></a>   <span class="fu">bind_cols</span>(ames_test <span class="sc">%&gt;%</span> <span class="fu">select</span>(Sale_Price)) <span class="sc">%&gt;%</span></span>
+<span id="cb96-14"><a href="lesson-3b-resampling.html#cb96-14" tabindex="-1"></a>   <span class="fu">rmse</span>(<span class="at">truth =</span> Sale_Price, <span class="at">estimate =</span> .pred)</span>
+<span id="cb96-15"><a href="lesson-3b-resampling.html#cb96-15" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
+<span id="cb96-16"><a href="lesson-3b-resampling.html#cb96-16" tabindex="-1"></a><span class="do">##   .metric .estimator .estimate</span></span>
+<span id="cb96-17"><a href="lesson-3b-resampling.html#cb96-17" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb96-18"><a href="lesson-3b-resampling.html#cb96-18" tabindex="-1"></a><span class="do">## 1 rmse    standard      26144.</span></span></code></pre></div>
 <p>Unfortunately, there are a few pitfalls to this approach:</p>
 <ol style="list-style-type: decimal">
 <li>If our dataset is small, a single test set may not provide realistic expectations of our model’s performance on unseen data.</li>
@@ -617,7 +621,7 @@ have become part of the model development process.
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:3b-resampling"></span>
 <img src="images/resampling.svg" alt="Illustration of resampling. [@tidymodels]" width="90%" height="90%" />
 <p class="caption">
-Figure 9.1: Illustration of resampling. <span class="citation">(<a href="#ref-tidymodels" role="doc-biblioref">Kuhn, Max n.d.</a>)</span>
+Figure 9.1: Illustration of resampling. <span class="citation">(<a href="#ref-tidymodels">Kuhn, Max n.d.</a>)</span>
 </p>
 </div>
 <div class="note">
@@ -632,8 +636,10 @@ training data and not touch the test data until we have selected a final
 <div id="k-fold-cross-validation" class="section level2 hasAnchor" number="9.4">
 <h2><span class="header-section-number">9.4</span> K-fold cross-validation<a href="lesson-3b-resampling.html#k-fold-cross-validation" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <div class="video">
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&amp;playerId=kaltura_player&amp;entry_id=1_8bgm9d8t&amp;flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&amp;wid=1_6o61bgq0" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - K-fold cross validation">
-</iframe>
+<p>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/o-sTAUKBQdY?si=E0wzQ7F2582tbdEe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 </div>
 <p>Cross-validation consists of repeating the procedure such that the training and testing sets are different each time. Generalization performance metrics are collected for each repetition and then aggregated. As a result we can get an estimate of the variability of the model’s generalization performance.</p>
 <p>k-fold cross-validation (aka k-fold CV) is a resampling method that randomly divides the training data into <em>k</em> groups (aka folds) of approximately equal size.</p>
@@ -659,47 +665,48 @@ test set will decrease.
 </p>
 </div>
 <p>To implement k-fold CV we first make a resampling object. In this example we create a 10-fold resampling object.</p>
-<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="lesson-3b-resampling.html#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">35</span>)</span>
-<span id="cb97-2"><a href="lesson-3b-resampling.html#cb97-2" aria-hidden="true" tabindex="-1"></a>kfolds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> Sale_Price)</span></code></pre></div>
+<div class="sourceCode" id="cb97"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb97-1"><a href="lesson-3b-resampling.html#cb97-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">35</span>)</span>
+<span id="cb97-2"><a href="lesson-3b-resampling.html#cb97-2" tabindex="-1"></a>kfolds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> Sale_Price)</span></code></pre></div>
 <p>We can now create our multiple linear regression workflow object as we did previously and fit our model across our 10-folds; we just use <code>fit_resamples()</code> rather than <code>fit()</code>.</p>
-<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="lesson-3b-resampling.html#cb98-1" aria-hidden="true" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
-<span id="cb98-2"><a href="lesson-3b-resampling.html#cb98-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">step_other</span>(<span class="fu">all_nominal_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.03</span>, <span class="at">other =</span> <span class="st">&quot;other&quot;</span>)</span>
-<span id="cb98-3"><a href="lesson-3b-resampling.html#cb98-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb98-4"><a href="lesson-3b-resampling.html#cb98-4" aria-hidden="true" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb98-5"><a href="lesson-3b-resampling.html#cb98-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb98-6"><a href="lesson-3b-resampling.html#cb98-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(mlr_recipe)</span>
-<span id="cb98-7"><a href="lesson-3b-resampling.html#cb98-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb98-8"><a href="lesson-3b-resampling.html#cb98-8" aria-hidden="true" tabindex="-1"></a><span class="co"># fit our model across the 10-fold CV</span></span>
-<span id="cb98-9"><a href="lesson-3b-resampling.html#cb98-9" aria-hidden="true" tabindex="-1"></a>mlr_fit_cv <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb98-10"><a href="lesson-3b-resampling.html#cb98-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(kfolds)</span></code></pre></div>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="lesson-3b-resampling.html#cb98-1" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
+<span id="cb98-2"><a href="lesson-3b-resampling.html#cb98-2" tabindex="-1"></a>   <span class="fu">step_other</span>(<span class="fu">all_nominal_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.03</span>, <span class="at">other =</span> <span class="st">&quot;other&quot;</span>)</span>
+<span id="cb98-3"><a href="lesson-3b-resampling.html#cb98-3" tabindex="-1"></a></span>
+<span id="cb98-4"><a href="lesson-3b-resampling.html#cb98-4" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb98-5"><a href="lesson-3b-resampling.html#cb98-5" tabindex="-1"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb98-6"><a href="lesson-3b-resampling.html#cb98-6" tabindex="-1"></a>  <span class="fu">add_recipe</span>(mlr_recipe)</span>
+<span id="cb98-7"><a href="lesson-3b-resampling.html#cb98-7" tabindex="-1"></a></span>
+<span id="cb98-8"><a href="lesson-3b-resampling.html#cb98-8" tabindex="-1"></a><span class="co"># fit our model across the 10-fold CV</span></span>
+<span id="cb98-9"><a href="lesson-3b-resampling.html#cb98-9" tabindex="-1"></a>mlr_fit_cv <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb98-10"><a href="lesson-3b-resampling.html#cb98-10" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(kfolds)</span></code></pre></div>
 <p>We can then get our average 10-fold cross validation error with <code>collect_metrics()</code>:</p>
-<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="lesson-3b-resampling.html#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv)</span>
-<span id="cb99-2"><a href="lesson-3b-resampling.html#cb99-2" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb99-3"><a href="lesson-3b-resampling.html#cb99-3" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
-<span id="cb99-4"><a href="lesson-3b-resampling.html#cb99-4" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb99-5"><a href="lesson-3b-resampling.html#cb99-5" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 3.25e+4    10 2.46e+3 Prepro…</span></span>
-<span id="cb99-6"><a href="lesson-3b-resampling.html#cb99-6" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 8.39e-1    10 2.37e-2 Prepro…</span></span>
-<span id="cb99-7"><a href="lesson-3b-resampling.html#cb99-7" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
+<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="lesson-3b-resampling.html#cb99-1" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv)</span>
+<span id="cb99-2"><a href="lesson-3b-resampling.html#cb99-2" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb99-3"><a href="lesson-3b-resampling.html#cb99-3" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n std_err</span></span>
+<span id="cb99-4"><a href="lesson-3b-resampling.html#cb99-4" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb99-5"><a href="lesson-3b-resampling.html#cb99-5" tabindex="-1"></a><span class="do">## 1 rmse    standard   32547.       10 2.46e+3</span></span>
+<span id="cb99-6"><a href="lesson-3b-resampling.html#cb99-6" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.839    10 2.37e-2</span></span>
+<span id="cb99-7"><a href="lesson-3b-resampling.html#cb99-7" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
 <p>If we want to see the model evaluation metric (i.e. RMSE) for each fold we just need to include <code>summarize = FALSE</code>.</p>
-<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="lesson-3b-resampling.html#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv, <span class="at">summarize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb100-2"><a href="lesson-3b-resampling.html#cb100-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&#39;rmse&#39;</span>)</span>
-<span id="cb100-3"><a href="lesson-3b-resampling.html#cb100-3" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 10 × 5</span></span>
-<span id="cb100-4"><a href="lesson-3b-resampling.html#cb100-4" aria-hidden="true" tabindex="-1"></a><span class="do">##    id     .metric .estimator .estimate .config </span></span>
-<span id="cb100-5"><a href="lesson-3b-resampling.html#cb100-5" aria-hidden="true" tabindex="-1"></a><span class="do">##    &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;   </span></span>
-<span id="cb100-6"><a href="lesson-3b-resampling.html#cb100-6" aria-hidden="true" tabindex="-1"></a><span class="do">##  1 Fold01 rmse    standard      36485. Preproc…</span></span>
-<span id="cb100-7"><a href="lesson-3b-resampling.html#cb100-7" aria-hidden="true" tabindex="-1"></a><span class="do">##  2 Fold02 rmse    standard      37722. Preproc…</span></span>
-<span id="cb100-8"><a href="lesson-3b-resampling.html#cb100-8" aria-hidden="true" tabindex="-1"></a><span class="do">##  3 Fold03 rmse    standard      47136. Preproc…</span></span>
-<span id="cb100-9"><a href="lesson-3b-resampling.html#cb100-9" aria-hidden="true" tabindex="-1"></a><span class="do">##  4 Fold04 rmse    standard      24794. Preproc…</span></span>
-<span id="cb100-10"><a href="lesson-3b-resampling.html#cb100-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  5 Fold05 rmse    standard      27203. Preproc…</span></span>
-<span id="cb100-11"><a href="lesson-3b-resampling.html#cb100-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  6 Fold06 rmse    standard      28096. Preproc…</span></span>
-<span id="cb100-12"><a href="lesson-3b-resampling.html#cb100-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  7 Fold07 rmse    standard      22781. Preproc…</span></span>
-<span id="cb100-13"><a href="lesson-3b-resampling.html#cb100-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  8 Fold08 rmse    standard      36901. Preproc…</span></span>
-<span id="cb100-14"><a href="lesson-3b-resampling.html#cb100-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  9 Fold09 rmse    standard      26510. Preproc…</span></span>
-<span id="cb100-15"><a href="lesson-3b-resampling.html#cb100-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 10 Fold10 rmse    standard      37841. Preproc…</span></span></code></pre></div>
+<div class="sourceCode" id="cb100"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb100-1"><a href="lesson-3b-resampling.html#cb100-1" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_cv, <span class="at">summarize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb100-2"><a href="lesson-3b-resampling.html#cb100-2" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&#39;rmse&#39;</span>)</span>
+<span id="cb100-3"><a href="lesson-3b-resampling.html#cb100-3" tabindex="-1"></a><span class="do">## # A tibble: 10 × 5</span></span>
+<span id="cb100-4"><a href="lesson-3b-resampling.html#cb100-4" tabindex="-1"></a><span class="do">##    id     .metric .estimator .estimate</span></span>
+<span id="cb100-5"><a href="lesson-3b-resampling.html#cb100-5" tabindex="-1"></a><span class="do">##    &lt;chr&gt;  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb100-6"><a href="lesson-3b-resampling.html#cb100-6" tabindex="-1"></a><span class="do">##  1 Fold01 rmse    standard      36485.</span></span>
+<span id="cb100-7"><a href="lesson-3b-resampling.html#cb100-7" tabindex="-1"></a><span class="do">##  2 Fold02 rmse    standard      37722.</span></span>
+<span id="cb100-8"><a href="lesson-3b-resampling.html#cb100-8" tabindex="-1"></a><span class="do">##  3 Fold03 rmse    standard      47136.</span></span>
+<span id="cb100-9"><a href="lesson-3b-resampling.html#cb100-9" tabindex="-1"></a><span class="do">##  4 Fold04 rmse    standard      24794.</span></span>
+<span id="cb100-10"><a href="lesson-3b-resampling.html#cb100-10" tabindex="-1"></a><span class="do">##  5 Fold05 rmse    standard      27203.</span></span>
+<span id="cb100-11"><a href="lesson-3b-resampling.html#cb100-11" tabindex="-1"></a><span class="do">##  6 Fold06 rmse    standard      28096.</span></span>
+<span id="cb100-12"><a href="lesson-3b-resampling.html#cb100-12" tabindex="-1"></a><span class="do">##  7 Fold07 rmse    standard      22781.</span></span>
+<span id="cb100-13"><a href="lesson-3b-resampling.html#cb100-13" tabindex="-1"></a><span class="do">##  8 Fold08 rmse    standard      36901.</span></span>
+<span id="cb100-14"><a href="lesson-3b-resampling.html#cb100-14" tabindex="-1"></a><span class="do">##  9 Fold09 rmse    standard      26510.</span></span>
+<span id="cb100-15"><a href="lesson-3b-resampling.html#cb100-15" tabindex="-1"></a><span class="do">## 10 Fold10 rmse    standard      37841.</span></span>
+<span id="cb100-16"><a href="lesson-3b-resampling.html#cb100-16" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
 <p>If we compare these results to our previous generalization error based on the test set, we see some differences. We now see that our average generalization RMSE across the ten holdout sets is $32,547 and individual validation set RMSEs range from $24,794 - $47,136. This provides us a little more robust expectations around how our model will perform on future unseen data. And it actually shows us that our single test set RMSE may have been biased and too optimistic!</p>
 <p>One other item to note - often, people assume that when creating the <em>k</em>-folds that R just selects the first <em>n</em> observations to be the first fold, the next <em>n</em> observations to be in the second fold, etc. However, this is not the case. Rather, R will randomly assign observations to each fold but will also ensure that each observation is only assigned to a single fold for validation purposes. The following illustrates a 10-fold cross validation on a dataset with 32 observations. Each observation is used once for validation and nine times for training.</p>
-<div class="figure" style="text-align: center"><span style="display:block;" id="fig:unnamed-chunk-171"></span>
-<img src="_main_files/figure-html/unnamed-chunk-171-1.png" alt="10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training." width="672" />
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:kfold-viz"></span>
+<img src="_main_files/figure-html/kfold-viz-1.png" alt="10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training." width="672" />
 <p class="caption">
 Figure 9.4: 10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training.
 </p>
@@ -726,36 +733,40 @@ folds?
 </li>
 </ol>
 </div>
-<div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="lesson-3b-resampling.html#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Create a k-fold object</span></span>
-<span id="cb101-2"><a href="lesson-3b-resampling.html#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb101-3"><a href="lesson-3b-resampling.html#cb101-3" aria-hidden="true" tabindex="-1"></a>kfolds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(______, <span class="at">v =</span> __, <span class="at">strata =</span> cmedv)</span>
-<span id="cb101-4"><a href="lesson-3b-resampling.html#cb101-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb101-5"><a href="lesson-3b-resampling.html#cb101-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Create our workflow object</span></span>
-<span id="cb101-6"><a href="lesson-3b-resampling.html#cb101-6" aria-hidden="true" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(cmedv <span class="sc">~</span> ___, <span class="at">data =</span> boston_train)</span>
-<span id="cb101-7"><a href="lesson-3b-resampling.html#cb101-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb101-8"><a href="lesson-3b-resampling.html#cb101-8" aria-hidden="true" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb101-9"><a href="lesson-3b-resampling.html#cb101-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(______) <span class="sc">%&gt;%</span> </span>
-<span id="cb101-10"><a href="lesson-3b-resampling.html#cb101-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(______)</span>
-<span id="cb101-11"><a href="lesson-3b-resampling.html#cb101-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb101-12"><a href="lesson-3b-resampling.html#cb101-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Fit our model on the k-fold object</span></span>
-<span id="cb101-13"><a href="lesson-3b-resampling.html#cb101-13" aria-hidden="true" tabindex="-1"></a>mlr_fit_cv <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb101-14"><a href="lesson-3b-resampling.html#cb101-14" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_______</span>(______)</span>
-<span id="cb101-15"><a href="lesson-3b-resampling.html#cb101-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb101-16"><a href="lesson-3b-resampling.html#cb101-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Assess our average cross validation error</span></span>
-<span id="cb101-17"><a href="lesson-3b-resampling.html#cb101-17" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_______</span>(______)</span></code></pre></div>
+<div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="lesson-3b-resampling.html#cb101-1" tabindex="-1"></a><span class="co"># 1. Create a k-fold object</span></span>
+<span id="cb101-2"><a href="lesson-3b-resampling.html#cb101-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb101-3"><a href="lesson-3b-resampling.html#cb101-3" tabindex="-1"></a>kfolds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(______, <span class="at">v =</span> __, <span class="at">strata =</span> cmedv)</span>
+<span id="cb101-4"><a href="lesson-3b-resampling.html#cb101-4" tabindex="-1"></a></span>
+<span id="cb101-5"><a href="lesson-3b-resampling.html#cb101-5" tabindex="-1"></a><span class="co"># 2. Create our workflow object</span></span>
+<span id="cb101-6"><a href="lesson-3b-resampling.html#cb101-6" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(cmedv <span class="sc">~</span> ___, <span class="at">data =</span> boston_train)</span>
+<span id="cb101-7"><a href="lesson-3b-resampling.html#cb101-7" tabindex="-1"></a></span>
+<span id="cb101-8"><a href="lesson-3b-resampling.html#cb101-8" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb101-9"><a href="lesson-3b-resampling.html#cb101-9" tabindex="-1"></a>  <span class="fu">add_model</span>(______) <span class="sc">%&gt;%</span> </span>
+<span id="cb101-10"><a href="lesson-3b-resampling.html#cb101-10" tabindex="-1"></a>  <span class="fu">add_recipe</span>(______)</span>
+<span id="cb101-11"><a href="lesson-3b-resampling.html#cb101-11" tabindex="-1"></a></span>
+<span id="cb101-12"><a href="lesson-3b-resampling.html#cb101-12" tabindex="-1"></a><span class="co"># 3. Fit our model on the k-fold object</span></span>
+<span id="cb101-13"><a href="lesson-3b-resampling.html#cb101-13" tabindex="-1"></a>mlr_fit_cv <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb101-14"><a href="lesson-3b-resampling.html#cb101-14" tabindex="-1"></a>   <span class="fu">fit_______</span>(______)</span>
+<span id="cb101-15"><a href="lesson-3b-resampling.html#cb101-15" tabindex="-1"></a></span>
+<span id="cb101-16"><a href="lesson-3b-resampling.html#cb101-16" tabindex="-1"></a><span class="co"># 4. Assess our average cross validation error</span></span>
+<span id="cb101-17"><a href="lesson-3b-resampling.html#cb101-17" tabindex="-1"></a><span class="fu">collect_______</span>(______)</span></code></pre></div>
 <div class="video">
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&amp;playerId=kaltura_player&amp;entry_id=1_1pvbvsi2&amp;flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&amp;wid=1_u70t0h90" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Knowledge check 9.4.1">
-</iframe>
+<p>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/U_X8Zbzx-L4?si=bhKQbUzavLtdhA64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 </div>
 </div>
 </div>
 <div id="bootstrap-resampling" class="section level2 hasAnchor" number="9.5">
 <h2><span class="header-section-number">9.5</span> Bootstrap resampling<a href="lesson-3b-resampling.html#bootstrap-resampling" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <div class="video">
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&amp;playerId=kaltura_player&amp;entry_id=1_sw9fjuyu&amp;flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&amp;wid=1_y3b3e5mm" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Bootstrap sampling">
-</iframe>
+<p>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ldXDG0hO0rk?si=2k84rJsIbDqXKX28" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 </div>
-<p>A bootstrap sample is a random sample of the data taken <em>with replacement</em> <span class="citation">(<a href="#ref-efron1986bootstrap" role="doc-biblioref">Efron and Tibshirani 1986</a>)</span>. This means that, after a data point is selected for inclusion in the subset, it’s still available for further selection. A bootstrap sample is the same size as the original data set from which it was constructed. Figure <a href="lesson-3b-resampling.html#fig:modeling-process-bootstrapscheme">9.5</a> provides a schematic of bootstrap sampling where each bootstrap sample contains 12 observations just as in the original data set. Furthermore, bootstrap sampling will contain approximately the same distribution of values (represented by colors) as the original data set.</p>
+<p>A bootstrap sample is a random sample of the data taken <em>with replacement</em> <span class="citation">(<a href="#ref-efron1986bootstrap">Efron and Tibshirani 1986</a>)</span>. This means that, after a data point is selected for inclusion in the subset, it’s still available for further selection. A bootstrap sample is the same size as the original data set from which it was constructed. Figure <a href="lesson-3b-resampling.html#fig:modeling-process-bootstrapscheme">9.5</a> provides a schematic of bootstrap sampling where each bootstrap sample contains 12 observations just as in the original data set. Furthermore, bootstrap sampling will contain approximately the same distribution of values (represented by colors) as the original data set.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-bootstrapscheme"></span>
 <img src="images/bootstrap-scheme.png" alt="Illustration of the bootstrapping process." width="70%" height="70%" />
 <p class="caption">
@@ -763,8 +774,8 @@ Figure 9.5: Illustration of the bootstrapping process.
 </p>
 </div>
 <p>Since samples are drawn with replacement, each bootstrap sample is likely to contain duplicate values. In fact, on average, <span class="math inline">\(\approx 63.21\)</span>% of the original sample ends up in any particular bootstrap sample. The original observations not contained in a particular bootstrap sample are considered <em>out-of-bag</em> (OOB). When bootstrapping, a model can be built on the selected samples and validated on the OOB samples; this is often done, for example, in random forests (which we’ll discuss in a later module).</p>
-<p>Since observations are replicated in bootstrapping, there tends to be less variability in the error measure compared with <em>k</em>-fold CV <span class="citation">(<a href="#ref-efron1983estimating" role="doc-biblioref">Efron 1983</a>)</span>. However, this can also increase the bias of your error estimate (we’ll discuss the concept of bias versus variance in a future module). This can be problematic with smaller data sets; however, for most average-to-large data sets (say <span class="math inline">\(n \geq 1,000\)</span>) this concern is often negligible.</p>
-<p>Figure <a href="lesson-3b-resampling.html#fig:modeling-process-sampling-comparison">9.6</a> compares bootstrapping to 10-fold CV on a small data set with <span class="math inline">\(n = 32\)</span> observations. A thorough introduction to the bootstrap and its use in R is provided in <span class="citation">Davison, Hinkley, et al. (<a href="#ref-davison1997bootstrap" role="doc-biblioref">1997</a>)</span>.</p>
+<p>Since observations are replicated in bootstrapping, there tends to be less variability in the error measure compared with <em>k</em>-fold CV <span class="citation">(<a href="#ref-efron1983estimating">Efron 1983</a>)</span>. However, this can also increase the bias of your error estimate (we’ll discuss the concept of bias versus variance in a future module). This can be problematic with smaller data sets; however, for most average-to-large data sets (say <span class="math inline">\(n \geq 1,000\)</span>) this concern is often negligible.</p>
+<p>Figure <a href="lesson-3b-resampling.html#fig:modeling-process-sampling-comparison">9.6</a> compares bootstrapping to 10-fold CV on a small data set with <span class="math inline">\(n = 32\)</span> observations. A thorough introduction to the bootstrap and its use in R is provided in <span class="citation">Davison, Hinkley, et al. (<a href="#ref-davison1997bootstrap">1997</a>)</span>.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:modeling-process-sampling-comparison"></span>
 <img src="_main_files/figure-html/modeling-process-sampling-comparison-1.png" alt="Bootstrap sampling (left) versus 10-fold cross validation (right) on 32 observations. For bootstrap sampling, the observations that have zero replications (white) are the out-of-bag observations used for validation." width="1152" />
 <p class="caption">
@@ -772,21 +783,21 @@ Figure 9.6: Bootstrap sampling (left) versus 10-fold cross validation (right) on
 </p>
 </div>
 <p>We can create bootstrap samples easily with <code>bootstraps()</code>, as illustrated in the code chunk below.</p>
-<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb102-1"><a href="lesson-3b-resampling.html#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">35</span>)</span>
-<span id="cb102-2"><a href="lesson-3b-resampling.html#cb102-2" aria-hidden="true" tabindex="-1"></a>bs_samples <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(ames_train, <span class="at">times =</span> <span class="dv">10</span>, <span class="at">strata =</span> Sale_Price)</span></code></pre></div>
+<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb102-1"><a href="lesson-3b-resampling.html#cb102-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">35</span>)</span>
+<span id="cb102-2"><a href="lesson-3b-resampling.html#cb102-2" tabindex="-1"></a>bs_samples <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(ames_train, <span class="at">times =</span> <span class="dv">10</span>, <span class="at">strata =</span> Sale_Price)</span></code></pre></div>
 <p>Once we’ve created our bootstrap samples we can reuse the same <code>mlr_wflow</code> object we created earlier and refit it with the bootstrap samples. Our results again show that our average resampling RMSE is $38,765 – again, much higher than the single test set RMSE we obtained previously.</p>
-<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="lesson-3b-resampling.html#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fit our model across the bootstrapped samples</span></span>
-<span id="cb103-2"><a href="lesson-3b-resampling.html#cb103-2" aria-hidden="true" tabindex="-1"></a>mlr_fit_bs <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb103-3"><a href="lesson-3b-resampling.html#cb103-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(bs_samples)</span>
-<span id="cb103-4"><a href="lesson-3b-resampling.html#cb103-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb103-5"><a href="lesson-3b-resampling.html#cb103-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb103-6"><a href="lesson-3b-resampling.html#cb103-6" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_bs)</span>
-<span id="cb103-7"><a href="lesson-3b-resampling.html#cb103-7" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb103-8"><a href="lesson-3b-resampling.html#cb103-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
-<span id="cb103-9"><a href="lesson-3b-resampling.html#cb103-9" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb103-10"><a href="lesson-3b-resampling.html#cb103-10" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 3.88e+4     9 1.88e+3 Prepro…</span></span>
-<span id="cb103-11"><a href="lesson-3b-resampling.html#cb103-11" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 7.80e-1     9 1.57e-2 Prepro…</span></span>
-<span id="cb103-12"><a href="lesson-3b-resampling.html#cb103-12" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
+<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="lesson-3b-resampling.html#cb103-1" tabindex="-1"></a><span class="co"># fit our model across the bootstrapped samples</span></span>
+<span id="cb103-2"><a href="lesson-3b-resampling.html#cb103-2" tabindex="-1"></a>mlr_fit_bs <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb103-3"><a href="lesson-3b-resampling.html#cb103-3" tabindex="-1"></a>   <span class="fu">fit_resamples</span>(bs_samples)</span>
+<span id="cb103-4"><a href="lesson-3b-resampling.html#cb103-4" tabindex="-1"></a></span>
+<span id="cb103-5"><a href="lesson-3b-resampling.html#cb103-5" tabindex="-1"></a></span>
+<span id="cb103-6"><a href="lesson-3b-resampling.html#cb103-6" tabindex="-1"></a><span class="fu">collect_metrics</span>(mlr_fit_bs)</span>
+<span id="cb103-7"><a href="lesson-3b-resampling.html#cb103-7" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb103-8"><a href="lesson-3b-resampling.html#cb103-8" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n std_err</span></span>
+<span id="cb103-9"><a href="lesson-3b-resampling.html#cb103-9" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb103-10"><a href="lesson-3b-resampling.html#cb103-10" tabindex="-1"></a><span class="do">## 1 rmse    standard   38765.        9 1.88e+3</span></span>
+<span id="cb103-11"><a href="lesson-3b-resampling.html#cb103-11" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.780     9 1.57e-2</span></span>
+<span id="cb103-12"><a href="lesson-3b-resampling.html#cb103-12" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
 <p>Bootstrapping is, typically, more of an internal resampling procedure that is naturally built into certain ML algorithms. This will become more apparent in later modules where we discuss bagging and random forests.</p>
 <div id="knowledge-check-16" class="section level3 hasAnchor" number="9.5.1">
 <h3><span class="header-section-number">9.5.1</span> Knowledge check<a href="lesson-3b-resampling.html#knowledge-check-16" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -813,33 +824,35 @@ performed earlier?
 </li>
 </ol>
 </div>
-<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="lesson-3b-resampling.html#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Create a bootstrap object</span></span>
-<span id="cb104-2"><a href="lesson-3b-resampling.html#cb104-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb104-3"><a href="lesson-3b-resampling.html#cb104-3" aria-hidden="true" tabindex="-1"></a>bs_samples <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(______, <span class="at">times =</span> ___, <span class="at">strata =</span> ____) <span class="co">#&lt;&lt;</span></span>
-<span id="cb104-4"><a href="lesson-3b-resampling.html#cb104-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb104-5"><a href="lesson-3b-resampling.html#cb104-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Create our workflow object</span></span>
-<span id="cb104-6"><a href="lesson-3b-resampling.html#cb104-6" aria-hidden="true" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(____ <span class="sc">~</span> __, <span class="at">data =</span> boston_train)</span>
-<span id="cb104-7"><a href="lesson-3b-resampling.html#cb104-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb104-8"><a href="lesson-3b-resampling.html#cb104-8" aria-hidden="true" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb104-9"><a href="lesson-3b-resampling.html#cb104-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(______) <span class="sc">%&gt;%</span> </span>
-<span id="cb104-10"><a href="lesson-3b-resampling.html#cb104-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(______)</span>
-<span id="cb104-11"><a href="lesson-3b-resampling.html#cb104-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb104-12"><a href="lesson-3b-resampling.html#cb104-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Fit our model on the bootstrap object</span></span>
-<span id="cb104-13"><a href="lesson-3b-resampling.html#cb104-13" aria-hidden="true" tabindex="-1"></a>mlr_fit_cv <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb104-14"><a href="lesson-3b-resampling.html#cb104-14" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit_______</span>(______)</span>
-<span id="cb104-15"><a href="lesson-3b-resampling.html#cb104-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb104-16"><a href="lesson-3b-resampling.html#cb104-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Assess our average cross validation error</span></span>
-<span id="cb104-17"><a href="lesson-3b-resampling.html#cb104-17" aria-hidden="true" tabindex="-1"></a>______</span></code></pre></div>
+<div class="sourceCode" id="cb104"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb104-1"><a href="lesson-3b-resampling.html#cb104-1" tabindex="-1"></a><span class="co"># 1. Create a bootstrap object</span></span>
+<span id="cb104-2"><a href="lesson-3b-resampling.html#cb104-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb104-3"><a href="lesson-3b-resampling.html#cb104-3" tabindex="-1"></a>bs_samples <span class="ot">&lt;-</span> <span class="fu">bootstraps</span>(______, <span class="at">times =</span> ___, <span class="at">strata =</span> ____) <span class="co">#&lt;&lt;</span></span>
+<span id="cb104-4"><a href="lesson-3b-resampling.html#cb104-4" tabindex="-1"></a></span>
+<span id="cb104-5"><a href="lesson-3b-resampling.html#cb104-5" tabindex="-1"></a><span class="co"># 2. Create our workflow object</span></span>
+<span id="cb104-6"><a href="lesson-3b-resampling.html#cb104-6" tabindex="-1"></a>mlr_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(____ <span class="sc">~</span> __, <span class="at">data =</span> boston_train)</span>
+<span id="cb104-7"><a href="lesson-3b-resampling.html#cb104-7" tabindex="-1"></a></span>
+<span id="cb104-8"><a href="lesson-3b-resampling.html#cb104-8" tabindex="-1"></a>mlr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb104-9"><a href="lesson-3b-resampling.html#cb104-9" tabindex="-1"></a>  <span class="fu">add_model</span>(______) <span class="sc">%&gt;%</span> </span>
+<span id="cb104-10"><a href="lesson-3b-resampling.html#cb104-10" tabindex="-1"></a>  <span class="fu">add_recipe</span>(______)</span>
+<span id="cb104-11"><a href="lesson-3b-resampling.html#cb104-11" tabindex="-1"></a></span>
+<span id="cb104-12"><a href="lesson-3b-resampling.html#cb104-12" tabindex="-1"></a><span class="co"># 3. Fit our model on the bootstrap object</span></span>
+<span id="cb104-13"><a href="lesson-3b-resampling.html#cb104-13" tabindex="-1"></a>mlr_fit_cv <span class="ot">&lt;-</span> mlr_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb104-14"><a href="lesson-3b-resampling.html#cb104-14" tabindex="-1"></a>   <span class="fu">fit_______</span>(______)</span>
+<span id="cb104-15"><a href="lesson-3b-resampling.html#cb104-15" tabindex="-1"></a></span>
+<span id="cb104-16"><a href="lesson-3b-resampling.html#cb104-16" tabindex="-1"></a><span class="co"># 4. Assess our average cross validation error</span></span>
+<span id="cb104-17"><a href="lesson-3b-resampling.html#cb104-17" tabindex="-1"></a>______</span></code></pre></div>
 <div class="video">
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&amp;playerId=kaltura_player&amp;entry_id=1_scfuugcn&amp;flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&amp;wid=1_mz8lxsl2" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Knowledge check 9.5.1">
-</iframe>
+<p>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/_gY2F0PA1bk?si=P-pUIVQWEYwfLCof" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 </div>
 </div>
 </div>
 <div id="alternative-methods" class="section level2 hasAnchor" number="9.6">
 <h2><span class="header-section-number">9.6</span> Alternative methods<a href="lesson-3b-resampling.html#alternative-methods" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>It is important to note that there are other useful resampling procedures. If you’re working with time-series specific data then you will want to incorporate rolling origin and other time series resampling procedures. <span class="citation">Hyndman and Athanasopoulos (<a href="#ref-hyndman2018forecasting" role="doc-biblioref">2018</a>)</span> is the dominant, R-focused, time series resource<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>.</p>
-<p>Additionally, <span class="citation">Efron (<a href="#ref-efron1983estimating" role="doc-biblioref">1983</a>)</span> developed the “632 method” and <span class="citation">Efron and Tibshirani (<a href="#ref-efron1997improvements" role="doc-biblioref">1997</a>)</span> discuss the “632+ method”; both approaches seek to minimize biases experienced with bootstrapping on smaller data sets.</p>
+<p>It is important to note that there are other useful resampling procedures. If you’re working with time-series specific data then you will want to incorporate rolling origin and other time series resampling procedures. <span class="citation">Hyndman and Athanasopoulos (<a href="#ref-hyndman2018forecasting">2018</a>)</span> is the dominant, R-focused, time series resource<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>.</p>
+<p>Additionally, <span class="citation">Efron (<a href="#ref-efron1983estimating">1983</a>)</span> developed the “632 method” and <span class="citation">Efron and Tibshirani (<a href="#ref-efron1997improvements">1997</a>)</span> discuss the “632+ method”; both approaches seek to minimize biases experienced with bootstrapping on smaller data sets.</p>
 <p>Other methods exist but K-fold cross validation and bootstrapping are the dominant methods used and are often sufficient.</p>
 </div>
 <div id="exercises-5" class="section level2 hasAnchor" number="9.7">
@@ -977,7 +990,7 @@ gitbook.start({
     var script = document.createElement("script");
     script.type = "text/javascript";
     var src = "true";
-    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
     if (location.protocol !== "file:")
       if (/^https?:/.test(src))
         src = src.replace(/^https?:/, '');

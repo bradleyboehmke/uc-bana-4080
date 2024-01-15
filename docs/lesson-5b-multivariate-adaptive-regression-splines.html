@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>15 Lesson 5b: Multivariate Adaptive Regression Splines | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
 
   <meta property="og:title" content="15 Lesson 5b: Multivariate Adaptive Regression Splines | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,16 +51,16 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
 <link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
 <script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
-<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
-<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
 
 
 <style type="text/css">
@@ -101,7 +101,7 @@ code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -114,7 +114,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -128,6 +128,10 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
 <style type="text/css">
 /* Used with Pandoc 2.11+ new --citeproc when CSL is used */
 div.csl-bib-body { }
@@ -556,7 +560,7 @@ div.csl-indent {
 <div id="lesson-5b-multivariate-adaptive-regression-splines" class="section level1 hasAnchor" number="15">
 <h1><span class="header-section-number">15</span> Lesson 5b: Multivariate Adaptive Regression Splines<a href="lesson-5b-multivariate-adaptive-regression-splines.html#lesson-5b-multivariate-adaptive-regression-splines" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <p>The previous modules discussed algorithms that are intrinsically linear. Many of these models can be adapted to nonlinear patterns in the data by manually adding nonlinear model terms (e.g., squared terms, interaction effects, and other transformations of the original features); however, to do so you the analyst must know the specific nature of the nonlinearities and interactions <em>a priori</em>. Alternatively, there are numerous algorithms that are inherently nonlinear. When using these models, the exact form of the nonlinearity does not need to be known explicitly or specified prior to model training. Rather, these algorithms will search for, and discover, nonlinearities and interactions in the data that help maximize predictive accuracy.</p>
-<p>This lesson discusses <em>multivariate adaptive regression splines</em> (MARS) <span class="citation">(<a href="#ref-friedman1991multivariate" role="doc-biblioref">J. H. Friedman 1991</a>)</span>, an algorithm that automatically creates a piecewise linear model which provides an intuitive stepping block into nonlinearity after grasping the concept of multiple linear regression. Future modules will focus on other nonlinear algorithms.</p>
+<p>This lesson discusses <em>multivariate adaptive regression splines</em> (MARS) <span class="citation">(<a href="#ref-friedman1991multivariate">J. H. Friedman 1991</a>)</span>, an algorithm that automatically creates a piecewise linear model which provides an intuitive stepping block into nonlinearity after grasping the concept of multiple linear regression. Future modules will focus on other nonlinear algorithms.</p>
 <div id="learning-objectives-15" class="section level2 hasAnchor" number="15.1">
 <h2><span class="header-section-number">15.1</span> Learning objectives<a href="lesson-5b-multivariate-adaptive-regression-splines.html#learning-objectives-15" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>By the end of this lesson you will know how:</p>
@@ -568,27 +572,29 @@ div.csl-indent {
 </div>
 <div id="prerequisites-8" class="section level2 hasAnchor" number="15.2">
 <h2><span class="header-section-number">15.2</span> Prerequisites<a href="lesson-5b-multivariate-adaptive-regression-splines.html#prerequisites-8" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<div class="sourceCode" id="cb149"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb149-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper packages</span></span>
-<span id="cb149-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
-<span id="cb149-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb149-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
-<span id="cb149-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)  <span class="co"># for fitting MARS models</span></span>
-<span id="cb149-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb149-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
-<span id="cb149-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
-<span id="cb149-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
-<div class="sourceCode" id="cb150"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb150-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Stratified sampling with the rsample package</span></span>
-<span id="cb150-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb150-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-3" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
-<span id="cb150-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-4" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
-<span id="cb150-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-5" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">training</span>(split)</span>
-<span id="cb150-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-6" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">testing</span>(split)</span></code></pre></div>
+<div class="sourceCode" id="cb149"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb149-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-1" tabindex="-1"></a><span class="co"># Helper packages</span></span>
+<span id="cb149-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-2" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
+<span id="cb149-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-3" tabindex="-1"></a></span>
+<span id="cb149-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-4" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
+<span id="cb149-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-5" tabindex="-1"></a><span class="fu">library</span>(tidymodels)  <span class="co"># for fitting MARS models</span></span>
+<span id="cb149-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-6" tabindex="-1"></a></span>
+<span id="cb149-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-7" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
+<span id="cb149-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-8" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
+<span id="cb149-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb149-9" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
+<div class="sourceCode" id="cb150"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb150-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-1" tabindex="-1"></a><span class="co"># Stratified sampling with the rsample package</span></span>
+<span id="cb150-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb150-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-3" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
+<span id="cb150-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-4" tabindex="-1"></a>split  <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
+<span id="cb150-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-5" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">training</span>(split)</span>
+<span id="cb150-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb150-6" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">testing</span>(split)</span></code></pre></div>
 </div>
 <div id="nonlinearity" class="section level2 hasAnchor" number="15.3">
 <h2><span class="header-section-number">15.3</span> Nonlinearity<a href="lesson-5b-multivariate-adaptive-regression-splines.html#nonlinearity" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <div class="video">
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&amp;playerId=kaltura_player&amp;entry_id=1_mcddkhi3&amp;flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&amp;wid=1_la01ilxg" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Multivariate adaptive regression splines">
-</iframe>
+<p>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/8-77ocMOan0?si=97rYHoCN7Oc9T0Qm" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 </div>
 <p>In the previous modules, we focused on linear models (where the analyst has to explicitly specify any nonlinear relationships and interaction effects). We illustrated some of the advantages of linear models such as their ease and speed of computation and also the intuitive nature of interpreting their coefficients. However, linear models make a strong assumption about linearity, and this assumption is often a poor one, which can affect predictive accuracy.</p>
 <p>We can extend linear models to capture any non-linear relationship. Typically, this is done by explicitly including polynomial terms (e.g., <span class="math inline">\(x_i^2\)</span>) or step functions. Polynomial regression is a form of regression in which the relationship between <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> is modeled as a <span class="math inline">\(d\)</span>th degree polynomial in <span class="math inline">\(X\)</span>. For example, the following equation represents a polynomial regression function where <span class="math inline">\(Y\)</span> is modeled as a <span class="math inline">\(d\)</span>-th degree polynomial in <span class="math inline">\(X\)</span>. Generally speaking, it is unusual to use <span class="math inline">\(d\)</span> greater than 3 or 4 as the larger <span class="math inline">\(d\)</span> becomes, the easier the function fit becomes overly flexible and oddly shaped…especially near the boundaries of the range of <span class="math inline">\(X\)</span> values. Increasing <span class="math inline">\(d\)</span> also tends to increase the presence of multicollinearity.</p>
@@ -638,12 +644,14 @@ Figure 15.2: Examples of fitted regression splines of one (A), two (B), three (C
 <div id="fitting-a-mars-model" class="section level2 hasAnchor" number="15.5">
 <h2><span class="header-section-number">15.5</span> Fitting a MARS model<a href="lesson-5b-multivariate-adaptive-regression-splines.html#fitting-a-mars-model" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <div class="video">
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&amp;playerId=kaltura_player&amp;entry_id=1_kcg69q6j&amp;flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&amp;wid=1_6igoesxe" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Fitting MARS models">
-</iframe>
+<p>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/aKAWLVCQzMs?si=SPyQZ7qQyAxBiH8u" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 </div>
 <div id="fitting-a-basic-model" class="section level3 hasAnchor" number="15.5.1">
 <h3><span class="header-section-number">15.5.1</span> Fitting a basic model<a href="lesson-5b-multivariate-adaptive-regression-splines.html#fitting-a-basic-model" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>We’ll start by fitting a basic model using <code>Gr_Liv_Area</code> and <code>Year_Built</code> to predict our <code>Sales_Price</code>. In both R, the modeling algorithm will assess all potential knots across all supplied features and then will prune to the optimal number of knots based on an expected change in <span class="math inline">\(R^2\)</span> (for the training data) of less than 0.001. This calculation is performed by the Generalized cross-validation (GCV) procedure, which is a computational shortcut for linear models that produces an approximate leave-one-out cross-validation error metric <span class="citation">(<a href="#ref-golub1979generalized" role="doc-biblioref">Golub, Heath, and Wahba 1979</a>)</span>.</p>
+<p>We’ll start by fitting a basic model using <code>Gr_Liv_Area</code> and <code>Year_Built</code> to predict our <code>Sales_Price</code>. In both R, the modeling algorithm will assess all potential knots across all supplied features and then will prune to the optimal number of knots based on an expected change in <span class="math inline">\(R^2\)</span> (for the training data) of less than 0.001. This calculation is performed by the Generalized cross-validation (GCV) procedure, which is a computational shortcut for linear models that produces an approximate leave-one-out cross-validation error metric <span class="citation">(<a href="#ref-golub1979generalized">Golub, Heath, and Wahba 1979</a>)</span>.</p>
 <div class="note">
 <p>
 Note that MARS models do not require normalization or standardization
@@ -660,34 +668,34 @@ get this error then install the earth package with
 <code>install.packages(“earth”)</code> and rerun the code.
 </p>
 </div>
-<div class="sourceCode" id="cb151"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb151-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-1" aria-hidden="true" tabindex="-1"></a>mars_fit <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb151-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> Gr_Liv_Area <span class="sc">+</span> Year_Built, ames_train)</span>
-<span id="cb151-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb151-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-4" aria-hidden="true" tabindex="-1"></a>mars_fit</span>
-<span id="cb151-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-5" aria-hidden="true" tabindex="-1"></a><span class="do">## parsnip model object</span></span>
-<span id="cb151-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-6" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb151-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Selected 9 of 10 terms, and 2 of 2 predictors</span></span>
-<span id="cb151-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Termination condition: RSq changed by less than 0.001 at 10 terms</span></span>
-<span id="cb151-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Importance: Gr_Liv_Area, Year_Built</span></span>
-<span id="cb151-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Number of terms at each degree of interaction: 1 8 (additive model)</span></span>
-<span id="cb151-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-11" aria-hidden="true" tabindex="-1"></a><span class="do">## GCV 1802525892    RSS 3.632344e+12    GRSq 0.7208907    RSq 0.7252347</span></span></code></pre></div>
+<div class="sourceCode" id="cb151"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb151-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-1" tabindex="-1"></a>mars_fit <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb151-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-2" tabindex="-1"></a>  <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> Gr_Liv_Area <span class="sc">+</span> Year_Built, ames_train)</span>
+<span id="cb151-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-3" tabindex="-1"></a></span>
+<span id="cb151-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-4" tabindex="-1"></a>mars_fit</span>
+<span id="cb151-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-5" tabindex="-1"></a><span class="do">## parsnip model object</span></span>
+<span id="cb151-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-6" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb151-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-7" tabindex="-1"></a><span class="do">## Selected 9 of 10 terms, and 2 of 2 predictors</span></span>
+<span id="cb151-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-8" tabindex="-1"></a><span class="do">## Termination condition: RSq changed by less than 0.001 at 10 terms</span></span>
+<span id="cb151-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-9" tabindex="-1"></a><span class="do">## Importance: Gr_Liv_Area, Year_Built</span></span>
+<span id="cb151-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-10" tabindex="-1"></a><span class="do">## Number of terms at each degree of interaction: 1 8 (additive model)</span></span>
+<span id="cb151-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb151-11" tabindex="-1"></a><span class="do">## GCV 1802525892    RSS 3.632344e+12    GRSq 0.7208907    RSq 0.7252347</span></span></code></pre></div>
 <p>In the results above, the GCV is reported along with other metrics (<span class="math inline">\(R^2\)</span>, residual sum of squares - RSS). We can use this info to compute the RMSE, which is in the low to mid $40K range. Keep in mind that this RMSE is not a cross-validated RMSE, just the RMSE on the training data (we’ll do some cross-validation shortly).</p>
-<div class="sourceCode" id="cb152"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb152-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb152-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RMSE</span></span>
-<span id="cb152-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb152-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(mars_fit<span class="sc">$</span>fit<span class="sc">$</span>rss <span class="sc">/</span> <span class="fu">nrow</span>(ames_train))</span>
-<span id="cb152-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb152-3" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 42103.92</span></span></code></pre></div>
+<div class="sourceCode" id="cb152"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb152-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb152-1" tabindex="-1"></a><span class="co"># RMSE</span></span>
+<span id="cb152-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb152-2" tabindex="-1"></a><span class="fu">sqrt</span>(mars_fit<span class="sc">$</span>fit<span class="sc">$</span>rss <span class="sc">/</span> <span class="fu">nrow</span>(ames_train))</span>
+<span id="cb152-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb152-3" tabindex="-1"></a><span class="do">## [1] 42103.92</span></span></code></pre></div>
 <p>Looking at the coefficients below, you’ll notice that we see a knot in <code>Gr_Liv_Area</code> at 3395. This suggests that as homes exceed 3395 square feet there is a change in the linear relationship between <code>Gr_Liv_Area</code> and <code>Sale_Price</code> compared to homes that are less than 3395 square feet. In fact, we can see multiple knots across the range of <code>Gr_Liv_Area</code> and <code>Year_Built</code>. Our model has taken two features (<code>Gr_Liv_Area</code> and <code>Year_Built</code>) and split them into 8 features by creating knots along these feature values.</p>
-<div class="sourceCode" id="cb153"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb153-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-1" aria-hidden="true" tabindex="-1"></a><span class="co"># coefficients</span></span>
-<span id="cb153-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-2" aria-hidden="true" tabindex="-1"></a>mars_fit<span class="sc">$</span>fit<span class="sc">$</span>coefficients</span>
-<span id="cb153-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-3" aria-hidden="true" tabindex="-1"></a><span class="do">##                       Sale_Price</span></span>
-<span id="cb153-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-4" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)         295628.31484</span></span>
-<span id="cb153-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-5" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3395)   -772.99460</span></span>
-<span id="cb153-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-6" aria-hidden="true" tabindex="-1"></a><span class="do">## h(3395-Gr_Liv_Area)    -61.66360</span></span>
-<span id="cb153-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-7" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2002-Year_Built)    -685.97770</span></span>
-<span id="cb153-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-8" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-2169)     27.57111</span></span>
-<span id="cb153-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-9" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3194)    516.04236</span></span>
-<span id="cb153-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-10" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-1456)     41.77324</span></span>
-<span id="cb153-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-11" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Year_Built-1977)     910.94873</span></span>
-<span id="cb153-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-12" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Year_Built-2004)   12519.67884</span></span></code></pre></div>
+<div class="sourceCode" id="cb153"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb153-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-1" tabindex="-1"></a><span class="co"># coefficients</span></span>
+<span id="cb153-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-2" tabindex="-1"></a>mars_fit<span class="sc">$</span>fit<span class="sc">$</span>coefficients</span>
+<span id="cb153-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-3" tabindex="-1"></a><span class="do">##                       Sale_Price</span></span>
+<span id="cb153-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-4" tabindex="-1"></a><span class="do">## (Intercept)         295628.31484</span></span>
+<span id="cb153-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-5" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3395)   -772.99460</span></span>
+<span id="cb153-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-6" tabindex="-1"></a><span class="do">## h(3395-Gr_Liv_Area)    -61.66360</span></span>
+<span id="cb153-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-7" tabindex="-1"></a><span class="do">## h(2002-Year_Built)    -685.97770</span></span>
+<span id="cb153-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-8" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-2169)     27.57111</span></span>
+<span id="cb153-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-9" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3194)    516.04236</span></span>
+<span id="cb153-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-10" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-1456)     41.77324</span></span>
+<span id="cb153-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-11" tabindex="-1"></a><span class="do">## h(Year_Built-1977)     910.94873</span></span>
+<span id="cb153-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb153-12" tabindex="-1"></a><span class="do">## h(Year_Built-2004)   12519.67884</span></span></code></pre></div>
 <div class="tip">
 <p>
 The most important tuning parameter in a MARS model is the number of
@@ -706,130 +714,130 @@ We call this process of feature elimination and knot refinement as
 “pruning the knots”.
 </p>
 </div>
-<div class="sourceCode" id="cb154"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb154-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-1" aria-hidden="true" tabindex="-1"></a>mars_fit <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb154-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> ., ames_train)</span>
-<span id="cb154-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-4" aria-hidden="true" tabindex="-1"></a>mars_fit</span>
-<span id="cb154-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-5" aria-hidden="true" tabindex="-1"></a><span class="do">## parsnip model object</span></span>
-<span id="cb154-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-6" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb154-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Selected 41 of 45 terms, and 29 of 308 predictors</span></span>
-<span id="cb154-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Termination condition: RSq changed by less than 0.001 at 45 terms</span></span>
-<span id="cb154-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Importance: Gr_Liv_Area, Year_Built, ...</span></span>
-<span id="cb154-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Number of terms at each degree of interaction: 1 40 (additive model)</span></span>
-<span id="cb154-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-11" aria-hidden="true" tabindex="-1"></a><span class="do">## GCV 511589986    RSS 967008439675    GRSq 0.9207836    RSq 0.9268516</span></span>
-<span id="cb154-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-13" aria-hidden="true" tabindex="-1"></a><span class="co"># RMSE</span></span>
-<span id="cb154-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sqrt</span>(mars_fit<span class="sc">$</span>fit<span class="sc">$</span>rss <span class="sc">/</span> <span class="fu">nrow</span>(ames_train))</span>
-<span id="cb154-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-15" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 21724.22</span></span>
-<span id="cb154-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb154-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-17" aria-hidden="true" tabindex="-1"></a><span class="co"># coefficients</span></span>
-<span id="cb154-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-18" aria-hidden="true" tabindex="-1"></a>mars_fit<span class="sc">$</span>fit<span class="sc">$</span>coefficients</span>
-<span id="cb154-19"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-19" aria-hidden="true" tabindex="-1"></a><span class="do">##                                   Sale_Price</span></span>
-<span id="cb154-20"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-20" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)                     2.275972e+05</span></span>
-<span id="cb154-21"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-21" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3194)            -2.879934e+02</span></span>
-<span id="cb154-22"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-22" aria-hidden="true" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)            -5.861227e+01</span></span>
-<span id="cb154-23"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-23" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Year_Built-2002)              3.128137e+03</span></span>
-<span id="cb154-24"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-24" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2002-Year_Built)             -4.506370e+02</span></span>
-<span id="cb154-25"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-25" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-2223)          -6.531310e+02</span></span>
-<span id="cb154-26"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-26" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2223-Total_Bsmt_SF)          -2.903002e+01</span></span>
-<span id="cb154-27"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-27" aria-hidden="true" tabindex="-1"></a><span class="do">## h(1656-Bsmt_Unf_SF)             2.152273e+01</span></span>
-<span id="cb154-28"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-28" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualVery_Excellent      1.198770e+05</span></span>
-<span id="cb154-29"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-29" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualExcellent           7.325741e+04</span></span>
-<span id="cb154-30"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-30" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualVery_Good           3.065703e+04</span></span>
-<span id="cb154-31"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-31" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2-Kitchen_AbvGr)              2.199288e+04</span></span>
-<span id="cb154-32"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-32" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Second_Flr_SF-1427)           3.071810e+02</span></span>
-<span id="cb154-33"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-33" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Year_Remod_Add-1973)          3.198457e+02</span></span>
-<span id="cb154-34"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-34" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)                4.956740e-01</span></span>
-<span id="cb154-35"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-35" aria-hidden="true" tabindex="-1"></a><span class="do">## h(6720-Lot_Area)               -3.972312e+00</span></span>
-<span id="cb154-36"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-36" aria-hidden="true" tabindex="-1"></a><span class="do">## FunctionalTyp                   1.642861e+04</span></span>
-<span id="cb154-37"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-37" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Bedroom_AbvGr-4)             -1.304304e+04</span></span>
-<span id="cb154-38"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-38" aria-hidden="true" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)              3.044473e+03</span></span>
-<span id="cb154-39"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-39" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Garage_Cars-2)                1.351805e+04</span></span>
-<span id="cb154-40"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-40" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2-Garage_Cars)               -5.099554e+03</span></span>
-<span id="cb154-41"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-41" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-2136)           5.756167e+02</span></span>
-<span id="cb154-42"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-42" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodCrawford            2.015380e+04</span></span>
-<span id="cb154-43"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-43" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualGood                1.167108e+04</span></span>
-<span id="cb154-44"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-44" aria-hidden="true" tabindex="-1"></a><span class="do">## Condition_2PosN                -1.164630e+05</span></span>
-<span id="cb154-45"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-45" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_CondGood                3.000370e+04</span></span>
-<span id="cb154-46"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-46" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_CondVery_Good           3.380410e+04</span></span>
-<span id="cb154-47"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-47" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_CondAbove_Average       2.231569e+04</span></span>
-<span id="cb154-48"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-48" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-2898)             1.591394e+02</span></span>
-<span id="cb154-49"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-49" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodGreen_Hills         9.830591e+04</span></span>
-<span id="cb154-50"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-50" aria-hidden="true" tabindex="-1"></a><span class="do">## Roof_MatlWdShngl                6.744107e+04</span></span>
-<span id="cb154-51"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-51" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Longitude--93.6572)          -1.229288e+05</span></span>
-<span id="cb154-52"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-52" aria-hidden="true" tabindex="-1"></a><span class="do">## h(-93.6572-Longitude)          -1.570905e+05</span></span>
-<span id="cb154-53"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-53" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodStone_Brook         3.162134e+04</span></span>
-<span id="cb154-54"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-54" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_CondExcellent           3.886202e+04</span></span>
-<span id="cb154-55"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-55" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_CondAverage             1.480704e+04</span></span>
-<span id="cb154-56"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-56" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-1295)           3.234334e+01</span></span>
-<span id="cb154-57"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-57" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodNorthridge          2.693805e+04</span></span>
-<span id="cb154-58"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-58" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Fireplaces-1)                 6.808179e+03</span></span>
-<span id="cb154-59"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-59" aria-hidden="true" tabindex="-1"></a><span class="do">## h(1-Fireplaces)                -4.374554e+03</span></span>
-<span id="cb154-60"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-60" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodNorthridge_Heights  1.455416e+04</span></span></code></pre></div>
+<div class="sourceCode" id="cb154"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb154-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-1" tabindex="-1"></a>mars_fit <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb154-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-2" tabindex="-1"></a>  <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> ., ames_train)</span>
+<span id="cb154-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-3" tabindex="-1"></a></span>
+<span id="cb154-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-4" tabindex="-1"></a>mars_fit</span>
+<span id="cb154-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-5" tabindex="-1"></a><span class="do">## parsnip model object</span></span>
+<span id="cb154-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-6" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb154-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-7" tabindex="-1"></a><span class="do">## Selected 41 of 45 terms, and 29 of 308 predictors</span></span>
+<span id="cb154-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-8" tabindex="-1"></a><span class="do">## Termination condition: RSq changed by less than 0.001 at 45 terms</span></span>
+<span id="cb154-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-9" tabindex="-1"></a><span class="do">## Importance: Gr_Liv_Area, Year_Built, ...</span></span>
+<span id="cb154-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-10" tabindex="-1"></a><span class="do">## Number of terms at each degree of interaction: 1 40 (additive model)</span></span>
+<span id="cb154-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-11" tabindex="-1"></a><span class="do">## GCV 511589986    RSS 967008439675    GRSq 0.9207836    RSq 0.9268516</span></span>
+<span id="cb154-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-12" tabindex="-1"></a></span>
+<span id="cb154-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-13" tabindex="-1"></a><span class="co"># RMSE</span></span>
+<span id="cb154-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-14" tabindex="-1"></a><span class="fu">sqrt</span>(mars_fit<span class="sc">$</span>fit<span class="sc">$</span>rss <span class="sc">/</span> <span class="fu">nrow</span>(ames_train))</span>
+<span id="cb154-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-15" tabindex="-1"></a><span class="do">## [1] 21724.22</span></span>
+<span id="cb154-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-16" tabindex="-1"></a></span>
+<span id="cb154-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-17" tabindex="-1"></a><span class="co"># coefficients</span></span>
+<span id="cb154-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-18" tabindex="-1"></a>mars_fit<span class="sc">$</span>fit<span class="sc">$</span>coefficients</span>
+<span id="cb154-19"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-19" tabindex="-1"></a><span class="do">##                                   Sale_Price</span></span>
+<span id="cb154-20"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-20" tabindex="-1"></a><span class="do">## (Intercept)                     2.275972e+05</span></span>
+<span id="cb154-21"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-21" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3194)            -2.879934e+02</span></span>
+<span id="cb154-22"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-22" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)            -5.861227e+01</span></span>
+<span id="cb154-23"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-23" tabindex="-1"></a><span class="do">## h(Year_Built-2002)              3.128137e+03</span></span>
+<span id="cb154-24"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-24" tabindex="-1"></a><span class="do">## h(2002-Year_Built)             -4.506370e+02</span></span>
+<span id="cb154-25"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-25" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-2223)          -6.531310e+02</span></span>
+<span id="cb154-26"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-26" tabindex="-1"></a><span class="do">## h(2223-Total_Bsmt_SF)          -2.903002e+01</span></span>
+<span id="cb154-27"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-27" tabindex="-1"></a><span class="do">## h(1656-Bsmt_Unf_SF)             2.152273e+01</span></span>
+<span id="cb154-28"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-28" tabindex="-1"></a><span class="do">## Overall_QualVery_Excellent      1.198770e+05</span></span>
+<span id="cb154-29"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-29" tabindex="-1"></a><span class="do">## Overall_QualExcellent           7.325741e+04</span></span>
+<span id="cb154-30"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-30" tabindex="-1"></a><span class="do">## Overall_QualVery_Good           3.065703e+04</span></span>
+<span id="cb154-31"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-31" tabindex="-1"></a><span class="do">## h(2-Kitchen_AbvGr)              2.199288e+04</span></span>
+<span id="cb154-32"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-32" tabindex="-1"></a><span class="do">## h(Second_Flr_SF-1427)           3.071810e+02</span></span>
+<span id="cb154-33"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-33" tabindex="-1"></a><span class="do">## h(Year_Remod_Add-1973)          3.198457e+02</span></span>
+<span id="cb154-34"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-34" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)                4.956740e-01</span></span>
+<span id="cb154-35"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-35" tabindex="-1"></a><span class="do">## h(6720-Lot_Area)               -3.972312e+00</span></span>
+<span id="cb154-36"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-36" tabindex="-1"></a><span class="do">## FunctionalTyp                   1.642861e+04</span></span>
+<span id="cb154-37"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-37" tabindex="-1"></a><span class="do">## h(Bedroom_AbvGr-4)             -1.304304e+04</span></span>
+<span id="cb154-38"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-38" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)              3.044473e+03</span></span>
+<span id="cb154-39"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-39" tabindex="-1"></a><span class="do">## h(Garage_Cars-2)                1.351805e+04</span></span>
+<span id="cb154-40"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-40" tabindex="-1"></a><span class="do">## h(2-Garage_Cars)               -5.099554e+03</span></span>
+<span id="cb154-41"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-41" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-2136)           5.756167e+02</span></span>
+<span id="cb154-42"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-42" tabindex="-1"></a><span class="do">## NeighborhoodCrawford            2.015380e+04</span></span>
+<span id="cb154-43"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-43" tabindex="-1"></a><span class="do">## Overall_QualGood                1.167108e+04</span></span>
+<span id="cb154-44"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-44" tabindex="-1"></a><span class="do">## Condition_2PosN                -1.164630e+05</span></span>
+<span id="cb154-45"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-45" tabindex="-1"></a><span class="do">## Overall_CondGood                3.000370e+04</span></span>
+<span id="cb154-46"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-46" tabindex="-1"></a><span class="do">## Overall_CondVery_Good           3.380410e+04</span></span>
+<span id="cb154-47"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-47" tabindex="-1"></a><span class="do">## Overall_CondAbove_Average       2.231569e+04</span></span>
+<span id="cb154-48"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-48" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-2898)             1.591394e+02</span></span>
+<span id="cb154-49"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-49" tabindex="-1"></a><span class="do">## NeighborhoodGreen_Hills         9.830591e+04</span></span>
+<span id="cb154-50"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-50" tabindex="-1"></a><span class="do">## Roof_MatlWdShngl                6.744107e+04</span></span>
+<span id="cb154-51"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-51" tabindex="-1"></a><span class="do">## h(Longitude--93.6572)          -1.229288e+05</span></span>
+<span id="cb154-52"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-52" tabindex="-1"></a><span class="do">## h(-93.6572-Longitude)          -1.570905e+05</span></span>
+<span id="cb154-53"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-53" tabindex="-1"></a><span class="do">## NeighborhoodStone_Brook         3.162134e+04</span></span>
+<span id="cb154-54"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-54" tabindex="-1"></a><span class="do">## Overall_CondExcellent           3.886202e+04</span></span>
+<span id="cb154-55"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-55" tabindex="-1"></a><span class="do">## Overall_CondAverage             1.480704e+04</span></span>
+<span id="cb154-56"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-56" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-1295)           3.234334e+01</span></span>
+<span id="cb154-57"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-57" tabindex="-1"></a><span class="do">## NeighborhoodNorthridge          2.693805e+04</span></span>
+<span id="cb154-58"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-58" tabindex="-1"></a><span class="do">## h(Fireplaces-1)                 6.808179e+03</span></span>
+<span id="cb154-59"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-59" tabindex="-1"></a><span class="do">## h(1-Fireplaces)                -4.374554e+03</span></span>
+<span id="cb154-60"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb154-60" tabindex="-1"></a><span class="do">## NeighborhoodNorthridge_Heights  1.455416e+04</span></span></code></pre></div>
 </div>
 <div id="fitting-a-full-model-with-interactions" class="section level3 hasAnchor" number="15.5.3">
 <h3><span class="header-section-number">15.5.3</span> Fitting a full model with interactions<a href="lesson-5b-multivariate-adaptive-regression-splines.html#fitting-a-full-model-with-interactions" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>In addition to pruning the number of knots, MARS models allow us to also assess potential interactions between different hinge functions. The following example illustrates by allowing second degree interactions. You can see that now our model includes interaction terms between a maximum of two hinge functions (e.g. in the results you see <code>h(Year_Built-2002)*h(Gr_Liv_Area-2398)</code> which represents an interaction effect for those houses built after 2002 and have more than 2,398 square feet of living space).</p>
-<div class="sourceCode" id="cb155"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb155-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-1" aria-hidden="true" tabindex="-1"></a>mars_fit <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>, <span class="at">prod_degree =</span> <span class="dv">2</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb155-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> ., ames_train)</span>
-<span id="cb155-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb155-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-4" aria-hidden="true" tabindex="-1"></a>mars_fit</span>
-<span id="cb155-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-5" aria-hidden="true" tabindex="-1"></a><span class="do">## parsnip model object</span></span>
-<span id="cb155-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-6" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb155-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-7" aria-hidden="true" tabindex="-1"></a><span class="do">## Selected 45 of 50 terms, and 27 of 308 predictors</span></span>
-<span id="cb155-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-8" aria-hidden="true" tabindex="-1"></a><span class="do">## Termination condition: RSq changed by less than 0.001 at 50 terms</span></span>
-<span id="cb155-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Importance: Gr_Liv_Area, Year_Built, ...</span></span>
-<span id="cb155-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-10" aria-hidden="true" tabindex="-1"></a><span class="do">## Number of terms at each degree of interaction: 1 20 24</span></span>
-<span id="cb155-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-11" aria-hidden="true" tabindex="-1"></a><span class="do">## GCV 420267019    RSS 7.70355e+11    GRSq 0.9349244    RSq 0.9417272</span></span>
-<span id="cb155-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb155-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-13" aria-hidden="true" tabindex="-1"></a><span class="co"># coefficients</span></span>
-<span id="cb155-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-14" aria-hidden="true" tabindex="-1"></a>mars_fit<span class="sc">$</span>fit<span class="sc">$</span>coefficients</span>
-<span id="cb155-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-15" aria-hidden="true" tabindex="-1"></a><span class="do">##                                                    Sale_Price</span></span>
-<span id="cb155-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-16" aria-hidden="true" tabindex="-1"></a><span class="do">## (Intercept)                                      3.473694e+05</span></span>
-<span id="cb155-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-17" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3194)                              2.302940e+02</span></span>
-<span id="cb155-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-18" aria-hidden="true" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)                             -7.005261e+01</span></span>
-<span id="cb155-19"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-19" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Year_Built-2002)                               5.242461e+03</span></span>
-<span id="cb155-20"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-20" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2002-Year_Built)                              -7.360079e+02</span></span>
-<span id="cb155-21"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-21" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-2223)                            1.181093e+02</span></span>
-<span id="cb155-22"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-22" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2223-Total_Bsmt_SF)                           -4.901140e+01</span></span>
-<span id="cb155-23"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-23" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Year_Built-2002)*h(Gr_Liv_Area-2398)           9.035037e+00</span></span>
-<span id="cb155-24"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-24" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Year_Built-2002)*h(2398-Gr_Liv_Area)          -3.382639e+00</span></span>
-<span id="cb155-25"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-25" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Bsmt_Unf_SF-625)*h(3194-Gr_Liv_Area)          -1.145129e-02</span></span>
-<span id="cb155-26"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-26" aria-hidden="true" tabindex="-1"></a><span class="do">## h(625-Bsmt_Unf_SF)*h(3194-Gr_Liv_Area)           9.905591e-03</span></span>
-<span id="cb155-27"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-27" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*h(Total_Bsmt_SF-912)         -7.674355e-01</span></span>
-<span id="cb155-28"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-28" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*h(912-Total_Bsmt_SF)          2.277350e-01</span></span>
-<span id="cb155-29"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-29" aria-hidden="true" tabindex="-1"></a><span class="do">## Mas_Vnr_TypeStone*h(Gr_Liv_Area-3194)           -5.876451e+02</span></span>
-<span id="cb155-30"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-30" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Bedroom_AbvGr-4)                              -9.649772e+03</span></span>
-<span id="cb155-31"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-31" aria-hidden="true" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)                               5.208836e+03</span></span>
-<span id="cb155-32"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-32" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualVery_Excellent                       1.095179e+05</span></span>
-<span id="cb155-33"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-33" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualExcellent                           -1.578730e+05</span></span>
-<span id="cb155-34"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-34" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualVery_Good                            3.794092e+04</span></span>
-<span id="cb155-35"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-35" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)                                 3.325029e+00</span></span>
-<span id="cb155-36"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-36" aria-hidden="true" tabindex="-1"></a><span class="do">## h(6720-Lot_Area)                                -4.188039e+00</span></span>
-<span id="cb155-37"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-37" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*h(Year_Remod_Add-1971)        7.085099e+00</span></span>
-<span id="cb155-38"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-38" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodCrawford*h(2002-Year_Built)          3.213659e+02</span></span>
-<span id="cb155-39"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-39" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)*h(Garage_Cars-3)               -1.943527e+00</span></span>
-<span id="cb155-40"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-40" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)*h(3-Garage_Cars)               -1.237131e+00</span></span>
-<span id="cb155-41"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-41" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualExcellent*FoundationPConc            2.295300e+05</span></span>
-<span id="cb155-42"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-42" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualGood                                 1.940091e+04</span></span>
-<span id="cb155-43"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-43" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_QualAbove_Average*h(2223-Total_Bsmt_SF)  6.438535e+00</span></span>
-<span id="cb155-44"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-44" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*Sale_ConditionNormal          2.183528e+02</span></span>
-<span id="cb155-45"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-45" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)*h(144-Screen_Porch)            -1.051737e-02</span></span>
-<span id="cb155-46"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-46" aria-hidden="true" tabindex="-1"></a><span class="do">## FunctionalTyp                                    1.481969e+04</span></span>
-<span id="cb155-47"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-47" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Kitchen_AbvGr-1)                              -1.802740e+04</span></span>
-<span id="cb155-48"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-48" aria-hidden="true" tabindex="-1"></a><span class="do">## h(First_Flr_SF-2444)                            -7.656120e+01</span></span>
-<span id="cb155-49"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-49" aria-hidden="true" tabindex="-1"></a><span class="do">## h(2444-First_Flr_SF)                            -7.045054e+00</span></span>
-<span id="cb155-50"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-50" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodStone_Brook*h(Year_Built-2002)       1.033983e+04</span></span>
-<span id="cb155-51"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-51" aria-hidden="true" tabindex="-1"></a><span class="do">## Overall_CondGood*h(2002-Year_Built)              1.598754e+02</span></span>
-<span id="cb155-52"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-52" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Longitude--93.6563)                           -9.367281e+05</span></span>
-<span id="cb155-53"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-53" aria-hidden="true" tabindex="-1"></a><span class="do">## h(-93.6563-Longitude)                           -9.165180e+05</span></span>
-<span id="cb155-54"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-54" aria-hidden="true" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)*h(Longitude--93.6559)        4.432167e+02</span></span>
-<span id="cb155-55"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-55" aria-hidden="true" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)*h(-93.6559-Longitude)        3.803470e+02</span></span>
-<span id="cb155-56"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-56" aria-hidden="true" tabindex="-1"></a><span class="do">## FunctionalTyp*h(Garage_Area-542)                 3.500866e+01</span></span>
-<span id="cb155-57"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-57" aria-hidden="true" tabindex="-1"></a><span class="do">## NeighborhoodGreen_Hills*FunctionalTyp            9.112140e+04</span></span>
-<span id="cb155-58"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-58" aria-hidden="true" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)*h(Fireplaces-1)               5.820943e+03</span></span>
-<span id="cb155-59"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-59" aria-hidden="true" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)*h(1-Fireplaces)              -2.482522e+03</span></span>
-<span id="cb155-60"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-60" aria-hidden="true" tabindex="-1"></a><span class="do">## h(Bsmt_Unf_SF-1237)*h(4-Bedroom_AbvGr)          -3.737860e+01</span></span></code></pre></div>
+<div class="sourceCode" id="cb155"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb155-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-1" tabindex="-1"></a>mars_fit <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>, <span class="at">prod_degree =</span> <span class="dv">2</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb155-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-2" tabindex="-1"></a>  <span class="fu">fit</span>(Sale_Price <span class="sc">~</span> ., ames_train)</span>
+<span id="cb155-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-3" tabindex="-1"></a></span>
+<span id="cb155-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-4" tabindex="-1"></a>mars_fit</span>
+<span id="cb155-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-5" tabindex="-1"></a><span class="do">## parsnip model object</span></span>
+<span id="cb155-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-6" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb155-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-7" tabindex="-1"></a><span class="do">## Selected 45 of 50 terms, and 27 of 308 predictors</span></span>
+<span id="cb155-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-8" tabindex="-1"></a><span class="do">## Termination condition: RSq changed by less than 0.001 at 50 terms</span></span>
+<span id="cb155-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-9" tabindex="-1"></a><span class="do">## Importance: Gr_Liv_Area, Year_Built, ...</span></span>
+<span id="cb155-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-10" tabindex="-1"></a><span class="do">## Number of terms at each degree of interaction: 1 20 24</span></span>
+<span id="cb155-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-11" tabindex="-1"></a><span class="do">## GCV 420267019    RSS 7.70355e+11    GRSq 0.9349244    RSq 0.9417272</span></span>
+<span id="cb155-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-12" tabindex="-1"></a></span>
+<span id="cb155-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-13" tabindex="-1"></a><span class="co"># coefficients</span></span>
+<span id="cb155-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-14" tabindex="-1"></a>mars_fit<span class="sc">$</span>fit<span class="sc">$</span>coefficients</span>
+<span id="cb155-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-15" tabindex="-1"></a><span class="do">##                                                    Sale_Price</span></span>
+<span id="cb155-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-16" tabindex="-1"></a><span class="do">## (Intercept)                                      3.473694e+05</span></span>
+<span id="cb155-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-17" tabindex="-1"></a><span class="do">## h(Gr_Liv_Area-3194)                              2.302940e+02</span></span>
+<span id="cb155-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-18" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)                             -7.005261e+01</span></span>
+<span id="cb155-19"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-19" tabindex="-1"></a><span class="do">## h(Year_Built-2002)                               5.242461e+03</span></span>
+<span id="cb155-20"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-20" tabindex="-1"></a><span class="do">## h(2002-Year_Built)                              -7.360079e+02</span></span>
+<span id="cb155-21"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-21" tabindex="-1"></a><span class="do">## h(Total_Bsmt_SF-2223)                            1.181093e+02</span></span>
+<span id="cb155-22"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-22" tabindex="-1"></a><span class="do">## h(2223-Total_Bsmt_SF)                           -4.901140e+01</span></span>
+<span id="cb155-23"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-23" tabindex="-1"></a><span class="do">## h(Year_Built-2002)*h(Gr_Liv_Area-2398)           9.035037e+00</span></span>
+<span id="cb155-24"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-24" tabindex="-1"></a><span class="do">## h(Year_Built-2002)*h(2398-Gr_Liv_Area)          -3.382639e+00</span></span>
+<span id="cb155-25"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-25" tabindex="-1"></a><span class="do">## h(Bsmt_Unf_SF-625)*h(3194-Gr_Liv_Area)          -1.145129e-02</span></span>
+<span id="cb155-26"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-26" tabindex="-1"></a><span class="do">## h(625-Bsmt_Unf_SF)*h(3194-Gr_Liv_Area)           9.905591e-03</span></span>
+<span id="cb155-27"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-27" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*h(Total_Bsmt_SF-912)         -7.674355e-01</span></span>
+<span id="cb155-28"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-28" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*h(912-Total_Bsmt_SF)          2.277350e-01</span></span>
+<span id="cb155-29"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-29" tabindex="-1"></a><span class="do">## Mas_Vnr_TypeStone*h(Gr_Liv_Area-3194)           -5.876451e+02</span></span>
+<span id="cb155-30"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-30" tabindex="-1"></a><span class="do">## h(Bedroom_AbvGr-4)                              -9.649772e+03</span></span>
+<span id="cb155-31"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-31" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)                               5.208836e+03</span></span>
+<span id="cb155-32"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-32" tabindex="-1"></a><span class="do">## Overall_QualVery_Excellent                       1.095179e+05</span></span>
+<span id="cb155-33"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-33" tabindex="-1"></a><span class="do">## Overall_QualExcellent                           -1.578730e+05</span></span>
+<span id="cb155-34"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-34" tabindex="-1"></a><span class="do">## Overall_QualVery_Good                            3.794092e+04</span></span>
+<span id="cb155-35"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-35" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)                                 3.325029e+00</span></span>
+<span id="cb155-36"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-36" tabindex="-1"></a><span class="do">## h(6720-Lot_Area)                                -4.188039e+00</span></span>
+<span id="cb155-37"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-37" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*h(Year_Remod_Add-1971)        7.085099e+00</span></span>
+<span id="cb155-38"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-38" tabindex="-1"></a><span class="do">## NeighborhoodCrawford*h(2002-Year_Built)          3.213659e+02</span></span>
+<span id="cb155-39"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-39" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)*h(Garage_Cars-3)               -1.943527e+00</span></span>
+<span id="cb155-40"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-40" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)*h(3-Garage_Cars)               -1.237131e+00</span></span>
+<span id="cb155-41"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-41" tabindex="-1"></a><span class="do">## Overall_QualExcellent*FoundationPConc            2.295300e+05</span></span>
+<span id="cb155-42"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-42" tabindex="-1"></a><span class="do">## Overall_QualGood                                 1.940091e+04</span></span>
+<span id="cb155-43"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-43" tabindex="-1"></a><span class="do">## Overall_QualAbove_Average*h(2223-Total_Bsmt_SF)  6.438535e+00</span></span>
+<span id="cb155-44"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-44" tabindex="-1"></a><span class="do">## h(2002-Year_Built)*Sale_ConditionNormal          2.183528e+02</span></span>
+<span id="cb155-45"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-45" tabindex="-1"></a><span class="do">## h(Lot_Area-6720)*h(144-Screen_Porch)            -1.051737e-02</span></span>
+<span id="cb155-46"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-46" tabindex="-1"></a><span class="do">## FunctionalTyp                                    1.481969e+04</span></span>
+<span id="cb155-47"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-47" tabindex="-1"></a><span class="do">## h(Kitchen_AbvGr-1)                              -1.802740e+04</span></span>
+<span id="cb155-48"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-48" tabindex="-1"></a><span class="do">## h(First_Flr_SF-2444)                            -7.656120e+01</span></span>
+<span id="cb155-49"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-49" tabindex="-1"></a><span class="do">## h(2444-First_Flr_SF)                            -7.045054e+00</span></span>
+<span id="cb155-50"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-50" tabindex="-1"></a><span class="do">## NeighborhoodStone_Brook*h(Year_Built-2002)       1.033983e+04</span></span>
+<span id="cb155-51"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-51" tabindex="-1"></a><span class="do">## Overall_CondGood*h(2002-Year_Built)              1.598754e+02</span></span>
+<span id="cb155-52"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-52" tabindex="-1"></a><span class="do">## h(Longitude--93.6563)                           -9.367281e+05</span></span>
+<span id="cb155-53"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-53" tabindex="-1"></a><span class="do">## h(-93.6563-Longitude)                           -9.165180e+05</span></span>
+<span id="cb155-54"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-54" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)*h(Longitude--93.6559)        4.432167e+02</span></span>
+<span id="cb155-55"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-55" tabindex="-1"></a><span class="do">## h(3194-Gr_Liv_Area)*h(-93.6559-Longitude)        3.803470e+02</span></span>
+<span id="cb155-56"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-56" tabindex="-1"></a><span class="do">## FunctionalTyp*h(Garage_Area-542)                 3.500866e+01</span></span>
+<span id="cb155-57"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-57" tabindex="-1"></a><span class="do">## NeighborhoodGreen_Hills*FunctionalTyp            9.112140e+04</span></span>
+<span id="cb155-58"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-58" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)*h(Fireplaces-1)               5.820943e+03</span></span>
+<span id="cb155-59"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-59" tabindex="-1"></a><span class="do">## h(4-Bedroom_AbvGr)*h(1-Fireplaces)              -2.482522e+03</span></span>
+<span id="cb155-60"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb155-60" tabindex="-1"></a><span class="do">## h(Bsmt_Unf_SF-1237)*h(4-Bedroom_AbvGr)          -3.737860e+01</span></span></code></pre></div>
 </div>
 <div id="knowledge-check-25" class="section level3 hasAnchor" number="15.5.4">
 <h3><span class="header-section-number">15.5.4</span> Knowledge check<a href="lesson-5b-multivariate-adaptive-regression-splines.html#knowledge-check-25" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -884,8 +892,10 @@ interpret the coefficients?
 <div id="tuning-1" class="section level2 hasAnchor" number="15.6">
 <h2><span class="header-section-number">15.6</span> Tuning<a href="lesson-5b-multivariate-adaptive-regression-splines.html#tuning-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <div class="video">
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&amp;playerId=kaltura_player&amp;entry_id=1_mgupbbkl&amp;flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&amp;wid=1_mtruyjr6" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Tuning MARS models">
-</iframe>
+<p>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/3lZiQnZ0LrQ?si=ye6nDE7OgCXPBLDE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+</p>
 </div>
 <p>There are two important tuning parameters associated with MARS models: the maximum degree of interactions and the number of terms retained in the final model. We need to perform a grid search to identify the optimal combination of these hyperparameters that minimize prediction error (the above pruning process was based only on an approximation of CV model performance on the training data rather than an exact <em>k</em>-fold CV process). As in the previous lesson, we’ll perform a CV grid search to identify the optimal hyperparameter mix. Below, we set up a grid that assesses different combinations of interaction complexity and the number of terms to retain in the final model.</p>
 <div class="warning">
@@ -899,39 +909,40 @@ region once you find an approximate optimal solution.
 </div>
 <p>In R, our hyperparameters are <code>num_terms</code> (number of terms retained in the model) and <code>prod_degrees</code> (maximum degree of interaction allowed). Note that in R we can use <code>num_terms()</code> and <code>prod_degree()</code> from the dials package to create a tuning grid. By default <code>prod_degree()</code> will use values of 1 and 2 (no interactions and 2 degree interactions).</p>
 <p>Our results show that our top 5 performing models all include 2 degree interactions and between 37-49 total terms (“knots”).</p>
-<div class="sourceCode" id="cb156"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb156-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create MARS model object</span></span>
-<span id="cb156-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-2" aria-hidden="true" tabindex="-1"></a>mars_mod <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>, <span class="at">num_terms =</span> <span class="fu">tune</span>(), <span class="at">prod_degree =</span> <span class="fu">tune</span>())</span>
-<span id="cb156-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb156-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-4" aria-hidden="true" tabindex="-1"></a><span class="co"># create k-fold cross validation object</span></span>
-<span id="cb156-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb156-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-6" aria-hidden="true" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
-<span id="cb156-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb156-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-8" aria-hidden="true" tabindex="-1"></a><span class="co"># create our model recipe</span></span>
-<span id="cb156-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-9" aria-hidden="true" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train)</span>
-<span id="cb156-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb156-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-11" aria-hidden="true" tabindex="-1"></a><span class="co"># create a hyper parameter tuning grid</span></span>
-<span id="cb156-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-12" aria-hidden="true" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
-<span id="cb156-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-13" aria-hidden="true" tabindex="-1"></a> <span class="fu">num_terms</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">100</span>)), </span>
-<span id="cb156-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-14" aria-hidden="true" tabindex="-1"></a> <span class="fu">prod_degree</span>(),</span>
-<span id="cb156-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-15" aria-hidden="true" tabindex="-1"></a> <span class="at">levels =</span> <span class="dv">50</span></span>
-<span id="cb156-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-16" aria-hidden="true" tabindex="-1"></a> )</span>
-<span id="cb156-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb156-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-18" aria-hidden="true" tabindex="-1"></a><span class="co"># train our model across the hyper parameter grid</span></span>
-<span id="cb156-19"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-19" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(mars_mod, model_recipe, <span class="at">resamples =</span> folds, <span class="at">grid =</span> hyper_grid)</span>
-<span id="cb156-20"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb156-21"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-21" aria-hidden="true" tabindex="-1"></a><span class="co"># get best results</span></span>
-<span id="cb156-22"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-22" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
-<span id="cb156-23"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-23" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 8</span></span>
-<span id="cb156-24"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-24" aria-hidden="true" tabindex="-1"></a><span class="do">##   num_terms prod_de…¹ .metric .esti…²   mean     n std_err .config</span></span>
-<span id="cb156-25"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-25" aria-hidden="true" tabindex="-1"></a><span class="do">##       &lt;int&gt;     &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb156-26"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-26" aria-hidden="true" tabindex="-1"></a><span class="do">## 1        37         2 rmse    standa… 26546.     5   2969. Prepro…</span></span>
-<span id="cb156-27"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-27" aria-hidden="true" tabindex="-1"></a><span class="do">## 2        43         2 rmse    standa… 26701.     5   2617. Prepro…</span></span>
-<span id="cb156-28"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-28" aria-hidden="true" tabindex="-1"></a><span class="do">## 3        45         2 rmse    standa… 26702.     5   2618. Prepro…</span></span>
-<span id="cb156-29"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-29" aria-hidden="true" tabindex="-1"></a><span class="do">## 4        47         2 rmse    standa… 26702.     5   2618. Prepro…</span></span>
-<span id="cb156-30"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-30" aria-hidden="true" tabindex="-1"></a><span class="do">## 5        49         2 rmse    standa… 26702.     5   2618. Prepro…</span></span>
-<span id="cb156-31"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-31" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable names ¹​prod_degree, ²​.estimator</span></span></code></pre></div>
-<div class="sourceCode" id="cb157"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb157-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(results)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-275-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb156"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb156-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-1" tabindex="-1"></a><span class="co"># create MARS model object</span></span>
+<span id="cb156-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-2" tabindex="-1"></a>mars_mod <span class="ot">&lt;-</span> <span class="fu">mars</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>, <span class="at">num_terms =</span> <span class="fu">tune</span>(), <span class="at">prod_degree =</span> <span class="fu">tune</span>())</span>
+<span id="cb156-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-3" tabindex="-1"></a></span>
+<span id="cb156-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-4" tabindex="-1"></a><span class="co"># create k-fold cross validation object</span></span>
+<span id="cb156-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-5" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb156-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-6" tabindex="-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb156-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-7" tabindex="-1"></a></span>
+<span id="cb156-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-8" tabindex="-1"></a><span class="co"># create our model recipe</span></span>
+<span id="cb156-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-9" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(Sale_Price <span class="sc">~</span> ., <span class="at">data =</span> ames_train)</span>
+<span id="cb156-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-10" tabindex="-1"></a></span>
+<span id="cb156-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-11" tabindex="-1"></a><span class="co"># create a hyper parameter tuning grid</span></span>
+<span id="cb156-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-12" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb156-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-13" tabindex="-1"></a> <span class="fu">num_terms</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">100</span>)), </span>
+<span id="cb156-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-14" tabindex="-1"></a> <span class="fu">prod_degree</span>(),</span>
+<span id="cb156-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-15" tabindex="-1"></a> <span class="at">levels =</span> <span class="dv">50</span></span>
+<span id="cb156-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-16" tabindex="-1"></a> )</span>
+<span id="cb156-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-17" tabindex="-1"></a></span>
+<span id="cb156-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-18" tabindex="-1"></a><span class="co"># train our model across the hyper parameter grid</span></span>
+<span id="cb156-19"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-19" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(mars_mod, model_recipe, <span class="at">resamples =</span> folds, <span class="at">grid =</span> hyper_grid)</span>
+<span id="cb156-20"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-20" tabindex="-1"></a></span>
+<span id="cb156-21"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-21" tabindex="-1"></a><span class="co"># get best results</span></span>
+<span id="cb156-22"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-22" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb156-23"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-23" tabindex="-1"></a><span class="do">## # A tibble: 5 × 8</span></span>
+<span id="cb156-24"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-24" tabindex="-1"></a><span class="do">##   num_terms prod_degree .metric .estimator</span></span>
+<span id="cb156-25"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-25" tabindex="-1"></a><span class="do">##       &lt;int&gt;       &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;     </span></span>
+<span id="cb156-26"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-26" tabindex="-1"></a><span class="do">## 1        37           2 rmse    standard  </span></span>
+<span id="cb156-27"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-27" tabindex="-1"></a><span class="do">## 2        43           2 rmse    standard  </span></span>
+<span id="cb156-28"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-28" tabindex="-1"></a><span class="do">## 3        45           2 rmse    standard  </span></span>
+<span id="cb156-29"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-29" tabindex="-1"></a><span class="do">## 4        47           2 rmse    standard  </span></span>
+<span id="cb156-30"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-30" tabindex="-1"></a><span class="do">## 5        49           2 rmse    standard  </span></span>
+<span id="cb156-31"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-31" tabindex="-1"></a><span class="do">## # ℹ 4 more variables: mean &lt;dbl&gt;, n &lt;int&gt;,</span></span>
+<span id="cb156-32"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb156-32" tabindex="-1"></a><span class="do">## #   std_err &lt;dbl&gt;, .config &lt;chr&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb157"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb157-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb157-1" tabindex="-1"></a><span class="fu">autoplot</span>(results)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-272-1.png" width="576" style="display: block; margin: auto;" /></p>
 <div id="knowledge-check-26" class="section level3 hasAnchor" number="15.6.1">
 <h3><span class="header-section-number">15.6.1</span> Knowledge check<a href="lesson-5b-multivariate-adaptive-regression-splines.html#knowledge-check-26" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -968,40 +979,40 @@ hyperparameter values provide these optimal results?
 <h2><span class="header-section-number">15.7</span> Feature interpretation<a href="lesson-5b-multivariate-adaptive-regression-splines.html#feature-interpretation-1" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>MARS models use a backwards elimination feature selection routine that looks at reductions in the GCV estimate of error as each predictor is added to the model. This total reduction can be used as the variable importance measure (<code>"gcv"</code>). Since MARS will automatically include and exclude terms during the pruning process, it essentially performs automated feature selection. If a predictor was never used in any of the MARS basis functions in the final model (after pruning), it has an importance value of zero. Alternatively, you can also monitor the change in the residual sums of squares (RSS) as terms are added (<code>"rss"</code>); however, you will often see very little difference between these methods. The following examples extract the feature importance values based on RSS.</p>
 <p>The below shows that our most influential feature <code>Gr_Liv_Area</code> followed by <code>Year_Built</code>, <code>Total_Bsmt_SF</code>, <code>Overall_QualExcellent</code>, etc.</p>
-<div class="sourceCode" id="cb158"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb158-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-1" aria-hidden="true" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> <span class="fu">select_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
-<span id="cb158-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb158-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-3" aria-hidden="true" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb158-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_model</span>(mars_mod) <span class="sc">%&gt;%</span></span>
-<span id="cb158-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-5" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_formula</span>(Sale_Price <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
-<span id="cb158-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
-<span id="cb158-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb158-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-8" aria-hidden="true" tabindex="-1"></a><span class="co"># plot top 20 influential variables</span></span>
-<span id="cb158-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-9" aria-hidden="true" tabindex="-1"></a>final_wf <span class="sc">%&gt;%</span></span>
-<span id="cb158-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-10" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span> </span>
-<span id="cb158-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb158-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-12" aria-hidden="true" tabindex="-1"></a>   <span class="fu">vip</span>(<span class="dv">20</span>, <span class="at">type =</span> <span class="st">&quot;rss&quot;</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-277-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb158"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb158-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-1" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> <span class="fu">select_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb158-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-2" tabindex="-1"></a></span>
+<span id="cb158-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-3" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb158-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-4" tabindex="-1"></a>   <span class="fu">add_model</span>(mars_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb158-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-5" tabindex="-1"></a>   <span class="fu">add_formula</span>(Sale_Price <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb158-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-6" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
+<span id="cb158-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-7" tabindex="-1"></a></span>
+<span id="cb158-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-8" tabindex="-1"></a><span class="co"># plot top 20 influential variables</span></span>
+<span id="cb158-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-9" tabindex="-1"></a>final_wf <span class="sc">%&gt;%</span></span>
+<span id="cb158-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-10" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb158-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-11" tabindex="-1"></a>   <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb158-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb158-12" tabindex="-1"></a>   <span class="fu">vip</span>(<span class="dv">20</span>, <span class="at">type =</span> <span class="st">&quot;rss&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-274-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>Since our relationship between our response variable and the predictor variables are now non-linear, it becomes helpful to visualize the relationship between the most influential feature(s) and the response variable to see how they relate. We can do that with <strong><em>partial dependence plots</em></strong> (PDPs). PDPs plot the change in the average predicted value of our model (<span class="math inline">\(\hat y\)</span>) as specified feature(s) vary over their marginal distribution.</p>
 <p>We can then use the <a href="https://bgreenwell.github.io/pdp/index.html"><code>pdp</code></a> package to extract the partial dependence values in order to plot the relationship between predicted <code>Sale_Price</code> and <code>Gr_Liv_Area</code>. Don’t get too hung up in the code here. But you can see that based on our PDP, as homes exceed 3,200ish square feet we see a steepening increase in the relationship.</p>
-<div class="sourceCode" id="cb159"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb159-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prediction function</span></span>
-<span id="cb159-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-2" aria-hidden="true" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
-<span id="cb159-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
-<span id="cb159-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb159-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb159-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
-<span id="cb159-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-7" aria-hidden="true" tabindex="-1"></a><span class="co"># and then plot</span></span>
-<span id="cb159-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-8" aria-hidden="true" tabindex="-1"></a>final_wf <span class="sc">%&gt;%</span></span>
-<span id="cb159-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
-<span id="cb159-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-10" aria-hidden="true" tabindex="-1"></a>  pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
-<span id="cb159-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-11" aria-hidden="true" tabindex="-1"></a>   <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
-<span id="cb159-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-12" aria-hidden="true" tabindex="-1"></a>   <span class="at">pred.fun =</span> pdp_pred_fun,</span>
-<span id="cb159-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-13" aria-hidden="true" tabindex="-1"></a>   <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
-<span id="cb159-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-14" aria-hidden="true" tabindex="-1"></a>   <span class="at">train =</span> ames_train</span>
-<span id="cb159-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb159-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Gr_Liv_Area, yhat)) <span class="sc">+</span></span>
-<span id="cb159-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb159-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-278-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb159"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb159-1"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-1" tabindex="-1"></a><span class="co"># prediction function</span></span>
+<span id="cb159-2"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-2" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
+<span id="cb159-3"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-3" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
+<span id="cb159-4"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-4" tabindex="-1"></a>}</span>
+<span id="cb159-5"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-5" tabindex="-1"></a></span>
+<span id="cb159-6"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-6" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
+<span id="cb159-7"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-7" tabindex="-1"></a><span class="co"># and then plot</span></span>
+<span id="cb159-8"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-8" tabindex="-1"></a>final_wf <span class="sc">%&gt;%</span></span>
+<span id="cb159-9"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-9" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train) <span class="sc">%&gt;%</span></span>
+<span id="cb159-10"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-10" tabindex="-1"></a>  pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
+<span id="cb159-11"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-11" tabindex="-1"></a>   <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
+<span id="cb159-12"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-12" tabindex="-1"></a>   <span class="at">pred.fun =</span> pdp_pred_fun,</span>
+<span id="cb159-13"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-13" tabindex="-1"></a>   <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
+<span id="cb159-14"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-14" tabindex="-1"></a>   <span class="at">train =</span> ames_train</span>
+<span id="cb159-15"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-15" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb159-16"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-16" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Gr_Liv_Area, yhat)) <span class="sc">+</span></span>
+<span id="cb159-17"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-17" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb159-18"><a href="lesson-5b-multivariate-adaptive-regression-splines.html#cb159-18" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-275-1.png" width="576" style="display: block; margin: auto;" /></p>
 </div>
 <div id="final-thoughts-2" class="section level2 hasAnchor" number="15.8">
 <h2><span class="header-section-number">15.8</span> Final thoughts<a href="lesson-5b-multivariate-adaptive-regression-splines.html#final-thoughts-2" class="anchor-section" aria-label="Anchor link to header"></a></h2>
@@ -1137,7 +1148,7 @@ gitbook.start({
     var script = document.createElement("script");
     script.type = "text/javascript";
     var src = "true";
-    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
     if (location.protocol !== "file:")
       if (/^https?:/.test(src))
         src = src.replace(/^https?:/, '');

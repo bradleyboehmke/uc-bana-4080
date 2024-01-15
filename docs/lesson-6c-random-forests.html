@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>19 Lesson 6c: Random Forests | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
 
   <meta property="og:title" content="19 Lesson 6c: Random Forests | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,16 +51,16 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
 <link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
 <script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
-<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
-<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
 
 
 <style type="text/css">
@@ -101,7 +101,7 @@ code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -114,7 +114,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -128,6 +128,10 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
 <style type="text/css">
 /* Used with Pandoc 2.11+ new --citeproc when CSL is used */
 div.csl-bib-body { }
@@ -555,7 +559,7 @@ div.csl-indent {
             <section class="normal" id="section-">
 <div id="lesson-6c-random-forests" class="section level1 hasAnchor" number="19">
 <h1><span class="header-section-number">19</span> Lesson 6c: Random Forests<a href="lesson-6c-random-forests.html#lesson-6c-random-forests" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<p><em>Random forests</em> are a modification of bagged decision trees that build a large collection of <em>de-correlated</em> trees to further improve predictive performance. They have become a very popular “out-of-the-box” or “off-the-shelf” learning algorithm that enjoys good predictive performance with relatively little hyperparameter tuning. Many modern implementations of random forests exist; however, Leo Breiman’s algorithm <span class="citation">(<a href="#ref-breiman2001random" role="doc-biblioref">Breiman 2001</a>)</span> has largely become the authoritative procedure. This module will cover the fundamentals of random forests.</p>
+<p><em>Random forests</em> are a modification of bagged decision trees that build a large collection of <em>de-correlated</em> trees to further improve predictive performance. They have become a very popular “out-of-the-box” or “off-the-shelf” learning algorithm that enjoys good predictive performance with relatively little hyperparameter tuning. Many modern implementations of random forests exist; however, Leo Breiman’s algorithm <span class="citation">(<a href="#ref-breiman2001random">Breiman 2001</a>)</span> has largely become the authoritative procedure. This module will cover the fundamentals of random forests.</p>
 <div id="learning-objectives-19" class="section level2 hasAnchor" number="19.1">
 <h2><span class="header-section-number">19.1</span> Learning objectives<a href="lesson-6c-random-forests.html#learning-objectives-19" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>By the end of this module you will know:</p>
@@ -567,20 +571,20 @@ div.csl-indent {
 </div>
 <div id="prerequisites-11" class="section level2 hasAnchor" number="19.2">
 <h2><span class="header-section-number">19.2</span> Prerequisites<a href="lesson-6c-random-forests.html#prerequisites-11" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<div class="sourceCode" id="cb178"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb178-1"><a href="lesson-6c-random-forests.html#cb178-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper packages</span></span>
-<span id="cb178-2"><a href="lesson-6c-random-forests.html#cb178-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
-<span id="cb178-3"><a href="lesson-6c-random-forests.html#cb178-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb178-4"><a href="lesson-6c-random-forests.html#cb178-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
-<span id="cb178-5"><a href="lesson-6c-random-forests.html#cb178-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels) </span>
-<span id="cb178-6"><a href="lesson-6c-random-forests.html#cb178-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb178-7"><a href="lesson-6c-random-forests.html#cb178-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
-<span id="cb178-8"><a href="lesson-6c-random-forests.html#cb178-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
-<span id="cb178-9"><a href="lesson-6c-random-forests.html#cb178-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
-<div class="sourceCode" id="cb179"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb179-1"><a href="lesson-6c-random-forests.html#cb179-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb179-2"><a href="lesson-6c-random-forests.html#cb179-2" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
-<span id="cb179-3"><a href="lesson-6c-random-forests.html#cb179-3" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
-<span id="cb179-4"><a href="lesson-6c-random-forests.html#cb179-4" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
-<span id="cb179-5"><a href="lesson-6c-random-forests.html#cb179-5" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
+<div class="sourceCode" id="cb178"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb178-1"><a href="lesson-6c-random-forests.html#cb178-1" tabindex="-1"></a><span class="co"># Helper packages</span></span>
+<span id="cb178-2"><a href="lesson-6c-random-forests.html#cb178-2" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
+<span id="cb178-3"><a href="lesson-6c-random-forests.html#cb178-3" tabindex="-1"></a></span>
+<span id="cb178-4"><a href="lesson-6c-random-forests.html#cb178-4" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
+<span id="cb178-5"><a href="lesson-6c-random-forests.html#cb178-5" tabindex="-1"></a><span class="fu">library</span>(tidymodels) </span>
+<span id="cb178-6"><a href="lesson-6c-random-forests.html#cb178-6" tabindex="-1"></a></span>
+<span id="cb178-7"><a href="lesson-6c-random-forests.html#cb178-7" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
+<span id="cb178-8"><a href="lesson-6c-random-forests.html#cb178-8" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
+<span id="cb178-9"><a href="lesson-6c-random-forests.html#cb178-9" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
+<div class="sourceCode" id="cb179"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb179-1"><a href="lesson-6c-random-forests.html#cb179-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb179-2"><a href="lesson-6c-random-forests.html#cb179-2" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
+<span id="cb179-3"><a href="lesson-6c-random-forests.html#cb179-3" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
+<span id="cb179-4"><a href="lesson-6c-random-forests.html#cb179-4" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb179-5"><a href="lesson-6c-random-forests.html#cb179-5" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
 </div>
 <div id="extending-bagging" class="section level2 hasAnchor" number="19.3">
 <h2><span class="header-section-number">19.3</span> Extending bagging<a href="lesson-6c-random-forests.html#extending-bagging" class="anchor-section" aria-label="Anchor link to header"></a></h2>
@@ -611,7 +615,7 @@ is equivalent to bagging decision trees.
 </div>
 <div id="out-of-the-box-performance" class="section level2 hasAnchor" number="19.4">
 <h2><span class="header-section-number">19.4</span> Out-of-the-box performance<a href="lesson-6c-random-forests.html#out-of-the-box-performance" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>Random forests have become popular because they tend to provide very good out-of-the-box performance. Although they have several hyperparameters that can be tuned, the default values tend to produce good results. Moreover, <span class="citation">Probst, Bischl, and Boulesteix (<a href="#ref-probst2018tunability" role="doc-biblioref">2018</a>)</span> illustrated that among the more popular machine learning algorithms, random forests have the least variability in their prediction accuracy when tuning.</p>
+<p>Random forests have become popular because they tend to provide very good out-of-the-box performance. Although they have several hyperparameters that can be tuned, the default values tend to produce good results. Moreover, <span class="citation">Probst, Bischl, and Boulesteix (<a href="#ref-probst2018tunability">2018</a>)</span> illustrated that among the more popular machine learning algorithms, random forests have the least variability in their prediction accuracy when tuning.</p>
 <p>For example, if we train a random forest model with all hyperparameters set to their default values, we get RMSEs comparable to some of the best model’s we’ve run thus far (without any tuning).</p>
 <div class="note">
 <p>
@@ -622,31 +626,31 @@ of machine learning model to either a regression or classification
 modeling objective.
 </p>
 </div>
-<div class="sourceCode" id="cb181"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb181-1"><a href="lesson-6c-random-forests.html#cb181-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create model recipe with all features</span></span>
-<span id="cb181-2"><a href="lesson-6c-random-forests.html#cb181-2" aria-hidden="true" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
-<span id="cb181-3"><a href="lesson-6c-random-forests.html#cb181-3" aria-hidden="true" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> ., </span>
-<span id="cb181-4"><a href="lesson-6c-random-forests.html#cb181-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
-<span id="cb181-5"><a href="lesson-6c-random-forests.html#cb181-5" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb181-6"><a href="lesson-6c-random-forests.html#cb181-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb181-7"><a href="lesson-6c-random-forests.html#cb181-7" aria-hidden="true" tabindex="-1"></a><span class="co"># create random forest model object</span></span>
-<span id="cb181-8"><a href="lesson-6c-random-forests.html#cb181-8" aria-hidden="true" tabindex="-1"></a>rf_mod <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb181-9"><a href="lesson-6c-random-forests.html#cb181-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>)</span>
-<span id="cb181-10"><a href="lesson-6c-random-forests.html#cb181-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb181-11"><a href="lesson-6c-random-forests.html#cb181-11" aria-hidden="true" tabindex="-1"></a><span class="co"># create resampling procedure</span></span>
-<span id="cb181-12"><a href="lesson-6c-random-forests.html#cb181-12" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
-<span id="cb181-13"><a href="lesson-6c-random-forests.html#cb181-13" aria-hidden="true" tabindex="-1"></a>kfold <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
-<span id="cb181-14"><a href="lesson-6c-random-forests.html#cb181-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb181-15"><a href="lesson-6c-random-forests.html#cb181-15" aria-hidden="true" tabindex="-1"></a><span class="co"># train model</span></span>
-<span id="cb181-16"><a href="lesson-6c-random-forests.html#cb181-16" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(rf_mod, model_recipe, kfold)</span>
-<span id="cb181-17"><a href="lesson-6c-random-forests.html#cb181-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb181-18"><a href="lesson-6c-random-forests.html#cb181-18" aria-hidden="true" tabindex="-1"></a><span class="co"># model results</span></span>
-<span id="cb181-19"><a href="lesson-6c-random-forests.html#cb181-19" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
-<span id="cb181-20"><a href="lesson-6c-random-forests.html#cb181-20" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb181-21"><a href="lesson-6c-random-forests.html#cb181-21" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
-<span id="cb181-22"><a href="lesson-6c-random-forests.html#cb181-22" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb181-23"><a href="lesson-6c-random-forests.html#cb181-23" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 2.70e+4     5 1.12e+3 Prepro…</span></span>
-<span id="cb181-24"><a href="lesson-6c-random-forests.html#cb181-24" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 8.95e-1     5 8.62e-3 Prepro…</span></span>
-<span id="cb181-25"><a href="lesson-6c-random-forests.html#cb181-25" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
+<div class="sourceCode" id="cb181"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb181-1"><a href="lesson-6c-random-forests.html#cb181-1" tabindex="-1"></a><span class="co"># create model recipe with all features</span></span>
+<span id="cb181-2"><a href="lesson-6c-random-forests.html#cb181-2" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
+<span id="cb181-3"><a href="lesson-6c-random-forests.html#cb181-3" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> ., </span>
+<span id="cb181-4"><a href="lesson-6c-random-forests.html#cb181-4" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
+<span id="cb181-5"><a href="lesson-6c-random-forests.html#cb181-5" tabindex="-1"></a>  )</span>
+<span id="cb181-6"><a href="lesson-6c-random-forests.html#cb181-6" tabindex="-1"></a></span>
+<span id="cb181-7"><a href="lesson-6c-random-forests.html#cb181-7" tabindex="-1"></a><span class="co"># create random forest model object</span></span>
+<span id="cb181-8"><a href="lesson-6c-random-forests.html#cb181-8" tabindex="-1"></a>rf_mod <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb181-9"><a href="lesson-6c-random-forests.html#cb181-9" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>)</span>
+<span id="cb181-10"><a href="lesson-6c-random-forests.html#cb181-10" tabindex="-1"></a></span>
+<span id="cb181-11"><a href="lesson-6c-random-forests.html#cb181-11" tabindex="-1"></a><span class="co"># create resampling procedure</span></span>
+<span id="cb181-12"><a href="lesson-6c-random-forests.html#cb181-12" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
+<span id="cb181-13"><a href="lesson-6c-random-forests.html#cb181-13" tabindex="-1"></a>kfold <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb181-14"><a href="lesson-6c-random-forests.html#cb181-14" tabindex="-1"></a></span>
+<span id="cb181-15"><a href="lesson-6c-random-forests.html#cb181-15" tabindex="-1"></a><span class="co"># train model</span></span>
+<span id="cb181-16"><a href="lesson-6c-random-forests.html#cb181-16" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(rf_mod, model_recipe, kfold)</span>
+<span id="cb181-17"><a href="lesson-6c-random-forests.html#cb181-17" tabindex="-1"></a></span>
+<span id="cb181-18"><a href="lesson-6c-random-forests.html#cb181-18" tabindex="-1"></a><span class="co"># model results</span></span>
+<span id="cb181-19"><a href="lesson-6c-random-forests.html#cb181-19" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
+<span id="cb181-20"><a href="lesson-6c-random-forests.html#cb181-20" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb181-21"><a href="lesson-6c-random-forests.html#cb181-21" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n std_err</span></span>
+<span id="cb181-22"><a href="lesson-6c-random-forests.html#cb181-22" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb181-23"><a href="lesson-6c-random-forests.html#cb181-23" tabindex="-1"></a><span class="do">## 1 rmse    standard   26981.        5 1.12e+3</span></span>
+<span id="cb181-24"><a href="lesson-6c-random-forests.html#cb181-24" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.895     5 8.62e-3</span></span>
+<span id="cb181-25"><a href="lesson-6c-random-forests.html#cb181-25" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
 <div id="knowledge-check-33" class="section level3 hasAnchor" number="19.4.1">
 <h3><span class="header-section-number">19.4.1</span> Knowledge check<a href="lesson-6c-random-forests.html#knowledge-check-33" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -664,7 +668,7 @@ assess to assess the model performance.
 </div>
 <div id="hyperparameters" class="section level2 hasAnchor" number="19.5">
 <h2><span class="header-section-number">19.5</span> Hyperparameters<a href="lesson-6c-random-forests.html#hyperparameters" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>Although random forests perform well out-of-the-box, there are several tunable hyperparameters that we should consider when training a model. Although we briefly discuss the main hyperparameters, <span class="citation">Probst, Wright, and Boulesteix (<a href="#ref-probst2019hyperparameters" role="doc-biblioref">2019</a>)</span> provide a much more thorough discussion. The main hyperparameters to consider include:</p>
+<p>Although random forests perform well out-of-the-box, there are several tunable hyperparameters that we should consider when training a model. Although we briefly discuss the main hyperparameters, <span class="citation">Probst, Wright, and Boulesteix (<a href="#ref-probst2019hyperparameters">2019</a>)</span> provide a much more thorough discussion. The main hyperparameters to consider include:</p>
 <ol style="list-style-type: decimal">
 <li>The number of trees in the forest</li>
 <li>The number of features to consider at any given split: <span class="math inline">\(m_{try}\)</span></li>
@@ -706,7 +710,7 @@ Figure 19.2: For the Ames data, an mtry value in the low to mid 20s improves per
 </div>
 <div id="tree-complexity" class="section level3 hasAnchor" number="19.5.3">
 <h3><span class="header-section-number">19.5.3</span> Tree complexity<a href="lesson-6c-random-forests.html#tree-complexity" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>Random forests are built on individual decision trees; consequently, most random forest implementations have one or more hyperparameters that allow us to control the depth and complexity of the individual trees. This will often include hyperparameters such as node size, max depth, max number of terminal nodes, or the required node size to allow additional splits. Node size is probably the most common hyperparameter to control tree complexity and most implementations use the default values of one for classification and five for regression as these values tend to produce good results <span class="citation">(<a href="#ref-diaz2006gene" role="doc-biblioref">Dı́az-Uriarte and De Andres 2006</a>; <a href="#ref-goldstein2011random" role="doc-biblioref">Goldstein, Polley, and Briggs 2011</a>)</span>. However, <span class="citation">Segal (<a href="#ref-segal2004machine" role="doc-biblioref">2004</a>)</span> showed that if your data has many noisy predictors and higher <span class="math inline">\(m_{try}\)</span> values are performing best, then performance may improve by increasing node size (i.e., decreasing tree depth and complexity). Moreover, if computation time is a concern then you can often decrease run time substantially by increasing the node size and have only marginal impacts to your error estimate as illustrated below.</p>
+<p>Random forests are built on individual decision trees; consequently, most random forest implementations have one or more hyperparameters that allow us to control the depth and complexity of the individual trees. This will often include hyperparameters such as node size, max depth, max number of terminal nodes, or the required node size to allow additional splits. Node size is probably the most common hyperparameter to control tree complexity and most implementations use the default values of one for classification and five for regression as these values tend to produce good results <span class="citation">(<a href="#ref-diaz2006gene">Dı́az-Uriarte and De Andres 2006</a>; <a href="#ref-goldstein2011random">Goldstein, Polley, and Briggs 2011</a>)</span>. However, <span class="citation">Segal (<a href="#ref-segal2004machine">2004</a>)</span> showed that if your data has many noisy predictors and higher <span class="math inline">\(m_{try}\)</span> values are performing best, then performance may improve by increasing node size (i.e., decreasing tree depth and complexity). Moreover, if computation time is a concern then you can often decrease run time substantially by increasing the node size and have only marginal impacts to your error estimate as illustrated below.</p>
 <div class="tip">
 <p>
 When adjusting node size start with three values between 1–10 and
@@ -724,7 +728,7 @@ Figure 19.3: Increasing node size to reduce tree complexity will often have a la
 </div>
 <div id="others" class="section level3 hasAnchor" number="19.5.4">
 <h3><span class="header-section-number">19.5.4</span> Others<a href="lesson-6c-random-forests.html#others" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<p>There are many other hyperparameters within random forest models; however, the above mentioned ones are the most common and, often, most influential in the performance of our model. For more discussion around random forest hyperparameters see <span class="citation">Probst, Wright, and Boulesteix (<a href="#ref-probst2019hyperparameters" role="doc-biblioref">2019</a>)</span>.</p>
+<p>There are many other hyperparameters within random forest models; however, the above mentioned ones are the most common and, often, most influential in the performance of our model. For more discussion around random forest hyperparameters see <span class="citation">Probst, Wright, and Boulesteix (<a href="#ref-probst2019hyperparameters">2019</a>)</span>.</p>
 </div>
 </div>
 <div id="tuning-4" class="section level2 hasAnchor" number="19.6">
@@ -743,39 +747,38 @@ Also, note the <code>importance = “impurity”</code> code we added to
 <code>set_engine()</code>. We’ll discuss why we add this shortly.
 </p>
 </div>
-<div class="sourceCode" id="cb182"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb182-1"><a href="lesson-6c-random-forests.html#cb182-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create random forest model object with tuning option</span></span>
-<span id="cb182-2"><a href="lesson-6c-random-forests.html#cb182-2" aria-hidden="true" tabindex="-1"></a>rf_mod <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(</span>
-<span id="cb182-3"><a href="lesson-6c-random-forests.html#cb182-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>, </span>
-<span id="cb182-4"><a href="lesson-6c-random-forests.html#cb182-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">trees =</span> <span class="dv">1000</span>,</span>
-<span id="cb182-5"><a href="lesson-6c-random-forests.html#cb182-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
-<span id="cb182-6"><a href="lesson-6c-random-forests.html#cb182-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_n =</span> <span class="fu">tune</span>()</span>
-<span id="cb182-7"><a href="lesson-6c-random-forests.html#cb182-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb182-8"><a href="lesson-6c-random-forests.html#cb182-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>, <span class="at">importance =</span> <span class="st">&quot;permutation&quot;</span>)</span>
-<span id="cb182-9"><a href="lesson-6c-random-forests.html#cb182-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb182-10"><a href="lesson-6c-random-forests.html#cb182-10" aria-hidden="true" tabindex="-1"></a><span class="co"># create the hyperparameter grid</span></span>
-<span id="cb182-11"><a href="lesson-6c-random-forests.html#cb182-11" aria-hidden="true" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
-<span id="cb182-12"><a href="lesson-6c-random-forests.html#cb182-12" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mtry</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">80</span>)),</span>
-<span id="cb182-13"><a href="lesson-6c-random-forests.html#cb182-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">min_n</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">20</span>)),        </span>
-<span id="cb182-14"><a href="lesson-6c-random-forests.html#cb182-14" aria-hidden="true" tabindex="-1"></a>   <span class="at">levels =</span> <span class="dv">5</span></span>
-<span id="cb182-15"><a href="lesson-6c-random-forests.html#cb182-15" aria-hidden="true" tabindex="-1"></a>   )</span>
-<span id="cb182-16"><a href="lesson-6c-random-forests.html#cb182-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb182-17"><a href="lesson-6c-random-forests.html#cb182-17" aria-hidden="true" tabindex="-1"></a><span class="co"># train our model across the hyper parameter grid</span></span>
-<span id="cb182-18"><a href="lesson-6c-random-forests.html#cb182-18" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb182-19"><a href="lesson-6c-random-forests.html#cb182-19" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(rf_mod, model_recipe, <span class="at">resamples =</span> kfold, <span class="at">grid =</span> hyper_grid)</span>
-<span id="cb182-20"><a href="lesson-6c-random-forests.html#cb182-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb182-21"><a href="lesson-6c-random-forests.html#cb182-21" aria-hidden="true" tabindex="-1"></a><span class="co"># model results</span></span>
-<span id="cb182-22"><a href="lesson-6c-random-forests.html#cb182-22" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
-<span id="cb182-23"><a href="lesson-6c-random-forests.html#cb182-23" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 8</span></span>
-<span id="cb182-24"><a href="lesson-6c-random-forests.html#cb182-24" aria-hidden="true" tabindex="-1"></a><span class="do">##    mtry min_n .metric .estimator   mean     n</span></span>
-<span id="cb182-25"><a href="lesson-6c-random-forests.html#cb182-25" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;int&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;</span></span>
-<span id="cb182-26"><a href="lesson-6c-random-forests.html#cb182-26" aria-hidden="true" tabindex="-1"></a><span class="do">## 1    41     1 rmse    standard   25988.     5</span></span>
-<span id="cb182-27"><a href="lesson-6c-random-forests.html#cb182-27" aria-hidden="true" tabindex="-1"></a><span class="do">## 2    60     1 rmse    standard   26151.     5</span></span>
-<span id="cb182-28"><a href="lesson-6c-random-forests.html#cb182-28" aria-hidden="true" tabindex="-1"></a><span class="do">## 3    21     5 rmse    standard   26167.     5</span></span>
-<span id="cb182-29"><a href="lesson-6c-random-forests.html#cb182-29" aria-hidden="true" tabindex="-1"></a><span class="do">## 4    21     1 rmse    standard   26207.     5</span></span>
-<span id="cb182-30"><a href="lesson-6c-random-forests.html#cb182-30" aria-hidden="true" tabindex="-1"></a><span class="do">## 5    41     5 rmse    standard   26223.     5</span></span>
-<span id="cb182-31"><a href="lesson-6c-random-forests.html#cb182-31" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 2 more variables: std_err &lt;dbl&gt;,</span></span>
-<span id="cb182-32"><a href="lesson-6c-random-forests.html#cb182-32" aria-hidden="true" tabindex="-1"></a><span class="do">## #   .config &lt;chr&gt;</span></span>
-<span id="cb182-33"><a href="lesson-6c-random-forests.html#cb182-33" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `colnames()` to see all variable names</span></span></code></pre></div>
+<div class="sourceCode" id="cb182"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb182-1"><a href="lesson-6c-random-forests.html#cb182-1" tabindex="-1"></a><span class="co"># create random forest model object with tuning option</span></span>
+<span id="cb182-2"><a href="lesson-6c-random-forests.html#cb182-2" tabindex="-1"></a>rf_mod <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(</span>
+<span id="cb182-3"><a href="lesson-6c-random-forests.html#cb182-3" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>, </span>
+<span id="cb182-4"><a href="lesson-6c-random-forests.html#cb182-4" tabindex="-1"></a>  <span class="at">trees =</span> <span class="dv">1000</span>,</span>
+<span id="cb182-5"><a href="lesson-6c-random-forests.html#cb182-5" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
+<span id="cb182-6"><a href="lesson-6c-random-forests.html#cb182-6" tabindex="-1"></a>  <span class="at">min_n =</span> <span class="fu">tune</span>()</span>
+<span id="cb182-7"><a href="lesson-6c-random-forests.html#cb182-7" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb182-8"><a href="lesson-6c-random-forests.html#cb182-8" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>, <span class="at">importance =</span> <span class="st">&quot;permutation&quot;</span>)</span>
+<span id="cb182-9"><a href="lesson-6c-random-forests.html#cb182-9" tabindex="-1"></a></span>
+<span id="cb182-10"><a href="lesson-6c-random-forests.html#cb182-10" tabindex="-1"></a><span class="co"># create the hyperparameter grid</span></span>
+<span id="cb182-11"><a href="lesson-6c-random-forests.html#cb182-11" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb182-12"><a href="lesson-6c-random-forests.html#cb182-12" tabindex="-1"></a>   <span class="fu">mtry</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">80</span>)),</span>
+<span id="cb182-13"><a href="lesson-6c-random-forests.html#cb182-13" tabindex="-1"></a>   <span class="fu">min_n</span>(<span class="at">range =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">20</span>)),        </span>
+<span id="cb182-14"><a href="lesson-6c-random-forests.html#cb182-14" tabindex="-1"></a>   <span class="at">levels =</span> <span class="dv">5</span></span>
+<span id="cb182-15"><a href="lesson-6c-random-forests.html#cb182-15" tabindex="-1"></a>   )</span>
+<span id="cb182-16"><a href="lesson-6c-random-forests.html#cb182-16" tabindex="-1"></a></span>
+<span id="cb182-17"><a href="lesson-6c-random-forests.html#cb182-17" tabindex="-1"></a><span class="co"># train our model across the hyper parameter grid</span></span>
+<span id="cb182-18"><a href="lesson-6c-random-forests.html#cb182-18" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb182-19"><a href="lesson-6c-random-forests.html#cb182-19" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(rf_mod, model_recipe, <span class="at">resamples =</span> kfold, <span class="at">grid =</span> hyper_grid)</span>
+<span id="cb182-20"><a href="lesson-6c-random-forests.html#cb182-20" tabindex="-1"></a></span>
+<span id="cb182-21"><a href="lesson-6c-random-forests.html#cb182-21" tabindex="-1"></a><span class="co"># model results</span></span>
+<span id="cb182-22"><a href="lesson-6c-random-forests.html#cb182-22" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb182-23"><a href="lesson-6c-random-forests.html#cb182-23" tabindex="-1"></a><span class="do">## # A tibble: 5 × 8</span></span>
+<span id="cb182-24"><a href="lesson-6c-random-forests.html#cb182-24" tabindex="-1"></a><span class="do">##    mtry min_n .metric .estimator   mean</span></span>
+<span id="cb182-25"><a href="lesson-6c-random-forests.html#cb182-25" tabindex="-1"></a><span class="do">##   &lt;int&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt;</span></span>
+<span id="cb182-26"><a href="lesson-6c-random-forests.html#cb182-26" tabindex="-1"></a><span class="do">## 1    41     1 rmse    standard   25988.</span></span>
+<span id="cb182-27"><a href="lesson-6c-random-forests.html#cb182-27" tabindex="-1"></a><span class="do">## 2    60     1 rmse    standard   26151.</span></span>
+<span id="cb182-28"><a href="lesson-6c-random-forests.html#cb182-28" tabindex="-1"></a><span class="do">## 3    21     5 rmse    standard   26167.</span></span>
+<span id="cb182-29"><a href="lesson-6c-random-forests.html#cb182-29" tabindex="-1"></a><span class="do">## 4    21     1 rmse    standard   26207.</span></span>
+<span id="cb182-30"><a href="lesson-6c-random-forests.html#cb182-30" tabindex="-1"></a><span class="do">## 5    41     5 rmse    standard   26223.</span></span>
+<span id="cb182-31"><a href="lesson-6c-random-forests.html#cb182-31" tabindex="-1"></a><span class="do">## # ℹ 3 more variables: n &lt;int&gt;,</span></span>
+<span id="cb182-32"><a href="lesson-6c-random-forests.html#cb182-32" tabindex="-1"></a><span class="do">## #   std_err &lt;dbl&gt;, .config &lt;chr&gt;</span></span></code></pre></div>
 <div id="knowledge-check-34" class="section level3 hasAnchor" number="19.6.1">
 <h3><span class="header-section-number">19.6.1</span> Knowledge check<a href="lesson-6c-random-forests.html#knowledge-check-34" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -819,61 +822,61 @@ add <code>importance = “impurity”</code> to <code>set_engine()</code> as
 we did in the last section.
 </p>
 </div>
-<div class="sourceCode" id="cb183"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb183-1"><a href="lesson-6c-random-forests.html#cb183-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get optimal hyperparameters</span></span>
-<span id="cb183-2"><a href="lesson-6c-random-forests.html#cb183-2" aria-hidden="true" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> <span class="fu">select_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
-<span id="cb183-3"><a href="lesson-6c-random-forests.html#cb183-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb183-4"><a href="lesson-6c-random-forests.html#cb183-4" aria-hidden="true" tabindex="-1"></a><span class="co"># create final workflow object</span></span>
-<span id="cb183-5"><a href="lesson-6c-random-forests.html#cb183-5" aria-hidden="true" tabindex="-1"></a>final_rf_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb183-6"><a href="lesson-6c-random-forests.html#cb183-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
-<span id="cb183-7"><a href="lesson-6c-random-forests.html#cb183-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_model</span>(rf_mod) <span class="sc">%&gt;%</span></span>
-<span id="cb183-8"><a href="lesson-6c-random-forests.html#cb183-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
-<span id="cb183-9"><a href="lesson-6c-random-forests.html#cb183-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb183-10"><a href="lesson-6c-random-forests.html#cb183-10" aria-hidden="true" tabindex="-1"></a><span class="co"># fit final workflow object</span></span>
-<span id="cb183-11"><a href="lesson-6c-random-forests.html#cb183-11" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> final_rf_wf <span class="sc">%&gt;%</span></span>
-<span id="cb183-12"><a href="lesson-6c-random-forests.html#cb183-12" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
-<span id="cb183-13"><a href="lesson-6c-random-forests.html#cb183-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb183-14"><a href="lesson-6c-random-forests.html#cb183-14" aria-hidden="true" tabindex="-1"></a><span class="co"># plot feature importance</span></span>
-<span id="cb183-15"><a href="lesson-6c-random-forests.html#cb183-15" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb183-16"><a href="lesson-6c-random-forests.html#cb183-16" aria-hidden="true" tabindex="-1"></a>   <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb183-17"><a href="lesson-6c-random-forests.html#cb183-17" aria-hidden="true" tabindex="-1"></a>   <span class="fu">vip</span>(<span class="at">num_features =</span> <span class="dv">20</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-326-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb183"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb183-1"><a href="lesson-6c-random-forests.html#cb183-1" tabindex="-1"></a><span class="co"># get optimal hyperparameters</span></span>
+<span id="cb183-2"><a href="lesson-6c-random-forests.html#cb183-2" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> <span class="fu">select_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb183-3"><a href="lesson-6c-random-forests.html#cb183-3" tabindex="-1"></a></span>
+<span id="cb183-4"><a href="lesson-6c-random-forests.html#cb183-4" tabindex="-1"></a><span class="co"># create final workflow object</span></span>
+<span id="cb183-5"><a href="lesson-6c-random-forests.html#cb183-5" tabindex="-1"></a>final_rf_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb183-6"><a href="lesson-6c-random-forests.html#cb183-6" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb183-7"><a href="lesson-6c-random-forests.html#cb183-7" tabindex="-1"></a>   <span class="fu">add_model</span>(rf_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb183-8"><a href="lesson-6c-random-forests.html#cb183-8" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
+<span id="cb183-9"><a href="lesson-6c-random-forests.html#cb183-9" tabindex="-1"></a></span>
+<span id="cb183-10"><a href="lesson-6c-random-forests.html#cb183-10" tabindex="-1"></a><span class="co"># fit final workflow object</span></span>
+<span id="cb183-11"><a href="lesson-6c-random-forests.html#cb183-11" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> final_rf_wf <span class="sc">%&gt;%</span></span>
+<span id="cb183-12"><a href="lesson-6c-random-forests.html#cb183-12" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
+<span id="cb183-13"><a href="lesson-6c-random-forests.html#cb183-13" tabindex="-1"></a></span>
+<span id="cb183-14"><a href="lesson-6c-random-forests.html#cb183-14" tabindex="-1"></a><span class="co"># plot feature importance</span></span>
+<span id="cb183-15"><a href="lesson-6c-random-forests.html#cb183-15" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb183-16"><a href="lesson-6c-random-forests.html#cb183-16" tabindex="-1"></a>   <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb183-17"><a href="lesson-6c-random-forests.html#cb183-17" tabindex="-1"></a>   <span class="fu">vip</span>(<span class="at">num_features =</span> <span class="dv">20</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-323-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>We can then plot the partial dependence of the most influential feature to see how it influences the predicted values. We see that as overall quality increase we see a significant increase in the predicted sale price.</p>
-<div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb184-1"><a href="lesson-6c-random-forests.html#cb184-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prediction function</span></span>
-<span id="cb184-2"><a href="lesson-6c-random-forests.html#cb184-2" aria-hidden="true" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
-<span id="cb184-3"><a href="lesson-6c-random-forests.html#cb184-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred</span>
-<span id="cb184-4"><a href="lesson-6c-random-forests.html#cb184-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb184-5"><a href="lesson-6c-random-forests.html#cb184-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb184-6"><a href="lesson-6c-random-forests.html#cb184-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
-<span id="cb184-7"><a href="lesson-6c-random-forests.html#cb184-7" aria-hidden="true" tabindex="-1"></a><span class="co"># and then plot</span></span>
-<span id="cb184-8"><a href="lesson-6c-random-forests.html#cb184-8" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb184-9"><a href="lesson-6c-random-forests.html#cb184-9" aria-hidden="true" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
-<span id="cb184-10"><a href="lesson-6c-random-forests.html#cb184-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Overall_Qual&quot;</span>, </span>
-<span id="cb184-11"><a href="lesson-6c-random-forests.html#cb184-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
-<span id="cb184-12"><a href="lesson-6c-random-forests.html#cb184-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
-<span id="cb184-13"><a href="lesson-6c-random-forests.html#cb184-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
-<span id="cb184-14"><a href="lesson-6c-random-forests.html#cb184-14" aria-hidden="true" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
-<span id="cb184-15"><a href="lesson-6c-random-forests.html#cb184-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Overall_Qual, yhat)) <span class="sc">+</span></span>
-<span id="cb184-16"><a href="lesson-6c-random-forests.html#cb184-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb184-17"><a href="lesson-6c-random-forests.html#cb184-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-327-1.png" width="960" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb184-1"><a href="lesson-6c-random-forests.html#cb184-1" tabindex="-1"></a><span class="co"># prediction function</span></span>
+<span id="cb184-2"><a href="lesson-6c-random-forests.html#cb184-2" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
+<span id="cb184-3"><a href="lesson-6c-random-forests.html#cb184-3" tabindex="-1"></a>   <span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred</span>
+<span id="cb184-4"><a href="lesson-6c-random-forests.html#cb184-4" tabindex="-1"></a>}</span>
+<span id="cb184-5"><a href="lesson-6c-random-forests.html#cb184-5" tabindex="-1"></a></span>
+<span id="cb184-6"><a href="lesson-6c-random-forests.html#cb184-6" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
+<span id="cb184-7"><a href="lesson-6c-random-forests.html#cb184-7" tabindex="-1"></a><span class="co"># and then plot</span></span>
+<span id="cb184-8"><a href="lesson-6c-random-forests.html#cb184-8" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb184-9"><a href="lesson-6c-random-forests.html#cb184-9" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
+<span id="cb184-10"><a href="lesson-6c-random-forests.html#cb184-10" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Overall_Qual&quot;</span>, </span>
+<span id="cb184-11"><a href="lesson-6c-random-forests.html#cb184-11" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
+<span id="cb184-12"><a href="lesson-6c-random-forests.html#cb184-12" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
+<span id="cb184-13"><a href="lesson-6c-random-forests.html#cb184-13" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
+<span id="cb184-14"><a href="lesson-6c-random-forests.html#cb184-14" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
+<span id="cb184-15"><a href="lesson-6c-random-forests.html#cb184-15" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Overall_Qual, yhat)) <span class="sc">+</span></span>
+<span id="cb184-16"><a href="lesson-6c-random-forests.html#cb184-16" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb184-17"><a href="lesson-6c-random-forests.html#cb184-17" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-324-1.png" width="960" style="display: block; margin: auto;" /></p>
 <p>Now let’s plot the PDP for the <code>Gr_Liv_Area</code> and see how that variable relates to the predicted sale price.</p>
-<div class="sourceCode" id="cb185"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb185-1"><a href="lesson-6c-random-forests.html#cb185-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prediction function</span></span>
-<span id="cb185-2"><a href="lesson-6c-random-forests.html#cb185-2" aria-hidden="true" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
-<span id="cb185-3"><a href="lesson-6c-random-forests.html#cb185-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
-<span id="cb185-4"><a href="lesson-6c-random-forests.html#cb185-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb185-5"><a href="lesson-6c-random-forests.html#cb185-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb185-6"><a href="lesson-6c-random-forests.html#cb185-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
-<span id="cb185-7"><a href="lesson-6c-random-forests.html#cb185-7" aria-hidden="true" tabindex="-1"></a><span class="co"># and then plot</span></span>
-<span id="cb185-8"><a href="lesson-6c-random-forests.html#cb185-8" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb185-9"><a href="lesson-6c-random-forests.html#cb185-9" aria-hidden="true" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
-<span id="cb185-10"><a href="lesson-6c-random-forests.html#cb185-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
-<span id="cb185-11"><a href="lesson-6c-random-forests.html#cb185-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
-<span id="cb185-12"><a href="lesson-6c-random-forests.html#cb185-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
-<span id="cb185-13"><a href="lesson-6c-random-forests.html#cb185-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
-<span id="cb185-14"><a href="lesson-6c-random-forests.html#cb185-14" aria-hidden="true" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
-<span id="cb185-15"><a href="lesson-6c-random-forests.html#cb185-15" aria-hidden="true" tabindex="-1"></a>   <span class="fu">autoplot</span>() <span class="sc">+</span></span>
-<span id="cb185-16"><a href="lesson-6c-random-forests.html#cb185-16" aria-hidden="true" tabindex="-1"></a>   <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-328-1.png" width="864" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb185"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb185-1"><a href="lesson-6c-random-forests.html#cb185-1" tabindex="-1"></a><span class="co"># prediction function</span></span>
+<span id="cb185-2"><a href="lesson-6c-random-forests.html#cb185-2" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
+<span id="cb185-3"><a href="lesson-6c-random-forests.html#cb185-3" tabindex="-1"></a>   <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
+<span id="cb185-4"><a href="lesson-6c-random-forests.html#cb185-4" tabindex="-1"></a>}</span>
+<span id="cb185-5"><a href="lesson-6c-random-forests.html#cb185-5" tabindex="-1"></a></span>
+<span id="cb185-6"><a href="lesson-6c-random-forests.html#cb185-6" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
+<span id="cb185-7"><a href="lesson-6c-random-forests.html#cb185-7" tabindex="-1"></a><span class="co"># and then plot</span></span>
+<span id="cb185-8"><a href="lesson-6c-random-forests.html#cb185-8" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb185-9"><a href="lesson-6c-random-forests.html#cb185-9" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
+<span id="cb185-10"><a href="lesson-6c-random-forests.html#cb185-10" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
+<span id="cb185-11"><a href="lesson-6c-random-forests.html#cb185-11" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
+<span id="cb185-12"><a href="lesson-6c-random-forests.html#cb185-12" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
+<span id="cb185-13"><a href="lesson-6c-random-forests.html#cb185-13" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
+<span id="cb185-14"><a href="lesson-6c-random-forests.html#cb185-14" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
+<span id="cb185-15"><a href="lesson-6c-random-forests.html#cb185-15" tabindex="-1"></a>   <span class="fu">autoplot</span>() <span class="sc">+</span></span>
+<span id="cb185-16"><a href="lesson-6c-random-forests.html#cb185-16" tabindex="-1"></a>   <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-325-1.png" width="864" style="display: block; margin: auto;" /></p>
 <div id="knowledge-check-35" class="section level3 hasAnchor" number="19.7.1">
 <h3><span class="header-section-number">19.7.1</span> Knowledge check<a href="lesson-6c-random-forests.html#knowledge-check-35" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -966,7 +969,7 @@ Segal, Mark R. 2004. <span>“Machine Learning Benchmarks and Random Forest Regr
 <div class="footnotes">
 <hr />
 <ol start="9">
-<li id="fn9"><p>See <span class="citation">J. Friedman, Hastie, and Tibshirani (<a href="#ref-esl" role="doc-biblioref">2001</a>)</span> for a mathematical explanation of the tree correlation phenomenon.<a href="lesson-6c-random-forests.html#fnref9" class="footnote-back">↩︎</a></p></li>
+<li id="fn9"><p>See <span class="citation">J. Friedman, Hastie, and Tibshirani (<a href="#ref-esl">2001</a>)</span> for a mathematical explanation of the tree correlation phenomenon.<a href="lesson-6c-random-forests.html#fnref9" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
             </section>
@@ -1025,7 +1028,7 @@ gitbook.start({
     var script = document.createElement("script");
     script.type = "text/javascript";
     var src = "true";
-    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
     if (location.protocol !== "file:")
       if (/^https?:/.test(src))
         src = src.replace(/^https?:/, '');

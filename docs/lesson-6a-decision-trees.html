@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>17 Lesson 6a: Decision Trees | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
 
   <meta property="og:title" content="17 Lesson 6a: Decision Trees | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,16 +51,16 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
 <link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
 <script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
-<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
-<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
 
 
 <style type="text/css">
@@ -101,7 +101,7 @@ code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -114,7 +114,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -128,6 +128,10 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
 <style type="text/css">
 /* Used with Pandoc 2.11+ new --citeproc when CSL is used */
 div.csl-bib-body { }
@@ -567,24 +571,24 @@ div.csl-indent {
 </div>
 <div id="prerequisites-9" class="section level2 hasAnchor" number="17.2">
 <h2><span class="header-section-number">17.2</span> Prerequisites<a href="lesson-6a-decision-trees.html#prerequisites-9" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<div class="sourceCode" id="cb160"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb160-1"><a href="lesson-6a-decision-trees.html#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper packages</span></span>
-<span id="cb160-2"><a href="lesson-6a-decision-trees.html#cb160-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
-<span id="cb160-3"><a href="lesson-6a-decision-trees.html#cb160-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb160-4"><a href="lesson-6a-decision-trees.html#cb160-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
-<span id="cb160-5"><a href="lesson-6a-decision-trees.html#cb160-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels) </span>
-<span id="cb160-6"><a href="lesson-6a-decision-trees.html#cb160-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb160-7"><a href="lesson-6a-decision-trees.html#cb160-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
-<span id="cb160-8"><a href="lesson-6a-decision-trees.html#cb160-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
-<span id="cb160-9"><a href="lesson-6a-decision-trees.html#cb160-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
-<div class="sourceCode" id="cb161"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb161-1"><a href="lesson-6a-decision-trees.html#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb161-2"><a href="lesson-6a-decision-trees.html#cb161-2" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
-<span id="cb161-3"><a href="lesson-6a-decision-trees.html#cb161-3" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
-<span id="cb161-4"><a href="lesson-6a-decision-trees.html#cb161-4" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
-<span id="cb161-5"><a href="lesson-6a-decision-trees.html#cb161-5" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
+<div class="sourceCode" id="cb160"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb160-1"><a href="lesson-6a-decision-trees.html#cb160-1" tabindex="-1"></a><span class="co"># Helper packages</span></span>
+<span id="cb160-2"><a href="lesson-6a-decision-trees.html#cb160-2" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
+<span id="cb160-3"><a href="lesson-6a-decision-trees.html#cb160-3" tabindex="-1"></a></span>
+<span id="cb160-4"><a href="lesson-6a-decision-trees.html#cb160-4" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
+<span id="cb160-5"><a href="lesson-6a-decision-trees.html#cb160-5" tabindex="-1"></a><span class="fu">library</span>(tidymodels) </span>
+<span id="cb160-6"><a href="lesson-6a-decision-trees.html#cb160-6" tabindex="-1"></a></span>
+<span id="cb160-7"><a href="lesson-6a-decision-trees.html#cb160-7" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
+<span id="cb160-8"><a href="lesson-6a-decision-trees.html#cb160-8" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
+<span id="cb160-9"><a href="lesson-6a-decision-trees.html#cb160-9" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
+<div class="sourceCode" id="cb161"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb161-1"><a href="lesson-6a-decision-trees.html#cb161-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb161-2"><a href="lesson-6a-decision-trees.html#cb161-2" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
+<span id="cb161-3"><a href="lesson-6a-decision-trees.html#cb161-3" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
+<span id="cb161-4"><a href="lesson-6a-decision-trees.html#cb161-4" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb161-5"><a href="lesson-6a-decision-trees.html#cb161-5" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
 </div>
 <div id="structure" class="section level2 hasAnchor" number="17.3">
 <h2><span class="header-section-number">17.3</span> Structure<a href="lesson-6a-decision-trees.html#structure" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>There are many methodologies for constructing decision trees but the most well-known is the <strong>c</strong>lassification <strong>a</strong>nd <strong>r</strong>egression <strong>t</strong>ree (CART) algorithm proposed in <span class="citation">Breiman (<a href="#ref-breiman2017classification" role="doc-biblioref">1984</a>)</span>.<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a> A basic decision tree partitions the training data into homogeneous subgroups (i.e., groups with similar response values) and then fits a simple <em>constant</em> in each subgroup (e.g., the mean of the within group response values for regression). The subgroups (also called nodes) are formed recursively using binary partitions formed by asking simple yes-or-no questions about each feature (e.g., is <code>age &lt; 18</code>?). This is done a number of times until a suitable stopping criteria is satisfied (e.g., a maximum depth of the tree is reached). After all the partitioning has been done, the model predicts the output based on (1) the average response values for all observations that fall in that subgroup (regression problem), or (2) the class that has majority representation (classification problem). For classification, predicted probabilities can be obtained using the proportion of each class within the subgroup.</p>
+<p>There are many methodologies for constructing decision trees but the most well-known is the <strong>c</strong>lassification <strong>a</strong>nd <strong>r</strong>egression <strong>t</strong>ree (CART) algorithm proposed in <span class="citation">Breiman (<a href="#ref-breiman2017classification">1984</a>)</span>.<a href="#fn6" class="footnote-ref" id="fnref6"><sup>6</sup></a> A basic decision tree partitions the training data into homogeneous subgroups (i.e., groups with similar response values) and then fits a simple <em>constant</em> in each subgroup (e.g., the mean of the within group response values for regression). The subgroups (also called nodes) are formed recursively using binary partitions formed by asking simple yes-or-no questions about each feature (e.g., is <code>age &lt; 18</code>?). This is done a number of times until a suitable stopping criteria is satisfied (e.g., a maximum depth of the tree is reached). After all the partitioning has been done, the model predicts the output based on (1) the average response values for all observations that fall in that subgroup (regression problem), or (2) the class that has majority representation (classification problem). For classification, predicted probabilities can be obtained using the proportion of each class within the subgroup.</p>
 <p>What results is an inverted tree-like structure such as that in the below figure. In essence, our tree is a set of rules that allows us to make predictions by asking simple yes-or-no questions about each feature. For example, if the customer is loyal, has household income greater than $150,000, and is shopping in a store, the exemplar tree diagram below would predict that the customer will redeem a coupon.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:exemplar-decision-tree"></span>
 <img src="images/exemplar-decision-tree.png" alt="Exemplar decision tree predicting whether or not a customer will redeem a coupon (yes or no) based on the customer's loyalty, household income, last month's spend, coupon placement, and shopping mode." width="100%" height="100%" />
@@ -611,7 +615,7 @@ SSE = \sum_{i \in R_1}\left(y_i - c_1\right)^2 + \sum_{i \in R_2}\left(y_i - c_2
 <p>
 In both regression and classification trees, the objective of
 partitioning is to minimize dissimilarity in the terminal nodes.
-However, we suggest <span class="citation"><span class="citation">Therneau, Atkinson, et al. (<a href="#ref-therneau1997introduction" role="doc-biblioref">1997</a>)</span></span> for a more thorough
+However, we suggest <span class="citation"><span class="citation">Therneau, Atkinson, et al. (<a href="#ref-therneau1997introduction">1997</a>)</span></span> for a more thorough
 discussion regarding binary recursive partitioning.
 </p>
 </div>
@@ -630,7 +634,7 @@ Figure 17.3: Decision tree illustrating the single split on feature x (left). Th
 Figure 17.4: Decision tree illustrating with depth = 3, resulting in 7 decision splits along values of feature x and 8 prediction regions (left). The resulting decision boundary (right).
 </p>
 </div>
-<p>However, even when many features are available, a single feature may still dominate if it continues to provide the best split after each successive partition. For example, a decision tree applied to the iris data set <span class="citation">(<a href="#ref-fisher1936use" role="doc-biblioref">R. A. Fisher 1936</a>)</span> where the species of the flower (setosa, versicolor, and virginica) is predicted based on two features (sepal width and sepal length) results in an optimal decision tree with two splits on each feature. Also, note how the decision boundary in a classification problem results in rectangular regions enclosing the observations. The predicted value is the response class with the greatest proportion within the enclosed region.</p>
+<p>However, even when many features are available, a single feature may still dominate if it continues to provide the best split after each successive partition. For example, a decision tree applied to the iris data set <span class="citation">(<a href="#ref-fisher1936use">R. A. Fisher 1936</a>)</span> where the species of the flower (setosa, versicolor, and virginica) is predicted based on two features (sepal width and sepal length) results in an optimal decision tree with two splits on each feature. Also, note how the decision boundary in a classification problem results in rectangular regions enclosing the observations. The predicted value is the response class with the greatest proportion within the enclosed region.</p>
 <div class="figure" style="text-align: center"><span style="display:block;" id="fig:iris-decision-tree"></span>
 <img src="_main_files/figure-html/iris-decision-tree-1.png" alt="Decision tree for the iris classification problem (left). The decision boundary results in rectangular regions that enclose the observations.  The class with the highest proportion in each region is the predicted value (right)." width="48%" /><img src="_main_files/figure-html/iris-decision-tree-2.png" alt="Decision tree for the iris classification problem (left). The decision boundary results in rectangular regions that enclose the observations.  The class with the highest proportion in each region is the predicted value (right)." width="48%" />
 <p class="caption">
@@ -681,95 +685,95 @@ Figure 17.8: To prune a tree, we grow an overly complex tree (left) and then use
 <h3><span class="header-section-number">17.6.1</span> Fitting a basic model<a href="lesson-6a-decision-trees.html#fitting-a-basic-model-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>To illustrate some of the concepts we’ve mentioned we’ll start by implementing models using just the <code>Gr_Liv_Area</code> and <code>Year_Built</code> features in our Ames housing data.</p>
 <p>In R we use the <code>decision_tree()</code> model and we’ll use the <code>rpart</code> package as our model engine. In this example we will not set a specific depth of our tree; rather, <code>rpart</code> automatically builds a fully deep tree and then prunes it to attempt to find an optimal tree depth.</p>
-<div class="sourceCode" id="cb162"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb162-1"><a href="lesson-6a-decision-trees.html#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: create decision tree model object</span></span>
-<span id="cb162-2"><a href="lesson-6a-decision-trees.html#cb162-2" aria-hidden="true" tabindex="-1"></a>dt_mod <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span> <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>)</span>
-<span id="cb162-3"><a href="lesson-6a-decision-trees.html#cb162-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb162-4"><a href="lesson-6a-decision-trees.html#cb162-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: create model recipe</span></span>
-<span id="cb162-5"><a href="lesson-6a-decision-trees.html#cb162-5" aria-hidden="true" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
-<span id="cb162-6"><a href="lesson-6a-decision-trees.html#cb162-6" aria-hidden="true" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> Gr_Liv_Area <span class="sc">+</span> Year_Built, </span>
-<span id="cb162-7"><a href="lesson-6a-decision-trees.html#cb162-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
-<span id="cb162-8"><a href="lesson-6a-decision-trees.html#cb162-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb162-9"><a href="lesson-6a-decision-trees.html#cb162-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb162-10"><a href="lesson-6a-decision-trees.html#cb162-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: fit model workflow</span></span>
-<span id="cb162-11"><a href="lesson-6a-decision-trees.html#cb162-11" aria-hidden="true" tabindex="-1"></a>dt_fit <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb162-12"><a href="lesson-6a-decision-trees.html#cb162-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
-<span id="cb162-13"><a href="lesson-6a-decision-trees.html#cb162-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(dt_mod) <span class="sc">%&gt;%</span></span>
-<span id="cb162-14"><a href="lesson-6a-decision-trees.html#cb162-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
-<span id="cb162-15"><a href="lesson-6a-decision-trees.html#cb162-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb162-16"><a href="lesson-6a-decision-trees.html#cb162-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 4: results</span></span>
-<span id="cb162-17"><a href="lesson-6a-decision-trees.html#cb162-17" aria-hidden="true" tabindex="-1"></a>dt_fit</span>
-<span id="cb162-18"><a href="lesson-6a-decision-trees.html#cb162-18" aria-hidden="true" tabindex="-1"></a><span class="do">## ══ Workflow [trained] ═════════════════════════</span></span>
-<span id="cb162-19"><a href="lesson-6a-decision-trees.html#cb162-19" aria-hidden="true" tabindex="-1"></a><span class="do">## Preprocessor: Recipe</span></span>
-<span id="cb162-20"><a href="lesson-6a-decision-trees.html#cb162-20" aria-hidden="true" tabindex="-1"></a><span class="do">## Model: decision_tree()</span></span>
-<span id="cb162-21"><a href="lesson-6a-decision-trees.html#cb162-21" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb162-22"><a href="lesson-6a-decision-trees.html#cb162-22" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Preprocessor ───────────────────────────────</span></span>
-<span id="cb162-23"><a href="lesson-6a-decision-trees.html#cb162-23" aria-hidden="true" tabindex="-1"></a><span class="do">## 0 Recipe Steps</span></span>
-<span id="cb162-24"><a href="lesson-6a-decision-trees.html#cb162-24" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb162-25"><a href="lesson-6a-decision-trees.html#cb162-25" aria-hidden="true" tabindex="-1"></a><span class="do">## ── Model ──────────────────────────────────────</span></span>
-<span id="cb162-26"><a href="lesson-6a-decision-trees.html#cb162-26" aria-hidden="true" tabindex="-1"></a><span class="do">## n= 2049 </span></span>
-<span id="cb162-27"><a href="lesson-6a-decision-trees.html#cb162-27" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb162-28"><a href="lesson-6a-decision-trees.html#cb162-28" aria-hidden="true" tabindex="-1"></a><span class="do">## node), split, n, deviance, yval</span></span>
-<span id="cb162-29"><a href="lesson-6a-decision-trees.html#cb162-29" aria-hidden="true" tabindex="-1"></a><span class="do">##       * denotes terminal node</span></span>
-<span id="cb162-30"><a href="lesson-6a-decision-trees.html#cb162-30" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb162-31"><a href="lesson-6a-decision-trees.html#cb162-31" aria-hidden="true" tabindex="-1"></a><span class="do">##  1) root 2049 1.321981e+13 180922.6  </span></span>
-<span id="cb162-32"><a href="lesson-6a-decision-trees.html#cb162-32" aria-hidden="true" tabindex="-1"></a><span class="do">##    2) Year_Built&lt; 1985.5 1228 2.698241e+12 141467.4  </span></span>
-<span id="cb162-33"><a href="lesson-6a-decision-trees.html#cb162-33" aria-hidden="true" tabindex="-1"></a><span class="do">##      4) Gr_Liv_Area&lt; 1486 840 7.763942e+11 125692.6  </span></span>
-<span id="cb162-34"><a href="lesson-6a-decision-trees.html#cb162-34" aria-hidden="true" tabindex="-1"></a><span class="do">##        8) Year_Built&lt; 1952.5 317 2.687202e+11 107761.5 *</span></span>
-<span id="cb162-35"><a href="lesson-6a-decision-trees.html#cb162-35" aria-hidden="true" tabindex="-1"></a><span class="do">##        9) Year_Built&gt;=1952.5 523 3.439725e+11 136561.0 *</span></span>
-<span id="cb162-36"><a href="lesson-6a-decision-trees.html#cb162-36" aria-hidden="true" tabindex="-1"></a><span class="do">##      5) Gr_Liv_Area&gt;=1486 388 1.260276e+12 175619.2  </span></span>
-<span id="cb162-37"><a href="lesson-6a-decision-trees.html#cb162-37" aria-hidden="true" tabindex="-1"></a><span class="do">##       10) Gr_Liv_Area&lt; 2663.5 372 8.913502e+11 170223.5 *</span></span>
-<span id="cb162-38"><a href="lesson-6a-decision-trees.html#cb162-38" aria-hidden="true" tabindex="-1"></a><span class="do">##       11) Gr_Liv_Area&gt;=2663.5 16 1.062939e+11 301068.8 *</span></span>
-<span id="cb162-39"><a href="lesson-6a-decision-trees.html#cb162-39" aria-hidden="true" tabindex="-1"></a><span class="do">##    3) Year_Built&gt;=1985.5 821 5.750622e+12 239937.1  </span></span>
-<span id="cb162-40"><a href="lesson-6a-decision-trees.html#cb162-40" aria-hidden="true" tabindex="-1"></a><span class="do">##      6) Gr_Liv_Area&lt; 1963 622 1.813069e+12 211699.5  </span></span>
-<span id="cb162-41"><a href="lesson-6a-decision-trees.html#cb162-41" aria-hidden="true" tabindex="-1"></a><span class="do">##       12) Gr_Liv_Area&lt; 1501.5 285 3.483774e+11 182098.8 *</span></span>
-<span id="cb162-42"><a href="lesson-6a-decision-trees.html#cb162-42" aria-hidden="true" tabindex="-1"></a><span class="do">##       13) Gr_Liv_Area&gt;=1501.5 337 1.003788e+12 236732.8  </span></span>
-<span id="cb162-43"><a href="lesson-6a-decision-trees.html#cb162-43" aria-hidden="true" tabindex="-1"></a><span class="do">##         26) Year_Built&lt; 2004.5 198 3.906393e+11 217241.1 *</span></span>
-<span id="cb162-44"><a href="lesson-6a-decision-trees.html#cb162-44" aria-hidden="true" tabindex="-1"></a><span class="do">##         27) Year_Built&gt;=2004.5 139 4.307663e+11 264498.0 *</span></span>
-<span id="cb162-45"><a href="lesson-6a-decision-trees.html#cb162-45" aria-hidden="true" tabindex="-1"></a><span class="do">##      7) Gr_Liv_Area&gt;=1963 199 1.891416e+12 328197.2  </span></span>
-<span id="cb162-46"><a href="lesson-6a-decision-trees.html#cb162-46" aria-hidden="true" tabindex="-1"></a><span class="do">##       14) Gr_Liv_Area&lt; 2390.5 107 5.903157e+11 290924.0  </span></span>
-<span id="cb162-47"><a href="lesson-6a-decision-trees.html#cb162-47" aria-hidden="true" tabindex="-1"></a><span class="do">##         28) Year_Built&lt; 2004.5 69 1.168804e+11 253975.7 *</span></span>
-<span id="cb162-48"><a href="lesson-6a-decision-trees.html#cb162-48" aria-hidden="true" tabindex="-1"></a><span class="do">##         29) Year_Built&gt;=2004.5 38 2.081946e+11 358014.5 *</span></span>
-<span id="cb162-49"><a href="lesson-6a-decision-trees.html#cb162-49" aria-hidden="true" tabindex="-1"></a><span class="do">##       15) Gr_Liv_Area&gt;=2390.5 92 9.795556e+11 371547.5 *</span></span></code></pre></div>
+<div class="sourceCode" id="cb162"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb162-1"><a href="lesson-6a-decision-trees.html#cb162-1" tabindex="-1"></a><span class="co"># Step 1: create decision tree model object</span></span>
+<span id="cb162-2"><a href="lesson-6a-decision-trees.html#cb162-2" tabindex="-1"></a>dt_mod <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(<span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>) <span class="sc">%&gt;%</span> <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>)</span>
+<span id="cb162-3"><a href="lesson-6a-decision-trees.html#cb162-3" tabindex="-1"></a></span>
+<span id="cb162-4"><a href="lesson-6a-decision-trees.html#cb162-4" tabindex="-1"></a><span class="co"># Step 2: create model recipe</span></span>
+<span id="cb162-5"><a href="lesson-6a-decision-trees.html#cb162-5" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
+<span id="cb162-6"><a href="lesson-6a-decision-trees.html#cb162-6" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> Gr_Liv_Area <span class="sc">+</span> Year_Built, </span>
+<span id="cb162-7"><a href="lesson-6a-decision-trees.html#cb162-7" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
+<span id="cb162-8"><a href="lesson-6a-decision-trees.html#cb162-8" tabindex="-1"></a>  )</span>
+<span id="cb162-9"><a href="lesson-6a-decision-trees.html#cb162-9" tabindex="-1"></a>  </span>
+<span id="cb162-10"><a href="lesson-6a-decision-trees.html#cb162-10" tabindex="-1"></a><span class="co"># Step 3: fit model workflow</span></span>
+<span id="cb162-11"><a href="lesson-6a-decision-trees.html#cb162-11" tabindex="-1"></a>dt_fit <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb162-12"><a href="lesson-6a-decision-trees.html#cb162-12" tabindex="-1"></a>  <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb162-13"><a href="lesson-6a-decision-trees.html#cb162-13" tabindex="-1"></a>  <span class="fu">add_model</span>(dt_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb162-14"><a href="lesson-6a-decision-trees.html#cb162-14" tabindex="-1"></a>  <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
+<span id="cb162-15"><a href="lesson-6a-decision-trees.html#cb162-15" tabindex="-1"></a></span>
+<span id="cb162-16"><a href="lesson-6a-decision-trees.html#cb162-16" tabindex="-1"></a><span class="co"># Step 4: results</span></span>
+<span id="cb162-17"><a href="lesson-6a-decision-trees.html#cb162-17" tabindex="-1"></a>dt_fit</span>
+<span id="cb162-18"><a href="lesson-6a-decision-trees.html#cb162-18" tabindex="-1"></a><span class="do">## ══ Workflow [trained] ══════════════════════</span></span>
+<span id="cb162-19"><a href="lesson-6a-decision-trees.html#cb162-19" tabindex="-1"></a><span class="do">## Preprocessor: Recipe</span></span>
+<span id="cb162-20"><a href="lesson-6a-decision-trees.html#cb162-20" tabindex="-1"></a><span class="do">## Model: decision_tree()</span></span>
+<span id="cb162-21"><a href="lesson-6a-decision-trees.html#cb162-21" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb162-22"><a href="lesson-6a-decision-trees.html#cb162-22" tabindex="-1"></a><span class="do">## ── Preprocessor ────────────────────────────</span></span>
+<span id="cb162-23"><a href="lesson-6a-decision-trees.html#cb162-23" tabindex="-1"></a><span class="do">## 0 Recipe Steps</span></span>
+<span id="cb162-24"><a href="lesson-6a-decision-trees.html#cb162-24" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb162-25"><a href="lesson-6a-decision-trees.html#cb162-25" tabindex="-1"></a><span class="do">## ── Model ───────────────────────────────────</span></span>
+<span id="cb162-26"><a href="lesson-6a-decision-trees.html#cb162-26" tabindex="-1"></a><span class="do">## n= 2049 </span></span>
+<span id="cb162-27"><a href="lesson-6a-decision-trees.html#cb162-27" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb162-28"><a href="lesson-6a-decision-trees.html#cb162-28" tabindex="-1"></a><span class="do">## node), split, n, deviance, yval</span></span>
+<span id="cb162-29"><a href="lesson-6a-decision-trees.html#cb162-29" tabindex="-1"></a><span class="do">##       * denotes terminal node</span></span>
+<span id="cb162-30"><a href="lesson-6a-decision-trees.html#cb162-30" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb162-31"><a href="lesson-6a-decision-trees.html#cb162-31" tabindex="-1"></a><span class="do">##  1) root 2049 1.321981e+13 180922.6  </span></span>
+<span id="cb162-32"><a href="lesson-6a-decision-trees.html#cb162-32" tabindex="-1"></a><span class="do">##    2) Year_Built&lt; 1985.5 1228 2.698241e+12 141467.4  </span></span>
+<span id="cb162-33"><a href="lesson-6a-decision-trees.html#cb162-33" tabindex="-1"></a><span class="do">##      4) Gr_Liv_Area&lt; 1486 840 7.763942e+11 125692.6  </span></span>
+<span id="cb162-34"><a href="lesson-6a-decision-trees.html#cb162-34" tabindex="-1"></a><span class="do">##        8) Year_Built&lt; 1952.5 317 2.687202e+11 107761.5 *</span></span>
+<span id="cb162-35"><a href="lesson-6a-decision-trees.html#cb162-35" tabindex="-1"></a><span class="do">##        9) Year_Built&gt;=1952.5 523 3.439725e+11 136561.0 *</span></span>
+<span id="cb162-36"><a href="lesson-6a-decision-trees.html#cb162-36" tabindex="-1"></a><span class="do">##      5) Gr_Liv_Area&gt;=1486 388 1.260276e+12 175619.2  </span></span>
+<span id="cb162-37"><a href="lesson-6a-decision-trees.html#cb162-37" tabindex="-1"></a><span class="do">##       10) Gr_Liv_Area&lt; 2663.5 372 8.913502e+11 170223.5 *</span></span>
+<span id="cb162-38"><a href="lesson-6a-decision-trees.html#cb162-38" tabindex="-1"></a><span class="do">##       11) Gr_Liv_Area&gt;=2663.5 16 1.062939e+11 301068.8 *</span></span>
+<span id="cb162-39"><a href="lesson-6a-decision-trees.html#cb162-39" tabindex="-1"></a><span class="do">##    3) Year_Built&gt;=1985.5 821 5.750622e+12 239937.1  </span></span>
+<span id="cb162-40"><a href="lesson-6a-decision-trees.html#cb162-40" tabindex="-1"></a><span class="do">##      6) Gr_Liv_Area&lt; 1963 622 1.813069e+12 211699.5  </span></span>
+<span id="cb162-41"><a href="lesson-6a-decision-trees.html#cb162-41" tabindex="-1"></a><span class="do">##       12) Gr_Liv_Area&lt; 1501.5 285 3.483774e+11 182098.8 *</span></span>
+<span id="cb162-42"><a href="lesson-6a-decision-trees.html#cb162-42" tabindex="-1"></a><span class="do">##       13) Gr_Liv_Area&gt;=1501.5 337 1.003788e+12 236732.8  </span></span>
+<span id="cb162-43"><a href="lesson-6a-decision-trees.html#cb162-43" tabindex="-1"></a><span class="do">##         26) Year_Built&lt; 2004.5 198 3.906393e+11 217241.1 *</span></span>
+<span id="cb162-44"><a href="lesson-6a-decision-trees.html#cb162-44" tabindex="-1"></a><span class="do">##         27) Year_Built&gt;=2004.5 139 4.307663e+11 264498.0 *</span></span>
+<span id="cb162-45"><a href="lesson-6a-decision-trees.html#cb162-45" tabindex="-1"></a><span class="do">##      7) Gr_Liv_Area&gt;=1963 199 1.891416e+12 328197.2  </span></span>
+<span id="cb162-46"><a href="lesson-6a-decision-trees.html#cb162-46" tabindex="-1"></a><span class="do">##       14) Gr_Liv_Area&lt; 2390.5 107 5.903157e+11 290924.0  </span></span>
+<span id="cb162-47"><a href="lesson-6a-decision-trees.html#cb162-47" tabindex="-1"></a><span class="do">##         28) Year_Built&lt; 2004.5 69 1.168804e+11 253975.7 *</span></span>
+<span id="cb162-48"><a href="lesson-6a-decision-trees.html#cb162-48" tabindex="-1"></a><span class="do">##         29) Year_Built&gt;=2004.5 38 2.081946e+11 358014.5 *</span></span>
+<span id="cb162-49"><a href="lesson-6a-decision-trees.html#cb162-49" tabindex="-1"></a><span class="do">##       15) Gr_Liv_Area&gt;=2390.5 92 9.795556e+11 371547.5 *</span></span></code></pre></div>
 <p>We can use <code>rpart.plot()</code> to plot our tree. This is only useful if we have a relatively small tree to visualize; however, most trees we will build will be far too large to attempt to visualize. In this case, we see that the root node (first node) splits our data based on (<code>Year_Built</code>). For those observations where the home is built after 1985 we follow the right half of the decision tree and for those where the home is built in or prior to 1985 we follow the left half of the decision tree.</p>
-<div class="sourceCode" id="cb163"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb163-1"><a href="lesson-6a-decision-trees.html#cb163-1" aria-hidden="true" tabindex="-1"></a>rpart.plot<span class="sc">::</span><span class="fu">rpart.plot</span>(dt_fit<span class="sc">$</span>fit<span class="sc">$</span>fit<span class="sc">$</span>fit)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-285-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb163"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb163-1"><a href="lesson-6a-decision-trees.html#cb163-1" tabindex="-1"></a>rpart.plot<span class="sc">::</span><span class="fu">rpart.plot</span>(dt_fit<span class="sc">$</span>fit<span class="sc">$</span>fit<span class="sc">$</span>fit)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-282-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>However, to understand how our model is performing we want to perform cross validation. We see that this single decision tree is not performing spectacularly well with the average RMSE across our 5 folds equaling just under $50K.</p>
-<div class="sourceCode" id="cb164"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb164-1"><a href="lesson-6a-decision-trees.html#cb164-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create resampling procedure</span></span>
-<span id="cb164-2"><a href="lesson-6a-decision-trees.html#cb164-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
-<span id="cb164-3"><a href="lesson-6a-decision-trees.html#cb164-3" aria-hidden="true" tabindex="-1"></a>kfold <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
-<span id="cb164-4"><a href="lesson-6a-decision-trees.html#cb164-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-5"><a href="lesson-6a-decision-trees.html#cb164-5" aria-hidden="true" tabindex="-1"></a><span class="co"># train model</span></span>
-<span id="cb164-6"><a href="lesson-6a-decision-trees.html#cb164-6" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(dt_mod, model_recipe, kfold)</span>
-<span id="cb164-7"><a href="lesson-6a-decision-trees.html#cb164-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-8"><a href="lesson-6a-decision-trees.html#cb164-8" aria-hidden="true" tabindex="-1"></a><span class="co"># model results</span></span>
-<span id="cb164-9"><a href="lesson-6a-decision-trees.html#cb164-9" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
-<span id="cb164-10"><a href="lesson-6a-decision-trees.html#cb164-10" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb164-11"><a href="lesson-6a-decision-trees.html#cb164-11" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
-<span id="cb164-12"><a href="lesson-6a-decision-trees.html#cb164-12" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb164-13"><a href="lesson-6a-decision-trees.html#cb164-13" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 4.72e+4     5 1.19e+3 Prepro…</span></span>
-<span id="cb164-14"><a href="lesson-6a-decision-trees.html#cb164-14" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 6.55e-1     5 1.29e-2 Prepro…</span></span>
-<span id="cb164-15"><a href="lesson-6a-decision-trees.html#cb164-15" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
+<div class="sourceCode" id="cb164"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb164-1"><a href="lesson-6a-decision-trees.html#cb164-1" tabindex="-1"></a><span class="co"># create resampling procedure</span></span>
+<span id="cb164-2"><a href="lesson-6a-decision-trees.html#cb164-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
+<span id="cb164-3"><a href="lesson-6a-decision-trees.html#cb164-3" tabindex="-1"></a>kfold <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb164-4"><a href="lesson-6a-decision-trees.html#cb164-4" tabindex="-1"></a></span>
+<span id="cb164-5"><a href="lesson-6a-decision-trees.html#cb164-5" tabindex="-1"></a><span class="co"># train model</span></span>
+<span id="cb164-6"><a href="lesson-6a-decision-trees.html#cb164-6" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(dt_mod, model_recipe, kfold)</span>
+<span id="cb164-7"><a href="lesson-6a-decision-trees.html#cb164-7" tabindex="-1"></a></span>
+<span id="cb164-8"><a href="lesson-6a-decision-trees.html#cb164-8" tabindex="-1"></a><span class="co"># model results</span></span>
+<span id="cb164-9"><a href="lesson-6a-decision-trees.html#cb164-9" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
+<span id="cb164-10"><a href="lesson-6a-decision-trees.html#cb164-10" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb164-11"><a href="lesson-6a-decision-trees.html#cb164-11" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n std_err</span></span>
+<span id="cb164-12"><a href="lesson-6a-decision-trees.html#cb164-12" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb164-13"><a href="lesson-6a-decision-trees.html#cb164-13" tabindex="-1"></a><span class="do">## 1 rmse    standard   47178.        5 1.19e+3</span></span>
+<span id="cb164-14"><a href="lesson-6a-decision-trees.html#cb164-14" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.655     5 1.29e-2</span></span>
+<span id="cb164-15"><a href="lesson-6a-decision-trees.html#cb164-15" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
 </div>
 <div id="fitting-a-full-model-1" class="section level3 hasAnchor" number="17.6.2">
 <h3><span class="header-section-number">17.6.2</span> Fitting a full model<a href="lesson-6a-decision-trees.html#fitting-a-full-model-1" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <p>Next, lets go ahead and fit a full model to include all Ames housing features. We do not need to one-hot encode our features as <strong>rpart</strong> will naturally handle categorical features. By including all features we see some improvement in our model performance as our average cross validated RMSE is now in the low $40K range.</p>
-<div class="sourceCode" id="cb165"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb165-1"><a href="lesson-6a-decision-trees.html#cb165-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create model recipe with all features</span></span>
-<span id="cb165-2"><a href="lesson-6a-decision-trees.html#cb165-2" aria-hidden="true" tabindex="-1"></a>full_model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
-<span id="cb165-3"><a href="lesson-6a-decision-trees.html#cb165-3" aria-hidden="true" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> ., </span>
-<span id="cb165-4"><a href="lesson-6a-decision-trees.html#cb165-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
-<span id="cb165-5"><a href="lesson-6a-decision-trees.html#cb165-5" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb165-6"><a href="lesson-6a-decision-trees.html#cb165-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb165-7"><a href="lesson-6a-decision-trees.html#cb165-7" aria-hidden="true" tabindex="-1"></a><span class="co"># train model</span></span>
-<span id="cb165-8"><a href="lesson-6a-decision-trees.html#cb165-8" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(dt_mod, full_model_recipe, kfold)</span>
-<span id="cb165-9"><a href="lesson-6a-decision-trees.html#cb165-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb165-10"><a href="lesson-6a-decision-trees.html#cb165-10" aria-hidden="true" tabindex="-1"></a><span class="co"># model results</span></span>
-<span id="cb165-11"><a href="lesson-6a-decision-trees.html#cb165-11" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
-<span id="cb165-12"><a href="lesson-6a-decision-trees.html#cb165-12" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb165-13"><a href="lesson-6a-decision-trees.html#cb165-13" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
-<span id="cb165-14"><a href="lesson-6a-decision-trees.html#cb165-14" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb165-15"><a href="lesson-6a-decision-trees.html#cb165-15" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 4.05e+4     5 1.69e+3 Prepro…</span></span>
-<span id="cb165-16"><a href="lesson-6a-decision-trees.html#cb165-16" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 7.45e-1     5 1.48e-2 Prepro…</span></span>
-<span id="cb165-17"><a href="lesson-6a-decision-trees.html#cb165-17" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
+<div class="sourceCode" id="cb165"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb165-1"><a href="lesson-6a-decision-trees.html#cb165-1" tabindex="-1"></a><span class="co"># create model recipe with all features</span></span>
+<span id="cb165-2"><a href="lesson-6a-decision-trees.html#cb165-2" tabindex="-1"></a>full_model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
+<span id="cb165-3"><a href="lesson-6a-decision-trees.html#cb165-3" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> ., </span>
+<span id="cb165-4"><a href="lesson-6a-decision-trees.html#cb165-4" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
+<span id="cb165-5"><a href="lesson-6a-decision-trees.html#cb165-5" tabindex="-1"></a>  )</span>
+<span id="cb165-6"><a href="lesson-6a-decision-trees.html#cb165-6" tabindex="-1"></a></span>
+<span id="cb165-7"><a href="lesson-6a-decision-trees.html#cb165-7" tabindex="-1"></a><span class="co"># train model</span></span>
+<span id="cb165-8"><a href="lesson-6a-decision-trees.html#cb165-8" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(dt_mod, full_model_recipe, kfold)</span>
+<span id="cb165-9"><a href="lesson-6a-decision-trees.html#cb165-9" tabindex="-1"></a></span>
+<span id="cb165-10"><a href="lesson-6a-decision-trees.html#cb165-10" tabindex="-1"></a><span class="co"># model results</span></span>
+<span id="cb165-11"><a href="lesson-6a-decision-trees.html#cb165-11" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
+<span id="cb165-12"><a href="lesson-6a-decision-trees.html#cb165-12" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb165-13"><a href="lesson-6a-decision-trees.html#cb165-13" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n std_err</span></span>
+<span id="cb165-14"><a href="lesson-6a-decision-trees.html#cb165-14" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb165-15"><a href="lesson-6a-decision-trees.html#cb165-15" tabindex="-1"></a><span class="do">## 1 rmse    standard   40510.        5 1.69e+3</span></span>
+<span id="cb165-16"><a href="lesson-6a-decision-trees.html#cb165-16" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.745     5 1.48e-2</span></span>
+<span id="cb165-17"><a href="lesson-6a-decision-trees.html#cb165-17" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
 </div>
 <div id="knowledge-check-27" class="section level3 hasAnchor" number="17.6.3">
 <h3><span class="header-section-number">17.6.3</span> Knowledge check<a href="lesson-6a-decision-trees.html#knowledge-check-27" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -822,39 +826,38 @@ to the model in #2. Which model performs best?
 <li><strong>Cost complexity parameter</strong>: acts as a regularization mechanism by penalizing the objective function.</li>
 </ol>
 <p>There is not one best approach to use and often different combinations of these parameter settings improves model performance. The following will demonstrate a small grid search across 3 different values for each of these parameters (<span class="math inline">\(3^3 = 27\)</span> total setting combinations).</p>
-<div class="sourceCode" id="cb166"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb166-1"><a href="lesson-6a-decision-trees.html#cb166-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create model object with tuning options</span></span>
-<span id="cb166-2"><a href="lesson-6a-decision-trees.html#cb166-2" aria-hidden="true" tabindex="-1"></a>dt_mod <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(</span>
-<span id="cb166-3"><a href="lesson-6a-decision-trees.html#cb166-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>,</span>
-<span id="cb166-4"><a href="lesson-6a-decision-trees.html#cb166-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">cost_complexity =</span> <span class="fu">tune</span>(),</span>
-<span id="cb166-5"><a href="lesson-6a-decision-trees.html#cb166-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
-<span id="cb166-6"><a href="lesson-6a-decision-trees.html#cb166-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">min_n =</span> <span class="fu">tune</span>()</span>
-<span id="cb166-7"><a href="lesson-6a-decision-trees.html#cb166-7" aria-hidden="true" tabindex="-1"></a> ) <span class="sc">%&gt;%</span> </span>
-<span id="cb166-8"><a href="lesson-6a-decision-trees.html#cb166-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>)</span>
-<span id="cb166-9"><a href="lesson-6a-decision-trees.html#cb166-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb166-10"><a href="lesson-6a-decision-trees.html#cb166-10" aria-hidden="true" tabindex="-1"></a><span class="co"># create the hyperparameter grid</span></span>
-<span id="cb166-11"><a href="lesson-6a-decision-trees.html#cb166-11" aria-hidden="true" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
-<span id="cb166-12"><a href="lesson-6a-decision-trees.html#cb166-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cost_complexity</span>(), </span>
-<span id="cb166-13"><a href="lesson-6a-decision-trees.html#cb166-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tree_depth</span>(),</span>
-<span id="cb166-14"><a href="lesson-6a-decision-trees.html#cb166-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">min_n</span>()</span>
-<span id="cb166-15"><a href="lesson-6a-decision-trees.html#cb166-15" aria-hidden="true" tabindex="-1"></a> )</span>
-<span id="cb166-16"><a href="lesson-6a-decision-trees.html#cb166-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb166-17"><a href="lesson-6a-decision-trees.html#cb166-17" aria-hidden="true" tabindex="-1"></a><span class="co"># hyperparameter value combinations to be assessed</span></span>
-<span id="cb166-18"><a href="lesson-6a-decision-trees.html#cb166-18" aria-hidden="true" tabindex="-1"></a>hyper_grid</span>
-<span id="cb166-19"><a href="lesson-6a-decision-trees.html#cb166-19" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 27 × 3</span></span>
-<span id="cb166-20"><a href="lesson-6a-decision-trees.html#cb166-20" aria-hidden="true" tabindex="-1"></a><span class="do">##    cost_complexity tree_depth min_n</span></span>
-<span id="cb166-21"><a href="lesson-6a-decision-trees.html#cb166-21" aria-hidden="true" tabindex="-1"></a><span class="do">##              &lt;dbl&gt;      &lt;int&gt; &lt;int&gt;</span></span>
-<span id="cb166-22"><a href="lesson-6a-decision-trees.html#cb166-22" aria-hidden="true" tabindex="-1"></a><span class="do">##  1    0.0000000001          1     2</span></span>
-<span id="cb166-23"><a href="lesson-6a-decision-trees.html#cb166-23" aria-hidden="true" tabindex="-1"></a><span class="do">##  2    0.00000316            1     2</span></span>
-<span id="cb166-24"><a href="lesson-6a-decision-trees.html#cb166-24" aria-hidden="true" tabindex="-1"></a><span class="do">##  3    0.1                   1     2</span></span>
-<span id="cb166-25"><a href="lesson-6a-decision-trees.html#cb166-25" aria-hidden="true" tabindex="-1"></a><span class="do">##  4    0.0000000001          8     2</span></span>
-<span id="cb166-26"><a href="lesson-6a-decision-trees.html#cb166-26" aria-hidden="true" tabindex="-1"></a><span class="do">##  5    0.00000316            8     2</span></span>
-<span id="cb166-27"><a href="lesson-6a-decision-trees.html#cb166-27" aria-hidden="true" tabindex="-1"></a><span class="do">##  6    0.1                   8     2</span></span>
-<span id="cb166-28"><a href="lesson-6a-decision-trees.html#cb166-28" aria-hidden="true" tabindex="-1"></a><span class="do">##  7    0.0000000001         15     2</span></span>
-<span id="cb166-29"><a href="lesson-6a-decision-trees.html#cb166-29" aria-hidden="true" tabindex="-1"></a><span class="do">##  8    0.00000316           15     2</span></span>
-<span id="cb166-30"><a href="lesson-6a-decision-trees.html#cb166-30" aria-hidden="true" tabindex="-1"></a><span class="do">##  9    0.1                  15     2</span></span>
-<span id="cb166-31"><a href="lesson-6a-decision-trees.html#cb166-31" aria-hidden="true" tabindex="-1"></a><span class="do">## 10    0.0000000001          1    21</span></span>
-<span id="cb166-32"><a href="lesson-6a-decision-trees.html#cb166-32" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 17 more rows</span></span>
-<span id="cb166-33"><a href="lesson-6a-decision-trees.html#cb166-33" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `print(n = ...)` to see more rows</span></span></code></pre></div>
+<div class="sourceCode" id="cb166"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb166-1"><a href="lesson-6a-decision-trees.html#cb166-1" tabindex="-1"></a><span class="co"># create model object with tuning options</span></span>
+<span id="cb166-2"><a href="lesson-6a-decision-trees.html#cb166-2" tabindex="-1"></a>dt_mod <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(</span>
+<span id="cb166-3"><a href="lesson-6a-decision-trees.html#cb166-3" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">&quot;regression&quot;</span>,</span>
+<span id="cb166-4"><a href="lesson-6a-decision-trees.html#cb166-4" tabindex="-1"></a>  <span class="at">cost_complexity =</span> <span class="fu">tune</span>(),</span>
+<span id="cb166-5"><a href="lesson-6a-decision-trees.html#cb166-5" tabindex="-1"></a>  <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
+<span id="cb166-6"><a href="lesson-6a-decision-trees.html#cb166-6" tabindex="-1"></a>  <span class="at">min_n =</span> <span class="fu">tune</span>()</span>
+<span id="cb166-7"><a href="lesson-6a-decision-trees.html#cb166-7" tabindex="-1"></a> ) <span class="sc">%&gt;%</span> </span>
+<span id="cb166-8"><a href="lesson-6a-decision-trees.html#cb166-8" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>)</span>
+<span id="cb166-9"><a href="lesson-6a-decision-trees.html#cb166-9" tabindex="-1"></a></span>
+<span id="cb166-10"><a href="lesson-6a-decision-trees.html#cb166-10" tabindex="-1"></a><span class="co"># create the hyperparameter grid</span></span>
+<span id="cb166-11"><a href="lesson-6a-decision-trees.html#cb166-11" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">grid_regular</span>(</span>
+<span id="cb166-12"><a href="lesson-6a-decision-trees.html#cb166-12" tabindex="-1"></a>  <span class="fu">cost_complexity</span>(), </span>
+<span id="cb166-13"><a href="lesson-6a-decision-trees.html#cb166-13" tabindex="-1"></a>  <span class="fu">tree_depth</span>(),</span>
+<span id="cb166-14"><a href="lesson-6a-decision-trees.html#cb166-14" tabindex="-1"></a>  <span class="fu">min_n</span>()</span>
+<span id="cb166-15"><a href="lesson-6a-decision-trees.html#cb166-15" tabindex="-1"></a> )</span>
+<span id="cb166-16"><a href="lesson-6a-decision-trees.html#cb166-16" tabindex="-1"></a></span>
+<span id="cb166-17"><a href="lesson-6a-decision-trees.html#cb166-17" tabindex="-1"></a><span class="co"># hyperparameter value combinations to be assessed</span></span>
+<span id="cb166-18"><a href="lesson-6a-decision-trees.html#cb166-18" tabindex="-1"></a>hyper_grid</span>
+<span id="cb166-19"><a href="lesson-6a-decision-trees.html#cb166-19" tabindex="-1"></a><span class="do">## # A tibble: 27 × 3</span></span>
+<span id="cb166-20"><a href="lesson-6a-decision-trees.html#cb166-20" tabindex="-1"></a><span class="do">##    cost_complexity tree_depth min_n</span></span>
+<span id="cb166-21"><a href="lesson-6a-decision-trees.html#cb166-21" tabindex="-1"></a><span class="do">##              &lt;dbl&gt;      &lt;int&gt; &lt;int&gt;</span></span>
+<span id="cb166-22"><a href="lesson-6a-decision-trees.html#cb166-22" tabindex="-1"></a><span class="do">##  1    0.0000000001          1     2</span></span>
+<span id="cb166-23"><a href="lesson-6a-decision-trees.html#cb166-23" tabindex="-1"></a><span class="do">##  2    0.00000316            1     2</span></span>
+<span id="cb166-24"><a href="lesson-6a-decision-trees.html#cb166-24" tabindex="-1"></a><span class="do">##  3    0.1                   1     2</span></span>
+<span id="cb166-25"><a href="lesson-6a-decision-trees.html#cb166-25" tabindex="-1"></a><span class="do">##  4    0.0000000001          8     2</span></span>
+<span id="cb166-26"><a href="lesson-6a-decision-trees.html#cb166-26" tabindex="-1"></a><span class="do">##  5    0.00000316            8     2</span></span>
+<span id="cb166-27"><a href="lesson-6a-decision-trees.html#cb166-27" tabindex="-1"></a><span class="do">##  6    0.1                   8     2</span></span>
+<span id="cb166-28"><a href="lesson-6a-decision-trees.html#cb166-28" tabindex="-1"></a><span class="do">##  7    0.0000000001         15     2</span></span>
+<span id="cb166-29"><a href="lesson-6a-decision-trees.html#cb166-29" tabindex="-1"></a><span class="do">##  8    0.00000316           15     2</span></span>
+<span id="cb166-30"><a href="lesson-6a-decision-trees.html#cb166-30" tabindex="-1"></a><span class="do">##  9    0.1                  15     2</span></span>
+<span id="cb166-31"><a href="lesson-6a-decision-trees.html#cb166-31" tabindex="-1"></a><span class="do">## 10    0.0000000001          1    21</span></span>
+<span id="cb166-32"><a href="lesson-6a-decision-trees.html#cb166-32" tabindex="-1"></a><span class="do">## # ℹ 17 more rows</span></span></code></pre></div>
 <p>We can now perform our grid search using <code>tune_grid()</code>. We see the optimal model decreases our average CV RMSE into the mid $30K range.</p>
 <div class="tip">
 <p>
@@ -864,30 +867,28 @@ find parameter values that perform well and then continue to analyze
 additional ranges around these values.
 </p>
 </div>
-<div class="sourceCode" id="cb167"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb167-1"><a href="lesson-6a-decision-trees.html#cb167-1" aria-hidden="true" tabindex="-1"></a><span class="co"># train our model across the hyper parameter grid</span></span>
-<span id="cb167-2"><a href="lesson-6a-decision-trees.html#cb167-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb167-3"><a href="lesson-6a-decision-trees.html#cb167-3" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(dt_mod, full_model_recipe, <span class="at">resamples =</span> kfold, <span class="at">grid =</span> hyper_grid)</span>
-<span id="cb167-4"><a href="lesson-6a-decision-trees.html#cb167-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb167-5"><a href="lesson-6a-decision-trees.html#cb167-5" aria-hidden="true" tabindex="-1"></a><span class="co"># get best results</span></span>
-<span id="cb167-6"><a href="lesson-6a-decision-trees.html#cb167-6" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>, <span class="at">n =</span> <span class="dv">10</span>)</span>
-<span id="cb167-7"><a href="lesson-6a-decision-trees.html#cb167-7" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 10 × 9</span></span>
-<span id="cb167-8"><a href="lesson-6a-decision-trees.html#cb167-8" aria-hidden="true" tabindex="-1"></a><span class="do">##    cost_complex…¹ tree_…² min_n .metric .esti…³</span></span>
-<span id="cb167-9"><a href="lesson-6a-decision-trees.html#cb167-9" aria-hidden="true" tabindex="-1"></a><span class="do">##             &lt;dbl&gt;   &lt;int&gt; &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;  </span></span>
-<span id="cb167-10"><a href="lesson-6a-decision-trees.html#cb167-10" aria-hidden="true" tabindex="-1"></a><span class="do">##  1   0.0000000001       8    21 rmse    standa…</span></span>
-<span id="cb167-11"><a href="lesson-6a-decision-trees.html#cb167-11" aria-hidden="true" tabindex="-1"></a><span class="do">##  2   0.00000316         8    21 rmse    standa…</span></span>
-<span id="cb167-12"><a href="lesson-6a-decision-trees.html#cb167-12" aria-hidden="true" tabindex="-1"></a><span class="do">##  3   0.0000000001      15    21 rmse    standa…</span></span>
-<span id="cb167-13"><a href="lesson-6a-decision-trees.html#cb167-13" aria-hidden="true" tabindex="-1"></a><span class="do">##  4   0.00000316        15    21 rmse    standa…</span></span>
-<span id="cb167-14"><a href="lesson-6a-decision-trees.html#cb167-14" aria-hidden="true" tabindex="-1"></a><span class="do">##  5   0.0000000001      15    40 rmse    standa…</span></span>
-<span id="cb167-15"><a href="lesson-6a-decision-trees.html#cb167-15" aria-hidden="true" tabindex="-1"></a><span class="do">##  6   0.00000316        15    40 rmse    standa…</span></span>
-<span id="cb167-16"><a href="lesson-6a-decision-trees.html#cb167-16" aria-hidden="true" tabindex="-1"></a><span class="do">##  7   0.0000000001       8    40 rmse    standa…</span></span>
-<span id="cb167-17"><a href="lesson-6a-decision-trees.html#cb167-17" aria-hidden="true" tabindex="-1"></a><span class="do">##  8   0.00000316         8    40 rmse    standa…</span></span>
-<span id="cb167-18"><a href="lesson-6a-decision-trees.html#cb167-18" aria-hidden="true" tabindex="-1"></a><span class="do">##  9   0.00000316         8     2 rmse    standa…</span></span>
-<span id="cb167-19"><a href="lesson-6a-decision-trees.html#cb167-19" aria-hidden="true" tabindex="-1"></a><span class="do">## 10   0.0000000001       8     2 rmse    standa…</span></span>
-<span id="cb167-20"><a href="lesson-6a-decision-trees.html#cb167-20" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with 4 more variables: mean &lt;dbl&gt;,</span></span>
-<span id="cb167-21"><a href="lesson-6a-decision-trees.html#cb167-21" aria-hidden="true" tabindex="-1"></a><span class="do">## #   n &lt;int&gt;, std_err &lt;dbl&gt;, .config &lt;chr&gt;, and</span></span>
-<span id="cb167-22"><a href="lesson-6a-decision-trees.html#cb167-22" aria-hidden="true" tabindex="-1"></a><span class="do">## #   abbreviated variable names</span></span>
-<span id="cb167-23"><a href="lesson-6a-decision-trees.html#cb167-23" aria-hidden="true" tabindex="-1"></a><span class="do">## #   ¹​cost_complexity, ²​tree_depth, ³​.estimator</span></span>
-<span id="cb167-24"><a href="lesson-6a-decision-trees.html#cb167-24" aria-hidden="true" tabindex="-1"></a><span class="do">## # ℹ Use `colnames()` to see all variable names</span></span></code></pre></div>
+<div class="sourceCode" id="cb167"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb167-1"><a href="lesson-6a-decision-trees.html#cb167-1" tabindex="-1"></a><span class="co"># train our model across the hyper parameter grid</span></span>
+<span id="cb167-2"><a href="lesson-6a-decision-trees.html#cb167-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb167-3"><a href="lesson-6a-decision-trees.html#cb167-3" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(dt_mod, full_model_recipe, <span class="at">resamples =</span> kfold, <span class="at">grid =</span> hyper_grid)</span>
+<span id="cb167-4"><a href="lesson-6a-decision-trees.html#cb167-4" tabindex="-1"></a></span>
+<span id="cb167-5"><a href="lesson-6a-decision-trees.html#cb167-5" tabindex="-1"></a><span class="co"># get best results</span></span>
+<span id="cb167-6"><a href="lesson-6a-decision-trees.html#cb167-6" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>, <span class="at">n =</span> <span class="dv">10</span>)</span>
+<span id="cb167-7"><a href="lesson-6a-decision-trees.html#cb167-7" tabindex="-1"></a><span class="do">## # A tibble: 10 × 9</span></span>
+<span id="cb167-8"><a href="lesson-6a-decision-trees.html#cb167-8" tabindex="-1"></a><span class="do">##    cost_complexity tree_depth min_n .metric</span></span>
+<span id="cb167-9"><a href="lesson-6a-decision-trees.html#cb167-9" tabindex="-1"></a><span class="do">##              &lt;dbl&gt;      &lt;int&gt; &lt;int&gt; &lt;chr&gt;  </span></span>
+<span id="cb167-10"><a href="lesson-6a-decision-trees.html#cb167-10" tabindex="-1"></a><span class="do">##  1    0.0000000001          8    21 rmse   </span></span>
+<span id="cb167-11"><a href="lesson-6a-decision-trees.html#cb167-11" tabindex="-1"></a><span class="do">##  2    0.00000316            8    21 rmse   </span></span>
+<span id="cb167-12"><a href="lesson-6a-decision-trees.html#cb167-12" tabindex="-1"></a><span class="do">##  3    0.0000000001         15    21 rmse   </span></span>
+<span id="cb167-13"><a href="lesson-6a-decision-trees.html#cb167-13" tabindex="-1"></a><span class="do">##  4    0.00000316           15    21 rmse   </span></span>
+<span id="cb167-14"><a href="lesson-6a-decision-trees.html#cb167-14" tabindex="-1"></a><span class="do">##  5    0.0000000001         15    40 rmse   </span></span>
+<span id="cb167-15"><a href="lesson-6a-decision-trees.html#cb167-15" tabindex="-1"></a><span class="do">##  6    0.00000316           15    40 rmse   </span></span>
+<span id="cb167-16"><a href="lesson-6a-decision-trees.html#cb167-16" tabindex="-1"></a><span class="do">##  7    0.0000000001          8    40 rmse   </span></span>
+<span id="cb167-17"><a href="lesson-6a-decision-trees.html#cb167-17" tabindex="-1"></a><span class="do">##  8    0.00000316            8    40 rmse   </span></span>
+<span id="cb167-18"><a href="lesson-6a-decision-trees.html#cb167-18" tabindex="-1"></a><span class="do">##  9    0.00000316            8     2 rmse   </span></span>
+<span id="cb167-19"><a href="lesson-6a-decision-trees.html#cb167-19" tabindex="-1"></a><span class="do">## 10    0.0000000001          8     2 rmse   </span></span>
+<span id="cb167-20"><a href="lesson-6a-decision-trees.html#cb167-20" tabindex="-1"></a><span class="do">## # ℹ 5 more variables: .estimator &lt;chr&gt;,</span></span>
+<span id="cb167-21"><a href="lesson-6a-decision-trees.html#cb167-21" tabindex="-1"></a><span class="do">## #   mean &lt;dbl&gt;, n &lt;int&gt;, std_err &lt;dbl&gt;,</span></span>
+<span id="cb167-22"><a href="lesson-6a-decision-trees.html#cb167-22" tabindex="-1"></a><span class="do">## #   .config &lt;chr&gt;</span></span></code></pre></div>
 <div id="knowledge-check-28" class="section level3 hasAnchor" number="17.7.1">
 <h3><span class="header-section-number">17.7.1</span> Knowledge check<a href="lesson-6a-decision-trees.html#knowledge-check-28" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -926,55 +927,55 @@ hyperparameter values provide these optimal results?
 <h2><span class="header-section-number">17.8</span> Feature interpretation<a href="lesson-6a-decision-trees.html#feature-interpretation-2" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>To measure feature importance, the reduction in the loss function (e.g., SSE) attributed to each variable at each split is tabulated. In some instances, a single variable could be used multiple times in a tree; consequently, the total reduction in the loss function across all splits by a variable are summed up and used as the total feature importance.</p>
 <p>We can use a similar approach as we have in the previous lessons to plot the most influential features in our decision tree models.</p>
-<div class="sourceCode" id="cb168"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb168-1"><a href="lesson-6a-decision-trees.html#cb168-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get best hyperparameter values</span></span>
-<span id="cb168-2"><a href="lesson-6a-decision-trees.html#cb168-2" aria-hidden="true" tabindex="-1"></a>best_model <span class="ot">&lt;-</span> <span class="fu">select_best</span>(results, <span class="st">&#39;rmse&#39;</span>)</span>
-<span id="cb168-3"><a href="lesson-6a-decision-trees.html#cb168-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb168-4"><a href="lesson-6a-decision-trees.html#cb168-4" aria-hidden="true" tabindex="-1"></a><span class="co"># put together final workflow</span></span>
-<span id="cb168-5"><a href="lesson-6a-decision-trees.html#cb168-5" aria-hidden="true" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb168-6"><a href="lesson-6a-decision-trees.html#cb168-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(full_model_recipe) <span class="sc">%&gt;%</span></span>
-<span id="cb168-7"><a href="lesson-6a-decision-trees.html#cb168-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(dt_mod) <span class="sc">%&gt;%</span></span>
-<span id="cb168-8"><a href="lesson-6a-decision-trees.html#cb168-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(best_model)</span>
-<span id="cb168-9"><a href="lesson-6a-decision-trees.html#cb168-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb168-10"><a href="lesson-6a-decision-trees.html#cb168-10" aria-hidden="true" tabindex="-1"></a><span class="co"># fit final workflow across entire training data</span></span>
-<span id="cb168-11"><a href="lesson-6a-decision-trees.html#cb168-11" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> final_wf <span class="sc">%&gt;%</span></span>
-<span id="cb168-12"><a href="lesson-6a-decision-trees.html#cb168-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
-<span id="cb168-13"><a href="lesson-6a-decision-trees.html#cb168-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb168-14"><a href="lesson-6a-decision-trees.html#cb168-14" aria-hidden="true" tabindex="-1"></a><span class="co"># plot feature importance</span></span>
-<span id="cb168-15"><a href="lesson-6a-decision-trees.html#cb168-15" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb168-16"><a href="lesson-6a-decision-trees.html#cb168-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb168-17"><a href="lesson-6a-decision-trees.html#cb168-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vip</span>(<span class="dv">20</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-293-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb168"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb168-1"><a href="lesson-6a-decision-trees.html#cb168-1" tabindex="-1"></a><span class="co"># get best hyperparameter values</span></span>
+<span id="cb168-2"><a href="lesson-6a-decision-trees.html#cb168-2" tabindex="-1"></a>best_model <span class="ot">&lt;-</span> <span class="fu">select_best</span>(results, <span class="st">&#39;rmse&#39;</span>)</span>
+<span id="cb168-3"><a href="lesson-6a-decision-trees.html#cb168-3" tabindex="-1"></a></span>
+<span id="cb168-4"><a href="lesson-6a-decision-trees.html#cb168-4" tabindex="-1"></a><span class="co"># put together final workflow</span></span>
+<span id="cb168-5"><a href="lesson-6a-decision-trees.html#cb168-5" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb168-6"><a href="lesson-6a-decision-trees.html#cb168-6" tabindex="-1"></a>  <span class="fu">add_recipe</span>(full_model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb168-7"><a href="lesson-6a-decision-trees.html#cb168-7" tabindex="-1"></a>  <span class="fu">add_model</span>(dt_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb168-8"><a href="lesson-6a-decision-trees.html#cb168-8" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(best_model)</span>
+<span id="cb168-9"><a href="lesson-6a-decision-trees.html#cb168-9" tabindex="-1"></a></span>
+<span id="cb168-10"><a href="lesson-6a-decision-trees.html#cb168-10" tabindex="-1"></a><span class="co"># fit final workflow across entire training data</span></span>
+<span id="cb168-11"><a href="lesson-6a-decision-trees.html#cb168-11" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> final_wf <span class="sc">%&gt;%</span></span>
+<span id="cb168-12"><a href="lesson-6a-decision-trees.html#cb168-12" tabindex="-1"></a>  <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
+<span id="cb168-13"><a href="lesson-6a-decision-trees.html#cb168-13" tabindex="-1"></a></span>
+<span id="cb168-14"><a href="lesson-6a-decision-trees.html#cb168-14" tabindex="-1"></a><span class="co"># plot feature importance</span></span>
+<span id="cb168-15"><a href="lesson-6a-decision-trees.html#cb168-15" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb168-16"><a href="lesson-6a-decision-trees.html#cb168-16" tabindex="-1"></a>  <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb168-17"><a href="lesson-6a-decision-trees.html#cb168-17" tabindex="-1"></a>  <span class="fu">vip</span>(<span class="dv">20</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-290-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>And similar the MARS model, since our relationship between our response variable and the predictor variables are non-linear, it becomes helpful to visualize the relationship between the most influential feature(s) and the response variable to see how they relate. Recall that we can do that with PDP plots.</p>
 <p>Here, we see that the overall quality of a home doesn’t have a big impact unless the homes are rated very good to very excellent.</p>
-<div class="sourceCode" id="cb169"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb169-1"><a href="lesson-6a-decision-trees.html#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prediction function</span></span>
-<span id="cb169-2"><a href="lesson-6a-decision-trees.html#cb169-2" aria-hidden="true" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
-<span id="cb169-3"><a href="lesson-6a-decision-trees.html#cb169-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
-<span id="cb169-4"><a href="lesson-6a-decision-trees.html#cb169-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb169-5"><a href="lesson-6a-decision-trees.html#cb169-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb169-6"><a href="lesson-6a-decision-trees.html#cb169-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
-<span id="cb169-7"><a href="lesson-6a-decision-trees.html#cb169-7" aria-hidden="true" tabindex="-1"></a><span class="co"># and then plot</span></span>
-<span id="cb169-8"><a href="lesson-6a-decision-trees.html#cb169-8" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb169-9"><a href="lesson-6a-decision-trees.html#cb169-9" aria-hidden="true" tabindex="-1"></a>  pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
-<span id="cb169-10"><a href="lesson-6a-decision-trees.html#cb169-10" aria-hidden="true" tabindex="-1"></a>   <span class="at">pred.var =</span> <span class="st">&quot;Overall_Qual&quot;</span>, </span>
-<span id="cb169-11"><a href="lesson-6a-decision-trees.html#cb169-11" aria-hidden="true" tabindex="-1"></a>   <span class="at">pred.fun =</span> pdp_pred_fun,</span>
-<span id="cb169-12"><a href="lesson-6a-decision-trees.html#cb169-12" aria-hidden="true" tabindex="-1"></a>   <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
-<span id="cb169-13"><a href="lesson-6a-decision-trees.html#cb169-13" aria-hidden="true" tabindex="-1"></a>   <span class="at">train =</span> ames_train</span>
-<span id="cb169-14"><a href="lesson-6a-decision-trees.html#cb169-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb169-15"><a href="lesson-6a-decision-trees.html#cb169-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Overall_Qual, yhat)) <span class="sc">+</span></span>
-<span id="cb169-16"><a href="lesson-6a-decision-trees.html#cb169-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
-<span id="cb169-17"><a href="lesson-6a-decision-trees.html#cb169-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-294-1.png" width="960" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb169"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb169-1"><a href="lesson-6a-decision-trees.html#cb169-1" tabindex="-1"></a><span class="co"># prediction function</span></span>
+<span id="cb169-2"><a href="lesson-6a-decision-trees.html#cb169-2" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
+<span id="cb169-3"><a href="lesson-6a-decision-trees.html#cb169-3" tabindex="-1"></a>  <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
+<span id="cb169-4"><a href="lesson-6a-decision-trees.html#cb169-4" tabindex="-1"></a>}</span>
+<span id="cb169-5"><a href="lesson-6a-decision-trees.html#cb169-5" tabindex="-1"></a></span>
+<span id="cb169-6"><a href="lesson-6a-decision-trees.html#cb169-6" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
+<span id="cb169-7"><a href="lesson-6a-decision-trees.html#cb169-7" tabindex="-1"></a><span class="co"># and then plot</span></span>
+<span id="cb169-8"><a href="lesson-6a-decision-trees.html#cb169-8" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb169-9"><a href="lesson-6a-decision-trees.html#cb169-9" tabindex="-1"></a>  pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
+<span id="cb169-10"><a href="lesson-6a-decision-trees.html#cb169-10" tabindex="-1"></a>   <span class="at">pred.var =</span> <span class="st">&quot;Overall_Qual&quot;</span>, </span>
+<span id="cb169-11"><a href="lesson-6a-decision-trees.html#cb169-11" tabindex="-1"></a>   <span class="at">pred.fun =</span> pdp_pred_fun,</span>
+<span id="cb169-12"><a href="lesson-6a-decision-trees.html#cb169-12" tabindex="-1"></a>   <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
+<span id="cb169-13"><a href="lesson-6a-decision-trees.html#cb169-13" tabindex="-1"></a>   <span class="at">train =</span> ames_train</span>
+<span id="cb169-14"><a href="lesson-6a-decision-trees.html#cb169-14" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb169-15"><a href="lesson-6a-decision-trees.html#cb169-15" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Overall_Qual, yhat)) <span class="sc">+</span></span>
+<span id="cb169-16"><a href="lesson-6a-decision-trees.html#cb169-16" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb169-17"><a href="lesson-6a-decision-trees.html#cb169-17" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-291-1.png" width="960" style="display: block; margin: auto;" /></p>
 <p>And if we do a similar plot for the <code>Gr_Liv_Area</code> variable we can see the non-linear relationship between the square footage of a home and the predicted <code>Sale_Price</code> that exists.</p>
-<div class="sourceCode" id="cb170"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb170-1"><a href="lesson-6a-decision-trees.html#cb170-1" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb170-2"><a href="lesson-6a-decision-trees.html#cb170-2" aria-hidden="true" tabindex="-1"></a>  pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
-<span id="cb170-3"><a href="lesson-6a-decision-trees.html#cb170-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
-<span id="cb170-4"><a href="lesson-6a-decision-trees.html#cb170-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">pred.fun =</span> pdp_pred_fun,</span>
-<span id="cb170-5"><a href="lesson-6a-decision-trees.html#cb170-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
-<span id="cb170-6"><a href="lesson-6a-decision-trees.html#cb170-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">train =</span> ames_train</span>
-<span id="cb170-7"><a href="lesson-6a-decision-trees.html#cb170-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb170-8"><a href="lesson-6a-decision-trees.html#cb170-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">autoplot</span>() <span class="sc">+</span></span>
-<span id="cb170-9"><a href="lesson-6a-decision-trees.html#cb170-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-295-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb170"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb170-1"><a href="lesson-6a-decision-trees.html#cb170-1" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb170-2"><a href="lesson-6a-decision-trees.html#cb170-2" tabindex="-1"></a>  pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
+<span id="cb170-3"><a href="lesson-6a-decision-trees.html#cb170-3" tabindex="-1"></a>   <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
+<span id="cb170-4"><a href="lesson-6a-decision-trees.html#cb170-4" tabindex="-1"></a>   <span class="at">pred.fun =</span> pdp_pred_fun,</span>
+<span id="cb170-5"><a href="lesson-6a-decision-trees.html#cb170-5" tabindex="-1"></a>   <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
+<span id="cb170-6"><a href="lesson-6a-decision-trees.html#cb170-6" tabindex="-1"></a>   <span class="at">train =</span> ames_train</span>
+<span id="cb170-7"><a href="lesson-6a-decision-trees.html#cb170-7" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb170-8"><a href="lesson-6a-decision-trees.html#cb170-8" tabindex="-1"></a>   <span class="fu">autoplot</span>() <span class="sc">+</span></span>
+<span id="cb170-9"><a href="lesson-6a-decision-trees.html#cb170-9" tabindex="-1"></a>   <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-292-1.png" width="576" style="display: block; margin: auto;" /></p>
 <div id="knowledge-check-29" class="section level3 hasAnchor" number="17.8.1">
 <h3><span class="header-section-number">17.8.1</span> Knowledge check<a href="lesson-6a-decision-trees.html#knowledge-check-29" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -996,8 +997,8 @@ Create and explain a PDP plot of the most influential feature.
 <div id="final-thoughts-3" class="section level2 hasAnchor" number="17.9">
 <h2><span class="header-section-number">17.9</span> Final thoughts<a href="lesson-6a-decision-trees.html#final-thoughts-3" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Decision trees have a number of advantages. Trees require very little pre-processing. This is not to say feature engineering may not improve upon a decision tree, but rather, that there are no pre-processing requirements. Monotonic transformations (e.g., <span class="math inline">\(\log\)</span>, <span class="math inline">\(\exp\)</span>, and <span class="math inline">\(\sqrt{}\)</span>) are not required to meet algorithm assumptions as in many parametric models; instead, they only shift the location of the optimal split points. Outliers typically do not bias the results as much since the binary partitioning simply looks for a single location to make a split within the distribution of each feature.</p>
-<p>Decision trees can easily handle categorical features without preprocessing. For unordered categorical features with more than two levels, the classes are ordered based on the outcome (for regression problems, the mean of the response is used and for classification problems, the proportion of the positive outcome class is used). For more details see <span class="citation">J. Friedman, Hastie, and Tibshirani (<a href="#ref-esl" role="doc-biblioref">2001</a>)</span>, <span class="citation">Breiman and Ihaka (<a href="#ref-breiman1984nonlinear" role="doc-biblioref">1984</a>)</span>, <span class="citation">Ripley (<a href="#ref-ripley2007pattern" role="doc-biblioref">2007</a>)</span>, <span class="citation">W. D. Fisher (<a href="#ref-fisher1958grouping" role="doc-biblioref">1958</a>)</span>, and <span class="citation">Loh and Vanichsetakul (<a href="#ref-loh1988tree" role="doc-biblioref">1988</a>)</span>.</p>
-<p>Missing values often cause problems with statistical models and analyses. Most procedures deal with them by refusing to deal with them—incomplete observations are tossed out. However, most decision tree implementations can easily handle missing values in the features and do not require imputation. This is handled in various ways but most commonly by creating a new “missing” class for categorical variables or using surrogate splits (see <span class="citation">Therneau, Atkinson, et al. (<a href="#ref-therneau1997introduction" role="doc-biblioref">1997</a>)</span> for details).</p>
+<p>Decision trees can easily handle categorical features without preprocessing. For unordered categorical features with more than two levels, the classes are ordered based on the outcome (for regression problems, the mean of the response is used and for classification problems, the proportion of the positive outcome class is used). For more details see <span class="citation">J. Friedman, Hastie, and Tibshirani (<a href="#ref-esl">2001</a>)</span>, <span class="citation">Breiman and Ihaka (<a href="#ref-breiman1984nonlinear">1984</a>)</span>, <span class="citation">Ripley (<a href="#ref-ripley2007pattern">2007</a>)</span>, <span class="citation">W. D. Fisher (<a href="#ref-fisher1958grouping">1958</a>)</span>, and <span class="citation">Loh and Vanichsetakul (<a href="#ref-loh1988tree">1988</a>)</span>.</p>
+<p>Missing values often cause problems with statistical models and analyses. Most procedures deal with them by refusing to deal with them—incomplete observations are tossed out. However, most decision tree implementations can easily handle missing values in the features and do not require imputation. This is handled in various ways but most commonly by creating a new “missing” class for categorical variables or using surrogate splits (see <span class="citation">Therneau, Atkinson, et al. (<a href="#ref-therneau1997introduction">1997</a>)</span> for details).</p>
 <p>However, individual decision trees generally do not often achieve state-of-the-art predictive accuracy. In this module, we saw that the best pruned decision tree, although it performed better than linear regression, had a very poor RMSE (~$41,000) compared to some of the other models we’ve built. This is driven by the fact that decision trees are composed of simple yes-or-no rules that create rigid non-smooth decision boundaries. Furthermore, we saw that deep trees tend to have high variance (and low bias) and shallow trees tend to be overly bias (but low variance). In the modules that follow, we’ll see how we can combine multiple trees together into very powerful prediction models called <em>ensembles</em>.</p>
 </div>
 <div id="exercises-10" class="section level2 hasAnchor" number="17.10">
@@ -1101,8 +1102,8 @@ Therneau, Terry M, Elizabeth J Atkinson, et al. 1997. <span>“An Introduction t
 <div class="footnotes">
 <hr />
 <ol start="6">
-<li id="fn6"><p>Other decision tree algorithms include the Iterative Dichotomiser 3 <span class="citation">(<a href="#ref-quinlan1986induction" role="doc-biblioref">J. Ross Quinlan 1986</a>)</span>, C4.5 <span class="citation">(<a href="#ref-quinlan1996bagging" role="doc-biblioref">J. Ross Quinlan et al. 1996</a>)</span>, Chi-square automatic interaction detection <span class="citation">(<a href="#ref-kass1980exploratory" role="doc-biblioref">Kass 1980</a>)</span>, Conditional inference trees <span class="citation">(<a href="#ref-hothorn2006unbiased" role="doc-biblioref">Hothorn, Hornik, and Zeileis 2006</a>)</span>, and more.<a href="lesson-6a-decision-trees.html#fnref6" class="footnote-back">↩︎</a></p></li>
-<li id="fn7"><p>Gini index and cross-entropy are the two most commonly applied loss functions used for decision trees. Classification error is rarely used to determine partitions as they are less sensitive to poor performing splits <span class="citation">(<a href="#ref-esl" role="doc-biblioref">J. Friedman, Hastie, and Tibshirani 2001</a>)</span>.<a href="lesson-6a-decision-trees.html#fnref7" class="footnote-back">↩︎</a></p></li>
+<li id="fn6"><p>Other decision tree algorithms include the Iterative Dichotomiser 3 <span class="citation">(<a href="#ref-quinlan1986induction">J. Ross Quinlan 1986</a>)</span>, C4.5 <span class="citation">(<a href="#ref-quinlan1996bagging">J. Ross Quinlan et al. 1996</a>)</span>, Chi-square automatic interaction detection <span class="citation">(<a href="#ref-kass1980exploratory">Kass 1980</a>)</span>, Conditional inference trees <span class="citation">(<a href="#ref-hothorn2006unbiased">Hothorn, Hornik, and Zeileis 2006</a>)</span>, and more.<a href="lesson-6a-decision-trees.html#fnref6" class="footnote-back">↩︎</a></p></li>
+<li id="fn7"><p>Gini index and cross-entropy are the two most commonly applied loss functions used for decision trees. Classification error is rarely used to determine partitions as they are less sensitive to poor performing splits <span class="citation">(<a href="#ref-esl">J. Friedman, Hastie, and Tibshirani 2001</a>)</span>.<a href="lesson-6a-decision-trees.html#fnref7" class="footnote-back">↩︎</a></p></li>
 </ol>
 </div>
             </section>
@@ -1161,7 +1162,7 @@ gitbook.start({
     var script = document.createElement("script");
     script.type = "text/javascript";
     var src = "true";
-    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
     if (location.protocol !== "file:")
       if (/^https?:/.test(src))
         src = src.replace(/^https?:/, '');

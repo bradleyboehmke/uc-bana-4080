@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>18 Lesson 6b: Bagging | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
 
   <meta property="og:title" content="18 Lesson 6b: Bagging | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,16 +51,16 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.5.4/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.0/plotly.js"></script>
+<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
 <link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
 <script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
-<link href="libs/plotly-htmlwidgets-css-2.5.1/plotly-htmlwidgets.css" rel="stylesheet" />
-<script src="libs/plotly-main-2.5.1/plotly-latest.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.9/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
 
 
 <style type="text/css">
@@ -101,7 +101,7 @@ code span.al { color: #ff0000; font-weight: bold; } /* Alert */
 code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
 code span.at { color: #7d9029; } /* Attribute */
 code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
+code span.bu { color: #008000; } /* BuiltIn */
 code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
 code span.ch { color: #4070a0; } /* Char */
 code span.cn { color: #880000; } /* Constant */
@@ -114,7 +114,7 @@ code span.er { color: #ff0000; font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: #40a070; } /* Float */
 code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
+code span.im { color: #008000; font-weight: bold; } /* Import */
 code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
 code span.kw { color: #007020; font-weight: bold; } /* Keyword */
 code span.op { color: #666666; } /* Operator */
@@ -128,6 +128,10 @@ code span.vs { color: #4070a0; } /* VerbatimString */
 code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
 <style type="text/css">
 /* Used with Pandoc 2.11+ new --citeproc when CSL is used */
 div.csl-bib-body { }
@@ -567,33 +571,33 @@ div.csl-indent {
 </div>
 <div id="prerequisites-10" class="section level2 hasAnchor" number="18.2">
 <h2><span class="header-section-number">18.2</span> Prerequisites<a href="lesson-6b-bagging.html#prerequisites-10" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<div class="sourceCode" id="cb171"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb171-1"><a href="lesson-6b-bagging.html#cb171-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper packages</span></span>
-<span id="cb171-2"><a href="lesson-6b-bagging.html#cb171-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
-<span id="cb171-3"><a href="lesson-6b-bagging.html#cb171-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-4"><a href="lesson-6b-bagging.html#cb171-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
-<span id="cb171-5"><a href="lesson-6b-bagging.html#cb171-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels) </span>
-<span id="cb171-6"><a href="lesson-6b-bagging.html#cb171-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(baguette)    <span class="co"># you may need to install.packages this package</span></span>
-<span id="cb171-7"><a href="lesson-6b-bagging.html#cb171-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb171-8"><a href="lesson-6b-bagging.html#cb171-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
-<span id="cb171-9"><a href="lesson-6b-bagging.html#cb171-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
-<span id="cb171-10"><a href="lesson-6b-bagging.html#cb171-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
-<div class="sourceCode" id="cb172"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb172-1"><a href="lesson-6b-bagging.html#cb172-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb172-2"><a href="lesson-6b-bagging.html#cb172-2" aria-hidden="true" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
-<span id="cb172-3"><a href="lesson-6b-bagging.html#cb172-3" aria-hidden="true" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
-<span id="cb172-4"><a href="lesson-6b-bagging.html#cb172-4" aria-hidden="true" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
-<span id="cb172-5"><a href="lesson-6b-bagging.html#cb172-5" aria-hidden="true" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
+<div class="sourceCode" id="cb171"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb171-1"><a href="lesson-6b-bagging.html#cb171-1" tabindex="-1"></a><span class="co"># Helper packages</span></span>
+<span id="cb171-2"><a href="lesson-6b-bagging.html#cb171-2" tabindex="-1"></a><span class="fu">library</span>(tidyverse)   <span class="co"># for data wrangling &amp; plotting</span></span>
+<span id="cb171-3"><a href="lesson-6b-bagging.html#cb171-3" tabindex="-1"></a></span>
+<span id="cb171-4"><a href="lesson-6b-bagging.html#cb171-4" tabindex="-1"></a><span class="co"># Modeling packages</span></span>
+<span id="cb171-5"><a href="lesson-6b-bagging.html#cb171-5" tabindex="-1"></a><span class="fu">library</span>(tidymodels) </span>
+<span id="cb171-6"><a href="lesson-6b-bagging.html#cb171-6" tabindex="-1"></a><span class="fu">library</span>(baguette)    <span class="co"># you may need to install.packages this package</span></span>
+<span id="cb171-7"><a href="lesson-6b-bagging.html#cb171-7" tabindex="-1"></a></span>
+<span id="cb171-8"><a href="lesson-6b-bagging.html#cb171-8" tabindex="-1"></a><span class="co"># Model interpretability packages</span></span>
+<span id="cb171-9"><a href="lesson-6b-bagging.html#cb171-9" tabindex="-1"></a><span class="fu">library</span>(vip)         <span class="co"># for variable importance</span></span>
+<span id="cb171-10"><a href="lesson-6b-bagging.html#cb171-10" tabindex="-1"></a><span class="fu">library</span>(pdp)         <span class="co"># for variable relationships</span></span></code></pre></div>
+<div class="sourceCode" id="cb172"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb172-1"><a href="lesson-6b-bagging.html#cb172-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb172-2"><a href="lesson-6b-bagging.html#cb172-2" tabindex="-1"></a>ames <span class="ot">&lt;-</span> AmesHousing<span class="sc">::</span><span class="fu">make_ames</span>()</span>
+<span id="cb172-3"><a href="lesson-6b-bagging.html#cb172-3" tabindex="-1"></a>split  <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(ames, <span class="at">prop =</span> <span class="fl">0.7</span>, <span class="at">strata =</span> <span class="st">&quot;Sale_Price&quot;</span>)</span>
+<span id="cb172-4"><a href="lesson-6b-bagging.html#cb172-4" tabindex="-1"></a>ames_train  <span class="ot">&lt;-</span> <span class="fu">training</span>(split)</span>
+<span id="cb172-5"><a href="lesson-6b-bagging.html#cb172-5" tabindex="-1"></a>ames_test   <span class="ot">&lt;-</span> <span class="fu">testing</span>(split)</span></code></pre></div>
 </div>
 <div id="why-and-when-bagging-works" class="section level2 hasAnchor" number="18.3">
 <h2><span class="header-section-number">18.3</span> Why and when bagging works<a href="lesson-6b-bagging.html#why-and-when-bagging-works" class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p><em>Bootstrap aggregating</em> (bagging) prediction models is a general method for fitting multiple versions of a prediction model and then combining (or ensembling) them into an aggregated prediction <span class="citation">(<a href="#ref-breiman1996bagging" role="doc-biblioref">Breiman 1996</a>)</span>. Bagging is a fairly straight forward algorithm in which <em>b</em> bootstrap copies of the original training data are created, the regression or classification algorithm (commonly referred to as the <em>base learner</em>) is applied to each bootstrap sample and, in the regression context, new predictions are made by averaging the predictions together from the individual base learners. When dealing with a classification problem, the base learner predictions are combined using plurality vote or by averaging the estimated class probabilities together. This is represented in the below equation where <span class="math inline">\(X\)</span> is the record for which we want to generate a prediction, <span class="math inline">\(\widehat{f_{bag}}\)</span> is the bagged prediction, and <span class="math inline">\(\widehat{f_1}\left(X\right), \widehat{f_2}\left(X\right), \dots, \widehat{f_b}\left(X\right)\)</span> are the predictions from the individual base learners.</p>
+<p><em>Bootstrap aggregating</em> (bagging) prediction models is a general method for fitting multiple versions of a prediction model and then combining (or ensembling) them into an aggregated prediction <span class="citation">(<a href="#ref-breiman1996bagging">Breiman 1996</a>)</span>. Bagging is a fairly straight forward algorithm in which <em>b</em> bootstrap copies of the original training data are created, the regression or classification algorithm (commonly referred to as the <em>base learner</em>) is applied to each bootstrap sample and, in the regression context, new predictions are made by averaging the predictions together from the individual base learners. When dealing with a classification problem, the base learner predictions are combined using plurality vote or by averaging the estimated class probabilities together. This is represented in the below equation where <span class="math inline">\(X\)</span> is the record for which we want to generate a prediction, <span class="math inline">\(\widehat{f_{bag}}\)</span> is the bagged prediction, and <span class="math inline">\(\widehat{f_1}\left(X\right), \widehat{f_2}\left(X\right), \dots, \widehat{f_b}\left(X\right)\)</span> are the predictions from the individual base learners.</p>
 <p><span class="math display">\[\begin{equation}
   \widehat{f_{bag}} = \widehat{f_1}\left(X\right) + \widehat{f_2}\left(X\right) + \cdots + \widehat{f_b}\left(X\right)
 \end{equation}\]</span></p>
-<p>Because of the aggregation process, bagging effectively reduces the variance of an individual base learner (i.e., averaging reduces variance); however, bagging does not always improve upon an individual base learner. As discussed in our <a href="https://bradleyboehmke.github.io/uc-bana-4080/lesson-5a-hyperparameter-tuning.html#bias-variance-tradeoff">bias vs variance discussion</a>, some models have larger variance than others. Bagging works especially well for unstable, high variance base learners—algorithms whose predicted output undergoes major changes in response to small changes in the training data <span class="citation">(<a href="#ref-dietterich2000ensemble" role="doc-biblioref">Dietterich 2000b</a>, <a href="#ref-dietterich2000experimental" role="doc-biblioref">2000a</a>)</span>. This includes algorithms such as decision trees and KNN (when <em>k</em> is sufficiently small). However, for algorithms that are more stable or have high bias, bagging offers less improvement on predicted outputs since there is less variability (e.g., bagging a linear regression model will effectively just return the original predictions for large enough <span class="math inline">\(b\)</span>).</p>
+<p>Because of the aggregation process, bagging effectively reduces the variance of an individual base learner (i.e., averaging reduces variance); however, bagging does not always improve upon an individual base learner. As discussed in our <a href="https://bradleyboehmke.github.io/uc-bana-4080/lesson-5a-hyperparameter-tuning.html#bias-variance-tradeoff">bias vs variance discussion</a>, some models have larger variance than others. Bagging works especially well for unstable, high variance base learners—algorithms whose predicted output undergoes major changes in response to small changes in the training data <span class="citation">(<a href="#ref-dietterich2000ensemble">Dietterich 2000b</a>, <a href="#ref-dietterich2000experimental">2000a</a>)</span>. This includes algorithms such as decision trees and KNN (when <em>k</em> is sufficiently small). However, for algorithms that are more stable or have high bias, bagging offers less improvement on predicted outputs since there is less variability (e.g., bagging a linear regression model will effectively just return the original predictions for large enough <span class="math inline">\(b\)</span>).</p>
 <div class="note">
 <p>
 The general idea behind bagging is referred to as the “wisdom of the
-crowd” effect and was popularized by <span class="citation"><span class="citation">Surowiecki (<a href="#ref-surowiecki2005wisdom" role="doc-biblioref">2005</a>)</span></span>. It essentially means that
+crowd” effect and was popularized by <span class="citation"><span class="citation">Surowiecki (<a href="#ref-surowiecki2005wisdom">2005</a>)</span></span>. It essentially means that
 the aggregation of information in large diverse groups results in
 decisions that are often better than could have been made by any single
 member of the group. The more diverse the group members are then the
@@ -620,33 +624,33 @@ unstructured, but free CV statistic.
 <p>Recall in the decision tree module that our optimally tuned single decision tree model was obtaining a mid-$30K RMSE. In this first implementation we’ll perform the same process; however, instead of a single decision tree we’ll use bagging to create and aggregate performance across <strong>5</strong> bagged trees.</p>
 <p>In R we use <code>baguette::bag_tree</code> to create a bagged tree model object, which can be applied to decision tree or MARS models. Note how we do not need to perform any feature engineering as decision trees (and therefore bagged decision trees) can handle numeric and categorical features just as they are.</p>
 <p>Note how aggregating just 5 decision trees improves our RMSE to around $30K.</p>
-<div class="sourceCode" id="cb173"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb173-1"><a href="lesson-6b-bagging.html#cb173-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create model recipe with all features</span></span>
-<span id="cb173-2"><a href="lesson-6b-bagging.html#cb173-2" aria-hidden="true" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
-<span id="cb173-3"><a href="lesson-6b-bagging.html#cb173-3" aria-hidden="true" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> ., </span>
-<span id="cb173-4"><a href="lesson-6b-bagging.html#cb173-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
-<span id="cb173-5"><a href="lesson-6b-bagging.html#cb173-5" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb173-6"><a href="lesson-6b-bagging.html#cb173-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb173-7"><a href="lesson-6b-bagging.html#cb173-7" aria-hidden="true" tabindex="-1"></a><span class="co"># create bagged CART model object and</span></span>
-<span id="cb173-8"><a href="lesson-6b-bagging.html#cb173-8" aria-hidden="true" tabindex="-1"></a><span class="co"># start with 5 bagged trees</span></span>
-<span id="cb173-9"><a href="lesson-6b-bagging.html#cb173-9" aria-hidden="true" tabindex="-1"></a>tree_mod <span class="ot">&lt;-</span> <span class="fu">bag_tree</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb173-10"><a href="lesson-6b-bagging.html#cb173-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>, <span class="at">times =</span> <span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb173-11"><a href="lesson-6b-bagging.html#cb173-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
-<span id="cb173-12"><a href="lesson-6b-bagging.html#cb173-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb173-13"><a href="lesson-6b-bagging.html#cb173-13" aria-hidden="true" tabindex="-1"></a><span class="co"># create resampling procedure</span></span>
-<span id="cb173-14"><a href="lesson-6b-bagging.html#cb173-14" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
-<span id="cb173-15"><a href="lesson-6b-bagging.html#cb173-15" aria-hidden="true" tabindex="-1"></a>kfold <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
-<span id="cb173-16"><a href="lesson-6b-bagging.html#cb173-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb173-17"><a href="lesson-6b-bagging.html#cb173-17" aria-hidden="true" tabindex="-1"></a><span class="co"># train model</span></span>
-<span id="cb173-18"><a href="lesson-6b-bagging.html#cb173-18" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(tree_mod, model_recipe, kfold)</span>
-<span id="cb173-19"><a href="lesson-6b-bagging.html#cb173-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb173-20"><a href="lesson-6b-bagging.html#cb173-20" aria-hidden="true" tabindex="-1"></a><span class="co"># model results</span></span>
-<span id="cb173-21"><a href="lesson-6b-bagging.html#cb173-21" aria-hidden="true" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
-<span id="cb173-22"><a href="lesson-6b-bagging.html#cb173-22" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb173-23"><a href="lesson-6b-bagging.html#cb173-23" aria-hidden="true" tabindex="-1"></a><span class="do">##   .metric .esti…¹    mean     n std_err .config</span></span>
-<span id="cb173-24"><a href="lesson-6b-bagging.html#cb173-24" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;     &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb173-25"><a href="lesson-6b-bagging.html#cb173-25" aria-hidden="true" tabindex="-1"></a><span class="do">## 1 rmse    standa… 2.99e+4     5 1.27e+3 Prepro…</span></span>
-<span id="cb173-26"><a href="lesson-6b-bagging.html#cb173-26" aria-hidden="true" tabindex="-1"></a><span class="do">## 2 rsq     standa… 8.61e-1     5 1.45e-2 Prepro…</span></span>
-<span id="cb173-27"><a href="lesson-6b-bagging.html#cb173-27" aria-hidden="true" tabindex="-1"></a><span class="do">## # … with abbreviated variable name ¹​.estimator</span></span></code></pre></div>
+<div class="sourceCode" id="cb173"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb173-1"><a href="lesson-6b-bagging.html#cb173-1" tabindex="-1"></a><span class="co"># create model recipe with all features</span></span>
+<span id="cb173-2"><a href="lesson-6b-bagging.html#cb173-2" tabindex="-1"></a>model_recipe <span class="ot">&lt;-</span> <span class="fu">recipe</span>(</span>
+<span id="cb173-3"><a href="lesson-6b-bagging.html#cb173-3" tabindex="-1"></a>    Sale_Price <span class="sc">~</span> ., </span>
+<span id="cb173-4"><a href="lesson-6b-bagging.html#cb173-4" tabindex="-1"></a>    <span class="at">data =</span> ames_train</span>
+<span id="cb173-5"><a href="lesson-6b-bagging.html#cb173-5" tabindex="-1"></a>  )</span>
+<span id="cb173-6"><a href="lesson-6b-bagging.html#cb173-6" tabindex="-1"></a></span>
+<span id="cb173-7"><a href="lesson-6b-bagging.html#cb173-7" tabindex="-1"></a><span class="co"># create bagged CART model object and</span></span>
+<span id="cb173-8"><a href="lesson-6b-bagging.html#cb173-8" tabindex="-1"></a><span class="co"># start with 5 bagged trees</span></span>
+<span id="cb173-9"><a href="lesson-6b-bagging.html#cb173-9" tabindex="-1"></a>tree_mod <span class="ot">&lt;-</span> <span class="fu">bag_tree</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb173-10"><a href="lesson-6b-bagging.html#cb173-10" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>, <span class="at">times =</span> <span class="dv">5</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb173-11"><a href="lesson-6b-bagging.html#cb173-11" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
+<span id="cb173-12"><a href="lesson-6b-bagging.html#cb173-12" tabindex="-1"></a></span>
+<span id="cb173-13"><a href="lesson-6b-bagging.html#cb173-13" tabindex="-1"></a><span class="co"># create resampling procedure</span></span>
+<span id="cb173-14"><a href="lesson-6b-bagging.html#cb173-14" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">13</span>)</span>
+<span id="cb173-15"><a href="lesson-6b-bagging.html#cb173-15" tabindex="-1"></a>kfold <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(ames_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb173-16"><a href="lesson-6b-bagging.html#cb173-16" tabindex="-1"></a></span>
+<span id="cb173-17"><a href="lesson-6b-bagging.html#cb173-17" tabindex="-1"></a><span class="co"># train model</span></span>
+<span id="cb173-18"><a href="lesson-6b-bagging.html#cb173-18" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(tree_mod, model_recipe, kfold)</span>
+<span id="cb173-19"><a href="lesson-6b-bagging.html#cb173-19" tabindex="-1"></a></span>
+<span id="cb173-20"><a href="lesson-6b-bagging.html#cb173-20" tabindex="-1"></a><span class="co"># model results</span></span>
+<span id="cb173-21"><a href="lesson-6b-bagging.html#cb173-21" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
+<span id="cb173-22"><a href="lesson-6b-bagging.html#cb173-22" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
+<span id="cb173-23"><a href="lesson-6b-bagging.html#cb173-23" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n std_err</span></span>
+<span id="cb173-24"><a href="lesson-6b-bagging.html#cb173-24" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb173-25"><a href="lesson-6b-bagging.html#cb173-25" tabindex="-1"></a><span class="do">## 1 rmse    standard   29850.        5 1.27e+3</span></span>
+<span id="cb173-26"><a href="lesson-6b-bagging.html#cb173-26" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.861     5 1.45e-2</span></span>
+<span id="cb173-27"><a href="lesson-6b-bagging.html#cb173-27" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
 <div id="knowledge-check-30" class="section level3 hasAnchor" number="18.4.1">
 <h3><span class="header-section-number">18.4.1</span> Knowledge check<a href="lesson-6b-bagging.html#knowledge-check-30" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -688,30 +692,32 @@ necessary as it will slow down computational efficiency.
 </p>
 </div>
 <p>In this example we use a hyperparameter grid to assess 5, 25, 50, 100, and 200 trees. We see an initial decrease but as we start using 50+ trees we only see marginal changes in our RMSE, suggesting we have likely reached enough trees to minimize the RMSE and any additional differences are likely due to the standard error that occurs during the bootstrapping process.</p>
-<div class="sourceCode" id="cb174"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb174-1"><a href="lesson-6b-bagging.html#cb174-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create bagged CART model object with</span></span>
-<span id="cb174-2"><a href="lesson-6b-bagging.html#cb174-2" aria-hidden="true" tabindex="-1"></a><span class="co"># tuning option set for number of bagged trees</span></span>
-<span id="cb174-3"><a href="lesson-6b-bagging.html#cb174-3" aria-hidden="true" tabindex="-1"></a>tree_mod <span class="ot">&lt;-</span> <span class="fu">bag_tree</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb174-4"><a href="lesson-6b-bagging.html#cb174-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>, <span class="at">times =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb174-5"><a href="lesson-6b-bagging.html#cb174-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
-<span id="cb174-6"><a href="lesson-6b-bagging.html#cb174-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb174-7"><a href="lesson-6b-bagging.html#cb174-7" aria-hidden="true" tabindex="-1"></a><span class="co"># create the hyperparameter grid</span></span>
-<span id="cb174-8"><a href="lesson-6b-bagging.html#cb174-8" aria-hidden="true" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">times =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">200</span>))</span>
-<span id="cb174-9"><a href="lesson-6b-bagging.html#cb174-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb174-10"><a href="lesson-6b-bagging.html#cb174-10" aria-hidden="true" tabindex="-1"></a><span class="co"># train our model across the hyperparameter grid</span></span>
-<span id="cb174-11"><a href="lesson-6b-bagging.html#cb174-11" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb174-12"><a href="lesson-6b-bagging.html#cb174-12" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(tree_mod, model_recipe, <span class="at">resamples =</span> kfold, <span class="at">grid =</span> hyper_grid)</span>
-<span id="cb174-13"><a href="lesson-6b-bagging.html#cb174-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb174-14"><a href="lesson-6b-bagging.html#cb174-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb174-15"><a href="lesson-6b-bagging.html#cb174-15" aria-hidden="true" tabindex="-1"></a><span class="co"># model results</span></span>
-<span id="cb174-16"><a href="lesson-6b-bagging.html#cb174-16" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
-<span id="cb174-17"><a href="lesson-6b-bagging.html#cb174-17" aria-hidden="true" tabindex="-1"></a><span class="do">## # A tibble: 5 × 7</span></span>
-<span id="cb174-18"><a href="lesson-6b-bagging.html#cb174-18" aria-hidden="true" tabindex="-1"></a><span class="do">##   times .metric .estimator   mean     n std_err .config         </span></span>
-<span id="cb174-19"><a href="lesson-6b-bagging.html#cb174-19" aria-hidden="true" tabindex="-1"></a><span class="do">##   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;           </span></span>
-<span id="cb174-20"><a href="lesson-6b-bagging.html#cb174-20" aria-hidden="true" tabindex="-1"></a><span class="do">## 1   200 rmse    standard   26175.     5    950. Preprocessor1_M…</span></span>
-<span id="cb174-21"><a href="lesson-6b-bagging.html#cb174-21" aria-hidden="true" tabindex="-1"></a><span class="do">## 2   100 rmse    standard   26430.     5    881. Preprocessor1_M…</span></span>
-<span id="cb174-22"><a href="lesson-6b-bagging.html#cb174-22" aria-hidden="true" tabindex="-1"></a><span class="do">## 3    50 rmse    standard   26536.     5    913. Preprocessor1_M…</span></span>
-<span id="cb174-23"><a href="lesson-6b-bagging.html#cb174-23" aria-hidden="true" tabindex="-1"></a><span class="do">## 4    25 rmse    standard   26909.     5   1104. Preprocessor1_M…</span></span>
-<span id="cb174-24"><a href="lesson-6b-bagging.html#cb174-24" aria-hidden="true" tabindex="-1"></a><span class="do">## 5     5 rmse    standard   30276.     5    485. Preprocessor1_M…</span></span></code></pre></div>
+<div class="sourceCode" id="cb174"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb174-1"><a href="lesson-6b-bagging.html#cb174-1" tabindex="-1"></a><span class="co"># create bagged CART model object with</span></span>
+<span id="cb174-2"><a href="lesson-6b-bagging.html#cb174-2" tabindex="-1"></a><span class="co"># tuning option set for number of bagged trees</span></span>
+<span id="cb174-3"><a href="lesson-6b-bagging.html#cb174-3" tabindex="-1"></a>tree_mod <span class="ot">&lt;-</span> <span class="fu">bag_tree</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb174-4"><a href="lesson-6b-bagging.html#cb174-4" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;rpart&quot;</span>, <span class="at">times =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb174-5"><a href="lesson-6b-bagging.html#cb174-5" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
+<span id="cb174-6"><a href="lesson-6b-bagging.html#cb174-6" tabindex="-1"></a></span>
+<span id="cb174-7"><a href="lesson-6b-bagging.html#cb174-7" tabindex="-1"></a><span class="co"># create the hyperparameter grid</span></span>
+<span id="cb174-8"><a href="lesson-6b-bagging.html#cb174-8" tabindex="-1"></a>hyper_grid <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">times =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">200</span>))</span>
+<span id="cb174-9"><a href="lesson-6b-bagging.html#cb174-9" tabindex="-1"></a></span>
+<span id="cb174-10"><a href="lesson-6b-bagging.html#cb174-10" tabindex="-1"></a><span class="co"># train our model across the hyperparameter grid</span></span>
+<span id="cb174-11"><a href="lesson-6b-bagging.html#cb174-11" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb174-12"><a href="lesson-6b-bagging.html#cb174-12" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(tree_mod, model_recipe, <span class="at">resamples =</span> kfold, <span class="at">grid =</span> hyper_grid)</span>
+<span id="cb174-13"><a href="lesson-6b-bagging.html#cb174-13" tabindex="-1"></a></span>
+<span id="cb174-14"><a href="lesson-6b-bagging.html#cb174-14" tabindex="-1"></a></span>
+<span id="cb174-15"><a href="lesson-6b-bagging.html#cb174-15" tabindex="-1"></a><span class="co"># model results</span></span>
+<span id="cb174-16"><a href="lesson-6b-bagging.html#cb174-16" tabindex="-1"></a><span class="fu">show_best</span>(results, <span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb174-17"><a href="lesson-6b-bagging.html#cb174-17" tabindex="-1"></a><span class="do">## # A tibble: 5 × 7</span></span>
+<span id="cb174-18"><a href="lesson-6b-bagging.html#cb174-18" tabindex="-1"></a><span class="do">##   times .metric .estimator   mean     n</span></span>
+<span id="cb174-19"><a href="lesson-6b-bagging.html#cb174-19" tabindex="-1"></a><span class="do">##   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb174-20"><a href="lesson-6b-bagging.html#cb174-20" tabindex="-1"></a><span class="do">## 1   200 rmse    standard   26175.     5</span></span>
+<span id="cb174-21"><a href="lesson-6b-bagging.html#cb174-21" tabindex="-1"></a><span class="do">## 2   100 rmse    standard   26430.     5</span></span>
+<span id="cb174-22"><a href="lesson-6b-bagging.html#cb174-22" tabindex="-1"></a><span class="do">## 3    50 rmse    standard   26536.     5</span></span>
+<span id="cb174-23"><a href="lesson-6b-bagging.html#cb174-23" tabindex="-1"></a><span class="do">## 4    25 rmse    standard   26909.     5</span></span>
+<span id="cb174-24"><a href="lesson-6b-bagging.html#cb174-24" tabindex="-1"></a><span class="do">## 5     5 rmse    standard   30276.     5</span></span>
+<span id="cb174-25"><a href="lesson-6b-bagging.html#cb174-25" tabindex="-1"></a><span class="do">## # ℹ 2 more variables: std_err &lt;dbl&gt;,</span></span>
+<span id="cb174-26"><a href="lesson-6b-bagging.html#cb174-26" tabindex="-1"></a><span class="do">## #   .config &lt;chr&gt;</span></span></code></pre></div>
 <div class="note">
 <p>
 When bagging trees we can also tune the same hyperparameters that we
@@ -751,69 +757,69 @@ in our cross-validated RMSE?
 <p>Unfortunately, due to the bagging process, models that are normally perceived as interpretable are no longer so. However, we can still make inferences about how features are influencing our model. Recall in the decision tree module that we measure feature importance based on the sum of the reduction in the loss function (e.g., SSE) attributed to each variable at each split in a given tree.</p>
 <p>For bagged decision trees, this process is similar. For each tree, we compute the sum of the reduction of the loss function across all splits. We then aggregate this measure across all trees for each feature. The features with the largest average decrease in SSE (for regression) are considered most important.</p>
 <p>The following extracts the feature importance for our best performing bagged decision trees. Unfortunately, <code>vip::vip()</code> doesn’t work naturally with models from <code>bag_tree</code> so we need to manually extract the variable importance scores and plot them with <code>ggplot</code>. We see that <code>Overall_Qual</code> and <code>Neighborhood</code> are the top two most influential features.</p>
-<div class="sourceCode" id="cb175"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb175-1"><a href="lesson-6b-bagging.html#cb175-1" aria-hidden="true" tabindex="-1"></a><span class="co"># identify best model</span></span>
-<span id="cb175-2"><a href="lesson-6b-bagging.html#cb175-2" aria-hidden="true" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> results <span class="sc">%&gt;%</span></span>
-<span id="cb175-3"><a href="lesson-6b-bagging.html#cb175-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="st">&quot;rmse&quot;</span>)</span>
-<span id="cb175-4"><a href="lesson-6b-bagging.html#cb175-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb175-5"><a href="lesson-6b-bagging.html#cb175-5" aria-hidden="true" tabindex="-1"></a><span class="co"># finalize workflow object</span></span>
-<span id="cb175-6"><a href="lesson-6b-bagging.html#cb175-6" aria-hidden="true" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb175-7"><a href="lesson-6b-bagging.html#cb175-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
-<span id="cb175-8"><a href="lesson-6b-bagging.html#cb175-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">add_model</span>(tree_mod) <span class="sc">%&gt;%</span></span>
-<span id="cb175-9"><a href="lesson-6b-bagging.html#cb175-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
-<span id="cb175-10"><a href="lesson-6b-bagging.html#cb175-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb175-11"><a href="lesson-6b-bagging.html#cb175-11" aria-hidden="true" tabindex="-1"></a><span class="co"># final fit on training data</span></span>
-<span id="cb175-12"><a href="lesson-6b-bagging.html#cb175-12" aria-hidden="true" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> final_wf <span class="sc">%&gt;%</span></span>
-<span id="cb175-13"><a href="lesson-6b-bagging.html#cb175-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
-<span id="cb175-14"><a href="lesson-6b-bagging.html#cb175-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb175-15"><a href="lesson-6b-bagging.html#cb175-15" aria-hidden="true" tabindex="-1"></a><span class="co"># plot top 20 influential variables</span></span>
-<span id="cb175-16"><a href="lesson-6b-bagging.html#cb175-16" aria-hidden="true" tabindex="-1"></a>vi <span class="ot">&lt;-</span> final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb175-17"><a href="lesson-6b-bagging.html#cb175-17" aria-hidden="true" tabindex="-1"></a>   <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb175-18"><a href="lesson-6b-bagging.html#cb175-18" aria-hidden="true" tabindex="-1"></a>   .[[<span class="st">&#39;fit&#39;</span>]] <span class="sc">%&gt;%</span></span>
-<span id="cb175-19"><a href="lesson-6b-bagging.html#cb175-19" aria-hidden="true" tabindex="-1"></a>   <span class="fu">var_imp</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb175-20"><a href="lesson-6b-bagging.html#cb175-20" aria-hidden="true" tabindex="-1"></a>   <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>)</span>
-<span id="cb175-21"><a href="lesson-6b-bagging.html#cb175-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb175-22"><a href="lesson-6b-bagging.html#cb175-22" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(vi, <span class="fu">aes</span>(value, <span class="fu">reorder</span>(term, value))) <span class="sc">+</span></span>
-<span id="cb175-23"><a href="lesson-6b-bagging.html#cb175-23" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_col</span>() <span class="sc">+</span></span>
-<span id="cb175-24"><a href="lesson-6b-bagging.html#cb175-24" aria-hidden="true" tabindex="-1"></a>   <span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb175-25"><a href="lesson-6b-bagging.html#cb175-25" aria-hidden="true" tabindex="-1"></a>   <span class="fu">xlab</span>(<span class="st">&quot;Feature importance&quot;</span>)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-307-1.png" width="576" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb175"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb175-1"><a href="lesson-6b-bagging.html#cb175-1" tabindex="-1"></a><span class="co"># identify best model</span></span>
+<span id="cb175-2"><a href="lesson-6b-bagging.html#cb175-2" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> results <span class="sc">%&gt;%</span></span>
+<span id="cb175-3"><a href="lesson-6b-bagging.html#cb175-3" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb175-4"><a href="lesson-6b-bagging.html#cb175-4" tabindex="-1"></a></span>
+<span id="cb175-5"><a href="lesson-6b-bagging.html#cb175-5" tabindex="-1"></a><span class="co"># finalize workflow object</span></span>
+<span id="cb175-6"><a href="lesson-6b-bagging.html#cb175-6" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb175-7"><a href="lesson-6b-bagging.html#cb175-7" tabindex="-1"></a>   <span class="fu">add_recipe</span>(model_recipe) <span class="sc">%&gt;%</span></span>
+<span id="cb175-8"><a href="lesson-6b-bagging.html#cb175-8" tabindex="-1"></a>   <span class="fu">add_model</span>(tree_mod) <span class="sc">%&gt;%</span></span>
+<span id="cb175-9"><a href="lesson-6b-bagging.html#cb175-9" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
+<span id="cb175-10"><a href="lesson-6b-bagging.html#cb175-10" tabindex="-1"></a></span>
+<span id="cb175-11"><a href="lesson-6b-bagging.html#cb175-11" tabindex="-1"></a><span class="co"># final fit on training data</span></span>
+<span id="cb175-12"><a href="lesson-6b-bagging.html#cb175-12" tabindex="-1"></a>final_fit <span class="ot">&lt;-</span> final_wf <span class="sc">%&gt;%</span></span>
+<span id="cb175-13"><a href="lesson-6b-bagging.html#cb175-13" tabindex="-1"></a>   <span class="fu">fit</span>(<span class="at">data =</span> ames_train)</span>
+<span id="cb175-14"><a href="lesson-6b-bagging.html#cb175-14" tabindex="-1"></a></span>
+<span id="cb175-15"><a href="lesson-6b-bagging.html#cb175-15" tabindex="-1"></a><span class="co"># plot top 20 influential variables</span></span>
+<span id="cb175-16"><a href="lesson-6b-bagging.html#cb175-16" tabindex="-1"></a>vi <span class="ot">&lt;-</span> final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb175-17"><a href="lesson-6b-bagging.html#cb175-17" tabindex="-1"></a>   <span class="fu">extract_fit_parsnip</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb175-18"><a href="lesson-6b-bagging.html#cb175-18" tabindex="-1"></a>   .[[<span class="st">&#39;fit&#39;</span>]] <span class="sc">%&gt;%</span></span>
+<span id="cb175-19"><a href="lesson-6b-bagging.html#cb175-19" tabindex="-1"></a>   <span class="fu">var_imp</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb175-20"><a href="lesson-6b-bagging.html#cb175-20" tabindex="-1"></a>   <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>)</span>
+<span id="cb175-21"><a href="lesson-6b-bagging.html#cb175-21" tabindex="-1"></a></span>
+<span id="cb175-22"><a href="lesson-6b-bagging.html#cb175-22" tabindex="-1"></a><span class="fu">ggplot</span>(vi, <span class="fu">aes</span>(value, <span class="fu">reorder</span>(term, value))) <span class="sc">+</span></span>
+<span id="cb175-23"><a href="lesson-6b-bagging.html#cb175-23" tabindex="-1"></a>   <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb175-24"><a href="lesson-6b-bagging.html#cb175-24" tabindex="-1"></a>   <span class="fu">ylab</span>(<span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb175-25"><a href="lesson-6b-bagging.html#cb175-25" tabindex="-1"></a>   <span class="fu">xlab</span>(<span class="st">&quot;Feature importance&quot;</span>)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-304-1.png" width="576" style="display: block; margin: auto;" /></p>
 <p>We can then plot the partial dependence of the most influential feature to see how it influences the predicted values. We see that as overall quality increase we see a significant increase in the predicted sale price.</p>
-<div class="sourceCode" id="cb176"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb176-1"><a href="lesson-6b-bagging.html#cb176-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prediction function</span></span>
-<span id="cb176-2"><a href="lesson-6b-bagging.html#cb176-2" aria-hidden="true" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
-<span id="cb176-3"><a href="lesson-6b-bagging.html#cb176-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred</span>
-<span id="cb176-4"><a href="lesson-6b-bagging.html#cb176-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb176-5"><a href="lesson-6b-bagging.html#cb176-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb176-6"><a href="lesson-6b-bagging.html#cb176-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
-<span id="cb176-7"><a href="lesson-6b-bagging.html#cb176-7" aria-hidden="true" tabindex="-1"></a><span class="co"># and then plot</span></span>
-<span id="cb176-8"><a href="lesson-6b-bagging.html#cb176-8" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb176-9"><a href="lesson-6b-bagging.html#cb176-9" aria-hidden="true" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
-<span id="cb176-10"><a href="lesson-6b-bagging.html#cb176-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Overall_Qual&quot;</span>, </span>
-<span id="cb176-11"><a href="lesson-6b-bagging.html#cb176-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
-<span id="cb176-12"><a href="lesson-6b-bagging.html#cb176-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
-<span id="cb176-13"><a href="lesson-6b-bagging.html#cb176-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
-<span id="cb176-14"><a href="lesson-6b-bagging.html#cb176-14" aria-hidden="true" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
-<span id="cb176-15"><a href="lesson-6b-bagging.html#cb176-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Overall_Qual, yhat)) <span class="sc">+</span></span>
-<span id="cb176-16"><a href="lesson-6b-bagging.html#cb176-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb176-17"><a href="lesson-6b-bagging.html#cb176-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-308-1.png" width="960" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb176"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb176-1"><a href="lesson-6b-bagging.html#cb176-1" tabindex="-1"></a><span class="co"># prediction function</span></span>
+<span id="cb176-2"><a href="lesson-6b-bagging.html#cb176-2" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
+<span id="cb176-3"><a href="lesson-6b-bagging.html#cb176-3" tabindex="-1"></a>   <span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred</span>
+<span id="cb176-4"><a href="lesson-6b-bagging.html#cb176-4" tabindex="-1"></a>}</span>
+<span id="cb176-5"><a href="lesson-6b-bagging.html#cb176-5" tabindex="-1"></a></span>
+<span id="cb176-6"><a href="lesson-6b-bagging.html#cb176-6" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
+<span id="cb176-7"><a href="lesson-6b-bagging.html#cb176-7" tabindex="-1"></a><span class="co"># and then plot</span></span>
+<span id="cb176-8"><a href="lesson-6b-bagging.html#cb176-8" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb176-9"><a href="lesson-6b-bagging.html#cb176-9" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
+<span id="cb176-10"><a href="lesson-6b-bagging.html#cb176-10" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Overall_Qual&quot;</span>, </span>
+<span id="cb176-11"><a href="lesson-6b-bagging.html#cb176-11" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
+<span id="cb176-12"><a href="lesson-6b-bagging.html#cb176-12" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
+<span id="cb176-13"><a href="lesson-6b-bagging.html#cb176-13" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
+<span id="cb176-14"><a href="lesson-6b-bagging.html#cb176-14" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
+<span id="cb176-15"><a href="lesson-6b-bagging.html#cb176-15" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(Overall_Qual, yhat)) <span class="sc">+</span></span>
+<span id="cb176-16"><a href="lesson-6b-bagging.html#cb176-16" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb176-17"><a href="lesson-6b-bagging.html#cb176-17" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-305-1.png" width="960" style="display: block; margin: auto;" /></p>
 <p>Now let’s plot the PDP for the <code>Gr_Liv_Area</code> and see how that variable relates to the predicted sale price.</p>
-<div class="sourceCode" id="cb177"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb177-1"><a href="lesson-6b-bagging.html#cb177-1" aria-hidden="true" tabindex="-1"></a><span class="co"># prediction function</span></span>
-<span id="cb177-2"><a href="lesson-6b-bagging.html#cb177-2" aria-hidden="true" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
-<span id="cb177-3"><a href="lesson-6b-bagging.html#cb177-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
-<span id="cb177-4"><a href="lesson-6b-bagging.html#cb177-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb177-5"><a href="lesson-6b-bagging.html#cb177-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb177-6"><a href="lesson-6b-bagging.html#cb177-6" aria-hidden="true" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
-<span id="cb177-7"><a href="lesson-6b-bagging.html#cb177-7" aria-hidden="true" tabindex="-1"></a><span class="co"># and then plot</span></span>
-<span id="cb177-8"><a href="lesson-6b-bagging.html#cb177-8" aria-hidden="true" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
-<span id="cb177-9"><a href="lesson-6b-bagging.html#cb177-9" aria-hidden="true" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
-<span id="cb177-10"><a href="lesson-6b-bagging.html#cb177-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
-<span id="cb177-11"><a href="lesson-6b-bagging.html#cb177-11" aria-hidden="true" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
-<span id="cb177-12"><a href="lesson-6b-bagging.html#cb177-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
-<span id="cb177-13"><a href="lesson-6b-bagging.html#cb177-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
-<span id="cb177-14"><a href="lesson-6b-bagging.html#cb177-14" aria-hidden="true" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
-<span id="cb177-15"><a href="lesson-6b-bagging.html#cb177-15" aria-hidden="true" tabindex="-1"></a>   <span class="fu">autoplot</span>() <span class="sc">+</span></span>
-<span id="cb177-16"><a href="lesson-6b-bagging.html#cb177-16" aria-hidden="true" tabindex="-1"></a>   <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-309-1.png" width="864" style="display: block; margin: auto;" /></p>
+<div class="sourceCode" id="cb177"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb177-1"><a href="lesson-6b-bagging.html#cb177-1" tabindex="-1"></a><span class="co"># prediction function</span></span>
+<span id="cb177-2"><a href="lesson-6b-bagging.html#cb177-2" tabindex="-1"></a>pdp_pred_fun <span class="ot">&lt;-</span> <span class="cf">function</span>(object, newdata) {</span>
+<span id="cb177-3"><a href="lesson-6b-bagging.html#cb177-3" tabindex="-1"></a>   <span class="fu">mean</span>(<span class="fu">predict</span>(object, newdata, <span class="at">type =</span> <span class="st">&quot;numeric&quot;</span>)<span class="sc">$</span>.pred)</span>
+<span id="cb177-4"><a href="lesson-6b-bagging.html#cb177-4" tabindex="-1"></a>}</span>
+<span id="cb177-5"><a href="lesson-6b-bagging.html#cb177-5" tabindex="-1"></a></span>
+<span id="cb177-6"><a href="lesson-6b-bagging.html#cb177-6" tabindex="-1"></a><span class="co"># use the pdp package to extract partial dependence predictions</span></span>
+<span id="cb177-7"><a href="lesson-6b-bagging.html#cb177-7" tabindex="-1"></a><span class="co"># and then plot</span></span>
+<span id="cb177-8"><a href="lesson-6b-bagging.html#cb177-8" tabindex="-1"></a>final_fit <span class="sc">%&gt;%</span></span>
+<span id="cb177-9"><a href="lesson-6b-bagging.html#cb177-9" tabindex="-1"></a>   pdp<span class="sc">::</span><span class="fu">partial</span>(</span>
+<span id="cb177-10"><a href="lesson-6b-bagging.html#cb177-10" tabindex="-1"></a>     <span class="at">pred.var =</span> <span class="st">&quot;Gr_Liv_Area&quot;</span>, </span>
+<span id="cb177-11"><a href="lesson-6b-bagging.html#cb177-11" tabindex="-1"></a>     <span class="at">pred.fun =</span> pdp_pred_fun,</span>
+<span id="cb177-12"><a href="lesson-6b-bagging.html#cb177-12" tabindex="-1"></a>     <span class="at">grid.resolution =</span> <span class="dv">10</span>, </span>
+<span id="cb177-13"><a href="lesson-6b-bagging.html#cb177-13" tabindex="-1"></a>     <span class="at">train =</span> ames_train</span>
+<span id="cb177-14"><a href="lesson-6b-bagging.html#cb177-14" tabindex="-1"></a>   ) <span class="sc">%&gt;%</span></span>
+<span id="cb177-15"><a href="lesson-6b-bagging.html#cb177-15" tabindex="-1"></a>   <span class="fu">autoplot</span>() <span class="sc">+</span></span>
+<span id="cb177-16"><a href="lesson-6b-bagging.html#cb177-16" tabindex="-1"></a>   <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> scales<span class="sc">::</span>dollar)</span></code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-306-1.png" width="864" style="display: block; margin: auto;" /></p>
 <div id="knowledge-check-32" class="section level3 hasAnchor" number="18.6.1">
 <h3><span class="header-section-number">18.6.1</span> Knowledge check<a href="lesson-6b-bagging.html#knowledge-check-32" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -836,7 +842,7 @@ Create and explain a PDP plot of the most influential feature.
 <h2><span class="header-section-number">18.7</span> Final thoughts<a href="lesson-6b-bagging.html#final-thoughts-4" class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>Bagging improves the prediction accuracy for high variance (and low bias) models at the expense of interpretability and computational speed. However, using various interpretability algorithms such as VIPs and PDPs, we can still make inferences about how our bagged model leverages feature information. Also, since bagging consists of independent processes, the algorithm is easily parallelizable.</p>
 <p>However, when bagging trees, a problem still exists. Although the model building steps are independent, the trees in bagging are not completely independent of each other since all the original features are considered at every split of every tree. Rather, trees from different bootstrap samples typically have similar structure to each other (especially at the top of the tree) due to any underlying strong relationships.</p>
-<p>For example, if we create six decision trees with different bootstrapped samples of the Boston housing data <span class="citation">(<a href="#ref-harrison1978hedonic" role="doc-biblioref">Harrison Jr and Rubinfeld 1978</a>)</span>, we see a similar structure as the top of the trees. Although there are 15 predictor variables to split on, all six trees have both <code>lstat</code> and <code>rm</code> variables driving the first few splits.</p>
+<p>For example, if we create six decision trees with different bootstrapped samples of the Boston housing data <span class="citation">(<a href="#ref-harrison1978hedonic">Harrison Jr and Rubinfeld 1978</a>)</span>, we see a similar structure as the top of the trees. Although there are 15 predictor variables to split on, all six trees have both <code>lstat</code> and <code>rm</code> variables driving the first few splits.</p>
 <div class="note">
 <p>
 We use the Boston housing data in this example because it has fewer
@@ -971,7 +977,7 @@ gitbook.start({
     var script = document.createElement("script");
     script.type = "text/javascript";
     var src = "true";
-    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
     if (location.protocol !== "file:")
       if (/^https?:/.test(src))
         src = src.replace(/^https?:/, '');
