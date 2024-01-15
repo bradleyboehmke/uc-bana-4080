@@ -53,7 +53,7 @@ ames_test   <- testing(split)
 
 In the previous lessons we split our data into a train and test set and we assessed the performance of our model on the test set. If we use a little feature engineering to take care of novel categorical levels, we see that our generalization RMSE based on the test set is \$26,144.
 
-```{r}
+```{r resample-cv}
 mlr_recipe <- recipe(Sale_Price ~ ., data = ames_train) %>%
    step_other(all_nominal_predictors(), threshold = 0.02, other = "other")
 
@@ -96,7 +96,8 @@ The two most commonly used resampling methods include **k-fold cross-validation*
 ## K-fold cross-validation
 
 ```{block, type='video'}
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_8bgm9d8t&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_6o61bgq0" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - K-fold cross validation"></iframe>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/o-sTAUKBQdY?si=E0wzQ7F2582tbdEe" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ```
 
 Cross-validation consists of repeating the procedure such that the training and testing sets are different each time. Generalization performance metrics are collected for each repetition and then aggregated. As a result we can get an estimate of the variability of the model’s generalization performance.
@@ -119,7 +120,7 @@ In practice, one typically uses k=5 or k=10. There is no formal rule as to the s
 
 To implement k-fold CV we first make a resampling object. In this example we create a 10-fold resampling object.
 
-```{r}
+```{r kfold1}
 set.seed(35)
 kfolds <- vfold_cv(ames_train, v = 10, strata = Sale_Price)
 ```
@@ -157,12 +158,12 @@ If we compare these results to our previous generalization error based on the te
 
 One other item to note - often, people assume that when creating the *k*-folds that R just selects the first *n* observations to be the first fold, the next *n* observations to be in the second fold, etc.  However, this is not the case. Rather, R will randomly assign observations to each fold but will also ensure that each observation is only assigned to a single fold for validation purposes.  The following illustrates a 10-fold cross validation on a dataset with 32 observations. Each observation is used once for validation and nine times for training.
 
-```{r, echo=FALSE, fig.align='center', fig.width=7, fig.height=5.5, fig.cap="10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training."}
+```{r kfold-viz, echo=FALSE, fig.align='center', fig.width=7, fig.height=5.5, fig.cap="10-fold cross validation on 32 observations. Each observation is used once for validation and nine times for training."}
 cv <- vfold_cv(mtcars, 10)
 
 cv$splits %>%
   map2_dfr(seq_along(cv$splits), ~ mtcars %>% mutate(
-    Resample = paste0("Fold_", str_pad(.y, 2, pad = 0)),
+    Resample = paste0("Fold_", stringr::str_pad(.y, 2, pad = 0)),
     ID = row_number(),
     Data = ifelse(ID %in% .x$in_id, "Training", "Validation"))
     ) %>%
@@ -206,14 +207,16 @@ collect_______(______)
 ```
 
 ```{block, type='video'}
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_1pvbvsi2&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_u70t0h90" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Knowledge check 9.4.1"></iframe>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/U_X8Zbzx-L4?si=bhKQbUzavLtdhA64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ```
 
 
 ## Bootstrap resampling
 
 ```{block, type='video'}
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_sw9fjuyu&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_y3b3e5mm" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Bootstrap sampling"></iframe>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ldXDG0hO0rk?si=2k84rJsIbDqXKX28" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ```
 
 A bootstrap sample is a random sample of the data taken _with replacement_ [@efron1986bootstrap].  This means that, after a data point is selected for inclusion in the subset, it's still available for further selection. A bootstrap sample is the same size as the original data set from which it was constructed. Figure \@ref(fig:modeling-process-bootstrapscheme) provides a schematic of bootstrap sampling where each bootstrap sample contains 12 observations just as in the original data set. Furthermore, bootstrap sampling will contain approximately the same distribution of values (represented by colors) as the original data set.
@@ -234,7 +237,7 @@ boots <- rsample::bootstraps(mtcars, 10)
 boots_plot <- boots$splits %>%
   map2_dfr(seq_along(boots$splits), ~ mtcars %>% 
              mutate(
-               Resample = paste0("Bootstrap_", str_pad(.y, 2, pad = 0)),
+               Resample = paste0("Bootstrap_", stringr::str_pad(.y, 2, pad = 0)),
                ID = row_number()
              ) %>%
              group_by(ID) %>%
@@ -252,7 +255,7 @@ cv <- vfold_cv(mtcars, 10)
 
 cv_plot <- cv$splits %>%
   map2_dfr(seq_along(cv$splits), ~ mtcars %>% mutate(
-    Resample = paste0("Fold_", str_pad(.y, 2, pad = 0)),
+    Resample = paste0("Fold_", stringr::str_pad(.y, 2, pad = 0)),
     ID = row_number(),
     Data = ifelse(ID %in% .x$in_id, "Training", "Validation"))
     ) %>%
@@ -321,7 +324,8 @@ ______
 ```
 
 ```{block, type='video'}
-<iframe id="kaltura_player" src="https://cdnapisec.kaltura.com/p/1492301/sp/149230100/embedIframeJs/uiconf_id/49148882/partner_id/1492301?iframeembed=true&playerId=kaltura_player&entry_id=1_scfuugcn&flashvars[streamerType]=auto&amp;flashvars[localizationCode]=en_US&amp;flashvars[leadWithHTML5]=true&amp;flashvars[sideBarContainer.plugin]=true&amp;flashvars[sideBarContainer.position]=left&amp;flashvars[sideBarContainer.clickToClose]=true&amp;flashvars[chapters.plugin]=true&amp;flashvars[chapters.layout]=vertical&amp;flashvars[chapters.thumbnailRotator]=false&amp;flashvars[streamSelector.plugin]=true&amp;flashvars[EmbedPlayer.SpinnerTarget]=videoHolder&amp;flashvars[dualScreen.plugin]=true&amp;flashvars[Kaltura.addCrossoriginToIframe]=true&amp;&wid=1_mz8lxsl2" width="640" height="610" allowfullscreen webkitallowfullscreen mozAllowFullScreen allow="autoplay *; fullscreen *; encrypted-media *" sandbox="allow-downloads allow-forms allow-same-origin allow-scripts allow-top-navigation allow-pointer-lock allow-popups allow-modals allow-orientation-lock allow-popups-to-escape-sandbox allow-presentation allow-top-navigation-by-user-activation" frameborder="0" title="BANA 4080 - Knowledge check 9.5.1"></iframe>
+<br>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/_gY2F0PA1bk?si=P-pUIVQWEYwfLCof" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 ```
 
 
