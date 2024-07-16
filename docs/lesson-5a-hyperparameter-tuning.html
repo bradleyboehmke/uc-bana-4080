@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>14 Lesson 5a: Hyperparameter Tuning | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.40 and GitBook 2.6.7" />
 
   <meta property="og:title" content="14 Lesson 5a: Hyperparameter Tuning | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,21 +51,22 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.4/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
-<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
-<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
 <link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
 <script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.11/grViz.js"></script>
 
 
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -137,6 +138,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 div.csl-bib-body { }
 div.csl-entry {
   clear: both;
+  margin-bottom: 0em;
 }
 .hanging div.csl-entry {
   margin-left:2em;
@@ -207,12 +209,12 @@ div.csl-indent {
 </ul></li>
 <li class="chapter" data-level="2.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#the-data-sets"><i class="fa fa-check"></i><b>2.5</b> The data sets</a>
 <ul>
-<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing</a></li>
-<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes</a></li>
-<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers</a></li>
-<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing</a></li>
-<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition</a></li>
-<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters</a></li>
+<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
 </ul></li>
 <li class="chapter" data-level="2.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#what-youll-learn-next"><i class="fa fa-check"></i><b>2.6</b> What You’ll Learn Next</a></li>
 <li class="chapter" data-level="2.7" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#exercises"><i class="fa fa-check"></i><b>2.7</b> Exercises</a></li>
@@ -721,10 +723,9 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb138-22"><a href="lesson-5a-hyperparameter-tuning.html#cb138-22" tabindex="-1"></a>   <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb138-23"><a href="lesson-5a-hyperparameter-tuning.html#cb138-23" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&#39;rmse&#39;</span>)</span>
 <span id="cb138-24"><a href="lesson-5a-hyperparameter-tuning.html#cb138-24" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
-<span id="cb138-25"><a href="lesson-5a-hyperparameter-tuning.html#cb138-25" tabindex="-1"></a><span class="do">##   .metric .estimator   mean     n std_err</span></span>
-<span id="cb138-26"><a href="lesson-5a-hyperparameter-tuning.html#cb138-26" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb138-27"><a href="lesson-5a-hyperparameter-tuning.html#cb138-27" tabindex="-1"></a><span class="do">## 1 rmse    standard   31373.     5   3012.</span></span>
-<span id="cb138-28"><a href="lesson-5a-hyperparameter-tuning.html#cb138-28" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
+<span id="cb138-25"><a href="lesson-5a-hyperparameter-tuning.html#cb138-25" tabindex="-1"></a><span class="do">##   .metric .estimator   mean     n std_err .config             </span></span>
+<span id="cb138-26"><a href="lesson-5a-hyperparameter-tuning.html#cb138-26" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb138-27"><a href="lesson-5a-hyperparameter-tuning.html#cb138-27" tabindex="-1"></a><span class="do">## 1 rmse    standard   31373.     5   3012. Preprocessor1_Model1</span></span></code></pre></div>
 <p>We then manually iterated through different values of <code>mixture</code> and <code>penalty</code> to try find the optimal setting. Which is less than efficient.</p>
 <div id="tuning" class="section level3 hasAnchor" number="14.5.1">
 <h3><span class="header-section-number">14.5.1</span> Tuning<a href="lesson-5a-hyperparameter-tuning.html#tuning" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -761,37 +762,33 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb142-9"><a href="lesson-5a-hyperparameter-tuning.html#cb142-9" tabindex="-1"></a>   <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb142-10"><a href="lesson-5a-hyperparameter-tuning.html#cb142-10" tabindex="-1"></a>   <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb142-11"><a href="lesson-5a-hyperparameter-tuning.html#cb142-11" tabindex="-1"></a><span class="do">## # A tibble: 25 × 8</span></span>
-<span id="cb142-12"><a href="lesson-5a-hyperparameter-tuning.html#cb142-12" tabindex="-1"></a><span class="do">##         penalty mixture .metric .estimator</span></span>
-<span id="cb142-13"><a href="lesson-5a-hyperparameter-tuning.html#cb142-13" tabindex="-1"></a><span class="do">##           &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;     </span></span>
-<span id="cb142-14"><a href="lesson-5a-hyperparameter-tuning.html#cb142-14" tabindex="-1"></a><span class="do">##  1 0.0000000001    0    rmse    standard  </span></span>
-<span id="cb142-15"><a href="lesson-5a-hyperparameter-tuning.html#cb142-15" tabindex="-1"></a><span class="do">##  2 0.0000000316    0    rmse    standard  </span></span>
-<span id="cb142-16"><a href="lesson-5a-hyperparameter-tuning.html#cb142-16" tabindex="-1"></a><span class="do">##  3 0.00001         0    rmse    standard  </span></span>
-<span id="cb142-17"><a href="lesson-5a-hyperparameter-tuning.html#cb142-17" tabindex="-1"></a><span class="do">##  4 0.00316         0    rmse    standard  </span></span>
-<span id="cb142-18"><a href="lesson-5a-hyperparameter-tuning.html#cb142-18" tabindex="-1"></a><span class="do">##  5 1               0    rmse    standard  </span></span>
-<span id="cb142-19"><a href="lesson-5a-hyperparameter-tuning.html#cb142-19" tabindex="-1"></a><span class="do">##  6 0.0000000001    0.25 rmse    standard  </span></span>
-<span id="cb142-20"><a href="lesson-5a-hyperparameter-tuning.html#cb142-20" tabindex="-1"></a><span class="do">##  7 0.0000000316    0.25 rmse    standard  </span></span>
-<span id="cb142-21"><a href="lesson-5a-hyperparameter-tuning.html#cb142-21" tabindex="-1"></a><span class="do">##  8 0.00001         0.25 rmse    standard  </span></span>
-<span id="cb142-22"><a href="lesson-5a-hyperparameter-tuning.html#cb142-22" tabindex="-1"></a><span class="do">##  9 0.00316         0.25 rmse    standard  </span></span>
-<span id="cb142-23"><a href="lesson-5a-hyperparameter-tuning.html#cb142-23" tabindex="-1"></a><span class="do">## 10 1               0.25 rmse    standard  </span></span>
-<span id="cb142-24"><a href="lesson-5a-hyperparameter-tuning.html#cb142-24" tabindex="-1"></a><span class="do">## # ℹ 15 more rows</span></span>
-<span id="cb142-25"><a href="lesson-5a-hyperparameter-tuning.html#cb142-25" tabindex="-1"></a><span class="do">## # ℹ 4 more variables: mean &lt;dbl&gt;, n &lt;int&gt;,</span></span>
-<span id="cb142-26"><a href="lesson-5a-hyperparameter-tuning.html#cb142-26" tabindex="-1"></a><span class="do">## #   std_err &lt;dbl&gt;, .config &lt;chr&gt;</span></span></code></pre></div>
+<span id="cb142-12"><a href="lesson-5a-hyperparameter-tuning.html#cb142-12" tabindex="-1"></a><span class="do">##         penalty mixture .metric .estimator   mean     n std_err .config</span></span>
+<span id="cb142-13"><a href="lesson-5a-hyperparameter-tuning.html#cb142-13" tabindex="-1"></a><span class="do">##           &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;  </span></span>
+<span id="cb142-14"><a href="lesson-5a-hyperparameter-tuning.html#cb142-14" tabindex="-1"></a><span class="do">##  1 0.0000000001    0    rmse    standard   31373.     5   3012. Prepro…</span></span>
+<span id="cb142-15"><a href="lesson-5a-hyperparameter-tuning.html#cb142-15" tabindex="-1"></a><span class="do">##  2 0.0000000316    0    rmse    standard   31373.     5   3012. Prepro…</span></span>
+<span id="cb142-16"><a href="lesson-5a-hyperparameter-tuning.html#cb142-16" tabindex="-1"></a><span class="do">##  3 0.00001         0    rmse    standard   31373.     5   3012. Prepro…</span></span>
+<span id="cb142-17"><a href="lesson-5a-hyperparameter-tuning.html#cb142-17" tabindex="-1"></a><span class="do">##  4 0.00316         0    rmse    standard   31373.     5   3012. Prepro…</span></span>
+<span id="cb142-18"><a href="lesson-5a-hyperparameter-tuning.html#cb142-18" tabindex="-1"></a><span class="do">##  5 1               0    rmse    standard   31373.     5   3012. Prepro…</span></span>
+<span id="cb142-19"><a href="lesson-5a-hyperparameter-tuning.html#cb142-19" tabindex="-1"></a><span class="do">##  6 0.0000000001    0.25 rmse    standard   37912.     5   4728. Prepro…</span></span>
+<span id="cb142-20"><a href="lesson-5a-hyperparameter-tuning.html#cb142-20" tabindex="-1"></a><span class="do">##  7 0.0000000316    0.25 rmse    standard   37912.     5   4728. Prepro…</span></span>
+<span id="cb142-21"><a href="lesson-5a-hyperparameter-tuning.html#cb142-21" tabindex="-1"></a><span class="do">##  8 0.00001         0.25 rmse    standard   37912.     5   4728. Prepro…</span></span>
+<span id="cb142-22"><a href="lesson-5a-hyperparameter-tuning.html#cb142-22" tabindex="-1"></a><span class="do">##  9 0.00316         0.25 rmse    standard   37912.     5   4728. Prepro…</span></span>
+<span id="cb142-23"><a href="lesson-5a-hyperparameter-tuning.html#cb142-23" tabindex="-1"></a><span class="do">## 10 1               0.25 rmse    standard   37912.     5   4728. Prepro…</span></span>
+<span id="cb142-24"><a href="lesson-5a-hyperparameter-tuning.html#cb142-24" tabindex="-1"></a><span class="do">## # ℹ 15 more rows</span></span></code></pre></div>
 <p>We can assess our best models with <code>show_best()</code>, which by default will show the top 5 performing models based on the desired metric. In this case we see that our top 5 models use the Ridge regularization (<code>mixture = 0</code>) and across all the penalties we get the same cross-validation RMSE (31,373).</p>
 <div class="sourceCode" id="cb143"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb143-1"><a href="lesson-5a-hyperparameter-tuning.html#cb143-1" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
 <span id="cb143-2"><a href="lesson-5a-hyperparameter-tuning.html#cb143-2" tabindex="-1"></a>   <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb143-3"><a href="lesson-5a-hyperparameter-tuning.html#cb143-3" tabindex="-1"></a><span class="do">## # A tibble: 5 × 8</span></span>
-<span id="cb143-4"><a href="lesson-5a-hyperparameter-tuning.html#cb143-4" tabindex="-1"></a><span class="do">##    penalty mixture .metric .estimator   mean</span></span>
-<span id="cb143-5"><a href="lesson-5a-hyperparameter-tuning.html#cb143-5" tabindex="-1"></a><span class="do">##      &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt;</span></span>
-<span id="cb143-6"><a href="lesson-5a-hyperparameter-tuning.html#cb143-6" tabindex="-1"></a><span class="do">## 1 1   e-10       0 rmse    standard   31373.</span></span>
-<span id="cb143-7"><a href="lesson-5a-hyperparameter-tuning.html#cb143-7" tabindex="-1"></a><span class="do">## 2 3.16e- 8       0 rmse    standard   31373.</span></span>
-<span id="cb143-8"><a href="lesson-5a-hyperparameter-tuning.html#cb143-8" tabindex="-1"></a><span class="do">## 3 1   e- 5       0 rmse    standard   31373.</span></span>
-<span id="cb143-9"><a href="lesson-5a-hyperparameter-tuning.html#cb143-9" tabindex="-1"></a><span class="do">## 4 3.16e- 3       0 rmse    standard   31373.</span></span>
-<span id="cb143-10"><a href="lesson-5a-hyperparameter-tuning.html#cb143-10" tabindex="-1"></a><span class="do">## 5 1   e+ 0       0 rmse    standard   31373.</span></span>
-<span id="cb143-11"><a href="lesson-5a-hyperparameter-tuning.html#cb143-11" tabindex="-1"></a><span class="do">## # ℹ 3 more variables: n &lt;int&gt;,</span></span>
-<span id="cb143-12"><a href="lesson-5a-hyperparameter-tuning.html#cb143-12" tabindex="-1"></a><span class="do">## #   std_err &lt;dbl&gt;, .config &lt;chr&gt;</span></span></code></pre></div>
+<span id="cb143-4"><a href="lesson-5a-hyperparameter-tuning.html#cb143-4" tabindex="-1"></a><span class="do">##        penalty mixture .metric .estimator   mean     n std_err .config </span></span>
+<span id="cb143-5"><a href="lesson-5a-hyperparameter-tuning.html#cb143-5" tabindex="-1"></a><span class="do">##          &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   </span></span>
+<span id="cb143-6"><a href="lesson-5a-hyperparameter-tuning.html#cb143-6" tabindex="-1"></a><span class="do">## 1 0.0000000001       0 rmse    standard   31373.     5   3012. Preproc…</span></span>
+<span id="cb143-7"><a href="lesson-5a-hyperparameter-tuning.html#cb143-7" tabindex="-1"></a><span class="do">## 2 0.0000000316       0 rmse    standard   31373.     5   3012. Preproc…</span></span>
+<span id="cb143-8"><a href="lesson-5a-hyperparameter-tuning.html#cb143-8" tabindex="-1"></a><span class="do">## 3 0.00001            0 rmse    standard   31373.     5   3012. Preproc…</span></span>
+<span id="cb143-9"><a href="lesson-5a-hyperparameter-tuning.html#cb143-9" tabindex="-1"></a><span class="do">## 4 0.00316            0 rmse    standard   31373.     5   3012. Preproc…</span></span>
+<span id="cb143-10"><a href="lesson-5a-hyperparameter-tuning.html#cb143-10" tabindex="-1"></a><span class="do">## 5 1                  0 rmse    standard   31373.     5   3012. Preproc…</span></span></code></pre></div>
 <p>We can also use the <code>select_best()</code> function to pull out the single set of hyperparameter values for our best regularization model:</p>
 <div class="sourceCode" id="cb144"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb144-1"><a href="lesson-5a-hyperparameter-tuning.html#cb144-1" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
-<span id="cb144-2"><a href="lesson-5a-hyperparameter-tuning.html#cb144-2" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb144-2"><a href="lesson-5a-hyperparameter-tuning.html#cb144-2" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb144-3"><a href="lesson-5a-hyperparameter-tuning.html#cb144-3" tabindex="-1"></a><span class="do">## # A tibble: 1 × 3</span></span>
 <span id="cb144-4"><a href="lesson-5a-hyperparameter-tuning.html#cb144-4" tabindex="-1"></a><span class="do">##        penalty mixture .config              </span></span>
 <span id="cb144-5"><a href="lesson-5a-hyperparameter-tuning.html#cb144-5" tabindex="-1"></a><span class="do">##          &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
@@ -814,15 +811,13 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb146-6"><a href="lesson-5a-hyperparameter-tuning.html#cb146-6" tabindex="-1"></a>tuning_results <span class="sc">%&gt;%</span></span>
 <span id="cb146-7"><a href="lesson-5a-hyperparameter-tuning.html#cb146-7" tabindex="-1"></a>   <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb146-8"><a href="lesson-5a-hyperparameter-tuning.html#cb146-8" tabindex="-1"></a><span class="do">## # A tibble: 5 × 7</span></span>
-<span id="cb146-9"><a href="lesson-5a-hyperparameter-tuning.html#cb146-9" tabindex="-1"></a><span class="do">##    penalty .metric .estimator   mean     n</span></span>
-<span id="cb146-10"><a href="lesson-5a-hyperparameter-tuning.html#cb146-10" tabindex="-1"></a><span class="do">##      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;</span></span>
-<span id="cb146-11"><a href="lesson-5a-hyperparameter-tuning.html#cb146-11" tabindex="-1"></a><span class="do">## 1 27826.   rmse    standard   30633.     5</span></span>
-<span id="cb146-12"><a href="lesson-5a-hyperparameter-tuning.html#cb146-12" tabindex="-1"></a><span class="do">## 2  7743.   rmse    standard   31160.     5</span></span>
-<span id="cb146-13"><a href="lesson-5a-hyperparameter-tuning.html#cb146-13" tabindex="-1"></a><span class="do">## 3     1    rmse    standard   31373.     5</span></span>
-<span id="cb146-14"><a href="lesson-5a-hyperparameter-tuning.html#cb146-14" tabindex="-1"></a><span class="do">## 4     3.59 rmse    standard   31373.     5</span></span>
-<span id="cb146-15"><a href="lesson-5a-hyperparameter-tuning.html#cb146-15" tabindex="-1"></a><span class="do">## 5    12.9  rmse    standard   31373.     5</span></span>
-<span id="cb146-16"><a href="lesson-5a-hyperparameter-tuning.html#cb146-16" tabindex="-1"></a><span class="do">## # ℹ 2 more variables: std_err &lt;dbl&gt;,</span></span>
-<span id="cb146-17"><a href="lesson-5a-hyperparameter-tuning.html#cb146-17" tabindex="-1"></a><span class="do">## #   .config &lt;chr&gt;</span></span></code></pre></div>
+<span id="cb146-9"><a href="lesson-5a-hyperparameter-tuning.html#cb146-9" tabindex="-1"></a><span class="do">##    penalty .metric .estimator   mean     n std_err .config             </span></span>
+<span id="cb146-10"><a href="lesson-5a-hyperparameter-tuning.html#cb146-10" tabindex="-1"></a><span class="do">##      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb146-11"><a href="lesson-5a-hyperparameter-tuning.html#cb146-11" tabindex="-1"></a><span class="do">## 1 27826.   rmse    standard   30633.     5   2503. Preprocessor1_Model…</span></span>
+<span id="cb146-12"><a href="lesson-5a-hyperparameter-tuning.html#cb146-12" tabindex="-1"></a><span class="do">## 2  7743.   rmse    standard   31160.     5   2903. Preprocessor1_Model…</span></span>
+<span id="cb146-13"><a href="lesson-5a-hyperparameter-tuning.html#cb146-13" tabindex="-1"></a><span class="do">## 3     1    rmse    standard   31373.     5   3012. Preprocessor1_Model…</span></span>
+<span id="cb146-14"><a href="lesson-5a-hyperparameter-tuning.html#cb146-14" tabindex="-1"></a><span class="do">## 4     3.59 rmse    standard   31373.     5   3012. Preprocessor1_Model…</span></span>
+<span id="cb146-15"><a href="lesson-5a-hyperparameter-tuning.html#cb146-15" tabindex="-1"></a><span class="do">## 5    12.9  rmse    standard   31373.     5   3012. Preprocessor1_Model…</span></span></code></pre></div>
 </div>
 <div id="finalizing-our-model" class="section level3 hasAnchor" number="14.5.3">
 <h3><span class="header-section-number">14.5.3</span> Finalizing our model<a href="lesson-5a-hyperparameter-tuning.html#finalizing-our-model" class="anchor-section" aria-label="Anchor link to header"></a></h3>
@@ -835,17 +830,17 @@ Figure 14.6: Results from a grid search for a <em>k</em>-nearest neighbor model 
 <span id="cb147-6"><a href="lesson-5a-hyperparameter-tuning.html#cb147-6" tabindex="-1"></a>   <span class="fu">finalize_workflow</span>(best_hyperparameters)</span>
 <span id="cb147-7"><a href="lesson-5a-hyperparameter-tuning.html#cb147-7" tabindex="-1"></a></span>
 <span id="cb147-8"><a href="lesson-5a-hyperparameter-tuning.html#cb147-8" tabindex="-1"></a>final_wf</span>
-<span id="cb147-9"><a href="lesson-5a-hyperparameter-tuning.html#cb147-9" tabindex="-1"></a><span class="do">## ══ Workflow ════════════════════════════════</span></span>
+<span id="cb147-9"><a href="lesson-5a-hyperparameter-tuning.html#cb147-9" tabindex="-1"></a><span class="do">## ══ Workflow ═══════════════════════════════════════════════════════════</span></span>
 <span id="cb147-10"><a href="lesson-5a-hyperparameter-tuning.html#cb147-10" tabindex="-1"></a><span class="do">## Preprocessor: Recipe</span></span>
 <span id="cb147-11"><a href="lesson-5a-hyperparameter-tuning.html#cb147-11" tabindex="-1"></a><span class="do">## Model: linear_reg()</span></span>
 <span id="cb147-12"><a href="lesson-5a-hyperparameter-tuning.html#cb147-12" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb147-13"><a href="lesson-5a-hyperparameter-tuning.html#cb147-13" tabindex="-1"></a><span class="do">## ── Preprocessor ────────────────────────────</span></span>
+<span id="cb147-13"><a href="lesson-5a-hyperparameter-tuning.html#cb147-13" tabindex="-1"></a><span class="do">## ── Preprocessor ───────────────────────────────────────────────────────</span></span>
 <span id="cb147-14"><a href="lesson-5a-hyperparameter-tuning.html#cb147-14" tabindex="-1"></a><span class="do">## 2 Recipe Steps</span></span>
 <span id="cb147-15"><a href="lesson-5a-hyperparameter-tuning.html#cb147-15" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb147-16"><a href="lesson-5a-hyperparameter-tuning.html#cb147-16" tabindex="-1"></a><span class="do">## • step_normalize()</span></span>
 <span id="cb147-17"><a href="lesson-5a-hyperparameter-tuning.html#cb147-17" tabindex="-1"></a><span class="do">## • step_dummy()</span></span>
 <span id="cb147-18"><a href="lesson-5a-hyperparameter-tuning.html#cb147-18" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb147-19"><a href="lesson-5a-hyperparameter-tuning.html#cb147-19" tabindex="-1"></a><span class="do">## ── Model ───────────────────────────────────</span></span>
+<span id="cb147-19"><a href="lesson-5a-hyperparameter-tuning.html#cb147-19" tabindex="-1"></a><span class="do">## ── Model ──────────────────────────────────────────────────────────────</span></span>
 <span id="cb147-20"><a href="lesson-5a-hyperparameter-tuning.html#cb147-20" tabindex="-1"></a><span class="do">## Linear Regression Model Specification (regression)</span></span>
 <span id="cb147-21"><a href="lesson-5a-hyperparameter-tuning.html#cb147-21" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb147-22"><a href="lesson-5a-hyperparameter-tuning.html#cb147-22" tabindex="-1"></a><span class="do">## Main Arguments:</span></span>
@@ -894,7 +889,7 @@ identify the top 10 most influential predictors.
 </div>
 </div>
 <h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-bergstra2012random" class="csl-entry">
 Bergstra, James, and Yoshua Bengio. 2012. <span>“Random Search for Hyper-Parameter Optimization.”</span> <em>Journal of Machine Learning Research</em> 13 (Feb): 281–305.
 </div>

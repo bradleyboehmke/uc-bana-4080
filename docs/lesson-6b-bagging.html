@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>18 Lesson 6b: Bagging | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.40 and GitBook 2.6.7" />
 
   <meta property="og:title" content="18 Lesson 6b: Bagging | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,21 +51,22 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.4/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
-<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
-<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
 <link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
 <script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.11/grViz.js"></script>
 
 
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -137,6 +138,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 div.csl-bib-body { }
 div.csl-entry {
   clear: both;
+  margin-bottom: 0em;
 }
 .hanging div.csl-entry {
   margin-left:2em;
@@ -207,12 +209,12 @@ div.csl-indent {
 </ul></li>
 <li class="chapter" data-level="2.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#the-data-sets"><i class="fa fa-check"></i><b>2.5</b> The data sets</a>
 <ul>
-<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing</a></li>
-<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes</a></li>
-<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers</a></li>
-<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing</a></li>
-<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition</a></li>
-<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters</a></li>
+<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
 </ul></li>
 <li class="chapter" data-level="2.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#what-youll-learn-next"><i class="fa fa-check"></i><b>2.6</b> What You’ll Learn Next</a></li>
 <li class="chapter" data-level="2.7" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#exercises"><i class="fa fa-check"></i><b>2.7</b> Exercises</a></li>
@@ -646,11 +648,10 @@ unstructured, but free CV statistic.
 <span id="cb173-20"><a href="lesson-6b-bagging.html#cb173-20" tabindex="-1"></a><span class="co"># model results</span></span>
 <span id="cb173-21"><a href="lesson-6b-bagging.html#cb173-21" tabindex="-1"></a><span class="fu">collect_metrics</span>(results)</span>
 <span id="cb173-22"><a href="lesson-6b-bagging.html#cb173-22" tabindex="-1"></a><span class="do">## # A tibble: 2 × 6</span></span>
-<span id="cb173-23"><a href="lesson-6b-bagging.html#cb173-23" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n std_err</span></span>
-<span id="cb173-24"><a href="lesson-6b-bagging.html#cb173-24" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb173-25"><a href="lesson-6b-bagging.html#cb173-25" tabindex="-1"></a><span class="do">## 1 rmse    standard   29850.        5 1.27e+3</span></span>
-<span id="cb173-26"><a href="lesson-6b-bagging.html#cb173-26" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.861     5 1.45e-2</span></span>
-<span id="cb173-27"><a href="lesson-6b-bagging.html#cb173-27" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div>
+<span id="cb173-23"><a href="lesson-6b-bagging.html#cb173-23" tabindex="-1"></a><span class="do">##   .metric .estimator      mean     n   std_err .config             </span></span>
+<span id="cb173-24"><a href="lesson-6b-bagging.html#cb173-24" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;int&gt;     &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb173-25"><a href="lesson-6b-bagging.html#cb173-25" tabindex="-1"></a><span class="do">## 1 rmse    standard   29850.        5 1270.     Preprocessor1_Model1</span></span>
+<span id="cb173-26"><a href="lesson-6b-bagging.html#cb173-26" tabindex="-1"></a><span class="do">## 2 rsq     standard       0.861     5    0.0145 Preprocessor1_Model1</span></span></code></pre></div>
 <div id="knowledge-check-30" class="section level3 hasAnchor" number="18.4.1">
 <h3><span class="header-section-number">18.4.1</span> Knowledge check<a href="lesson-6b-bagging.html#knowledge-check-30" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -759,7 +760,7 @@ in our cross-validated RMSE?
 <p>The following extracts the feature importance for our best performing bagged decision trees. Unfortunately, <code>vip::vip()</code> doesn’t work naturally with models from <code>bag_tree</code> so we need to manually extract the variable importance scores and plot them with <code>ggplot</code>. We see that <code>Overall_Qual</code> and <code>Neighborhood</code> are the top two most influential features.</p>
 <div class="sourceCode" id="cb175"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb175-1"><a href="lesson-6b-bagging.html#cb175-1" tabindex="-1"></a><span class="co"># identify best model</span></span>
 <span id="cb175-2"><a href="lesson-6b-bagging.html#cb175-2" tabindex="-1"></a>best_hyperparameters <span class="ot">&lt;-</span> results <span class="sc">%&gt;%</span></span>
-<span id="cb175-3"><a href="lesson-6b-bagging.html#cb175-3" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="st">&quot;rmse&quot;</span>)</span>
+<span id="cb175-3"><a href="lesson-6b-bagging.html#cb175-3" tabindex="-1"></a>   <span class="fu">select_best</span>(<span class="at">metric =</span> <span class="st">&quot;rmse&quot;</span>)</span>
 <span id="cb175-4"><a href="lesson-6b-bagging.html#cb175-4" tabindex="-1"></a></span>
 <span id="cb175-5"><a href="lesson-6b-bagging.html#cb175-5" tabindex="-1"></a><span class="co"># finalize workflow object</span></span>
 <span id="cb175-6"><a href="lesson-6b-bagging.html#cb175-6" tabindex="-1"></a>final_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
@@ -898,7 +899,7 @@ values.
 </div>
 </div>
 <h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-breiman1996bagging" class="csl-entry">
 ———. 1996. <span>“Bagging Predictors.”</span> <em>Machine Learning</em> 24 (2): 123–40.
 </div>

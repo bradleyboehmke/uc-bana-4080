@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>11 Lesson 4a: Logistic Regression | Data Mining with R</title>
   <meta name="description" content="Master the art of data wrangling &amp; analysis with the R programming language." />
-  <meta name="generator" content="bookdown 0.37 and GitBook 2.6.7" />
+  <meta name="generator" content="bookdown 0.40 and GitBook 2.6.7" />
 
   <meta property="og:title" content="11 Lesson 4a: Logistic Regression | Data Mining with R" />
   <meta property="og:type" content="book" />
@@ -51,21 +51,22 @@
 <link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
 <link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
 <script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
-<script src="libs/htmlwidgets-1.6.2/htmlwidgets.js"></script>
-<script src="libs/plotly-binding-4.10.2/plotly.js"></script>
+<link href="libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet" />
+<script src="libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="libs/plotly-binding-4.10.4/plotly.js"></script>
 <script src="libs/typedarray-0.1/typedarray.min.js"></script>
-<link href="libs/crosstalk-1.2.0/css/crosstalk.min.css" rel="stylesheet" />
-<script src="libs/crosstalk-1.2.0/js/crosstalk.min.js"></script>
+<link href="libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
 <link href="libs/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet" />
 <script src="libs/plotly-main-2.11.1/plotly-latest.min.js"></script>
 <script src="libs/viz-1.8.2/viz.js"></script>
 <link href="libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="libs/grViz-binding-1.0.10/grViz.js"></script>
+<script src="libs/grViz-binding-1.0.11/grViz.js"></script>
 
 
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -137,6 +138,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 div.csl-bib-body { }
 div.csl-entry {
   clear: both;
+  margin-bottom: 0em;
 }
 .hanging div.csl-entry {
   margin-left:2em;
@@ -207,12 +209,12 @@ div.csl-indent {
 </ul></li>
 <li class="chapter" data-level="2.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#the-data-sets"><i class="fa fa-check"></i><b>2.5</b> The data sets</a>
 <ul>
-<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing</a></li>
-<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes</a></li>
-<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers</a></li>
-<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing</a></li>
-<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition</a></li>
-<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters</a></li>
+<li class="chapter" data-level="2.5.1" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#boston-housing"><i class="fa fa-check"></i><b>2.5.1</b> Boston housing <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.2" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#pima-indians-diabetes"><i class="fa fa-check"></i><b>2.5.2</b> Pima Indians Diabetes <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.3" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#iris-flowers"><i class="fa fa-check"></i><b>2.5.3</b> Iris flowers <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.4" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#ames-housing"><i class="fa fa-check"></i><b>2.5.4</b> Ames housing <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.5" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#attrition"><i class="fa fa-check"></i><b>2.5.5</b> Attrition <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
+<li class="chapter" data-level="2.5.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#hitters"><i class="fa fa-check"></i><b>2.5.6</b> Hitters <svg aria-hidden="true" role="img" viewBox="0 0 640 512" style="height:1em;width:1.25em;vertical-align:-0.125em;margin-left:auto;margin-right:auto;font-size:inherit;fill:currentColor;overflow:visible;position:relative;"><path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/></svg></a></li>
 </ul></li>
 <li class="chapter" data-level="2.6" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#what-youll-learn-next"><i class="fa fa-check"></i><b>2.6</b> What You’ll Learn Next</a></li>
 <li class="chapter" data-level="2.7" data-path="lesson-1a-intro-to-machine-learning.html"><a href="lesson-1a-intro-to-machine-learning.html#exercises"><i class="fa fa-check"></i><b>2.7</b> Exercises</a></li>
@@ -713,18 +715,17 @@ Figure 11.2: Predicted probablilities of employee attrition based on monthly inc
 <p>For <code>lr_fit1</code>, the estimated coefficient for <code>MonthlyIncome</code> is -0.000139, which is negative, indicating that an increase in <code>MonthlyIncome</code> is associated with a decrease in the probability of attrition. Similarly, for <code>lr_fit2</code>, employees who work <code>OverTime</code> are associated with an increased probability of attrition compared to those that do not work <code>OverTime</code>.</p>
 <div class="sourceCode" id="cb110"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb110-1"><a href="lesson-4a-logistic-regression.html#cb110-1" tabindex="-1"></a><span class="fu">tidy</span>(lr_fit1)</span>
 <span id="cb110-2"><a href="lesson-4a-logistic-regression.html#cb110-2" tabindex="-1"></a><span class="do">## # A tibble: 2 × 5</span></span>
-<span id="cb110-3"><a href="lesson-4a-logistic-regression.html#cb110-3" tabindex="-1"></a><span class="do">##   term  estimate std.error statistic p.value</span></span>
-<span id="cb110-4"><a href="lesson-4a-logistic-regression.html#cb110-4" tabindex="-1"></a><span class="do">##   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb110-5"><a href="lesson-4a-logistic-regression.html#cb110-5" tabindex="-1"></a><span class="do">## 1 (Int… -8.86e-1 0.157         -5.64 1.74e-8</span></span>
-<span id="cb110-6"><a href="lesson-4a-logistic-regression.html#cb110-6" tabindex="-1"></a><span class="do">## 2 Mont… -1.39e-4 0.0000272     -5.10 3.44e-7</span></span>
+<span id="cb110-3"><a href="lesson-4a-logistic-regression.html#cb110-3" tabindex="-1"></a><span class="do">##   term           estimate std.error statistic      p.value</span></span>
+<span id="cb110-4"><a href="lesson-4a-logistic-regression.html#cb110-4" tabindex="-1"></a><span class="do">##   &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span id="cb110-5"><a href="lesson-4a-logistic-regression.html#cb110-5" tabindex="-1"></a><span class="do">## 1 (Intercept)   -0.886    0.157         -5.64 0.0000000174</span></span>
+<span id="cb110-6"><a href="lesson-4a-logistic-regression.html#cb110-6" tabindex="-1"></a><span class="do">## 2 MonthlyIncome -0.000139 0.0000272     -5.10 0.000000344</span></span>
 <span id="cb110-7"><a href="lesson-4a-logistic-regression.html#cb110-7" tabindex="-1"></a></span>
 <span id="cb110-8"><a href="lesson-4a-logistic-regression.html#cb110-8" tabindex="-1"></a><span class="fu">tidy</span>(lr_fit2)</span>
 <span id="cb110-9"><a href="lesson-4a-logistic-regression.html#cb110-9" tabindex="-1"></a><span class="do">## # A tibble: 2 × 5</span></span>
-<span id="cb110-10"><a href="lesson-4a-logistic-regression.html#cb110-10" tabindex="-1"></a><span class="do">##   term        estimate std.error statistic</span></span>
-<span id="cb110-11"><a href="lesson-4a-logistic-regression.html#cb110-11" tabindex="-1"></a><span class="do">##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb110-12"><a href="lesson-4a-logistic-regression.html#cb110-12" tabindex="-1"></a><span class="do">## 1 (Intercept)    -2.13     0.119    -17.9 </span></span>
-<span id="cb110-13"><a href="lesson-4a-logistic-regression.html#cb110-13" tabindex="-1"></a><span class="do">## 2 OverTimeYes     1.29     0.176      7.35</span></span>
-<span id="cb110-14"><a href="lesson-4a-logistic-regression.html#cb110-14" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: p.value &lt;dbl&gt;</span></span></code></pre></div>
+<span id="cb110-10"><a href="lesson-4a-logistic-regression.html#cb110-10" tabindex="-1"></a><span class="do">##   term        estimate std.error statistic  p.value</span></span>
+<span id="cb110-11"><a href="lesson-4a-logistic-regression.html#cb110-11" tabindex="-1"></a><span class="do">##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb110-12"><a href="lesson-4a-logistic-regression.html#cb110-12" tabindex="-1"></a><span class="do">## 1 (Intercept)    -2.13     0.119    -17.9  1.46e-71</span></span>
+<span id="cb110-13"><a href="lesson-4a-logistic-regression.html#cb110-13" tabindex="-1"></a><span class="do">## 2 OverTimeYes     1.29     0.176      7.35 2.01e-13</span></span></code></pre></div>
 <p>As discussed earlier, it is easier to interpret the coefficients using an <code>exp()</code> transformation:</p>
 <div class="sourceCode" id="cb111"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb111-1"><a href="lesson-4a-logistic-regression.html#cb111-1" tabindex="-1"></a><span class="fu">exp</span>(<span class="fu">coef</span>(lr_fit1<span class="sc">$</span>fit))</span>
 <span id="cb111-2"><a href="lesson-4a-logistic-regression.html#cb111-2" tabindex="-1"></a><span class="do">##   (Intercept) MonthlyIncome </span></span>
@@ -784,12 +785,11 @@ p\left(X\right) = \frac{e^{b_0 + b_1 x_1 + \cdots + b_p x_p }}{1 + e^{b_0 + b_1 
 <span id="cb114-4"><a href="lesson-4a-logistic-regression.html#cb114-4" tabindex="-1"></a></span>
 <span id="cb114-5"><a href="lesson-4a-logistic-regression.html#cb114-5" tabindex="-1"></a><span class="fu">tidy</span>(lr_fit3)</span>
 <span id="cb114-6"><a href="lesson-4a-logistic-regression.html#cb114-6" tabindex="-1"></a><span class="do">## # A tibble: 3 × 5</span></span>
-<span id="cb114-7"><a href="lesson-4a-logistic-regression.html#cb114-7" tabindex="-1"></a><span class="do">##   term          estimate std.error statistic</span></span>
-<span id="cb114-8"><a href="lesson-4a-logistic-regression.html#cb114-8" tabindex="-1"></a><span class="do">##   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb114-9"><a href="lesson-4a-logistic-regression.html#cb114-9" tabindex="-1"></a><span class="do">## 1 (Intercept)   -1.33e+0 0.177         -7.54</span></span>
-<span id="cb114-10"><a href="lesson-4a-logistic-regression.html#cb114-10" tabindex="-1"></a><span class="do">## 2 MonthlyIncome -1.47e-4 0.0000280     -5.27</span></span>
-<span id="cb114-11"><a href="lesson-4a-logistic-regression.html#cb114-11" tabindex="-1"></a><span class="do">## 3 OverTimeYes    1.35e+0 0.180          7.50</span></span>
-<span id="cb114-12"><a href="lesson-4a-logistic-regression.html#cb114-12" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: p.value &lt;dbl&gt;</span></span></code></pre></div>
+<span id="cb114-7"><a href="lesson-4a-logistic-regression.html#cb114-7" tabindex="-1"></a><span class="do">##   term           estimate std.error statistic  p.value</span></span>
+<span id="cb114-8"><a href="lesson-4a-logistic-regression.html#cb114-8" tabindex="-1"></a><span class="do">##   &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb114-9"><a href="lesson-4a-logistic-regression.html#cb114-9" tabindex="-1"></a><span class="do">## 1 (Intercept)   -1.33     0.177         -7.54 4.74e-14</span></span>
+<span id="cb114-10"><a href="lesson-4a-logistic-regression.html#cb114-10" tabindex="-1"></a><span class="do">## 2 MonthlyIncome -0.000147 0.0000280     -5.27 1.38e- 7</span></span>
+<span id="cb114-11"><a href="lesson-4a-logistic-regression.html#cb114-11" tabindex="-1"></a><span class="do">## 3 OverTimeYes    1.35     0.180          7.50 6.59e-14</span></span></code></pre></div>
 <div class="sourceCode" id="cb115"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb115-1"><a href="lesson-4a-logistic-regression.html#cb115-1" tabindex="-1"></a>lr_fit3 <span class="sc">%&gt;%</span> </span>
 <span id="cb115-2"><a href="lesson-4a-logistic-regression.html#cb115-2" tabindex="-1"></a>  <span class="fu">predict</span>(churn_train, <span class="at">type =</span> <span class="st">&quot;prob&quot;</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb115-3"><a href="lesson-4a-logistic-regression.html#cb115-3" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -956,21 +956,20 @@ test data).
 <span id="cb121-8"><a href="lesson-4a-logistic-regression.html#cb121-8" tabindex="-1"></a><span class="co"># average AUC</span></span>
 <span id="cb121-9"><a href="lesson-4a-logistic-regression.html#cb121-9" tabindex="-1"></a><span class="fu">collect_metrics</span>(results) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;roc_auc&quot;</span>)</span>
 <span id="cb121-10"><a href="lesson-4a-logistic-regression.html#cb121-10" tabindex="-1"></a><span class="do">## # A tibble: 1 × 6</span></span>
-<span id="cb121-11"><a href="lesson-4a-logistic-regression.html#cb121-11" tabindex="-1"></a><span class="do">##   .metric .estimator  mean     n std_err</span></span>
-<span id="cb121-12"><a href="lesson-4a-logistic-regression.html#cb121-12" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb121-13"><a href="lesson-4a-logistic-regression.html#cb121-13" tabindex="-1"></a><span class="do">## 1 roc_auc binary     0.830     5  0.0153</span></span>
-<span id="cb121-14"><a href="lesson-4a-logistic-regression.html#cb121-14" tabindex="-1"></a><span class="do">## # ℹ 1 more variable: .config &lt;chr&gt;</span></span>
-<span id="cb121-15"><a href="lesson-4a-logistic-regression.html#cb121-15" tabindex="-1"></a></span>
-<span id="cb121-16"><a href="lesson-4a-logistic-regression.html#cb121-16" tabindex="-1"></a><span class="co"># AUC across all folds</span></span>
-<span id="cb121-17"><a href="lesson-4a-logistic-regression.html#cb121-17" tabindex="-1"></a><span class="fu">collect_metrics</span>(results, <span class="at">summarize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;roc_auc&quot;</span>)</span>
-<span id="cb121-18"><a href="lesson-4a-logistic-regression.html#cb121-18" tabindex="-1"></a><span class="do">## # A tibble: 5 × 5</span></span>
-<span id="cb121-19"><a href="lesson-4a-logistic-regression.html#cb121-19" tabindex="-1"></a><span class="do">##   id    .metric .estimator .estimate .config</span></span>
-<span id="cb121-20"><a href="lesson-4a-logistic-regression.html#cb121-20" tabindex="-1"></a><span class="do">##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;  </span></span>
-<span id="cb121-21"><a href="lesson-4a-logistic-regression.html#cb121-21" tabindex="-1"></a><span class="do">## 1 Fold1 roc_auc binary         0.811 Prepro…</span></span>
-<span id="cb121-22"><a href="lesson-4a-logistic-regression.html#cb121-22" tabindex="-1"></a><span class="do">## 2 Fold2 roc_auc binary         0.801 Prepro…</span></span>
-<span id="cb121-23"><a href="lesson-4a-logistic-regression.html#cb121-23" tabindex="-1"></a><span class="do">## 3 Fold3 roc_auc binary         0.811 Prepro…</span></span>
-<span id="cb121-24"><a href="lesson-4a-logistic-regression.html#cb121-24" tabindex="-1"></a><span class="do">## 4 Fold4 roc_auc binary         0.884 Prepro…</span></span>
-<span id="cb121-25"><a href="lesson-4a-logistic-regression.html#cb121-25" tabindex="-1"></a><span class="do">## 5 Fold5 roc_auc binary         0.845 Prepro…</span></span></code></pre></div>
+<span id="cb121-11"><a href="lesson-4a-logistic-regression.html#cb121-11" tabindex="-1"></a><span class="do">##   .metric .estimator  mean     n std_err .config             </span></span>
+<span id="cb121-12"><a href="lesson-4a-logistic-regression.html#cb121-12" tabindex="-1"></a><span class="do">##   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb121-13"><a href="lesson-4a-logistic-regression.html#cb121-13" tabindex="-1"></a><span class="do">## 1 roc_auc binary     0.830     5  0.0153 Preprocessor1_Model1</span></span>
+<span id="cb121-14"><a href="lesson-4a-logistic-regression.html#cb121-14" tabindex="-1"></a></span>
+<span id="cb121-15"><a href="lesson-4a-logistic-regression.html#cb121-15" tabindex="-1"></a><span class="co"># AUC across all folds</span></span>
+<span id="cb121-16"><a href="lesson-4a-logistic-regression.html#cb121-16" tabindex="-1"></a><span class="fu">collect_metrics</span>(results, <span class="at">summarize =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span> <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">&quot;roc_auc&quot;</span>)</span>
+<span id="cb121-17"><a href="lesson-4a-logistic-regression.html#cb121-17" tabindex="-1"></a><span class="do">## # A tibble: 5 × 5</span></span>
+<span id="cb121-18"><a href="lesson-4a-logistic-regression.html#cb121-18" tabindex="-1"></a><span class="do">##   id    .metric .estimator .estimate .config             </span></span>
+<span id="cb121-19"><a href="lesson-4a-logistic-regression.html#cb121-19" tabindex="-1"></a><span class="do">##   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb121-20"><a href="lesson-4a-logistic-regression.html#cb121-20" tabindex="-1"></a><span class="do">## 1 Fold1 roc_auc binary         0.811 Preprocessor1_Model1</span></span>
+<span id="cb121-21"><a href="lesson-4a-logistic-regression.html#cb121-21" tabindex="-1"></a><span class="do">## 2 Fold2 roc_auc binary         0.801 Preprocessor1_Model1</span></span>
+<span id="cb121-22"><a href="lesson-4a-logistic-regression.html#cb121-22" tabindex="-1"></a><span class="do">## 3 Fold3 roc_auc binary         0.811 Preprocessor1_Model1</span></span>
+<span id="cb121-23"><a href="lesson-4a-logistic-regression.html#cb121-23" tabindex="-1"></a><span class="do">## 4 Fold4 roc_auc binary         0.884 Preprocessor1_Model1</span></span>
+<span id="cb121-24"><a href="lesson-4a-logistic-regression.html#cb121-24" tabindex="-1"></a><span class="do">## 5 Fold5 roc_auc binary         0.845 Preprocessor1_Model1</span></span></code></pre></div>
 <div id="knowledge-check-20" class="section level3 hasAnchor" number="11.8.1">
 <h3><span class="header-section-number">11.8.1</span> Knowledge check<a href="lesson-4a-logistic-regression.html#knowledge-check-20" class="anchor-section" aria-label="Anchor link to header"></a></h3>
 <div class="todo">
@@ -1077,7 +1076,7 @@ Identify the influence of the three predictor variables.
 </div>
 </div>
 <h3>References<a href="references.html#references" class="anchor-section" aria-label="Anchor link to header"></a></h3>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-agresti2003categorical" class="csl-entry">
 Agresti, Alan. 2003. <em>Categorical Data Analysis</em>. Wiley Series in Probability and Statistics. Wiley.
 </div>
