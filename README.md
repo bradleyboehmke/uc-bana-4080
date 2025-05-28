@@ -22,8 +22,8 @@ By the end of the course, students will be able to:
 
 | Week | Tuesday (Lecture)                                       | Thursday (Lab/Activities)                                  |
 |------|----------------------------------------------------------|-------------------------------------------------------------|
-| 1    | Course Intro + Python Fundamentals                       | Python Basics: Variables, Data Types, Input/Output          |
-| 2    | Reproducible Workflows & Data Importing                  | Jupyter, Pandas, Importing CSVs, APIs                       |
+| 1    | Course Intro + Python Fundamentals                       | Python Basics: Variables, Data Types, Basic Operators       |
+| 2    | Reproducible Workflows & Data Importing                  | Jupyter, Data structures, Pandas, Importing CSVs            |
 | 3    | Data Wrangling & Manipulation (Pandas)                   | Filtering, Aggregating, Merging DataFrames                  |
 | 4    | Working with Dates, Strings, & Relational Data           | Date-time, Text Columns, SQL Joins in Pandas                |
 | 5    | Data Visualization (Matplotlib & Seaborn)                | Exploratory Data Analysis with Visuals                      |
