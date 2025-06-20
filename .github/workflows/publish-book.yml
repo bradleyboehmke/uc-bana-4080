@@ -1,0 +1,44 @@
+on:
+    push:
+      branches: main
+    pull_request:
+      branches: main
+    # to be able to trigger a manual build
+    workflow_dispatch:
+    schedule:
+      # run every day at 11 PM
+      - cron: '0 23 * * *'
+
+name: Render and publish book
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: '>=3.10'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: pre-release
+          # To install LaTeX to build PDF book
+          #tinytex: true
+
+      - name: Render and Publish
+        uses: quarto-dev/quarto-actions/publish@v2
+        with:
+          target: gh-pages
+          path: book
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
