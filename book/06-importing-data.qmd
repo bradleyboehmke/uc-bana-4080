@@ -1,0 +1,149 @@
+# Chapter 6: Importing Data and Exploring Pandas DataFrames
+
+Imagine you’re working as a summer intern for a real estate analytics firm. On your first day, your manager hands you a file: “Here’s the raw data for the Ames, Iowa housing market. Let’s start by pulling it into Python and taking a quick look around.”
+
+You double-click the file — it's filled with rows and rows of numbers, codes, and column headers you don’t quite understand. Where do you even begin?
+
+In this chapter, you’ll walk through the exact steps you'd take in that situation. You’ll load real data, explore it using Python, and start to build your intuition for what’s inside a dataset. You won’t be doing full analysis yet — but you will learn how to get your bearings using one of Python’s most powerful tools: Pandas.
+
+Later chapters will teach you how to clean, transform, and analyze data — but first, you need to bring it into Python and take a look around.
+
+::: {.callout collapse="true"}
+## Experience First: Explore a Raw Dataset
+
+Before we dive into the code, let’s simulate your first task on the job.
+
+1. Download the ames_raw.csv file from this URL:
+https://raw.githubusercontent.com/bradleyboehmke/uc-bana-6043/main/book/data/ames_raw.csv
+2. Open the file in Excel, Google Sheets, or a text editor.
+3. Skim through the data. Ask yourself:
+   - What kind of information is being recorded?
+   - Do any columns or values confuse you?
+   - How would you describe this dataset to someone else?
+4. Write down 2–3 observations or questions you have just from visually exploring the file.
+:::
+
+By the end of this chapter, you will be able to:
+
+* Describe how imported data is stored in memory
+* Import tabular data with Pandas
+* Explore basic structure and metadata of a DataFrame
+* Read alternative file formats like Excel, JSON, and Pickle files
+
+## From Disk to DataFrame: How Data Enters Python
+
+Python stores its data in memory - this makes it relatively quickly accessible but can cause size limitations in certain fields. In this class we will mainly work with small to moderate data sets, which means we should not run into any space limitations. 
+
+{{< video https://youtu.be/cHZ7yE4wlb8?si=2C1HjaWhCtbfZ8ql >}}
+
+::: {.callout-tip}
+Python does provide tooling that allows you to work with _big data_ via distributed data (i.e. [Pyspark](http://spark.apache.org/docs/2.0.0/api/python/index.html)) and relational databrases (i.e. SQL). 
+:::
+
+Python memory is session-specific, so quitting Python (i.e. shutting down JupyterLab) removes the data from memory. A general way to conceptualize data import into and use within Python:
+
+1. Data sits in on the computer/server - this is frequently called "disk"
+2. Python code can be used to copy a data file from disk to the Python session's memory
+3. Python data then sits within Python's memory ready to be used by other Python code
+
+Here is a visualization of this process:
+
+![Python memory](images/import-framework.png){width="70%"}
+
+## Importing Delimited Files with `read_csv()`
+
+Text files are a popular way to store and exchange tabular data. Nearly every data application supports exporting to CSV (Comma Separated Values) format or another type of text-based format. These files use a delimiter — such as a comma, tab, or pipe symbol — to separate elements within each line. Because of this consistent structure, importing text files into Python typically follows a straightforward process once the delimiter is identified.
+
+Pandas provides a very efficient and simple way to load these types of files using its `read_csv()` function. While there are other approaches available (such as Python’s built-in `csv` module), Pandas is preferred for its ease of use and direct creation of a DataFrame — the primary tabular data structure used throughout this course.
+
+{{< video https://www.youtube.com/embed/_pXeLrqQhxI?si=NDBCiV2x9sek6j6X >}}
+
+In the example below, we use `read_csv()` to load a dataset on residential property sales in Ames, Iowa ([source](http://jse.amstat.org/v19n3/decock.pdf)). Once loaded, we can preview the first few rows using the `head()` method:
+
+```{python}
+import pandas as pd
+
+ames = pd.read_csv('../data/ames_raw.csv')
+```
+
+We see that our imported data is represented as a DataFrame:
+
+```{python}
+type(ames)
+```
+
+We can look at it in the Jupyter notebook, since Jupyter will display it in a well-organized, pretty way.
+
+```{python}
+ames
+```
+
+This is a nice representation of the data, but we really do not need to display that many rows of the DataFrame in order to understand its structure. Instead, we can use the `head()` method of data frames to look at the first few rows. This is more manageable and gives us an overview of what the columns are. Note also the the missing data was populated with NaN.
+
+```{python}
+ames.head()
+```
+
+## File Paths
+
+Before we dig into DataFrames, let's spend a little time talking about file paths.
+
+{{< video https://www.youtube.com/embed/HjIceUNes48?si=dyN8qf7bzTkj5bFf >}}
+
+It's important to understand where files exist on your computer and how to reference those paths. There are two main approaches:
+
+1. Absolute paths
+2. Relative paths
+
+An **absolute path** always contains the root elements and the complete list of directories to locate the specific file or folder. For the ames_raw.csv file, the absolute path on my computer is:
+
+```{python}
+import os
+
+absolute_path = os.path.abspath('../data/ames_raw.csv')
+absolute_path
+```
+
+I can always use the absolute path in `pd.read_csv()`:
+
+```{python}
+ames = pd.read_csv(absolute_path)
+```
+
+In contrast, a **relative path** is a path built starting from the current location. For example, say that I am operating in a directory called "Project A". If I'm working in "my_notebook.ipynb" and I have a "my_data.csv" file in that same directory:
+
+```bash
+# illustration of the directory layout
+Project A
+├── my_notebook.ipynb
+└── my_data.csv
+```
+
+Then I can use this relative path to import this file: `pd.read_csv('my_data.csv')`. This just means to look for the 'my_data.csv' file relative to the current directory that I am in.
+ 
+Often, people store data in a "data" directory. If this directory is a subdirectory within my Project A directory:
+
+```bash
+# illustration of the directory layout
+Project A
+├── my_notebook.ipynb
+└── data
+    └── my_data.csv
+```
+
+Then I can use this relative path to import this file: `pd.read_csv('data/my_data.csv')`. This just means to look for the 'data' subdirectory relative to the current directory that I am in and then look for the 'my_data.csv' file.
+
+Sometimes, the data directory may not be in the current directory. Sometimes a project directory will look the following where there is a subdirectory containing multiple notebooks and then another subdirectory containing data assets. If you are working in "notebook1.ipynb" within the notebooks subdirectory, you will need to tell Pandas to go up one directory relative to the notebook you are working in to the main Project A directory and then go down into the data directory.
+
+```bash
+# illustration of the directory layout
+Project A
+├── notebooks
+│   ├── notebook1.ipynb
+│   ├── notebook2.ipynb
+│   └── notebook3.ipynb
+└── data
+    └── my_data.csv
+```
+
+I can do this by using dot-notation in my relative path specification - here I use '..' to imply "go up one directory relative to my current location": `pd.read_csv('../data/my_data.csv')`.
