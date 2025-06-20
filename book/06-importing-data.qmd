@@ -1,4 +1,4 @@
-# Chapter 6: Importing Data and Exploring Pandas DataFrames
+# Importing Data and Exploring Pandas DataFrames
 
 Imagine you’re working as a summer intern for a real estate analytics firm. On your first day, your manager hands you a file: “Here’s the raw data for the Ames, Iowa housing market. Let’s start by pulling it into Python and taking a quick look around.”
 
@@ -11,16 +11,16 @@ Later chapters will teach you how to clean, transform, and analyze data — but 
 ::: {.callout collapse="true"}
 ## Experience First: Explore a Raw Dataset
 
-Before we dive into the code, let’s simulate your first task on the job.
+Before we dive into the code, let’s simulate your first task on the job. Check out [this](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_raw.csv) dataset on residential property sales in Ames, Iowa ([source](http://jse.amstat.org/v19n3/decock.pdf)).
 
 1. Download the ames_raw.csv file from this URL:
-https://raw.githubusercontent.com/bradleyboehmke/uc-bana-6043/main/book/data/ames_raw.csv
-2. Open the file in Excel, Google Sheets, or a text editor.
-3. Skim through the data. Ask yourself:
+https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_raw.csv
+1. Open the file in Excel, Google Sheets, or a text editor.
+2. Skim through the data. Ask yourself:
    - What kind of information is being recorded?
    - Do any columns or values confuse you?
    - How would you describe this dataset to someone else?
-4. Write down 2–3 observations or questions you have just from visually exploring the file.
+3. Write down 2–3 observations or questions you have just from visually exploring the file.
 :::
 
 By the end of this chapter, you will be able to:
@@ -58,35 +58,65 @@ Pandas provides a very efficient and simple way to load these types of files usi
 
 {{< video https://www.youtube.com/embed/_pXeLrqQhxI?si=NDBCiV2x9sek6j6X >}}
 
-In the example below, we use `read_csv()` to load a dataset on residential property sales in Ames, Iowa ([source](http://jse.amstat.org/v19n3/decock.pdf)). Once loaded, we can preview the first few rows using the `head()` method:
+In the example below, we use `read_csv()` to load a [dataset listing some information on aircraft](https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/refs/heads/main/data/planes.csv). 
+
+::: {.callout-note}
+Please note that **you must have internet access for this example to work.** 
+
+In this first example, we will demonstrate how to import data directly from a URL. This approach is useful when your data is hosted online and you want to access it directly within your analysis. 
+
+Later in this chapter, we will discuss how to import data that resides on your local computer.
+:::
 
 ```{python}
 import pandas as pd
 
-ames = pd.read_csv('../data/ames_raw.csv')
+planes = pd.read_csv('https://tinyurl.com/planes-data')
 ```
 
 We see that our imported data is represented as a DataFrame:
 
 ```{python}
-type(ames)
+type(planes)
 ```
 
 We can look at it in the Jupyter notebook, since Jupyter will display it in a well-organized, pretty way.
 
 ```{python}
-ames
+planes
 ```
 
-This is a nice representation of the data, but we really do not need to display that many rows of the DataFrame in order to understand its structure. Instead, we can use the `head()` method of data frames to look at the first few rows. This is more manageable and gives us an overview of what the columns are. Note also the the missing data was populated with NaN.
+This is a nice representation of the data, but we really do not need to display that many rows of the DataFrame in order to understand its structure. Instead, we can use the `head()` method of data frplanes to look at the first few rows. This is more manageable and gives us an overview of what the columns are. Note also the the missing data was populated with NaN.
 
 ```{python}
-ames.head()
+planes.head()
 ```
+
+### Knowledge Check
+
+::: {.callout}
+## Getting Started with Ames Housing Data
+
+Use the Pandas library to complete the following tasks.
+
+1. **Load the Data**: Import the Ames housing dataset using the following URL - `https://tinyurl.com/ames-raw`
+2. **Verify the Object Type**: What type of Python object is the result of your import? Use the `type()` function to confirm.
+3. **Preview the Data**: Use the `.head()` method to print the first few rows of the dataset. Based on the output:
+   * What are some of the column names you see?
+   * What kinds of values are stored in these columns?
+:::
 
 ## File Paths
 
-Before we dig into DataFrames, let's spend a little time talking about file paths.
+In the previous example, we imported data directly from a URL; however, datasets often reside on our computer and we need to specify the file path to read them from. For example, rather than import the `planes.csv` data from the URL we used above, I can read in that same dataset as follows.
+
+```{python}
+planes = pd.read_csv('../data/planes.csv')
+
+planes.head()
+```
+
+But to understand why I use `'../data/planes.csv'` in the code above, we need to spend a little time talking about file paths.
 
 {{< video https://www.youtube.com/embed/HjIceUNes48?si=dyN8qf7bzTkj5bFf >}}
 
@@ -95,19 +125,19 @@ It's important to understand where files exist on your computer and how to refer
 1. Absolute paths
 2. Relative paths
 
-An **absolute path** always contains the root elements and the complete list of directories to locate the specific file or folder. For the ames_raw.csv file, the absolute path on my computer is:
+An **absolute path** always contains the root elements and the complete list of directories to locate the specific file or folder. For the planes.csv file, the absolute path on my computer is:
 
 ```{python}
 import os
 
-absolute_path = os.path.abspath('../data/ames_raw.csv')
+absolute_path = os.path.abspath('../data/planes.csv')
 absolute_path
 ```
 
-I can always use the absolute path in `pd.read_csv()`:
+I can always use this absolute path in `pd.read_csv()`:
 
 ```{python}
-ames = pd.read_csv(absolute_path)
+planes = pd.read_csv(absolute_path)
 ```
 
 In contrast, a **relative path** is a path built starting from the current location. For example, say that I am operating in a directory called "Project A". If I'm working in "my_notebook.ipynb" and I have a "my_data.csv" file in that same directory:
@@ -146,4 +176,333 @@ Project A
     └── my_data.csv
 ```
 
-I can do this by using dot-notation in my relative path specification - here I use '..' to imply "go up one directory relative to my current location": `pd.read_csv('../data/my_data.csv')`.
+I can do this by using dot-notation in my relative path specification - here I use '..' to imply "go up one directory relative to my current location": `pd.read_csv('../data/my_data.csv')`. And this is  why is used `'../data/planes.csv'` in the code at the beginning of this section, because my directory layout is:
+
+```bash
+Project A
+├── notebooks
+│   ├── notebook1.ipynb
+│   ├── notebook2.ipynb
+│   └── notebook3.ipynb
+└── data
+    └── planes.csv
+```
+
+
+### Knowledge Check
+
+::: {.callout}
+## Try Different File Paths
+
+Download the [`ames_raw.csv` dataset](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_raw.csv) and save the file in a folder structure like this:
+
+```
+Project A
+├── notebooks
+│   └── import_demo.ipynb
+└── data
+    └── ames_raw.csv
+```
+
+Now, do the following:
+
+1. **Import using a relative path**: In `import_demo.ipynb`, write the code to import the file using a relative path.
+2. **Import using an absolute path**: Use Python’s `os.path.abspath()` to determine the full absolute path of the file. Then use that path in `pd.read_csv()`.
+3. **Reflection questions (write your answers in a Markdown cell):**
+   * Which method feels easier or more flexible to you?
+   * In what situations might you prefer absolute over relative paths?
+:::
+
+## Inspecting Your DataFrame
+
+After importing, the data is stored as a DataFrame — the core data structure in Pandas. And with DataFrames, there are several ways to start understanding some basic, descriptive information about our data. For example, we can get the dimensions of our DataFrame. Here, we see that we have 3,322 rows and 9 columns.
+
+```{python}
+planes.shape
+```
+
+We can also see what type of data each column is. For example, we see that the `tailnum` column data type is `object`, the `year` column is a floating point (`float64`), and `engines` is an integer (`int64`).
+
+```{python}
+planes.dtypes
+```
+
+The following are the most common data types that appear frequently in DataFrames.
+
+- **boolean** - only two possible values, `True` and `False`
+- **integer** - whole numbers without decimals
+- **float** - numbers with decimals
+- **object** - typically strings, but may contain any object
+- **datetime** - a specific date and time with nanosecond precision
+
+::: {.callout-note}
+Booleans, integers, floats, and datetimes all use a particular amount of memory for each of their values. The memory is measured in bits. The number of bits used for each value is the number appended to the end of the data type name. For instance, integers can be either 8, 16, 32, or 64 bits while floats can be 16, 32, 64, or 128. A 128-bit float column will show up as `float128`.
+Technically a `float128` is a different data type than a `float64` but generally you will not have to worry about such a distinction as the operations between different float columns will be the same.
+:::
+
+We can also use the `info()` method, which provides output similar to dtypes, but also shows the number of non-missing values in each column along with more info such as:
+
+* Type of object (always a DataFrame)
+* The type of index and number of rows
+* The number of columns
+* The data types of each column and the number of non-missing (a.k.a non-null) 
+* The frequency count of all data types
+* The total memory usage
+
+```{python}
+planes.info()
+```
+
+### Knowledge Check
+
+::: {.callout}
+## Inspecting the Ames Housing Data
+
+In the previous section, you imported the `ames_raw.csv` dataset. Now let’s explore its structure using the tools you just learned.
+
+1. **How big is the dataset?**: Use `.shape` to find out how many rows and columns are in the dataset.
+2. **What kinds of data are stored?**: Use `.dtypes` to print out the data types of all columns.
+   * How many columns are `object` type?
+   * How many are `float` or `int`?
+3. **Dig deeper with `.info()`**
+   * How many non-null values are in each column?
+   * How much memory does the dataset use?
+:::
+
+## Attributes & Methods
+
+{{< video https://www.youtube.com/embed/u62SwUgxpuI?si=ta29I-o5DYIf005d >}}
+
+We've seen that we can use the dot-notation to access functions in libraries (i.e. `pd.read_csv()`). We can use this same approach to access things inside of _objects_. What's an object? Basically, a variable that contains other data or functionality inside of it that is exposed to users. Consequently, our DataFrame item is an object.
+
+In the above code, we saw that we can make different calls with our DataFrame such as `planes.shape` and `planes.head()`. An observant reader probably noticed the difference between the two -- one has parentheses and the other does not. 
+
+An **attribute** inside an object is simply a variable that is unique to that object and a **method** is just a function inside an object that is unique to that object.
+
+::: {.callout-tip}
+Variables inside an object are often called attributes and functions inside objects are called methods.
+
+**attribute**: A variable associated with an object and is referenced by name using dotted expressions. For example, if an object `o` has an attribute `a` it would be referenced as `o.a`
+
+**method**: A function associated with an object and is also referenced using dotted expressions but will include parentheses. For example, if an object `o` has a method `m` it would be called as `o.m()`
+:::
+
+Earlier, we saw the attributes `shape` and `dtypes`. Another attribute is `columns`, which will list all column names in our DataFrame.
+
+```{python}
+planes.columns
+```
+
+Similar to regular functions, methods are called with parentheses and often take arguments. For example, we can use the `tail()` method to see the last _n_ rows in our DataFrame:
+
+```{python}
+planes.tail(3)
+```
+
+::: {.callout-note}
+We will be exposed to _many_ of the available DataFrame methods throughout this course!
+:::
+
+### Knowledge Check
+
+::: {.callout}
+## Attributes vs. Methods in the Ames Housing Data
+
+Using the `ames_raw` DataFrame you’ve already imported:
+
+1. **List all column names**: Use the appropriate **attribute** to display all the column names in the dataset.
+2. **Preview the last 5 rows**: Use the appropriate **method** to display the last five rows of the dataset.
+3. **Identify each line of code**: For each of the following, decide whether it’s a method or an attribute:
+   * `ames.columns`
+   * `ames.head()`
+   * `ames.shape`
+   * `ames.tail(10)`
+   * `ames.dtypes`
+4. **Reflect**
+   In a markdown cell, briefly explain in your own words:
+   * What’s the difference between an attribute and a method?
+   * How can you tell which one you’re using?
+:::
+
+
+## Common DataFrame Errors
+
+As you're learning to work with DataFrames in Pandas, you’ll likely encounter a few common errors. Don’t worry — these are normal and part of the learning process. This section introduces a few of the most frequent issues and how to fix them.
+
+### Forgetting Parentheses When Using a Method
+
+One of the most common mistakes is confusing **methods** with **attributes**. Remember: methods require parentheses `()` — even if they don’t take arguments.
+
+```python
+ames.head     # 🚫 Returns the method itself, not the data
+ames.head()   # ✅ Correct — this returns the first few rows
+```
+
+### Typos in Column Names
+
+Column names in a DataFrame must be typed exactly as they appear. They're case-sensitive and must match spacing and punctuation.
+
+```python
+ames['SalePrice']     # ✅ Correct
+ames['saleprice']     # 🚫 KeyError: 'saleprice'
+```
+
+::: {.callout-tip}
+Tip: Use `ames.columns` to check exact column names.
+:::
+
+
+### FileNotFoundError When Loading a File
+
+This happens when the file path is incorrect or the file isn’t in the expected location.
+
+```python
+# 🚫 Incorrect: file doesn't exist at this path
+pd.read_csv('data.csv')
+
+# ✅ Correct (based on your current working directory)
+pd.read_csv('../data/ames_raw.csv')
+```
+
+::: {.callout-tip}
+Tip: Use `os.getcwd()` to check your working directory, and `os.path.abspath()` to confirm the full path.
+:::
+
+### Using Dot Notation with Column Names that Contain Spaces or Special Characters
+
+Pandas allows you to access columns using dot notation only if the column name is a valid Python variable name.
+
+```python
+ames.SalePrice     # ✅ Works (if column is named 'SalePrice')
+ames.MS Zoning     # 🚫 SyntaxError
+
+# ✅ Use bracket notation instead
+ames['MS Zoning']
+```
+
+
+### Confusing Methods That Don’t Exist
+
+Sometimes, learners assume there’s a method for something that doesn’t exist.
+
+```python
+ames.rows()    # 🚫 AttributeError: 'DataFrame' object has no attribute 'rows'
+```
+
+::: {.callout-tip}
+Tip: Use `dir(ames)` to see a list of available methods and attributes, or use tab-completion in Jupyter to explore.
+:::
+
+
+## Other File Types
+
+So far, we’ve focused on CSVs — the most common format for tabular data. But Python, especially through the Pandas library, can import a wide variety of file types beyond just delimited text files.
+
+Here are a few common formats you might encounter:
+
+* **Excel spreadsheets** (`.xls`, `.xlsx`)
+* **JSON** files — often used for APIs and web data
+* **Pickle** files — Python’s own format for saving data structures
+* **SQL databases** — such as SQLite, PostgreSQL, or MySQL
+* **Parquet** and **Feather** — efficient storage formats for big data workflows
+
+In most cases, Pandas provides a convenient `read_` function to handle the import process. For example, let's look at how we can import an Excel file directly — without converting it to a CSV first.
+
+### Importing Excel Files with `read_excel()`
+
+Excel is still one of the most widely used tools for storing and sharing data. And while many users convert Excel files into CSVs before importing them into Python, Pandas allows you to skip that step entirely.
+
+To import data directly from an Excel workbook, you can use the `read_excel()` function. But first, you may need to install an additional dependency:
+
+```bash
+# Run this in your terminal if you haven’t already
+pip install openpyxl
+```
+
+In this example, we’ll import a mock dataset of grocery store products stored in a file called `products.xlsx` (download [here](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/products.xlsx)).
+
+```{python}
+# Preview the available sheets in the workbook
+products_excel = pd.ExcelFile('../data/products.xlsx')
+products_excel.sheet_names
+```
+
+To load a specific sheet from this workbook:
+
+::: {.callout-warning}
+If you don’t explicitly specify a sheet name, Pandas will default to importing the **first worksheet** in the file.
+:::
+
+```{python}
+products = pd.read_excel('../data/products.xlsx', sheet_name='products data')
+products.head()
+```
+
+::: {.callout-tip}
+Here’s an additional video provided by Corey Schafer that you might find useful. It covers importing and exporting data from multiple different sources.
+
+{{< video https://youtu.be/N6hyN6BW6ao >}}
+:::
+
+
+## Summary
+
+In this chapter, you learned how to import real-world data into Python and begin exploring it using Pandas — one of the most important tools in the data science workflow.
+
+You started with a realistic scenario: opening up a raw dataset and figuring out how to make sense of it. You learned how to read in delimited files (like CSVs), use relative and absolute file paths, and inspect your data using essential DataFrame attributes and methods like `.shape`, `.dtypes`, `.info()`, and `.head()`.
+
+You also saw how Pandas supports a wide variety of file formats beyond CSV, including Excel, JSON, Pickle, and SQL databases — making it a flexible tool for working with nearly any type of data source.
+
+This chapter was focused on getting your data **into** Python and taking a first look around. In upcoming chapters, we’ll dig into the heart of data science: cleaning, wrangling, summarizing, and uncovering patterns in your data to support real-world decision making.
+
+
+## Exercise: COVID-19 Cases at U.S. Colleges
+
+The New York Times published a dataset tracking COVID-19 cases at colleges and universities across the United States. You can read about this dataset [here](https://github.com/nytimes/covid-19-data/tree/master/colleges).  In this exercise, you'll download and explore that dataset to practice the skills you've learned in this chapter.
+
+::: {.callout collapse="true"}
+## Step 1: Download the Data
+
+Download the dataset directly from this GitHub URL: [`colleges.csv`](https://github.com/nytimes/covid-19-data/blob/master/colleges/colleges.csv)
+
+Set up your project directory to look like this:
+
+```
+BANA 4080
+├── notebooks
+│   └── covid_analysis.ipynb
+└── data
+    └── colleges.csv
+```
+:::
+
+::: {.callout collapse="true"}
+## Step 2: Import the Data
+
+In your `covid_analysis.ipynb` notebook:
+
+1. Import Pandas
+2. Load the dataset using a **relative path**
+3. Use the `type()` function to confirm that the data is stored as a DataFrame
+:::
+
+::: {.callout collapse="true"}
+## Step 3: Explore the Structure
+
+Use the following DataFrame attributes and methods:
+
+* `.shape` — how many rows and columns are in the dataset?
+* `.columns` — what variables are included?
+* `.head()` — what do the first few rows of the dataset look like?
+* `.info()` — are there any missing values?
+:::
+
+::: {.callout collapse="true"}
+## Step 4: Reflect
+
+In a Markdown cell, write a short summary addressing the following:
+
+* What is this dataset tracking?
+* What are some variables you’d want to explore further?
+* What kinds of questions could you answer with this data in future chapters?
+:::
