@@ -1,0 +1,351 @@
+# Deeper Dive on DataFrames
+
+Imagine you’ve just imported a new airline dataset into Python. It includes hundreds of rows listing airline names and their carrier codes. Your manager asks, “Can you quickly pull a list of all airline names? And which carrier code has the longest name?” Before you can answer, you need to understand what’s inside that DataFrame.
+
+In the previous chapter, we focused on how to import datasets into Python using Pandas — a crucial first step in any data analysis workflow. Now that we can get data into Python, we need to understand what we’re actually working with. This chapter takes a closer look at Pandas **DataFrames** and their building blocks, the **Series**.
+
+By deepening your understanding of the DataFrame structure and how to access and manipulate data within it, you’ll build a foundation for future chapters focused on cleaning, transforming, and analyzing real-world data.
+
+## Learning objectives
+
+At the end of this lesson you should be able to:
+
+* Explain the difference between DataFrames and Series
+* Access and manipulate data within DataFrames and Series
+* Set and manipulate index values
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/07_dataframes.ipynb) in Google Colab (or other editor of choice). This interactive notebook lets you run code examples covered in the chapter—and experiment with your own ideas.
+
+👉 Open the [Dataframes Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/07_dataframes.ipynb).
+:::
+
+To illustrate our points throughout this lesson, we'll use the following [airlines data](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/airlines.csv) which includes the name of the airline carrier and the airline carrier code:
+
+```{python}
+import pandas as pd
+
+df = pd.read_csv('../data/airlines.csv')
+df.head()
+```
+
+## Understanding the DataFrame Structure
+
+A DataFrame is a two-dimensional, labeled data structure—similar to a table in Excel or a SQL database—that is used to store and manipulate structured data. You can think of it as a spreadsheet-like object where the data is organized into rows and columns.
+
+Each column in a DataFrame is actually a special type of object in Pandas called a **Series**. A Series is a one-dimensional array-like object that holds data and a corresponding index for labeling each entry. While the concept of a Series might be new to you, it’s fundamental to how Pandas works under the hood. Understanding how Series operate is essential because much of your interaction with DataFrames involves accessing and manipulating individual Series.
+
+```{python}
+df.info()
+df.shape
+```
+
+### Knowledge Check
+
+::: {.callout}
+## Exploring Airport Data
+
+Download and import the [airports data](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/airports.csv) into a DataFrame called `airports`.
+
+1. How many rows and columns are in the dataset? Use `.shape` and `.info()` to help.
+2. What are the column names and data types? Are any surprising?
+3. Try printing the first 5 and last 5 rows using `.head()` and `.tail()`. What types of data does this dataset contain?
+
+:::
+
+## Series: The Building Blocks of DataFrames
+
+{{< video https://www.youtube.com/embed/geuxCNnBl48?si=3v1yhadM-aH9iFFf >}}
+
+Columns (and rows) of a DataFrame are actually Series objects. A **Series** is a one-dimensional labeled array capable of holding any data type — such as integers, strings, or even objects. You can think of it as a single column of data with a label on every entry. When you select a single column from a DataFrame, Pandas returns that column as a Series object.
+
+::: {#fig-series}
+![Example Series](images/series-illustration.png){width="80%"}
+
+Source: [Python Programming for Data Science](https://www.tomasbeuzen.com/python-programming-for-data-science)
+:::
+
+You can extract a Series using bracket notation with the column name:
+
+```{python}
+carrier_column = df['carrier']
+carrier_column
+```
+
+This looks very much like a column of data — and it is — but under the hood, it’s a different type of object than the full DataFrame:
+
+```{python}
+type(carrier_column)
+```
+
+This confirms that what you extracted is a `Series`. You can verify its one-dimensional nature with:
+
+```{python}
+carrier_column.shape  # One dimension (just the number of rows)
+```
+
+Compare this with the shape of the full DataFrame, which has both rows and columns:
+
+```{python}
+df.shape  # Two dimensions (rows, columns)
+```
+
+It’s important to be familiar with Series because they are fundamentally the core of DataFrames.
+
+::: {#fig-dataframes}
+![Example DataFrame](images/dataframe-illustration.png){width="80%"}
+
+Source: [Python Programming for Data Science](https://www.tomasbeuzen.com/python-programming-for-data-science)
+:::
+
+Understanding this distinction is important, because many of the functions and behaviors available to Series differ from those of DataFrames. As we continue working with data, we’ll frequently switch between viewing data as Series and viewing it as part of a full DataFrame.
+
+Interestingly, when you extract a single row using `.loc[]`, Pandas also returns a Series. In that case, the index of the Series becomes the column names of the original DataFrame:
+
+::: {.callout-note}
+`.loc[]` is an accessor that allows us to retrieve rows and columns by labels. We'll explore accessors more in the next chapter, but for now, just know we're using it here to get the first row of the DataFrame.
+:::
+
+```{python}
+first_row = df.loc[0]  # Using .loc to access the first row of the DataFrame
+type(first_row)        # pandas.core.series.Series
+```
+
+This reinforces the idea that both columns and rows, when isolated, are treated as Series.
+
+Another difference lies in the methods available to each. Series come with some specialized methods, such as `.to_list()`, which converts the data to a basic Python list. This method is not available on DataFrames:
+
+```{python}
+carrier_column.to_list()  # works
+```
+
+```{python}
+#| error: true
+# This will raise an error
+df.to_list()
+```
+
+::: {.callout-tip}
+As you continue through this book, you'll learn many methods that apply specifically to either Series or DataFrames, and some that work on both. Becoming familiar with the structure of each will help you develop the intuition to choose and apply the right methods in the right context.
+:::
+
+Finally, Series tend to print more compactly and are useful when you're only interested in a single set of values — like a single variable or row. Their lightweight format makes them a convenient choice in many day-to-day data tasks. 
+
+### Knowledge Check
+
+::: {.callout}
+## Digging into Columns and Rows
+
+Using the `airports` DataFrame:
+
+1. Select the `alt` column and assign it to a variable called `altitudes`. What type of object is `altitudes`?
+2. Use `type()` and `.shape` to confirm it's a Series and check its dimensionality.
+3. Extract the first row using `.loc[0]`. What type of object is this? What is its index made up of?
+4. Compare the output of `airports["alt"]` and `airports[["alt"]]`. What do you think is the difference between the two?
+5. Try calling `.to_list()` on both the `airports["alt"]` and `airports[["alt"]]` objects. What happens?
+6. What happens if you try using dot notation like `airports.alt`? When does this work vs. when could you see this failing?
+:::
+
+## Creating and Indexing a Series
+
+{{< video https://www.youtube.com/embed/mJ3dAY3QYiw?si=Si83kRM56S0g9eZ0 >}}
+
+First, let’s create our own Series object from scratch – they don’t always need to come from a DataFrame. Here, we pass a list in as an argument and it will be converted to a Series:
+
+```{python}
+s = pd.Series([10, 20, 30, 40, 50])
+s
+```
+
+This gives us a one-dimensional structure that prints a little differently than a DataFrame. There are three main parts of the Series to pay attention to:
+
+* **The values** (10, 20, 30…)
+* **The dtype**, short for data type (in this case, `int64`)
+* **The index** (0, 1, 2… by default)
+
+Values are fairly self-explanatory — they’re the list elements we passed in. The data type describes what kind of values are being stored (numbers, strings, etc.). Series are often homogeneous — holding only one data type — though technically they can hold a mix (which we’ll avoid for clarity).
+
+The **index** is where things get more interesting. Every Series has an index, which functions much like the keys in a dictionary — each label maps to a value. By default, Pandas assigns numeric labels starting at 0:
+
+```{python}
+s.index  # Default index (RangeIndex)
+s
+```
+
+But we can change the index to be more meaningful. For example, we could relabel the values using letters:
+
+```{python}
+s.index = ['a', 'b', 'c', 'd', 'e']
+s
+```
+
+Now, if we want to access the value `40`, we can do so by label:
+
+```{python}
+s['d']
+```
+
+This flexibility is powerful. Recall how rows in a DataFrame are also Series. Let’s revisit our airline DataFrame:
+
+```{python}
+df.head()
+```
+
+If we extract the first row using `.loc[0]`, we get:
+
+```{python}
+first_row = df.loc[0]
+first_row
+```
+
+Here, the index labels of the Series are the original column names:
+
+```{python}
+first_row['carrier']  # returns '9E'
+```
+
+This demonstrates how Series behave consistently whether they're extracted from columns, rows, or created from scratch. Understanding indexing will help you fluently navigate, reshape, and analyze your data as we move forward.
+
+### Knowledge Check
+
+::: {.callout}
+## Build Your Own Series
+
+1. Create a Series with the following values: `[33, 64, 77, 22, 51]`. Assign it to `temps`.
+2. What are the index labels? What is the data type?
+3. Change the index to letters: `['a', 'b', 'c', 'd', 'e']`.
+4. What value is associated with the label `'c'`?
+5. Reassign the index back to numbers. What’s one reason you might prefer named indexes over numbers?
+
+:::
+
+## Indexing in DataFrames
+
+{{< video https://www.youtube.com/watch?v=7qGoubP8trA\&t=1s >}}
+
+It’s not just Series that have indexes! DataFrames have them too. Take a look at the carrier DataFrame again and note the bold numbers on the left.
+
+```{python}
+df.head()
+```
+
+These numbers are an index, just like the one we saw on our example Series. And DataFrame indexes support similar functionality.
+
+```{python}
+# Our index is a range from 0 (inclusive) to 16 (exclusive).
+df.index
+```
+
+When loading in a DataFrame, the default index will always be 0 to N-1, where N is the number of rows in your DataFrame. This is called a `RangeIndex`. Selecting individual rows by their index can also be done with the `.loc` accessor.
+
+```{python}
+# Get the row at index 4 (the fifth row).
+df.loc[4]
+```
+
+As with Series, DataFrames support reassigning their index. However, with DataFrames it often makes sense to change one of your columns into the index. This is analogous to a primary key in relational databases: a way to rapidly look up rows within a table.
+
+In our case, maybe we will often use the carrier code (`carrier`) to look up the full name of the airline. In that case, it would make sense to set the carrier column as our index.
+
+```{python}
+df = df.set_index('carrier')
+df.head()
+```
+
+Now the RangeIndex has been replaced with a more meaningful index, and it’s possible to look up rows of the table by passing a carrier code to the `.loc` accessor.
+
+```{python}
+df.loc['AA']
+```
+
+::: {.callout-warning}
+Pandas does not require that indexes have unique values (that is, no duplicates) although many relational databases do have that requirement of a primary key. This means that it is *possible* to create a non-unique index, but highly inadvisable. Having duplicate values in your index can cause unexpected results when you refer to rows by index – but multiple rows have that index. Don’t do it if you can help it!
+:::
+
+When starting to work with a DataFrame, it’s often a good idea to determine what column makes sense as your index and to set it immediately. This will make your code nicer – by letting you directly look up values with the index – and also make your selections and filters faster, because Pandas is optimized for operations by index. If you want to change the index of your DataFrame later, you can always `reset_index` (and then assign a new one).
+
+```{python}
+df.head() # DataFrame with carrier as the index
+```
+
+```{python}
+df = df.reset_index() # resetting the index to be 0:n-1
+df.head()
+```
+
+::: {.callout-warning}
+Avoid non-unique indexes — they can lead to ambiguous behavior!
+:::
+
+### Knowledge Check
+
+::: {.callout}
+## Working with DataFrame Indexes
+
+1. What kind of index does the `airports` DataFrame currently use? Use `.index` to explore.
+2. Is this a good index? Why or why not?
+3. Set the `faa` column as the new index using `.set_index()`.
+4. Use `.loc` to look up the row for FAA code `'4G0'`. What is the altitude of this airport?
+5. Reset the index. What happens to the `faa` column after you reset it?
+
+:::
+
+
+## Summary
+
+In this chapter, you took your first deep dive into Pandas DataFrames — the central data structure for data analysis in Python. You learned that a DataFrame is essentially a table of data, where each column is a one-dimensional object called a Series. While Series and DataFrames are closely related, they behave differently and support different operations, and it's important to recognize which you're working with.
+
+You also saw how to create Series objects manually and explored the concept of indexing — both in Series and in DataFrames. Indexing allows you to label and quickly access specific rows or columns, and gives structure to your data. We covered how to extract single rows and columns (which are treated as Series), how to interpret data types (dtype), and how to assign or reset index values.
+
+Finally, you learned that Pandas provides accessors like .loc for retrieving data by label, and that setting a meaningful index can make your code more readable and efficient. As we continue through the book, you'll see more examples of these techniques in action, and you'll build the intuition for when and how to apply them in your own data projects.
+
+| Concept   | What it is       | Example                      |
+| --------- | ---------------- | ---------------------------- |
+| DataFrame | 2D table of data | `df.head()`                  |
+| Series    | 1D column/row    | `df['carrier']`, `df.loc[0]` |
+| Index     | Labels for rows  | `df.set_index('carrier')`    |
+
+In the next chapter, you’ll begin working with real-world messy data — and the skills you learned here will make that much easier to manage.
+
+## Exercise: Exploring COVID-19 Data in Colleges
+
+In the previous chapter's exercise, you imported COVID-19 data related to U.S. colleges and universities using the New York Times dataset. Let’s now build on that by exploring and interacting with the structure of the DataFrame.
+
+You can access the data again from this link:
+[https://github.com/nytimes/covid-19-data/blob/master/colleges/colleges.csv](https://github.com/nytimes/covid-19-data/blob/master/colleges/colleges.csv)
+
+::: {.callout collapse="true"}
+## Step 1: Load the data
+
+```{python}
+import pandas as pd
+
+url = "https://raw.githubusercontent.com/nytimes/covid-19-data/master/colleges/colleges.csv"
+covid = pd.read_csv(url)
+covid.head()
+```
+:::
+
+::: {.callout collapse="true"}
+## Step 2: Working with the data
+
+1. What is the current shape of the DataFrame? How many rows and columns does it have?
+2. Use `.info()` to inspect the column names and data types. Are any of them unexpected?
+3. Select the column containing cumulative cases (`cases`) and check its type and structure. Is it a Series or a DataFrame?
+4. Try the following `covid['cases'].sum()`. What does this output represent? Try some other summary statistics. We'll cover more summary statistics and aggregation methods in the next few chapters.
+  
+:::
+
+::: {.callout collapse="true"}
+## Step 3: Set and reset the index
+
+1. What kind of index does the full `covid` DataFrame currently use?
+2. Would any of the existing columns make a better index? If so, which one and why?
+3. Set the `ipeds_id` column as the new index.
+4. Use `.loc[]` to look up the row for where `ipeds_id` equals `201885` and report:
+   * Which university is this?
+   * What is the total number of cases?
+5. Reset the index back to its original form.
+:::
