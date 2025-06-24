@@ -1,0 +1,513 @@
+# Subsetting Data
+
+> “Every second of every day, our senses bring in way too much data than we can possibly process in our brains.”
+> — *Peter Diamandis, Founder of the X-Prize for human-AI collaboration*
+
+::: {.callout}
+## ✈️ Try This First
+
+Open the [planes.csv](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/planes.csv) file in Excel, Google Sheets, or your preferred spreadsheet tool. Then try to answer this question:
+
+> **Which aircraft were manufactured by Embraer in 2004 or later?**
+
+Use whatever approach you're comfortable with: filtering, sorting, scrolling or even conditional formatting.
+
+* How long did it take you to find the matching rows?
+* Did you run into any frustration or confusion?
+* What would happen if the dataset had 1 million rows instead of a few hundred?
+* Could you repeat this process consistently if asked to do it again tomorrow?
+
+:::
+
+This activity gives you a glimpse of a common task in data science: **subsetting** a dataset to focus on the most relevant information. Whether you’re analyzing flight records, home prices, or COVID case data, you’ll frequently need to extract specific **rows and columns** before you can analyze or visualize anything.
+
+In this lesson, you’ll learn how to do this efficiently using Python and the `pandas` library — a skill that will save you time, reduce errors, and set the foundation for deeper analysis later.
+
+
+### Learning Objectives
+
+By the end of this lesson, you'll be able to:
+
+* Differentiate between the different ways to subset DataFrames.
+* Select columns of a DataFrame.
+* Slice and filter specific rows of a DataFrame.
+
+
+## Prerequisites
+
+To illustrate selecting and filtering let's go ahead and load the pandas library and import our planes data we've been using:
+
+
+```{python}
+import pandas as pd
+
+planes_df = pd.read_csv('../data/planes.csv')
+planes_df.head()
+```
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/08_subsetting.ipynb) in Google Colab (or other editor of choice). This interactive notebook lets you run code examples covered in the chapter—and experiment with your own ideas.
+
+👉 Open the [Subsetting Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/08_subsetting.ipynb).
+:::
+
+
+## Subsetting dimensions
+
+{{< video https://www.youtube.com/embed/SJDr1kdBsTA?si=bLP-ZXTNH_MyrlVr >}}
+
+We don't always want all of the data in a DataFrame, so we need to take subsets of the DataFrame. In general, **subsetting** is extracting a small portion of a DataFrame -- making the DataFrame smaller. Since the DataFrame is two-dimensional, there are two dimensions on which to subset.
+
+**Dimension 1:** We may only want to consider certain *variables*. For example, we may only care about the `year` and `engines` variables:
+
+![](images/selecting_columns.png)
+
+We call this **selecting** columns/variables -- this is similar to SQL's `SELECT` or R's dplyr package's `select()`.
+
+**Dimension 2:** We may only want to consider certain *cases*. For example, we may only care about the cases where the manufacturer is Embraer.
+
+![](images/selecting_rows.png)
+
+We call this **filtering** or **slicing** -- this is similar to SQL's `WHERE` or R's dplyr package's `filter()` or `slice()`. And we can combine these two options to subset in both dimensions -- the `year` and `engines` variables where the manufacturer is Embraer:
+
+![](images/selecting_rows_columns.png)
+
+In the previous example, we want to do two things using `planes_df`:
+
+  1. **select** the `year` and `engines` variables
+  2. **filter** to cases where the manufacturer is Embraer
+
+But we also want to return a new DataFrame -- not just highlight certain cells. In other words, we want to turn this:
+
+
+```{python}
+#| code-fold: true
+planes_df.head()
+```
+
+
+Into this:
+
+
+```{python}
+#| code-fold: true
+planes_df.head().loc[planes_df['manufacturer'] == 'EMBRAER', ['year', 'engines']]
+```
+
+So we really have a third need: return the resulting DataFrame so we can continue our analysis:
+
+  1. **select** the `year` and `engines` variables
+  2. **filter** to cases where the manufacturer is Embraer
+  3. Return a DataFrame to continue the analysis
+
+## Subsetting variables
+
+Recall that the subsetting of variables/columns is called **selecting** variables/columns. In a simple example, we can select a single variable using bracket subsetting notation:
+
+
+
+```{python}
+planes_df['year'].head()
+```
+
+Notice the `head()` method also works on `planes_df['year']` to return the first five elements.
+
+::: {.callout}
+## Pop quiz!
+
+What is the data type of `planes_df['year']`?
+:::
+
+This returns `pandas.core.series.Series`, referred to simply as a "Series", rather than a DataFrame.
+
+
+```{python}
+type(planes_df['year'])
+```
+
+
+This is okay -- the Series is a popular data structure in Python. Recall from a previous lesson:
+
+* A Series is a one-dimensional data structure -- this is similar to a Python `list`
+* Note that all objects in a Series are usually of the same type (but this isn't a strict requirement)
+* Each DataFrame can be thought of as a list of equal-length Series (plus an Index)
+
+![](images/dataframe-series.png){width="50%" fig-align="center"}
+
+Series can be useful, but for now, we are interested in *returning a DataFrame* rather than a series. We can select a single variable and return a DataFrame by still using bracket subsetting notation, but this time we will **pass a `list` of variables names**:
+
+
+```{python}
+planes_df[['year']].head()
+```
+
+And we can see that we've returned a DataFrame:
+
+
+```{python}
+type(planes_df[['year']].head())
+```
+
+
+::: {.callout}
+## Pop quiz!
+
+What do you think is another advantage of passing a `list`?
+:::
+
+Passing a list into the bracket subsetting notation allows us to select multiple variables at once:
+
+
+```{python}
+planes_df[['year', 'engines']].head()
+```
+
+
+In another example, assume we are interested in the `model` of plane, number of `seats` and `engine` type:
+
+
+```{python}
+planes_df[['model', 'seats', 'engine']].head()
+```
+
+### Knowledge check
+
+::: {.callout}
+## Try This
+
+1. ______ is a common term for subsetting DataFrame variables.
+2. What type of object is a DataFrame column?
+3. What will be returned by the following code?
+
+   ```python
+   planes_df['type', 'model']
+   ```  
+
+{{< video https://www.youtube.com/embed/1l19iK1DzoE?si=Mzt73NBLcQOJ_FY_ >}}
+:::
+
+## Subsetting rows
+
+When we subset rows (aka cases, records, observations) we primarily use two names: **slicing** and **filtering**, but *these are not the same*:
+
+  * **slicing**, similar to row **indexing**, subsets observations by the value of the Index
+  * **filtering** subsets observations using a conditional test
+
+### Slicing rows
+
+Remember that all DataFrames have an Index:
+
+
+```{python}
+planes_df.head()
+```
+
+We can **slice** cases/rows using the values in the Index and bracket subsetting notation. It's common practice to use `.loc` to slice cases/rows:
+
+
+```{python}
+planes_df.loc[0:5]
+```
+
+::: {.callout-important}
+Note that since this is ***not*** "indexing", the last element is inclusive.
+:::
+
+We can also pass a `list` of Index values:
+
+
+```{python}
+planes_df.loc[[0, 2, 4, 6, 8]]
+```
+
+
+### Filtering rows
+
+We can **filter** rows using a logical sequence equal in length to the number of rows in the DataFrame.
+
+Continuing our example, assume we want to determine whether each case's `manufacturer` is Embraer. We can use the `manufacturer` Series and a logical equivalency test to find the result for each row:
+
+
+```{python}
+planes_df['manufacturer'] == 'EMBRAER'
+```
+
+
+We can use this resulting logical sequence to test **filter** cases -- rows that are `True` will be returned while those that are `False` will be removed:
+
+
+```{python}
+planes_df[planes_df['manufacturer'] == 'EMBRAER'].head()
+```
+
+
+This also works with `.loc`:
+
+
+```{python}
+planes_df.loc[planes_df['manufacturer'] == 'EMBRAER'].head()
+```
+
+
+Any conditional test can be used to **filter** DataFrame rows:
+
+
+```{python}
+# Filter observations where year is greater than 2002
+planes_df.loc[planes_df['year'] > 2002].head()
+```
+
+And multiple conditional tests can be combined using logical operators:
+
+
+```{python}
+# Filter observations where year is greater than 2002 and less than 2007
+planes_df.loc[(planes_df['year'] > 2002) & (planes_df['year'] < 2007)].head()
+```
+
+
+::: {.callout-important}
+Note that each condition is wrapped in parentheses -- this is required.
+:::
+
+Often, as your condition gets more complex, it can be easier to read if you separate out the condition:
+
+
+```{python}
+cond = (planes_df['year'] > 2002) & (planes_df['year'] < 2004)
+planes_df.loc[cond].head()
+```
+
+### Knowledge check
+
+::: {.callout}
+## Try This
+
+1. What's the difference between **slicing** cases and **filtering** cases?
+2. Fill in the blanks to fix the following code to find planes that have more than three engines:
+
+   ```python
+    planes_df.loc[______['______'] > 3]
+   ```
+
+{{< video https://www.youtube.com/embed/u174sBhrivQ?si=LwDGxnvMim8ny6nh >}}
+
+:::
+
+## Selecting variables and filtering rows
+
+If we want to select variables and filter cases at the same time, we have a few options:
+
+1. Sequential operations
+2. Simultaneous operations
+
+### Sequential Operations
+
+We can use what we've previously learned to select variables and filter cases in multiple steps:
+
+
+```{python}
+planes_df_filtered = planes_df.loc[planes_df['manufacturer'] == 'EMBRAER']
+planes_df_filtered_and_selected = planes_df_filtered[['year', 'engines']]
+planes_df_filtered_and_selected.head()
+```
+
+This is a good way to learn how to select and filter independently, and it also reads very clearly.
+
+### Simultaneous operations
+
+However, we can also do both selecting and filtering in a single step with `.loc`:
+
+
+```{python}
+planes_df.loc[planes_df['manufacturer'] == 'EMBRAER', ['year', 'engines']].head()
+```
+
+This option is more succinct and also reduces programming time. As before, as your filtering and selecting conditions get longer and/or more complex, it can make it easier to read to break it up into separate lines:
+
+
+```{python}
+rows = planes_df['manufacturer'] == 'EMBRAER'
+cols = ['year', 'engines']
+planes_df.loc[rows, cols].head()
+```
+
+### Knowledge check
+
+::: {.callout}
+## Try This
+
+Subset `planes_df` to only include planes made by Boeing and only return the `seats` and `model` variables.
+
+{{< video https://www.youtube.com/embed/gfjn9jc09dg?si=6hwVJp4sLR81wHRQ >}}
+
+:::
+
+## Views vs copies
+
+One thing to be aware of, as you will likely experience it eventually, is the concept of returning a ***view*** (“looking” at a part of an existing object) versus a ***copy*** (making a new copy of the object in memory). This can be a bit abstract and even [this section in the Pandas docs](https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy) states _"...it’s very hard to predict whether it will return a view or a copy."_
+
+The main takeaway is that the most common warning you’ll encounter in Pandas is the `SettingWithCopyWarning`; Pandas raises it as a warning that you might not be doing what you think you’re doing or because the operation you are performing may behave unpredictably.
+
+Let's look at an example. Say the number of seats on this particular plane was recorded incorrectly. Instead of 55 seats it should actually be 60 seats.
+
+
+```{python}
+tailnum_of_interest = planes_df['tailnum'] == 'N10156'
+planes_df[tailnum_of_interest]
+```
+
+
+Instead of using `.iloc`, we could actually filter and select this element in our DataFrame with the following bracket notation.
+
+
+```{python}
+planes_df[tailnum_of_interest]['seats']
+```
+
+
+```{python}
+#| warning: true
+planes_df[tailnum_of_interest]['seats'] = 60
+```
+
+So what's going on? Did our DataFrame get changed?
+
+
+```{python}
+planes_df[tailnum_of_interest]
+```
+
+No it didn’t, even though you probably thought it did. What happened above is that `planes_df[tailnum_of_interest]['seats']` was executed first and returned a copy of the DataFrame, which is an entirely different object. We can confirm by using `id()`:
+
+
+```{python}
+print(f"The id of the original dataframe is: {id(planes_df)}")
+print(f" The id of the indexed dataframe is: {id(planes_df[tailnum_of_interest])}")
+```
+
+We then tried to set a value on this new object by appending `['seats'] = 60`. Pandas is warning us that we are doing that operation on a copy of the original dataframe, which is probably not what we want. To fix this, you need to index in a single go, using `.loc[]` for example:
+
+
+```{python}
+planes_df.loc[tailnum_of_interest, 'seats'] = 60
+```
+
+No error this time! And let’s confirm the change:
+
+
+```{python}
+planes_df[tailnum_of_interest]
+```
+
+::: {.callout-tip}
+The concept of views and copies is confusing and you can read more about it [here](https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy). 
+
+But realize, this behavior is changing in **pandas 3.0**. A new system called **Copy-on-Write** will become the default, and it will prevent chained indexing from working at all — meaning instead of getting the `SettingWithCopyWarning` warning, pandas will simply raise an error.
+
+Regardless, always use `.loc[]` for combined filtering and selecting!
+:::
+
+
+## Summary
+
+In this chapter, you learned how to **zoom in** on the parts of a DataFrame that matter most. Whether you’re interested in just a few variables or a specific set of cases, being able to **subset** your data is a critical first step in any analysis.
+
+We started by giving you a real-world task in Excel or Google Sheets — find aircraft built by Embraer in 2004 or later. That hands-on activity highlighted a common problem: manual filtering doesn’t scale. That’s where Python and `pandas` come in.
+
+In this chapter, you learned how to use pandas for:
+
+* **Selecting columns** using single or multiple variable names
+* **Slicing rows** by index position
+* **Filtering rows** using conditional logic
+* **Combining selection and filtering** with `.loc[]` for efficient subsetting
+
+### 🧾 Quick Reference: Subsetting Techniques
+
+| Task                         | Syntax Example                                | Output Type           |
+| ---------------------------- | --------------------------------------------- | --------------------- |
+| Select one column            | `df["col"]`                                   | Series                |
+| Select multiple columns      | `df[["col1", "col2"]]`                        | DataFrame             |
+| Slice rows by index          | `df.loc[0:4]`                                 | DataFrame             |
+| Filter rows by condition     | `df[df["year"] > 2000]`                       | DataFrame             |
+| Combine filter + select      | `df.loc[df["year"] > 2000, ["col1", "col2"]]` | DataFrame             |
+| Best practice for assignment | `df.loc[cond, "col"] = value`                 | Safe, avoids warnings |
+
+### 🔁 Revisit the Challenge
+
+Now that you've learned how to subset data using `pandas`, go back to the original question:
+
+> **Which aircraft were manufactured by Embraer in 2004 or later?**
+
+This time, solve it using Python instead of a spreadsheet. Use what you’ve learned in this chapter — filtering rows by conditions, and selecting only the columns you need — to create a clean, focused DataFrame.
+
+When you're done, try to answer:
+
+* How many rows matched the condition?
+* What columns did you choose to keep?
+* Could you reuse your code later for different conditions?
+
+This is how data scientists work: writing reusable, scalable code to extract insights from large datasets.
+
+
+## Exercise: Subsetting COVID College Data
+
+In this exercise, you'll apply what you learned to subset the New York Times [college COVID-19 dataset](https://github.com/nytimes/covid-19-data/blob/master/colleges/README.md). The dataset tracks COVID cases reported by colleges across the U.S.
+
+> 📂 Download the data from this [GitHub link](https://github.com/nytimes/covid-19-data/blob/master/colleges/colleges.csv) or load it directly from a local copy if provided.
+
+::: {.callout collapse="true"}
+## Step 1: Load the Data
+
+```{python}
+import pandas as pd
+
+data_url = "https://raw.githubusercontent.com/nytimes/covid-19-data/refs/heads/master/colleges/colleges.csv"
+college_df = pd.read_csv(data_url)
+college_df.head()
+```
+
+This dataset includes many columns, but for this exercise, we're going to focus only on:
+
+* `state`
+* `city`
+* `college`
+* `cases`
+
+:::
+
+
+::: {.callout collapse="true"}
+## Step 2: Subsetting Practice
+
+1. **Select only the columns**: `state`, `city`, `college`, and `cases`.
+2. **Filter the dataset** to show **only colleges in Ohio (`state == "OH"`)** that reported **more than 100 cases**.
+3. **How many Ohio colleges** reported more than 100 cases? *(Hint: Use `.shape` or `len()`)*
+:::
+
+::: {.callout collapse="true"}
+## Step 3: Dig Into a Specific School
+
+1. Filter the dataset to find records where the `college` is **"University of Cincinnati"** (case sensitive).
+2. How many cases were reported by the University of Cincinnati?
+
+::: {.callout collapse="true"}
+## Make It Dynamic
+
+Try making your filtering logic more flexible by defining parameters at the top of your notebook:
+
+```python
+my_state = "OH"
+threshold = 100
+```
+
+Then write code that will:
+
+* Filter for all colleges in `my_state` with `cases` greater than `threshold`
+* Return only the `college` and `cases` columns
+
+Test your code with a few different states and thresholds. Can you reuse it to answer different questions (i.e. *How many colleges in California reported more than 500 Covid cases?*)
+
+:::
