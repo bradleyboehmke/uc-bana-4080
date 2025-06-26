@@ -1,0 +1,511 @@
+# Summarizing Data
+
+> “What we have is a data glut.”
+> — Vernor Vinge, Professor Emeritus of Mathematics, San Diego State University
+
+As datasets grow in size and complexity, the ability to summarize information becomes an essential skill in any data scientist’s toolkit. Summary statistics—like averages, medians, and group-level comparisons—help us cut through the noise and uncover meaningful patterns. Whether you’re reporting results to stakeholders or exploring data to form new hypotheses, knowing how to aggregate data is fundamental.
+
+::: {.callout}
+## Do This First!
+
+To begin this lesson, open the [**Ames Housing dataset**](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_raw.csv) and take a few minutes to explore it. What kinds of summary questions come to mind? Consider what a homeowner, real estate agent, or city planner might want to know. For example:
+
+* Which neighborhood has the highest median sale price?
+* How does the number of bedrooms relate to the average or median sale price?
+* What’s the average sale price per square foot?
+* Are there any neighborhoods with notably low or high prices?
+
+```{python}
+import pandas as pd
+
+ames = pd.read_csv('../data/ames_raw.csv')
+ames.head()
+```
+
+:::
+
+These types of questions will guide your thinking as we explore tools in Pandas for summarizing and grouping data. And by the end of this lesson, you will be able to:
+
+* Compute summary statistics for a single Pandas Series
+* Apply aggregation functions across one or more columns in a DataFrame
+* Generate grouped summary statistics using `groupby()` and related tools
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/10_aggregating_data.ipynb) in Google Colab (or other editor of choice). This interactive notebook lets you run code examples covered in the chapter—and experiment with your own ideas.
+
+👉 Open the [Manipulating Data Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/10_aggregating_data.ipynb).
+:::
+
+## Simple aggregation
+
+In the previous lesson, we learned how to **manipulate data across columns**, typically by performing operations on two or more Series within the same row. For example, we might calculate a total by adding two columns together:
+
+![](images/series-plus-series.png){width="60%" fig-align="center"}
+
+::: {.callout-note}
+These types of operations return the same number of rows as the original DataFrame. This is sometimes called a **window function**—but you can think of it as performing calculations *at the row level*.
+:::
+
+For example, we can calculate a total by adding two columns together with code that looks like this:
+
+```python
+DataFrame['A'] + DataFrame['B']
+```
+
+This adds the values in column `A` to the corresponding values in column `B`, row by row. You could also use other operators (e.g., subtraction, multiplication) as long as the result returns one value per row.
+
+However, sometimes we want to shift our focus from individual rows to the entire column. Instead of computing values *across columns within a row*, we want to **aggregate values across rows within a column**. This is the foundation of many summary statistics—like computing the average, median, or maximum of a column.
+
+![](images/aggregate-series.png){width="50%" fig-align="center"}
+
+::: {.callout-note}
+These types of operations return a single value that summarizes multiple values. This is often referred to as a **summary function**, but you can think of it as aggregating values *across rows*.
+:::
+
+
+### Summarizing a Series
+
+Once we’ve loaded a dataset into a Pandas DataFrame, one of the simplest ways to explore it is by summarizing individual columns—also known as **Series**. Pandas makes this easy with built-in methods like `.sum()`, `.mean()`, and `.median()`.
+
+Suppose we want to compute the total of all home sale prices. We can do that by selecting the `SalePrice` column and using the `.sum()` method:
+
+```{python}
+ames['SalePrice'].sum()
+```
+
+This returns a **single value**, which makes this a summary operation—we’re aggregating values *across all rows* in the `SalePrice` column.
+
+Pandas includes many other helpful summary methods for numerical data:
+
+```{python}
+# Average sale price
+ames['SalePrice'].mean()
+```
+
+```{python}
+# Median sale price
+ames['SalePrice'].median()
+```
+
+```{python}
+# Standard deviation of sale prices
+ames['SalePrice'].std()   
+```
+
+These methods are designed for **quantitative variables** and won’t work as expected on text-based columns.
+
+::: {.callout-tip}
+Pandas will include the data type in the summary statistic output preceeding the actual summary stat (i.e. `np.float64`).  If you want to not see that you can just wrap it with `print()`:
+
+```{python}
+print(ames['SalePrice'].sum())
+```
+
+:::
+
+However, Pandas also provides summary methods that are useful for **categorical variables** (like neighborhood names):
+
+```{python}
+# Number of unique neighborhoods
+ames['Neighborhood'].nunique()
+```
+
+```{python}
+# Most frequent neighborhood
+ames['Neighborhood'].mode()    
+```
+
+These allow us to summarize the structure and frequency of categorical data—just as we do with numbers.
+
+#### Knowledge Check
+
+::: {.callout}
+## Try it yourself:
+
+1. What is the difference between a **window operation** and a **summary operation**?
+2. What are the **mean**, **median**, and **standard deviation** of the `Gr Liv Area` (above ground square footage)?
+3. How many times does each neighborhood appear in the dataset? (Hint: Try using the GenAI code assistant to figure this out. Ask it how to “count value frequency in a Pandas Series.”). Then reflect: Would this count as a summary operation? Why or why not?
+:::
+
+{{< video https://www.youtube.com/embed/pBFe_Y1Yhbk?si=9BJCNda2E-v9Btsz >}}
+
+
+### The `describe()` Method
+
+When you're first getting familiar with a dataset, it's helpful to quickly view a variety of summary statistics all at once. Pandas provides the `.describe()` method for exactly this purpose.
+
+For numeric variables, `.describe()` returns common summary statistics such as the count, mean, standard deviation, min, and max values:
+
+```{python}
+ames['SalePrice'].describe()
+```
+
+This is especially useful during **exploratory data analysis (EDA)** when you're trying to get a sense of a column’s range, distribution, and central tendency.
+
+::: {.callout-note}
+The behavior of `.describe()` changes based on the data type of the Series.
+:::
+
+For categorical variables, `.describe()` provides a different summary, showing the number of non-null entries, number of unique values, most frequent value, and its frequency:
+
+```{python}
+ames['Neighborhood'].describe()
+```
+
+In both cases, `.describe()` gives you a quick and informative overview—whether you're working with numbers or categories.
+
+
+### Summarizing a DataFrame
+
+So far, we’ve focused on summarizing individual columns (Series). But in many cases, we want to explore **multiple variables at once**. Fortunately, Pandas allows us to apply the same summary methods to a subset of columns in a DataFrame.
+
+First, recall how to select multiple columns using double brackets and a list of column names:
+
+```{python}
+ames[['SalePrice', 'Gr Liv Area']]
+```
+
+This returns a new DataFrame with just the `SalePrice` and `Gr Liv Area` columns.
+
+We can now apply summary methods—just like we did with a single Series:
+
+```{python}
+ames[['SalePrice', 'Gr Liv Area']].mean()
+```
+
+```{python}
+ames[['SalePrice', 'Gr Liv Area']].median()
+```
+
+These methods return a **Series object**, where:
+
+* The **index** contains the column names, and
+* The **values** are the summary statistics (e.g., mean or median) for each column.
+
+This approach is useful when you're interested in comparing summary values across several numeric variables at once.
+
+::: {.callout-note}
+Even though you're summarizing multiple columns, each summary method still operates column-by-column under the hood.
+:::
+
+
+### The `.agg()` Method
+
+So far, we’ve used built-in summary methods like `.mean()` and `.median()` to compute statistics on one or more columns. While this approach works well, it has a few important limitations when applied to DataFrames:
+
+1. You can only apply **one summary method at a time**.
+2. The same method gets applied to **every selected column**.
+3. The result is returned as a **Series**, which can be harder to work with later.
+
+To overcome these limitations, Pandas provides a more flexible tool: the `.agg()` method (short for `.aggregate()`).
+
+Here’s a basic example:
+
+```{python}
+ames.agg({
+    'SalePrice': ['mean']
+})
+```
+
+This returns a **DataFrame** rather than a Series—and gives us more control over how we summarize each column.
+
+Let’s break it down:
+
+* We pass a **dictionary** to `.agg()`
+* The **keys** are column names
+* The **values** are lists of summary functions we want to apply
+
+::: {.callout-tip}
+The `.agg()` method is just shorthand for `.aggregate()`. You can use either version—they’re equivalent!
+:::
+
+```{python}
+# Verbose version
+ames.aggregate({
+    'SalePrice': ['mean']
+})
+
+# Concise version
+ames.agg({
+    'SalePrice': ['mean']
+})
+```
+
+We can easily extend this to include multiple columns:
+
+```{python}
+ames.agg({
+    'SalePrice': ['mean'],
+    'Gr Liv Area': ['mean']
+})
+```
+
+And because the values in the dictionary are **lists**, we can apply multiple summary functions to each column:
+
+```{python}
+ames.agg({
+    'SalePrice': ['mean', 'median'],
+    'Gr Liv Area': ['mean', 'min']
+})
+```
+
+::: {.callout-note}
+You don’t have to apply the same summary functions to every variable. If a summary function isn’t applied to a particular column, Pandas will return a `NaN` in that spot.
+:::
+
+The `.agg()` method is especially useful when you want to apply **different** aggregations to **different** columns and get the results in a clean, tabular format.
+
+
+#### Knowledge Check
+
+::: {.callout}
+## Try it yourself:
+
+1. Fill in the blanks to compute the average number of rooms above ground (`TotRms AbvGrd`) and the average number of bedrooms above ground (`Bedroom AbvGr`). What type of object is returned?
+
+   ```python
+   ames[['______', '______']].______()
+   ```
+
+2. Use the `.agg()` method to complete the same computation as above. How does the output differ?
+3. Fill in the blanks in the below code to calculate the minimum and maximum year built (`Year Built`) and the mean and median number of garage stalls (`Garage Cars`):
+
+   ```python
+   ames.agg({
+       '_____': ['min', '_____'],
+       '_____': ['_____', 'median']
+   })
+   ```
+
+:::
+
+{{< video https://www.youtube.com/embed/SBpiaituv5w?si=1ZKft3y1uooq4bgr >}}
+
+
+### The `describe()` Method
+
+While `.agg()` is a powerful and flexible tool for customized summaries, the `.describe()` method offers a **quick and convenient overview** of your entire DataFrame—making it especially useful during **exploratory data analysis (EDA)**.
+
+Try running `.describe()` on the full Ames dataset:
+
+```{python}
+ames.describe()
+```
+
+By default, Pandas will summarize only the **numeric columns**, returning statistics like count, mean, standard deviation, min, max, and quartiles.
+
+::: {.callout-warning}
+But wait, what’s missing from the output?
+
+String (object) columns — like `Neighborhood` — are excluded!
+:::
+
+If you want to include other variable types, you can use the `include` parameter to tell Pandas what to summarize. For example:
+
+```{python}
+ames.describe(include=['int', 'float', 'object'])
+```
+
+This will generate descriptive statistics for **all numeric and categorical variables**, including counts, unique values, top categories, and their frequencies.
+
+::: {.callout-tip}
+You can also use `include='all'` to summarize every column, regardless of type. Just be aware that this can result in a mix of numeric and non-numeric statistics in the same table.
+:::
+
+The `.describe()` method is a fast and effective way to get a high-level snapshot of your dataset—perfect for early-stage data exploration.
+
+
+## Grouped Aggregation
+
+So far, we’ve focused on **summary operations** that collapse an entire column—or a subset of columns—into a single result. But in many real-world analyses, we’re interested in summarizing **within groups** rather than across the whole dataset.
+
+This is called a **grouped aggregation**. Instead of collapsing a DataFrame into a single row, we collapse it into **one row per group**.
+
+For example, we might want to compute:
+
+* Total home sales *by neighborhood*
+* Average square footage *by number of bedrooms*
+* Median sale price *by year*
+* Maximum temperature *by month*
+
+Here’s a simple illustration: suppose we want to compute the **sum of column `B` for each unique category in column `A`**:
+
+![](images/summarizing-by-groups.png){width="80%" fig-align="center"}
+
+### The Groupby Model
+
+Grouped aggregation in Pandas always follows the same three-step process:
+
+1. **Group** the data using `groupby()`
+2. **Apply** a summary method like `.sum()`, `.agg()`, or `.describe()`
+3. **Return** a DataFrame of group-level summaries
+
+
+![](images/model-for-grouped-aggs.png){width="80%"}
+
+### Creating a Grouped Object
+
+We use the `groupby()` method to define how we want to group the data. For example, to group homes by `Neighborhood`:
+
+```{python}
+ames_grp = ames.groupby('Neighborhood')
+```
+
+This creates a **GroupBy object**—it doesn’t return a DataFrame yet, but rather an internal structure that maps each group to its corresponding rows.
+
+```{python}
+type(ames_grp)
+```
+
+You can inspect the structure of the groups:
+
+```{python}
+ames_grp.groups
+```
+
+And access a specific group:
+
+```{python}
+# Get the Bloomington neighborhood group
+ames_grp.get_group('Blmngtn').head()
+```
+
+### Applying Aggregations to Groups
+
+Once a group is defined, you can apply the same aggregation methods we used earlier:
+
+```{python}
+ames.groupby('Neighborhood').agg({'SalePrice': ['mean', 'median']}).head()
+```
+
+This returns a DataFrame where each row corresponds to a different neighborhood, and the columns represent the aggregated values.
+
+### Groups as Index vs. Variables
+
+::: {.callout-note}
+By default, the grouped variable becomes the **index** of the resulting DataFrame.
+:::
+
+```{python}
+ames.groupby('Neighborhood').agg({'SalePrice': ['mean', 'median']}).index
+```
+
+This is the most efficient default behavior in Pandas. However, if you’d prefer the group column to remain a **regular column** instead of becoming the index, you can set `as_index=False`:
+
+```{python}
+ames.groupby('Neighborhood', as_index=False).agg({'SalePrice': ['mean', 'median']}).head()
+```
+
+::: {.callout-tip}
+Using `as_index=False` can make your results easier to merge with other DataFrames or write to CSV later.
+:::
+
+
+### Grouping by Multiple Variables
+
+You can also group by **more than one variable**. For example, to compute the average sale price by both `Neighborhood` and `Yr Sold`:
+
+```{python}
+ames.groupby(['Neighborhood', 'Yr Sold'], as_index=False).agg({'SalePrice': 'mean'})
+```
+
+This returns one row for each combination of `Neighborhood` and `Yr Sold`, giving you more granular insights.
+
+### Knowledge check
+
+::: {.callout}
+## Try it yourself:
+
+1. Reframe the following question using Pandas' grouped aggregation syntax. Which Pandas functions will you need? 
+   
+   > What is the **average above-ground square footage** of homes, grouped by **neighborhood** and **number of bedrooms**?
+
+2. Now compute the result using the Ames Housing dataset. 🔍 Hint...
+   - `Gr Liv Area` = above-ground square footage  
+   - `Neighborhood` = neighborhood name  
+   - `Bedroom AbvGr` = number of bedrooms  
+
+3. Using your results from #2, identify any **neighborhoods** where **1-bedroom homes** have an average of **more than 1500 square feet** above ground. How many neighborhoods meet this condition?
+:::
+
+{{< video https://www.youtube.com/embed/sfNkXNP9-mY?si=CRjeSJcf_oqIuUJB >}}
+
+## Summary
+
+In this chapter, we explored how to summarize and aggregate data using Pandas—a foundational skill in any data analysis workflow. You learned how to compute summary statistics on individual columns (Series), multiple columns in a DataFrame, and across groups using the powerful `groupby()` method. We introduced tools like `.mean()`, `.median()`, `.describe()`, and `.agg()` to help extract key insights from both numerical and categorical variables. These techniques allow us to make sense of large datasets by reducing complexity and identifying trends, patterns, and outliers.
+
+In the chapters ahead, we’ll continue building on these data wrangling skills. You’ll learn how to combine datasets using joins, reshape data through pivoting and tidying, and prepare data for modeling and visualization. Mastering these techniques will give you the ability to transform raw data into a clean, structured form ready for deeper analysis.
+
+
+## Exercise: Aggregating COVID College Data
+
+Now that you’ve practiced subsetting and filtering, let’s dig deeper by computing some summary statistics from the [college COVID-19 dataset](https://github.com/nytimes/covid-19-data/blob/master/colleges/colleges.csv).
+
+::: {.callout collapse="true"}
+## Step 1: Load the Data
+
+```{python}
+import pandas as pd
+
+data_url = "https://raw.githubusercontent.com/nytimes/covid-19-data/refs/heads/master/colleges/colleges.csv"
+college_df = pd.read_csv(data_url)
+college_df.head()
+```
+
+:::
+
+::: {.callout collapse="true"}
+## Step 2: Compute the average number of `cases` reported across all colleges
+
+* What function will help you find the average (mean) value of a column?
+* What is the average value of `cases`?
+
+```python
+college_df['cases'].____()
+```
+
+:::
+
+::: {.callout collapse="true"}
+## Step 3: Compute the total number of `cases` and total number of `cases_2021`
+
+* What is the average value of `cases`?
+* How do these two numbers compare? Why might they be different? Hint: Read the variable definitions in the [NYT GitHub repo](https://github.com/nytimes/covid-19-data/tree/master/colleges). Are these columns measuring the same thing?
+
+```python
+college_df[['cases', 'cases_2021']].____()
+```
+
+:::
+
+::: {.callout collapse="true"}
+## Step 4: Compute the total number of cases by state
+
+* Use `groupby()` and `sum()` to find the total cases reported by colleges **in each state**.
+* Which state had the **most** cases?
+* Which had the **fewest**?
+
+```python
+college_df.groupby('state')[['cases']].____()
+```
+
+:::
+
+
+::: {.callout collapse="true"}
+## Step 5: Focus on colleges in Ohio
+
+Filter the data to show only colleges in Ohio. Then compute:
+
+* The **total number of cases**
+* The **average (mean)** number of cases across Ohio colleges
+
+```python
+ohio_df = college_df[college_df['state'] == '____']
+
+# Your aggregations go here
+```
+
+:::
