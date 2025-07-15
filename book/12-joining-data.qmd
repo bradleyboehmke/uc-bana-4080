@@ -1,0 +1,458 @@
+# Relational data
+
+In many data projects, we work with more than one table. A product’s description might be in one table, customer demographics in another, and transaction records in yet another. To make sense of these interconnected datasets, we need to combine them in ways that preserve the relationships between them.
+
+This is the world of **relational data**—data stored in multiple related tables. Each table gives us a piece of the story, but we only get a full picture when we connect the pieces together.
+
+To do that, we use **joins**, which allow us to merge tables using key variables they have in common. In this chapter, we’ll build up your understanding of joins in pandas and give you hands-on experience combining data from multiple sources.
+
+::: {.callout collapse="true"}
+## Try It: Exploring Relationships Between Tables
+
+Before we dive into code, let’s step into the mindset of a data wrangler.
+
+We’ll work with two tables so go ahead and download them:
+
+* [transactions](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/transactions.csv): item-level purchases made by households at a retail grocery store
+* [demographics](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/demographics.csv): attributes of each household, including income, age, and household size
+
+Open both of these tables in Python or export them to Excel/Google Sheets. As you explore them, consider:
+
+1. What kinds of questions could you answer by combining these two tables?
+   * For example: Do larger households purchase more per trip?
+   * Do younger households spend more on snacks?
+   * Is there a difference in average spending by income level?
+2. What variable(s) would you need to merge the two tables?
+3. What type of relationship do you expect? Do you think each household has many transactions or do you think there will be only one transaction for each household?
+4. **Challenge**: Try performing the merge in Excel or Google Sheets. What challenges do you encounter?
+:::
+
+
+By the end of this lesson you'll be able to:
+
+* Use various mutating joins to combine variables from two tables.
+* Join two tables that have differing common key variable names.
+* Include an indicator variable while joining so you can filter the joined data for follow-on analysis.
+
+Before we dive into code, watch this short video for a practical overview of how to join DataFrames in pandas. It walks through key concepts like different types of joins and when to use them. After watching, you’ll be ready to roll up your sleeves and apply these techniques in the hands-on examples that follow.
+
+{{< video https://www.youtube.com/watch?v=iYWKfUOtGaw >}}
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/10_aggregating_data.ipynb) in Google Colab (or other editor of choice). This interactive notebook lets you run code examples covered in the chapter—and experiment with your own ideas.
+
+👉 Open the [Manipulating Data Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/10_aggregating_data.ipynb).
+:::
+
+## Prerequisites
+
+Before we dive into real-world data, let's start by loading the `pandas` library. This will give us access to the join functions we'll be using throughout the chapter.
+
+```{python}
+import pandas as pd
+```
+
+To build your intuition around joins, we’ll begin with two very simple DataFrames, `x` and `y`. In these examples:
+
+* The **colored column** represents the **key** variable used to match rows between tables.
+* The **gray column** represents the **value** column—this is the information that gets carried along in the merge.
+
+::: {#fig-join-dfs}
+![Simple Example DFs](images/original-dfs-join-chapter.png){width="50%" fig-align="center"}
+
+Two simple DataFrames with a shared key column.
+:::
+
+Here’s how we’ll create them in code:
+
+```{python}
+x = pd.DataFrame({'id': [1, 2, 3], 'val_x': ['x1', 'x2', 'x3']})
+y = pd.DataFrame({'id': [1, 2, 4], 'val_y': ['y1', 'y2', 'y4']})
+```
+
+These examples will help you understand what joins do and how they behave before we move on to working with larger, more complex tables.
+
+However, we will also build upon the simple examples by using various data sets from the **completejourney_py** library. This library provides access to data sets characterizing household level transactions over one year from a group of 2,469 households who are frequent shoppers at a grocery store.
+
+There are eight built-in data sets available in this library. The data sets include:
+
+* **transactions**: item-level purchases made by households at a retail grocery store
+* **demographics**: household demographic data (age, income, family size, etc.)
+* **products**: product metadata (brand, description, etc.)
+* **campaigns**: campaigns received by each household
+* **campaign_descriptions**: campaign metadata (length of time active)
+* **coupons**: coupon metadata (UPC code, campaign, etc.)
+* **coupon_redemptions**: coupon redemptions (household, day, UPC code, campaign)
+
+This is a Python equivalent of the R package [completejourney](https://github.com/bradleyboehmke/completejourney). The R package has a full guide to get you acquainted with the various data set schemas, which you can read [here](https://bradleyboehmke.github.io/completejourney/articles/completejourney.html).
+
+```{python}
+from completejourney_py import get_data
+
+# get_data() provides a dictionary of several DataFrames
+cj_data = get_data()
+cj_data.keys()
+```
+
+```{python}
+# We can check out the transactions data with the following
+cj_data['transactions'].head()
+```
+
+::: {.callout}
+## TODO
+
+Take some time to read about the completejourney data set schema [here](https://bradleyboehmke.github.io/completejourney/articles/completejourney.html#dataset-details).
+
+1. What different data sets are available and what do they represent?
+2. What are the common variables between each table?
+:::
+
+
+## 🔑 Understanding Keys
+
+To combine two tables, we need a way to tell pandas how rows in one table relate to rows in another. That’s where **keys** come in.
+
+A **key** is one or more columns used to match rows between two tables. These columns typically contain identifiers that link observations—like customer IDs, product codes, or dates.
+
+There are two main types of keys you'll encounter:
+
+* A **primary key** uniquely identifies each row within its own table.
+* A **foreign key** connects to a primary key in another table, creating a relationship between the two.
+
+::: {.callout-note}
+For example:
+
+* In the `transactions` table, `household_id` acts as a **foreign key**—it tells us which household made the purchase.
+* In the `demographics` table, `household_id` is a **primary key**—each household appears only once.
+:::
+
+Together, these keys form a **relation**. In most cases, the relationship is **one-to-many**: one household can have many transactions, but each transaction belongs to only one household. Occasionally, you’ll encounter **one-to-one** relationships, where each row in one table maps to exactly one row in another.
+
+When data is cleaned appropriately the keys used to match two tables will be commonly named. For example, the variable that can link our `x` and `y` data sets is named `id`:
+
+```{python}
+x.columns.intersection(y.columns)
+```
+
+We can easily see this by looking at the `x` and `y` data but when working with larger data sets this becomes more appropriate than just viewing the data. For example, we can easily identify the common columns in the **completejourney_py** `transactions` and `demographics` data:
+
+```{python}
+transactions = cj_data['transactions']
+demographics = cj_data['demographics']
+
+transactions.columns.intersection(demographics.columns)
+```
+
+
+::: {.callout-note}
+## A Note on Column Names
+
+While it's common for keys to have the same name in both tables (like `id`, `household_id`, or `product_id`), that's not always the case. For example, our household identifier could be named `household_id` in the transaction data but be `hshd_id` in the demographics table. Although the names differ, they represent the same information. When column names differ, you can still join the tables—you just need to tell pandas which columns to use, which we will discuss later.
+:::
+
+## Mutating Joins
+
+When working with multiple DataFrames, we often want to combine information from different sources based on a shared key. A **mutating join** allows us to do exactly that—it matches rows across two tables based on a key and brings in additional columns from one table to the other.
+
+In this section, you'll learn how to use pandas to perform various types of joins that are essential for working with relational data.
+
+### Types of Joins
+
+There are several types of joins, each serving a different purpose:
+
+* **Inner join**: Keeps only the rows with keys that match in both tables.
+* **Left join**: Keeps all rows from the left table and brings in matching rows from the right.
+* **Right join**: Keeps all rows from the right table and brings in matching rows from the left.
+* **Full outer join**: Keeps all rows from both tables.
+
+::: {.callout-note}
+In pandas, you can join DataFrames using either `.join()` or `.merge()`. While `.join()` is designed for joining on indexes, `.merge()` is more flexible and allows joining on one or more columns. We'll use `.merge()` throughout this chapter.
+:::
+
+### Inner Join
+
+An **inner join** returns only the rows where the key exists in both DataFrames. This is the most restrictive type of join.
+
+::: {#fig-inner-join}
+![Inner join](images/join-inner.png){width="50%" fig-align="center"}
+
+Inner join ([source](https://r4ds.had.co.nz/relational-data.html)).
+:::
+
+```{python}
+x.merge(y, on="id", how="inner")
+```
+
+::: {.callout-note}
+Only rows with matching values in both `x` and `y` are retained. In our example, only `id` values 1 and 2 appear in both tables.
+:::
+
+### Outer Joins
+
+An inner join keeps observations that appear in both tables. However, we often want to retain ***all*** observations in at least one of the tables. Consequently, we can apply various **outer joins** to retain observations that appear in at least one of the tables. There are three main types of outer joins:
+
+* A left join keeps all observations in `x`.
+* A right join keeps all observations in `y`.
+* A full join keeps all observations in `x` and `y`.
+
+These joins work by adding `NaN` in rows where non-matching information exists:
+
+::: {#fig-outer-join}
+![Examples of outer joins](images/join-outer.png){width="50%" fig-align="center"}
+
+Difference in left join, right join, and outer join procedures ([source](https://r4ds.had.co.nz/relational-data.html)).
+:::
+
+#### Left Join
+
+A **left join** keeps all rows from the left DataFrame (`x`) and adds matching rows from the right DataFrame (`y`). If no match is found, the result will contain `NaN` for the missing values.
+
+```{python}
+x.merge(y, on="id", how="left")
+```
+
+#### Right Join
+
+A **right join** is similar to a left join, but it retains all rows from the right DataFrame (`y`).
+
+```{python}
+x.merge(y, on="id", how="right")
+```
+
+::: {.callout-tip}
+Should I use a right join, or a left join? To answer this, ask yourself *“which DataFrame should retain all of its rows?”* - and use this one as the baseline. A left join keeps all the rows in the first (leftside) DataFrame written in the command, whereas a right join keeps all the rows in the second (rightside) DataFrame.
+:::
+
+#### Full Outer Join
+
+A **full outer join** retains all rows from both DataFrames. Where there are no matches, it fills in `NaN` for missing values.
+
+```{python}
+x.merge(y, on="id", how="outer")
+```
+
+::: {.callout-note}
+This is the most inclusive join. It's useful when you don’t want to lose any data.
+:::
+
+## Working with Differently Named Keys
+
+So far, the keys we’ve used to join two DataFrames have had the same name. This was encoded by using `on='id'`. However, having keys with the same name is not a requirement. But what happens we our common key variable is named differently in each DataFrame?
+
+For example:
+
+```{python}
+a = pd.DataFrame({'id_a': [1, 2, 3], 'val_a': ['x1', 'x2', 'x3']})
+b = pd.DataFrame({'id_b': [1, 2, 4], 'val_b': ['y1', 'y2', 'y4']})
+```
+
+In this case, since our common key variable has different names in each table (`id_a` in `a` and `id_b` in `b`), our inner join function doesn’t know how to join these two DataFrames and an error results.
+
+::: {.callout-warning collapse="true"}
+## Example merge error
+
+```{python}
+#| error: true
+a.merge(b)
+```
+:::
+
+When this happens, we can explicitly tell our join function to use unique key names in each DataFrame as a common key with the `left_on` and `right_on` arguments:
+
+```{python}
+a.merge(b, left_on="id_a", right_on="id_b")
+```
+
+
+## A Larger Example with Complete Journey Data
+
+Let’s apply what we’ve learned to real data from the `completejourney_py` package.
+
+Suppose we want to add product details to each transaction. That means we'll join the `transactions` and `products` DataFrames. Because we want to retain all transaction records, even if product details are missing, we’ll use a **left join**.
+
+First, check the column names:
+
+```{python}
+cj_data = get_data()
+transactions = cj_data["transactions"]
+products = cj_data["products"]
+
+print(f'transactions columns: {transactions.columns}')
+print(f'products columns: {products.columns}')
+```
+
+And we can find if a common column name exists:
+
+```{python}
+transactions.columns.intersection(products.columns)
+```
+
+We see that both DataFrames share the `product_id` column. This aligns to the [data dictionary](https://bradleyboehmke.github.io/completejourney/articles/completejourney.html#dataset-details) so we can trust this is the accurate common key. We can now perform a left join using`product_id` as the common key.
+
+::: {.callout-tip}
+Joins add new variables to the far right of the resulting DataFrame. If you're working in a wide table, you may need to scroll to see the added columns.
+:::
+
+```{python}
+transactions.merge(products, on="product_id", how="left").head()
+```
+
+This has now added product information to each transaction. Consequently, if we wanted to get the total sales across the meat `department` but summarized at the `product_category` level so that we can identify which products generate the greatest sales we could follow this joining procedure with additional skills we learned in previous lessons:
+
+```{python}
+(
+    transactions
+    .merge(products, how='left', on='product_id')
+    .query("department == 'MEAT'")
+    .groupby('product_category', as_index=False)
+    .agg({'sales_value': 'sum'})
+    .sort_values(by='sales_value', ascending=False)
+)
+```
+
+### Knowledge check
+
+::: {.callout}
+## Try it yourself:
+
+1. Join the `transactions` and `demographics` data so that you have household demographics for each transaction. Now compute the total sales by `age` category to identify which age group generates the most sales.
+2. Use successive joins to join `transactions` with `coupons` and then with `coupon_redemptions`. Use the proper join that will only retain those transactions that have coupon and coupon redemption data.
+
+Try the above yourself and then see my approach here:
+
+{{< video https://www.youtube.com/watch?v=oQTC9TS3r9I >}}
+:::
+
+## Merge Indicator
+
+You can use the `indicator` argument to add a special column called `_merge` that shows where each row in the joined table came from. The values in `_merge` will be:
+
+* `'left_only'` — the row came only from the left table
+* `'right_only'` — the row came only from the right table
+* `'both'` — the row had a match in both tables
+
+This is helpful when you're trying to understand or debug the result of a join:
+
+```{python}
+x.merge(y, how='outer', indicator=True)
+```
+
+This feature is also useful when filtering rows based on whether they had a match. For example:
+
+::: {.callout}
+## **Scenario**: Your manager asks,
+
+> *“Of all our transactions, how many are from households that we **don’t** have demographic information for?”*
+:::
+
+You can answer this by performing an outer join between `transactions` and `demographics`, then filtering for rows with `_merge == 'left_only'`:
+
+```{python}
+# Total number of transactions
+transactions.shape
+```
+
+```{python}
+# Transactions without matching demographic info
+(
+    transactions
+    .merge(demographics, how='outer', indicator=True)
+    .query("_merge == 'left_only'")
+).shape
+```
+
+In this case, 640,457 transactions (about 43%) come from households without demographic information.
+
+### 🔍 Knowledge Check
+
+::: {.callout}
+## Try it yourself:
+
+1. Using the `products` and `transactions` tables, how many products have been sold?  
+   How many products are in inventory but have **not** appeared in any transaction?
+2. Using `demographics` and `transactions`, which income group buys the highest **total quantity** of goods?
+
+Try the above yourself and then see my approach here:
+
+{{< video https://www.youtube.com/watch?v=pyc9MeHN4AQ >}}
+:::
+
+## Summary
+
+In this chapter, you explored how to work with **relational data**—data that lives across multiple, related tables. You learned how to use **joins** in pandas to combine these tables using shared key variables, allowing you to answer more complex and meaningful questions.
+
+You practiced:
+
+* Identifying and working with **keys** (primary and foreign).
+* Performing **mutating joins** including `inner`, `left`, `right`, and `full outer` joins.
+* Handling **differently named key columns** using `left_on` and `right_on`.
+* Using the **merge indicator** to understand which rows matched or didn’t match between tables.
+* Applying these techniques to real retail transaction data using the `completejourney_py` package.
+
+Relational data techniques give you the power to piece together a fuller picture of what's happening in your data. But once you've wrangled the data into shape, the next challenge is making your findings clear and compelling.
+
+In the next chapter, we’ll shift gears and explore **data visualization**—learning how to communicate insights effectively using Python plotting libraries like `matplotlib` and `seaborn`.
+
+
+## Exercise: Understanding Shopping Behavior
+
+Use the datasets provided by the `completejourney_py` package to complete the following exercises. These tasks will help you practice joining tables, filtering data, and computing summary statistics. If you're unfamiliar with the structure of these datasets, take a few minutes to review the [Complete Journey data dictionary](https://bradleyboehmke.github.io/completejourney/articles/completejourney.html) to understand how the tables relate to one another.
+
+
+::: {.callout collapse="true"}
+## 1. Total Sales by Age Group (With a Join)
+
+Join the `transactions` and `demographics` tables. Then compute the **total `sales_value`** by `age` group.
+
+* Which age group generates the most total sales?
+* Bonus: How does this change if you only consider transactions over \$5?
+:::
+
+::: {.callout collapse="true"}
+## 2. What Are Families Buying?
+
+Using the `transactions`, `products`, and `demographics` tables:
+
+* Focus only on households with **3 or more members** (use `household_size` from `demographics`).
+* Identify the **top 5 most frequently purchased product categories** among these households.
+* What percent of their purchases come from the `MEAT` department?
+:::
+
+::: {.callout collapse="true"}
+## 3. Coupon-Driven Purchases
+
+Join `transactions`, `coupon_redemptions`, and `coupons` together. Then:
+
+* Find the **total number of coupon redemptions** by `campaign`.
+* Which campaign resulted in the **highest total `sales_value`**?
+:::
+
+::: {.callout collapse="true"}
+## 4. High Spenders Without Demographics
+
+From your existing prompt:
+
+* Identify households with **total sales ≥ \$100**.
+* Among them, how many **do not appear** in the `demographics` table?
+* What percent of all \$100+ spenders are missing demographic info?
+
+**Tip**: Use the `indicator=True` argument to help with this.
+
+:::
+
+::: {.callout collapse="true"}
+## 5. Front Display Effectiveness
+
+Join `promotions` with `transactions` and `products`.
+
+* Filter to products that were part of a **front-of-store display** (`display_location == 1`).
+* For those products, compute:
+  * Total `sales_value`
+  * Total `quantity` sold
+  * Top 3 departments (by sales)
+
+How do these compare to products not on display?
+:::
