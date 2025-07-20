@@ -1,0 +1,354 @@
+# Interactive Data Visualization with Bokeh
+
+In the previous two lessons, you learned how to visualize data using **pandas**' high-level plotting tools for quick insights, and **matplotlib** for more detailed and customized charting.
+
+In this lesson, you’ll take your visualization skills to the next level with [**Bokeh**](https://bokeh.pydata.org/), a Python library designed for building **interactive visualizations in modern web browsers**. With Bokeh, you can create everything from simple scatterplots to fully-featured, dynamic dashboards — all in Python, no JavaScript required.
+
+Tools like Bokeh allow you to move beyond static charts and into the world of interactive, responsive data experiences. This shift enables visual storytelling, where users can explore data themselves, and helps you deliver more engaging, stakeholder-friendly output. Whether you're sharing insights with a non-technical audience or designing a data dashboard, Bokeh gives you the flexibility and power to communicate results in more impactful ways.
+
+Although Bokeh is considered a lower-level visualization API than pandas or seaborn, it strikes a great balance between ease of use and customizability. You’ll find it intuitive to get started with and incredibly powerful as you go deeper.
+
+::: {.callout}
+## Try This First!
+Check out some [example Bokeh interactive visualizations](https://demo.bokeh.org). Spend 1–2 minutes exploring it—hover over elements, interact with sliders, or zoom in on charts.
+
+**Now reflect:** How does this experience compare to the static charts you created with pandas or matplotlib? What stood out to you?
+:::
+
+In this chapter, you’ll get hands-on experience with Bokeh and learn how to create and customize interactive visualizations for the web. By the end of this lesson you will be able to:
+
+* Use Bokeh’s figure interface to build interactive charts from scratch.
+* Add hover tools, legends, and other interactive components to your plots.
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/14_data_viz_bokeh.ipynb) in Google Colab (or other editor of choice). This interactive notebook lets you run code examples covered in the chapter—and experiment with your own ideas.
+
+👉 Open the [Bokeh Data Viz Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/14_data_viz_bokeh.ipynb).
+:::
+
+## Prerequisites
+
+Most of the functionality of Bokeh is accessed through submodules such as `bokeh.plotting` and `bokeh.models`. Also, when using Bokeh in a notebook we need to run `bokeh.io.output_notebook()` to make our plots viewable and interactive.
+
+```{python}
+import pandas as pd
+
+# Our main plotting package (must have explicit import of submodules)
+import bokeh.io
+import bokeh.models
+import bokeh.plotting
+import bokeh.transform
+
+# Enable viewing Bokeh plots in the notebook
+bokeh.io.output_notebook()
+```
+
+We'll use a [cleaned up version of the Ames, IA housing data](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_clean.csv) for illustration purposes:
+
+```{python}
+df = pd.read_csv('../data/ames_clean.csv')
+df.head()
+```
+
+## Bokeh's grammar and our first plot with Bokeh
+
+Constructing a plot with Bokeh consists of four main steps.
+
+1. Creating a figure on which to populate **glyphs** (symbols that represent data, e.g., dots for a scatter plot). Think of this figure as a "canvas" which sets the space on which you will "paint" your glyphs.
+2. Defining a data source that is the reference used to place the glyphs.
+3. Choose the kind of glyph you would like.
+4. Refining the plot by adding titles, formatted axis labels, or even interactive components.
+
+After completing these steps, you need to render the graphic.
+
+Let's go through these steps to generate an interactive scatter plot of home sales price and total living area. So you have the concrete example in mind, the final graphic will look like this:
+
+```{python}
+#| echo: false
+
+# Create the figure, stored in variable `p`
+p = bokeh.plotting.figure(
+    frame_width=700,
+    frame_height=350,
+    title='Relationship between home sale price and living area \nAmes, Iowa (2006-2010)',
+    x_axis_label='Living Area (Square feet)',
+    y_axis_label='Sale Price'
+)
+
+source = bokeh.models.ColumnDataSource(df)
+
+p.scatter(
+    source=source,
+    x='GrLivArea',
+    y='SalePrice',
+    alpha=0.25
+)
+
+p.yaxis.formatter = bokeh.models.NumeralTickFormatter(format="$,")
+p.xaxis.formatter = bokeh.models.NumeralTickFormatter(format=",")
+
+tooltips = [("Sale Price","@SalePrice"),("SqFt","@GrLivArea")]
+hover = bokeh.models.HoverTool(tooltips=tooltips, mode='mouse')
+p.add_tools(hover)
+
+bokeh.io.show(p)
+```
+
+1\. Our first step is creating a figure, our "canvas." In creating the figure, we are implicitly thinking about what kind of representation for our data we want. That is, we have to specify axes and their labels. We might also want to specify the title of the figure, whether or not to have grid lines, and all sorts of other customizations. Naturally, we also want to specify the size of the figure.
+
+(Almost) all of this is accomplished in Bokeh by making a call to `bokeh.plotting.figure()` with the appropriate keyword arguments.
+
+```{python}
+# Create the figure, stored in variable `p`
+p = bokeh.plotting.figure(
+    frame_width=700,
+    frame_height=350,
+    title='Relationship between home sale price and living area \nAmes, Iowa (2006-2010)',
+    x_axis_label='Living Area (Square feet)',
+    y_axis_label='Sale Price'
+)
+```
+
+There are many more keyword attributes you can assign, including [all of those listed in the Bokeh Plot class](https://bokeh.pydata.org/en/latest/docs/reference/models/plots.html#bokeh.models.plots.Plot) and [the additional ones listed in the Bokeh Figure class](https://bokeh.pydata.org/en/latest/docs/reference/plotting.html#bokeh.plotting.figure.Figure).
+
+2\. Now that we have set up our canvas, we can decide on the data source. It is convenient to create a **`ColumnDataSource`**, a special Bokeh object that holds data to be displayed in a plot. (Later on we will see that we can change the data in a `ColumnDataSource` and the plot will automatically update!) Conveniently, we can instantiate a `ColumnDataSource` directly from a Pandas data frame.
+
+```{python}
+source = bokeh.models.ColumnDataSource(df)
+```
+
+::: {.callout-note}
+We could also instantiate a data source using a dictionary of arrays, like...
+
+`source = bokeh.models.ColumnDataSource(dict(x=[1, 2, 3, 4], y=[1, 4, 9, 16]))`
+:::
+
+3\. Since we are creating a scatter plot we will choose scatter as our glyph. This kind of glyph requires that we specify  which column of the data source will serve to place the glyphs along the $x$-axis and which will serve to place the glyphs along the $y$-axis. We choose the `'GrLivArea'` column to specify the $x$-coordinate of the glyph and the `'SalePrice'` column to specify the $y$-coordinate. Since there are a lot of observations clustered together we can control overplotting by adjusting the transparency with `alpha`.
+
+We accomplish step 3 by calling one of the [**glyph methods**](https://docs.bokeh.org/en/latest/docs/user_guide/plotting.html#scatter-markers) of the Bokeh `Figure` instance, `p`. Since we are choosing a scatter plot, the appropriate method is `p.scatter()`, and we use the `source`, `x`, and `y` kwargs to specify the positions of the glyphs.
+
+```{python}
+p.scatter(
+    source=source,
+    x='GrLivArea',
+    y='SalePrice',
+    alpha=0.25
+);
+```
+
+
+4\. Lastly, we can refine the plot in various ways. In this example we make the x and y-axis labels comma and dollar formatted respectively. We can also add [interactive components](https://docs.bokeh.org/en/latest/docs/user_guide/interaction.html#userguide-interaction) to our visuals. Here, I add a hover tool so that sale price and total living area is displayed when my mouse hovers over a point. 
+
+::: {.callout-tip}
+We can specify these features (axis configuration and tooltips) when we instantiate the figure or afterwards by assigning attribute values to an already instantiated figure. 
+:::
+
+The syntax for a tooltip is a list of 2-tuples, where each tuple represents the tooltip you want. The first entry in the tuple is the label and the second is the column from the data source that has the values. The second entry must be preceded with an `@` symbol signifying that it is a field in the data source and not field that is intrinsic to the plot, which is preceded with a `$` sign. If there are spaces in the column heading, enclose the column name in braces (i.e. `{name with spaces}`). (See the [documentation for tooltip specification](https://bokeh.pydata.org/en/latest/docs/user_guide/tools.html#basic-tooltips) for more information.)
+
+```{python}
+p.yaxis.formatter = bokeh.models.NumeralTickFormatter(format="$,")
+p.xaxis.formatter = bokeh.models.NumeralTickFormatter(format=",")
+
+tooltips = [("Sale Price","@SalePrice"),("SqFt","@GrLivArea")]
+hover = bokeh.models.HoverTool(tooltips=tooltips, mode='mouse')
+p.add_tools(hover)
+```
+
+Now that we have built the plot, we can render it in the notebook using `bokeh.io.show()`.
+
+```{python}
+bokeh.io.show(p)
+```
+
+In looking at the plot, notice a toolbar to right of the plot that enables you to zoom and pan within the plot.
+
+## Coloring with other dimensions
+
+Let's say we wanted to make the same plot, but we wanted to color the points based on another feature such as whether the home has central air or not (`CentralAir`). To do this, we take advantage of two features of Bokeh.
+
+1. We create a color mapping using `factor_cmap()` that assigns colors to the discrete levels of a given factor (CentralAir in this example). Here, we simply assign red and blue colors; however, Bokeh has many [color palettes to choose from](https://docs.bokeh.org/en/latest/docs/reference/palettes.html).
+2. We can then use the `scatter` method to assign the glyph of choice and pass the `color_mapper` object to `fill_color` and/or `fill_line`. I also add the legend field so it shows up in the plot and we can format our legend as necessary (i.e. add title, change font).
+
+```{python}
+# Create the figure, stored in variable `p`
+p = bokeh.plotting.figure(
+    frame_width=700,
+    frame_height=350,
+    title='Relationship between home sale price and living area \nAmes, Iowa (2006-2010)',
+    x_axis_label='Living Area (Square feet)',
+    y_axis_label='Sale Price'
+)
+
+source = bokeh.models.ColumnDataSource(df)
+
+# create color mapper
+color_mapper = bokeh.transform.factor_cmap(
+    'CentralAir',
+    palette=['red', 'blue'],
+    factors=df['CentralAir'].unique()
+    )
+
+p.scatter(
+    source=source,
+    x='GrLivArea',
+    y='SalePrice',
+    marker='circle',
+    alpha=0.25,
+    fill_color=color_mapper,
+    line_color=color_mapper,
+    legend_field='CentralAir'
+)
+
+p.legend.title = "Has central air"
+
+p.yaxis.formatter = bokeh.models.NumeralTickFormatter(format="$,")
+p.xaxis.formatter = bokeh.models.NumeralTickFormatter(format=",")
+
+tooltips = [("Sale Price","@SalePrice"),("SqFt","@GrLivArea")]
+hover = bokeh.models.HoverTool(tooltips=tooltips, mode='mouse')
+p.add_tools(hover)
+
+bokeh.io.show(p)
+```
+
+## Saving Bokeh plots
+
+After you create your plot, you can save it to a variety of formats. Most commonly you would save them as PNG (for presentations), SVG (for publications in the paper of the past), and HTML (for the paper of the future or sharing with colleagues). 
+
+To save as a PNG for quick use, you can click the disk icon in the tool bar. 
+
+To save to SVG, you first change the output backend to `'svg'` and then you can click the disk icon again, and you will get an SVG rendering of the plot. After saving the SVG, you should change the output backend back to `'canvas'` because it has much better in-browser performance.
+
+```{python}
+p.output_backend = 'svg'
+
+bokeh.io.show(p)
+```
+
+Now, click the disk icon in the plot above to save it.
+
+After saving, we should switch back to canvas.
+
+```{python}
+p.output_backend = 'canvas'
+```
+
+You can also save the figure programmatically using the `bokeh.io.export_svgs()` function. This requires additional installations, so we will not do it here, but show the code to do it. Again, this will only work if the output backed is `'svg'`.
+
+```python
+p.output_backend = 'svg'
+bokeh.io.export_svgs(p, filename='ames_sale_price_vs_living_area.svg')
+p.output_backend = 'canvas'
+```
+
+Finally, to save as HTML, you can use the `bokeh.io.save()` function. This saves your plot as a standalone HTML page. Note that the `title` kwarg is not the title of the plot, but the title of the web page that will appear on your Browser tab.
+
+```python
+bokeh.io.save(
+    p,
+    filename='ames_sale_price_vs_living_area.html',
+    title='Bokeh plot'
+);
+```
+
+## Video Tutorial
+
+This lesson only scratches the surface of what Bokeh can do. From interactive widgets and streaming data to fully responsive dashboards, Bokeh offers a wide range of advanced capabilities. To see more examples and explore what's possible, visit the official Bokeh gallery at [https://demo.bokeh.org/](https://demo.bokeh.org/).
+
+::: {.callout}
+## Video 🎥
+
+The following video provides an overview of Bokeh and will also expose you to other types of plots you can create (i.e. line charts, histograms, area plots).
+
+{{< video https://www.youtube.com/watch?v=GUEYt9adD8s >}}
+:::
+
+## Summary
+
+In this chapter, you explored the fundamentals of creating interactive data visualizations using **Bokeh**, a powerful Python library designed for the web. You learned how to use Bokeh’s `figure` interface to build plots from scratch, enhance them with interactive tools like hovers and legends, and combine multiple charts into dashboard-style layouts.
+
+Bokeh opens the door to **interactive, engaging visual storytelling**—ideal for exploratory analysis and sharing insights with stakeholders in a more dynamic format. While this chapter focused on the core building blocks, Bokeh supports much more, including advanced widgets, real-time data streaming, and fully customizable layouts.
+
+To explore Bokeh’s full capabilities, check out the [official demo gallery](https://demo.bokeh.org/).
+
+
+## Exercise: Exploring Housing Trends with Bokeh
+
+In this exercise set, you’ll revisit the [Ames Housing dataset](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_clean.csv) and apply what you've learned about **Bokeh** to build interactive plots from scratch. These visualizations will give you hands-on practice with building charts, customizing tooltips, applying categorical coloring, and creating simple layouts.
+
+Use the [Ames Housing dataset](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_clean.csv) we used in this chapter, and import the necessary Bokeh modules as needed:
+
+```python
+import pandas as pd
+from bokeh.plotting import figure, show
+from bokeh.io import output_notebook
+from bokeh.transform import factor_cmap
+from bokeh.layouts import row, column
+from bokeh.models import HoverTool
+
+output_notebook()
+
+df = pd.read_csv("data/ames_clean.csv")  # adjust path as needed
+```
+
+::: {.callout-tip}
+## 💡 Stuck or unsure how to do something?
+
+Use tools like **ChatGPT**, **GitHub Copilot**, or the [Bokeh documentation](https://docs.bokeh.org/en/latest/index.html) to help troubleshoot, format your plots, or discover ways to customize interactivity. Learning how to adapt examples is part of becoming a confident data visualizer.
+:::
+
+::: {.callout collapse="true"}
+## 1. Explore the Bokeh Gallery
+
+Visit [https://demo.bokeh.org](https://demo.bokeh.org) and spend a few minutes exploring different chart types.
+
+* What kinds of visualizations stand out to you?
+* Can you imagine how these might be used in a data science or business setting?
+
+There’s no coding for this part—just use it for inspiration before diving into the next tasks.
+:::
+
+::: {.callout collapse="true"}
+## 2. Bar Chart: Housing Count by Neighborhood
+
+Create a **Bokeh bar chart** that shows the number of houses sold per `Neighborhood`.
+
+* Use `groupby()` and `value_counts()` to prepare your data.
+* Create a vertical bar chart with `vbar()`.
+* Add a title, axis labels, and hover tooltips that show the neighborhood name and house count.
+* Bonus: Sort the bars in descending order.
+
+:::
+
+::: {.callout collapse="true"}
+## 3. Scatter Plot: Living Area vs. Sale Price
+
+Visualize the relationship between `GrLivArea` (above ground living area) and `SalePrice`.
+
+* Create a **scatter plot** using `figure().circle()`.
+* Add a `HoverTool` that shows the address (or another interesting feature), living area, and sale price when you hover over points.
+* Bonus: Add color or marker size based on a third variable like `OverallQual`.
+:::
+
+::: {.callout collapse="true"}
+## 4. Add Categorical Color to Your Scatter Plot
+
+Enhance your scatter plot by mapping color to a **categorical feature** such as `CentralAir`, `BldgType`, or a binned version of `OverallQual`.
+
+* Use `factor_cmap` to map categories to colors.
+* Include a legend and adjust the plot size or layout if needed.
+
+**Bonus**: Use `ColumnDataSource` to simplify your interactivity.
+:::
+
+::: {.callout collapse="true"}
+## 5. Combine Multiple Plots into a Layout
+
+Create a second plot of your choice (e.g., a histogram of `SalePrice` or another scatter plot).
+
+* Use `row()` or `column()` to combine it with your earlier scatter plot.
+* Add a shared title or explanatory text.
+* Reflect: How might this layout be useful as a small dashboard for exploring housing data?
+:::
