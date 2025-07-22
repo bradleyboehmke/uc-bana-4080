@@ -1,0 +1,552 @@
+# Controlling Repetition with Iteration Statements
+
+::: {.callout}
+# Think About It 💭
+
+Have you ever worked through a spreadsheet, applying the same operation across dozens—or even hundreds—of rows? What if you could teach your computer to do that for you?
+:::
+
+Repetition is common in data science tasks—from looping through rows of a dataset to applying transformations across multiple features or files. Fortunately, programming languages like Python provide **iteration statements** to handle these repetitive tasks efficiently and clearly.
+
+In this chapter, you'll learn how to use `for` and `while` loops to perform repetition in your code. You'll also learn how to control loop behavior using `break` and `continue`, explore the concept of **iterables**, and practice using **list comprehensions**—a powerful and Pythonic way to iterate and transform data collections.
+
+These tools are foundational in data mining and data science work, where we often need to process large amounts of data, automate repetitive operations, and build reusable code structures.
+
+::: {.callout}
+## Video 🎥:
+
+First, check out this video for a simple introduction to `for` and `while` loops. Then move on to the lesson that follows which will reiterate and build upon these basic concepts.
+
+{{< video https://www.youtube.com/watch?v=DZwmZ8Usvnk >}}
+:::
+
+By the end of this lesson you will be able to:
+
+* Apply `for` and `while` loops to execute repetitive code statements.
+* Incorporate `break` and `continue` to control looping statements.
+* Explain what a list comprehension is and implement variations of them.
+* Discuss the concept of iterables.
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/16_iteration_statements.ipynb) in Google Colab (or other editor of choice). This interactive notebook lets you run code examples covered in the chapter—and experiment with your own ideas.
+
+👉 Open the [Iteration Statements Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/16_iteration_statements.ipynb).
+:::
+
+## Prerequisites
+
+```{python}
+import glob
+import os
+import random
+import pandas as pd
+```
+
+## `for` loop
+
+The `for` loop is used to execute repetitive code statements for a particular number of times. The general syntax is provided below where `i` is the counter and as `i` assumes each sequential value the code in the body will be performed for that ith value.
+
+```python
+# syntax of for loop
+# !! this code won't run but, rather, gives you an idea of what the syntax looks like !!
+for i in sequence:
+    <do stuff here with i>
+```
+
+There are three main components of a `for` loop to consider:
+
+1. __Sequence__: The sequence represents each element in a list or tuple, each key-value pair in a dictionary, or each column in a DataFrame.
+2. __Body__: apply some function(s) to the object we are iterating over.
+3. __Output__: You must specify what to do with the result.  This may include printing out a result or modifying the object in place.
+
+For example, say we want to iterate N times, we can perform a for loop using the `range()` function:
+
+```{python}
+for number in range(10):
+    print(number)
+
+```
+
+We can add multiple lines to our `for` loop; we just need to ensure that each line follows the same indentation patter:
+
+```{python}
+
+for number in range(10):
+    squared = number * number
+    print(f'{number} squared = {squared}')
+
+```
+
+Rather than just print out some result, we can also assign the computation to an object. For example, say we wanted to assign the squared result in the previous `for` loop to a dictionary where the key is the original number and the value is the squared value.
+
+```{python}
+
+squared_values = {}
+
+for number in range(10):
+    squared = number * number
+    squared_values[number] = squared
+
+squared_values
+
+```
+
+### Knowledge check
+
+We can see all data sets that we have in the “[data/monthly_data](https://github.com/bradleyboehmke/uc-bana-4080/tree/main/data/monthly_data)” folder with `glob.glob`:
+
+```{python}
+monthly_data_files = sorted(glob.glob("../data/monthly_data/*"))
+monthly_data_files
+```
+
+If you wanted to get just the file name from the string path we can use `os.path.basename`:
+
+```{python}
+file_name = os.path.basename(monthly_data_files[0])
+file_name
+```
+
+And if we wanted to just get the name minus the file extension we can apply some simple string indexing to remove the last four characters (`.csv`):
+
+```{python}
+file_name[:-4]
+```
+
+::: {.callout}
+## Try it yourself:
+
+Use this knowledge to:
+
+1. Create an empty dictionary called `monthly_data`.
+2. Loop over `monthly_data_files` and assign the file name as the dictionary key and assign the file path as the value.
+3. Loop over `monthly_data_files` and assign the file name as the dictionary key, import the data with `pd.read_csv()` and assign the imported DataFrame as the value in the dictionary.
+
+Try the above yourself and then see my approach here:
+
+{{< video https://www.youtube.com/embed/Eqht_daVbb4?si=Ck1M_KW0GLmJD_xw >}}
+:::
+
+## Controlling sequences
+
+There are two ways to control the progression of a loop:
+
+* `continue`: terminates the current iteration and advances to the next.
+* `break`: exits the entire for loop.
+
+Both are used in conjunction with if statements. For example, this for loop will iterate for each element in `year`; however, when it gets to the element that equals the year of `covid` (2020) it will `break` out and end the for loop process.
+
+```{python}
+
+# range will produce numbers starting at 2018 and up to but not include 2023
+years = range(2018, 2023)
+list(years)
+
+```
+
+```{python}
+
+covid = 2020
+
+for year in years:
+    if year == covid: break
+    print(year)
+
+```
+
+The `continue` argument is useful when we want to skip the current iteration of a loop without terminating it. On encountering `continue`, the Python parser skips further evaluation and starts the next iteration of the loop. In this example, the for loop will iterate for each element in year; however, when it gets to the element that equals covid it will skip the rest of the code execution simply jump to the next iteration.
+
+```{python}
+
+for year in years:
+    if year == covid: continue
+    print(year)
+
+```
+
+### Knowledge check
+
+::: {.callout}
+## Try it yourself:
+
+Modify the following for `loop` with a `continue` or `break` statement to:
+
+1. only import Month-01 through Month-07
+2. only import Month-08 through Month-10
+
+```python
+monthly_data_files = glob.glob("../data/monthly_data/*")
+monthly_data = {}
+
+for file in monthly_data_files:
+    file_name = os.path.basename(file)[:-4]
+    monthly_data[file_name] = pd.read_csv(file)
+
+```
+
+Try the above yourself and then see my approach here:
+
+{{< video https://www.youtube.com/embed/dBeeIiq_I1w?si=pVxyskk9uepYBL83 >}}
+:::
+
+## List comprehensions
+
+List comprehensions offer a shorthand syntax for `for` loops and are very common in the Python community. Although a little odd at first, the way to think of list comprehensions is as a backward `for` loop where we state the expression first, and then the sequence.  
+
+```python
+# !! this code won't run but, rather, gives you an idea of what the syntax looks like !!
+
+# syntax of for loop
+for i in sequence:
+    expression
+  
+# syntax for a list comprehension
+[expression for i in sequence]
+```
+
+Often, we'll see a pattern like the following where we:
+
+1. create an empty object (list in this example)
+2. loop over an object and perform some computation
+3. save the result to the empty object
+
+```{python}
+
+squared_values = []
+for number in range(5):
+    squared = number * number
+    squared_values.append(squared)
+
+squared_values
+
+```
+
+A list comprehension allows us to condense this pattern to a single line:
+
+```{python}
+
+squared_values = [number * number for number in range(5)]
+squared_values
+
+```
+
+List comprehensions even allow us to add conditional statements. For example, here we use a conditional statement to skip even numbers:
+
+```{python}
+
+squared_odd_values = [number * number for number in range(10) if number % 2 != 0]
+squared_odd_values
+
+```
+
+For more complex conditional statements, or if the list comprehension gets a bit long, we can use multiple lines to make it easier to digest:
+
+```{python}
+
+squared_certain_values = [
+    number * number for number in range(10)
+    if number % 2 != 0 and number != 5
+    ]
+
+squared_certain_values
+
+```
+
+There are other forms of comprehensions as well. For example, we can perform a dictionary comprehension where we follow the same patter; however, we use dict brackets (`{`) instead of list brackets (`[`):
+
+```{python}
+
+squared_values_dict = {number: number*number for number in range(10)}
+squared_values_dict
+
+```
+
+::: {.callout-tip}
+## Video 🎥:
+
+Check out this video that provides more discussion and examples of using comprehensions.
+
+{{< video https://www.youtube.com/watch?v=3dt4OGnU5sM >}}
+:::
+
+### Knowledge check
+
+::: {.callout}
+## Try it yourself:
+
+Re-write the following `for` loop using a dictionary comprehension:
+
+```python
+monthly_data_files = glob.glob("../data/monthly_data/*")
+monthly_data = {}
+
+for file in monthly_data_files:
+    file_name = os.path.basename(file)[:-4]
+    monthly_data[file_name] = pd.read_csv(file)
+
+```
+
+
+Try the above yourself and then see my approach here:
+
+{{< video https://www.youtube.com/embed/uKNlXV_eO8E?si=j2bHocgmCbKFwltn >}}
+:::
+
+
+## `while` loop
+
+We may not always know how many iterations we need to make. Rather, we simply want to perform some task while a particular condition exists. This is the job of a `while` loop. A `while` loop follows the same logic as a `for` loop, except, rather than specify a sequence we want to specify a condition that will determine how many iterations.
+
+```python
+# syntax of for loop
+while condition_holds:
+    <do stuff here with i>
+```
+
+For example, the probability of flipping 10 coins and getting all heads or tails is $(\frac{1}{2})^{10} = 0.0009765625$ (1 in 1024 tries). Let's implement this and see how many times it'll take to accomplish this feat.
+
+The following `while` statement will check if the number of unique values for 10 flips are 1, which implies that we flipped all heads or tails. If it is not equal to 1 then we repeat the process of flipping 10 coins and incrementing the number of tries. When our condition statement `ten_of_a_kind == True` then our while loop will stop.
+
+```{python}
+
+# create a coin
+coin = ['heads', 'tails']
+
+# we'll use this to track how many tries it takes to get 10 heads or 10 tails
+n_tries = 0
+
+# signals if we got 10 heads or 10 tails
+ten_of_a_kind = False
+
+while not ten_of_a_kind:
+    # flip coin 10 times
+    ten_coin_flips = [random.choice(coin) for flip in range(11)]
+
+    # check if there
+    ten_of_a_kind = len(set(ten_coin_flips)) == 1
+
+    # add iteration to counter
+    n_tries += 1
+
+
+print(f'After {n_tries} flips: {ten_coin_flips}')
+
+```
+
+### Knowledge check
+
+::: {.callout}
+## Try it yourself:
+
+An elementary example of a random walk is the random walk on the integer number line, $Z$, which starts at 0 and at each step moves +1 or −1 with equal probability.
+
+Fill in the incomplete code chunk below to perform a random walk starting at value 0, with each step either adding or subtracting 1. Have your random walk stop if the value it exceeds 100 or if the number of steps taken exceeds 10,000.
+
+```python
+value = 0
+n_tries = 0
+exceeds_100 = False
+
+while not exceeds_100 or _______:
+    # randomly add or subtract 1
+    random_value = random.choice([-1, 1])
+    value += _____
+
+    # check if value exceeds 100
+    exceeds_100 = ______
+
+    # add iteration to counter
+    n_tries += _____
+
+  
+print(f'The final value was {value} after {n_tries} iterations.')
+
+```
+
+Try the above yourself and then see my approach here:
+
+{{< video https://www.youtube.com/embed/3maa-7Jdzgc?si=_AC2qrQR4rAuL7DX >}}
+:::
+
+
+## Iterables
+
+Python strongly leverages the concept of _iterable objects_. An object is considered _iterable_ if it is either a physically stored sequence, or an object that produces one result at a time in the context of an interation tool like a `for` loop. Up to this point, our example looping structures have primarily iterated over a DataFrame or a list.
+
+When our `for` loop iterates over a DataFrame, underneath the hood it is first accessing the iterable object, and then iterating over each item. As the following illustrates, the default iterable components of a DataFrame are the columns:
+
+```{python}
+
+df = pd.DataFrame({'col1': [1, 2, 3], 'col2': [3, 4, 5], 'col3': [6, 6, 6]})
+
+I = df.__iter__() # access iterable object
+print(next(I))    # first iteration
+print(next(I))    # second iteration
+print(next(I))    # third iteration
+
+```
+
+When our `for` loop iterates over a list, the same procedure unfolds. Note that when no more items are available to iterate over, a `StopIteration` is thrown which signals to our `for` loop that no more itertions should be performed. 
+
+```{python}
+#| warning: true
+#| error: true
+
+names = ['Robert', 'Sandy', 'John', 'Patrick']
+
+I = names.__iter__() # access iterable object
+print(next(I))       # first iteration
+print(next(I))       # second iteration
+print(next(I))       # third iteration
+print(next(I))       # fourth iteration
+print(next(I))       # no more items
+
+```
+
+Dictionaries and tuples are also iterable objects. Iterating over dictionary automatically returns one key at a time, which allows us to have the key and index for that key at the same time:
+
+```{python}
+
+D = {'a':1, 'b':2, 'c':3}
+
+I = D.__iter__()  # access iterable object
+print(next(I))    # first iteration
+print(next(I))    # second iteration
+print(next(I))    # third iteration
+
+```
+
+```{python}
+
+for key in D:
+    print(key, D[key])
+
+```
+
+Although using these iterables in a for loop is quite common, you will often see two other approaches which include the iterables `range()` and `enumerate()`. range is often used to generate indexes in a for loop but you can use it anywhere you need a series of integers. However, range is an iterable that generates items on demand:
+
+```{python}
+
+values = range(5)
+
+I = values.__iter__()
+print(next(I))
+print(next(I))
+print(next(I))
+
+```
+
+So if you wanted to iterate over each column in our DataFrame, an alternative is to use range. In this example, range produces the numeric index for each column so we simply use that value to index for the column within the for loop:
+
+```{python}
+
+unique_values = []
+for col in range(len(df.columns)):
+  value = df.iloc[:, col].nunique()
+  unique_values.append(value)
+
+unique_values
+
+```
+
+Another common iterator you will see is `enumerate`. Actually, the `enumerate` function returns a **generator object**, which also supports this iterator concept. The benefit of `enumerate` is that it returns a (index, value) tuple each time through the loop:
+
+```{python}
+
+E = enumerate(df) # access iterable object
+print(next(E))    # first iteration
+print(next(E))    # second iteration
+print(next(E))    # third iteration
+
+```
+
+The `for` loop steps through these tuples automatically and allows us to unpack their values with tuple assignment in the header of the `for` loop. In the following example, we unpack the tuples into the variables `index` and `col` and we can now use both of these values however necessary in a for loop.
+
+```{python}
+
+for index, col in enumerate(df):
+    print(f'{index} - {col}')
+
+```
+
+```{note}
+There are additional iterable objects that can be used in looping structures (i.e. zip, map); however, the ones discussed here are the most common you will come across and likely use.
+```
+
+::: {.callout-tip}
+## Video 🎥:
+
+Learn more about iterables and a similar, yet different concept -- _'iterators'_ with this video.
+
+{{< video https://www.youtube.com/watch?v=jTYiNjvnHZY >}}
+:::
+
+
+## Summary
+
+In this chapter, you learned how to use **iteration statements** to write more efficient and powerful Python code. These tools are essential for any data scientist or analyst, especially when working with large datasets or needing to automate repetitive tasks.
+
+You explored how:
+
+* The `for` loop allows you to iterate over sequences like lists, dictionaries, and DataFrames.
+* The `while` loop executes code repeatedly until a specified condition is no longer true.
+* `break` and `continue` give you more control over loop execution.
+* List and dictionary comprehensions provide a compact and readable way to create new collections.
+* Iterables and iterator objects, such as `range()` and `enumerate()`, form the foundation of Python looping behavior and data traversal.
+
+Understanding these concepts sets you up for more advanced programming patterns, where **repetition, transformation, and control flow** are crucial.
+
+But iteration isn’t the only way to make your code more concise and reusable. In the next chapter, you’ll take your skills a step further by learning how to write your own **functions**. Functions allow you to encapsulate logic into clean, modular blocks of code—another key capability for data scientists who want to write readable, efficient, and maintainable analysis pipelines.
+
+## Exercise: Practicing Looping and Iteration Patterns
+
+In this exercise set, you’ll practice using `for` loops, `while` loops, conditional logic, and comprehensions. These tasks will help you build fluency with the iteration patterns that show up frequently in data wrangling and automation tasks.
+
+You can run these exercises in your own Python editor or in the [companion notebook](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/16_iteration_statements.ipynb).
+
+::: {.callout-tip}
+## 💡 Stuck or Unsure?
+
+Don’t hesitate to ask for help! Use **ChatGPT**, **GitHub Copilot**, or any other AI coding assistant to get guidance or debug your code. It's a great way to reinforce learning and explore alternate solutions.
+:::
+
+::: {.callout collapse="true"}
+## 1. Filter Capitalized Names with a Comprehension
+
+Use the list of names below to write a **list comprehension** that returns only the values that start with a capital letter (i.e. a "title case" word).
+
+```python
+names = ['Steve Irwin', 'koala', 'kangaroo', 'Australia', 'Sydney', 'desert']
+```
+
+*Hint: Try using the `.istitle()` method.*
+
+Which names are included in the result?
+
+:::
+
+
+::: {.callout collapse="true"}
+## 2. Generate the Fibonacci Sequence
+
+The **Fibonacci Sequence** starts with the numbers 0 and 1, and each subsequent number is the sum of the two previous numbers. For example:
+`[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...]`
+
+Write a `for` loop that generates the **first 25 Fibonacci numbers** and stores them in a list.
+
+:::
+
+::: {.callout collapse="true"}
+## 3. Sum with Conditional Skip
+
+Write a `for` loop that computes the sum of all numbers from 0 through 100, **excluding** the numbers in the list below:
+
+```python
+skip_these_numbers = [8, 29, 43, 68, 98]
+```
+
+Use a `continue` statement to skip over those values. What is the resulting sum?
+
+:::
