@@ -1,0 +1,864 @@
+---
+title: "Week 3 – Working with Spreadsheet Data in Python"
+subtitle: "Tabular Data & DataFrames"
+format:
+  revealjs:
+    slide-number: true
+    preview-links: auto
+    revealjs-plugins:
+      - appearance
+      - highlight-text
+    css: styles.css
+    mermaid:
+      theme: neutral
+footer: 'BANA 4080'
+title-slide-attributes:
+    data-background-image: images/pandas-icon.png
+    data-background-size: cover
+    data-background-opacity: "1.0"
+filters: 
+  - timer
+---
+
+## Welcome to Week 3
+
+* Quick overview of today's plan:
+
+  * Discuss last week's homework & content
+  * Learn about DataFrames and Series
+  * Explore importing data and file paths
+  * Practice inspecting, subsetting, and filtering data
+
+# Discussion: Homework & Questions {background="#43464B"}
+
+## Questions from Week 2?
+
+* Variables, strings, or math operations?
+* Anything confusing in the homework?
+* Time to ask!
+
+# Tabular Data {background="#43464B"}
+
+## Think-Pair-Share {.smaller}
+
+Download and open this data: [https://bit.ly/ames-raw-data](https://bit.ly/ames-raw-data)
+
+:::: {.columns}
+::: {.column width="70%"}
+Discuss with a neighbor (2–3 min):
+
+- What characteristics do you notice?
+- What kind of data is in this spreadsheet?
+- How would you describe this dataset to someone else?
+
+:::
+::: {.column width="30%"}
+
+<center>
+
+<div id="3minWaiting"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minWaiting", 180, "slide"); 
+    });
+</script>
+</center>
+
+:::
+::::
+
+Then we’ll take a few responses...
+
+## Tabular data {.smaller}
+
+:::: {.columns}
+::: {.column}
+* Rows represent observations
+* Columns represent variables
+* Each column has a name
+* Each cell contains a single value
+* Consistent data types within columns
+* Rows are usually uniquely identified
+* Missing values are possible
+* Data is rectangular (rows × columns)
+:::
+::: {.column}
+![](images/ames-raw-df.png)
+:::
+::::
+
+::: {.notes}
+This would be a good time to open the raw ames data in Excel and talk through this.
+:::
+
+## 🐼 Introducing Pandas {.smaller}
+
+- **Pandas** is the primary Python library for working with **tabular data**
+- Built specifically to handle data structured like spreadsheets or database tables
+- Enables:
+  - **Importing** data from files like `.csv` and Excel
+  - Exploring, **cleaning**, and **transforming** datasets
+  - Filtering and **subsetting** rows and columns
+  - Performing aggregations and **summary statistics**
+  - and **visualizing** data.
+
+::: {.callout-tip}
+
+🧠 Think of Pandas as **Excel + Python power** — but reproducible and scalable
+
+Pandas docs: [https://pandas.pydata.org/docs/](https://pandas.pydata.org/docs/)
+
+:::
+
+## Tabular data {.smaller}
+
+**DataFrames** are Python's equivalent to Excel's spreadsheet
+
+<br>
+
+```{python}
+import pandas as pd
+
+pd.read_csv("../data/ames_raw.csv")
+```
+
+
+# Let's Import Some Data {background="#43464B"}
+
+> *There is no data science without data.*
+>
+> A wise person
+
+
+## General Framework {.smaller}
+
+Python stores its data in **memory** - this makes it relatively quickly accessible but can cause size limitations in certain fields.
+
+:::: {.columns}
+::: {.column}
+
+1. Data sits in on the computer/server - this is frequently called "disk"
+2. Python code can be used to copy a data file from disk to the Python session's memory
+3. Python data then sits within Python's memory ready to be used by other Python code
+
+:::
+::: {.column}
+
+![](images/import-framework.png)
+
+:::
+::::
+
+::: {.callout-note}
+There are libraries that allow for distributed data processing but we're not going to worry about that in this class.
+:::
+
+## Importing with Pandas {.smaller}
+
+```{python}
+#| code-line-numbers: "3"
+#| echo: true
+import pandas as pd
+
+planes = pd.read_csv("../data/planes.csv")
+```
+
+. . .
+
+We can visualize the first few rows of our DataFrame using the `head()` method:
+
+```{python}
+#| echo: true
+planes.head()
+```
+
+## Lot's of Options {.smaller}
+
+:::: {.columns}
+::: {.column}
+**Other tabular data files**
+
+While tabular data is the most popular in data science, other types of data files are used as well.
+
+- Excel files
+- SQL databases
+- JSON files
+- And many more!
+   
+Python has many capabilities (via built-in, standard library, and 3rd party packages) for working with these other file types.
+:::
+::: {.column}
+The `read_csv()` function has many parameters for importing data. A few examples:
+
+* `sep` - the data's delimiter
+* `header` - the row number containing the column names (0 indicates there is no header)
+* `names` - the names of the columns
+
+```{python}
+#| echo: true
+pd.read_csv?
+```
+
+:::
+::::
+
+## Getting to Know Your Data {.smaller}
+
+We can get to know our data with a few functions:
+
+:::: {.columns}
+::: {.column}
+
+```{python}
+#| echo: true
+# data dimensions
+planes.shape
+```
+
+<br>
+
+```{python}
+#| echo: true
+# summary info for our variables
+planes.info()
+```
+
+:::
+::: {.column}
+:::
+::::
+
+## Getting to Know Your Data {.smaller}
+
+We can get to know our data with a few functions:
+
+:::: {.columns}
+::: {.column}
+
+```{python}
+#| echo: true
+# data dimensions
+planes.shape
+```
+
+<br>
+
+```{python}
+#| echo: true
+# summary info for our variables
+planes.info()
+```
+
+:::
+::: {.column}
+Do you notice a difference between these two code lines?
+:::
+::::
+
+## Getting to Know Your Data {.smaller}
+
+We can get to know our data with a few functions:
+
+:::: {.columns}
+::: {.column}
+
+```{python}
+#| echo: true
+# data dimensions
+planes.shape
+```
+
+<br>
+
+```{python}
+#| echo: true
+# summary info for our variables
+planes.info()
+```
+
+:::
+::: {.column}
+Do you notice a difference between these two code lines?
+
+<br>
+
+One has parentheses and the other does not.
+
+```python
+planes.shape
+planes.info()
+```
+
+* __Attribute__: simply a variable that is attached and unique to that object.
+
+* __Method__: is just a function inside an object that is unique to that object.
+:::
+::::
+
+## Getting to Know Your Data {.smaller}
+
+More general information on our DataFrame
+
+:::: {.columns}
+::: {.column}
+**Attribute**: get the column names
+
+```{python}
+#| echo: true
+planes.columns
+```
+:::
+::: {.column}
+**Method**: get column summary stats
+
+```{python}
+#| echo: true
+planes.describe() 
+```
+:::
+::::
+
+
+# Digging into DataFrames {background="#43464B"}
+
+## What is a Pandas DataFrame? {.smaller}
+
+* A 2D labeled data structure (like an Excel table)
+* Rows have **index labels**
+* Columns have **names**
+* [Each column is a **Pandas Series**]{.mark}
+* Built on top of NumPy arrays
+
+```{python}
+#| echo: true
+planes.head()
+```
+
+---
+
+## DataFrame vs Series {.smaller}
+
+![](images/dataframe-illustration.png){width="75%" fig-align="center"}
+
+| Concept    | Series        | DataFrame        |
+| ---------- | ------------- | ---------------- |
+| Dimensions | 1D            | 2D               |
+| Structure  | Single column | Rows + columns   |
+| Usage      | One variable  | Full dataset     |
+
+::: {.callout-important}
+A DataFrame is a **collection of Series**
+:::
+
+
+## A Series {.smaller}
+
+We can access a single column from our DataFrame with `[ ]`
+
+<br>
+
+:::: {.columns}
+::: {.column}
+```{python}
+#| echo: true
+seats_column = planes['seats']
+```
+:::
+::: {.column}
+```{python}
+#| echo: true
+type(seats_column)
+```
+:::
+::::
+
+. . .
+
+Series do not print out as nicely as DataFrames
+
+<br>
+
+:::: {.columns}
+::: {.column}
+```{python}
+#| echo: true
+seats_column.head()
+```
+:::
+::: {.column}
+```{python}
+#| echo: true
+planes.head()
+```
+:::
+::::
+
+
+## A Series {.smaller}
+
+
+:::: {.columns}
+::: {.column}
+There are 3 things to notice about a Series:
+
+* The values (55, 182, 182...)
+* The dtype, short for data type.
+* The index (0, 1, 2...)
+:::
+::: {.column}
+```{python}
+#| echo: true
+seats_column
+```
+:::
+::::
+
+. . .
+
+<br>
+
+:::: {.columns}
+::: {.column}
+Based on the dtype we can do certain things with a series
+:::
+::: {.column}
+```{python}
+#| echo: true
+# math on numeric dtypes
+seats_column.mean()
+```
+
+<br>
+
+```{python}
+#| echo: true
+# string manipulation
+planes['manufacturer'].str.contains('AIRBUS')
+```
+:::
+::::
+
+## A Series {.smaller}
+
+
+:::: {.columns}
+::: {.column}
+And we can extract elements out using `[ ]` like we did with lists
+
+* Note zero-based indexing
+* You can also slice with `[start:stop]`
+:::
+::: {.column}
+```{python}
+#| echo: true
+# 1st element
+seats_column[0]
+```
+
+<br>
+
+```{python}
+#| echo: true
+# 3rd element
+seats_column[2]
+```
+
+<br>
+
+```{python}
+#| echo: true
+# 3-5 elements
+seats_column[2:5]
+```
+
+<br>
+
+```{python}
+#| echo: true
+# first 5 elements
+seats_column[:5]
+```
+:::
+::::
+
+## Index Values {.smaller}
+
+What is unique about Pandas (both Series and DataFrames) is that we can name our index.
+
+:::: {.columns}
+::: {.column}
+* Remind of you anything??  Dictionaries!
+* Not always a best practice
+* But does allow you to index by name
+:::
+::: {.column}
+```{python}
+#| echo: true
+seats_column.index = planes['tailnum']
+seats_column.head()
+```
+
+<br>
+
+```{python}
+#| echo: true
+seats_column['N10575']
+```
+
+:::
+::::
+
+. . .
+
+::: {.callout-caution}
+But do you see a potential problem?
+:::
+
+## Index Values {.smaller}
+
+May seem like an edge case but you'd be surprised!
+
+:::: {.columns}
+::: {.column}
+* Indexing the row element(s) by simple brackets can lead to confusion
+:::
+::: {.column}
+
+```{python}
+#| echo: true
+s = pd.Series([10, 20, 30, 40, 50])
+s.index = ['a', 0, 'c', 2, 'e']
+s
+```
+
+<br>
+
+```{python}
+#| echo: true
+s[0]
+```
+
+:::
+::::
+
+## Index Values {.smaller}
+
+May seem like an edge case but you'd be surprised!
+
+:::: {.columns}
+::: {.column}
+* Indexing the row element(s) by simple brackets can lead to confusion
+* Which is why you'll start to see two new approaches called [accessors]{.mark}
+  * `iloc[]`: index position-based
+  * `loc[]`: label-based
+:::
+::: {.column}
+
+```{python}
+#| echo: true
+s = pd.Series([10, 20, 30, 40, 50])
+s.index = ['a', 0, 'c', 2, 'e']
+s
+```
+
+<br>
+
+```{python}
+#| echo: true
+s.iloc[0]
+```
+
+<br>
+
+```{python}
+#| echo: true
+s.loc[0]
+```
+
+:::
+::::
+
+## Index Values {.smaller}
+
+And we can always reset our index using `reset_index()`
+
+```{python}
+#| echo: true
+s
+```
+
+<br>
+
+```{python}
+#| echo: true
+s = s.reset_index(drop=True)
+```
+
+<br>
+
+```{python}
+#| echo: true
+s
+```
+
+# Getting Back to DataFrames {background="#43464B"}
+
+## Accessing Data in DataFrames {.smaller}
+
+Typically, we want to **subset** the data we are working on. This often consists of:
+
+:::: {.columns}
+::: {.column width="40%"}
+* **Selecting columns**
+:::
+::: {.column width="60%"}
+![](images/selecting_columns.png)
+:::
+::::
+
+## Accessing Data in DataFrames {.smaller}
+
+Typically, we want to **subset** the data we are working on. This often consists of:
+
+:::: {.columns}
+::: {.column width="40%"}
+* Selecting columns
+* **Filtering rows**
+:::
+::: {.column width="60%"}
+![](images/selecting_rows.png)
+:::
+::::
+
+## Accessing Data in DataFrames {.smaller}
+
+Typically, we want to **subset** the data we are working on. This often consists of:
+
+:::: {.columns}
+::: {.column width="40%"}
+* Selecting columns
+* Filtering rows
+* **Combination of the two**
+:::
+::: {.column width="60%"}
+![](images/selecting_rows_columns.png)
+:::
+::::
+
+## Subsetting Columns {.smaller}
+
+We already saw we can select a single column and get a series back.
+
+But we can also select a single column and get a DataFrame back using a list `[]`
+
+<br>
+
+:::: {.columns}
+::: {.column}
+```{python}
+#| echo: true
+# One column as a series
+planes['seats']
+```
+:::
+::: {.column}
+```{python}
+#| echo: true
+# One column as a DataFrame
+planes[['seats']]
+```
+:::
+::::
+
+## Subsetting Columns {.smaller}
+
+Why does this matter?  Because we can actually pass multiple columns in our list and get them in return.
+
+<br>
+
+:::: {.columns}
+::: {.column}
+```{python}
+#| echo: true
+planes[['tailnum', 'seats']]
+```
+:::
+::: {.column}
+```{python}
+#| echo: true
+planes[['tailnum', 'seats', 'engines']]
+```
+:::
+::::
+
+## Filtering Rows based on Index {.smaller}
+
+Similar to Series, we can use accessors to index for specific rows.
+
+:::: {.columns}
+::: {.column}
+```{python}
+#| echo: true
+planes.loc[0:3]
+```
+:::
+::: {.column}
+```{python}
+#| echo: true
+planes.loc[[0, 2, 4]]
+```
+:::
+::::
+
+## Filtering Rows with Conditions {.smaller}
+
+But, its more common to filter rows based on some condition.
+
+We can use a lot of the same conditional statements we've already seen.
+
+* `==`
+* `>`
+* `<=`
+* etc.
+
+. . .
+
+What we get in return is a series of `True` and `False`
+
+
+```{python}
+#| echo: true
+embraer_planes = planes['manufacturer'] == 'EMBRAER'
+embraer_planes
+```
+
+## Filtering Rows with Conditions {.smaller}
+
+But, its more common to filter rows based on some condition.
+
+We can use a lot of the same conditional statements we've already seen.
+
+What we get in return is a series of `True` and `False`
+
+[We can use this series to filter our original DataFrame]{.mark}
+
+```{python}
+#| echo: true
+planes.loc[embraer_planes].head()
+```
+
+## Filtering Rows with Multiple Conditions {.smaller}
+
+We can even combine multiple conditions.  For example...
+
+<br>
+
+```{python}
+#| echo: true
+embraer_planes = planes['manufacturer'] == 'EMBRAER'
+after_2004 = planes['year'] > 2004
+```
+
+. . .
+
+<br>
+
+:::: {.columns}
+::: {.column}
+```{python}
+#| echo: true
+# Embraer planes built after 2004
+planes.loc[embraer_planes & after_2004]
+```
+:::
+::: {.column}
+```{python}
+#| echo: true
+# Embraer planes OR built after 2004
+planes.loc[embraer_planes | after_2004]
+```
+:::
+::::
+
+## Filtering Rows with Multiple Conditions {.smaller}
+
+::: {.callout-caution}
+This same process can be written in one line but it gets harder to read as you add more conditions
+:::
+
+```{python}
+#| echo: true
+planes.loc[(planes['manufacturer'] == 'EMBRAER') & (planes['year'] > 2004)]
+```
+
+## Selecting and Filtering {.smaller}
+
+And lastly, we often want to...
+
+* select columns and
+* filter rows
+
+...simultaneously!
+
+. . .
+
+No problem!
+
+```{python}
+#| echo: true
+rows = planes['manufacturer'] == 'EMBRAER'
+cols = ['manufacturer', 'year', 'engines']
+planes.loc[rows, cols].head()
+```
+
+# Let's Wrap This Up {background="#43464B"}
+
+## Recap: What Did We Learn?
+
+* Pandas DataFrames = spreadsheet-like structures in Python
+* Import data using `pd.read_csv()`
+* DataFrame Columns = Series
+* Use `head()`, `info()`, `describe()` to inspect your data
+* Subset with square brackets, `.loc[]`, and `.iloc[]`
+
+## 🧾 Quick Reference {.smaller}
+
+| Task                         | Syntax Example                                | Output Type           |
+| ---------------------------- | --------------------------------------------- | --------------------- |
+| Select one column            | `df["col"]`                                   | Series                |
+| Select multiple columns      | `df[["col1", "col2"]]`                        | DataFrame             |
+| Slice rows by index          | `df.loc[0:4]`                                 | DataFrame             |
+| Filter rows by condition     | `df[df["year"] > 2000]`                       | DataFrame             |
+| Combine filter + select      | `df.loc[df["year"] > 2000, ["col1", "col2"]]` | DataFrame             |
+| Best practice for assignment | `df.loc[cond, "col"] = value`                 | Safe, avoids warnings |
+
+
+## Key Takeaways
+
+* Pandas DataFrames = spreadsheet-like structures in Python
+* Import data using `pd.read_csv()` and check file paths
+* Use `head()`, `info()`, `describe()` to inspect your data
+* Subset with square brackets, `.loc[]`, and `.iloc[]`
+* Columns = Series, Rows = observations
+
+## Coming Up Next...
+
+* Thursday Lab: practice importing and subsetting real datasets
+* Homework: explore your own data using these techniques
+* Discussion: dig into Pandas documentation
+
+
+::: {.callout-important}
+Be sure to read the chapter readings **before** Thursday's lab!  And bring your questions!
+:::
+
+## Q&A 🙋‍♀️
+
+Open floor for any questions regarding...
+
+- Last week's content
+- This week's content
+- Data mining in general
+- Career questions
+- Etc
