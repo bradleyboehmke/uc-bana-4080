@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="w4_tuesday_files/libs/clipboard/clipboard.min.js"></script>
+<script src="w4_tuesday_files/libs/quarto-html/tabby.min.js"></script>
+<script src="w4_tuesday_files/libs/quarto-html/popper.min.js"></script>
+<script src="w4_tuesday_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="w4_tuesday_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="w4_tuesday_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="w4_tuesday_files/libs/quarto-html/quarto-syntax-highlighting-e1a5c8363afafaef2c763b6775fbf3ca.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="w4_tuesday_files/libs/quarto-contrib/quarto-timer-1.0.0/timer.js"></script>
+<link href="w4_tuesday_files/libs/quarto-contrib/quarto-timer-1.0.0/timer.css" rel="stylesheet"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.7.31">
+
+  <title>Week 4 – Data Wrangling in Python</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="w4_tuesday_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="w4_tuesday_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="w4_tuesday_files/libs/revealjs/dist/theme/quarto-f563837468303362081e247dddd440d0.css">
+  <link rel="stylesheet" href="styles.css">
+  <link href="w4_tuesday_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="w4_tuesday_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="w4_tuesday_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="w4_tuesday_files/libs/revealjs/plugin/appearance/appearance.css" rel="stylesheet">
+  <link href="w4_tuesday_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+  
+  <script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" data-background-image="images/pandas-icon.png" data-background-opacity="1.0" data-background-size="cover" class="quarto-title-block center">
+  <h1 class="title">Week 4 – Data Wrangling in Python</h1>
+  <p class="subtitle">Manipulating, summarizing, and joining data</p>
+
+<div class="quarto-title-authors">
+</div>
+
+</section>
+<section id="welcome-to-week-4" class="slide level2">
+<h2>Welcome to Week 4</h2>
+<ul>
+<li><p>Quick overview of today’s plan:</p>
+<ul>
+<li>Discuss last week’s homework &amp; content</li>
+<li>Load &amp; explore the Complete Journey datasets</li>
+<li>Brainstorm analysis questions</li>
+<li>Manipulating Data (15–20 min)</li>
+<li>Summarizing Data (15–20 min)</li>
+<li>Joining Data (15–20 min)</li>
+</ul></li>
+</ul>
+</section>
+<section>
+<section id="discussion-homework-questions" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Discussion: Homework &amp; Questions</h1>
+
+</section>
+<section id="questions-from-week-3" class="slide level2">
+<h2>Questions from Week 3?</h2>
+<ul>
+<li>DataFrames vs.&nbsp;Series?</li>
+<li>Subsetting procedures?</li>
+<li>Anything confusing in the quiz or class lab?</li>
+<li>Time to ask!</li>
+</ul>
+</section></section>
+<section>
+<section id="complete-journey-data" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Complete Journey Data</h1>
+
+</section>
+<section id="intro-activity-load-the-data" class="slide level2 smaller">
+<h2>Intro Activity – Load the Data</h2>
+<p>Open up Colab (Thursday’s Lab notebook) and load the Complete Journey data</p>
+<div class="columns">
+<div class="column">
+<p><img data-src="images/cj_data_relationships.png" style="width:80.0%"></p>
+</div><div class="column">
+<p><br></p>
+<div id="85daff29" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href=""></a><span class="co"># you may need to pip install first</span></span>
+<span id="cb1-2"><a href=""></a><span class="co"># !pip install completejourney-py</span></span>
+<span id="cb1-3"><a href=""></a></span>
+<span id="cb1-4"><a href=""></a><span class="im">from</span> completejourney_py <span class="im">import</span> get_data</span>
+<span id="cb1-5"><a href=""></a></span>
+<span id="cb1-6"><a href=""></a><span class="co"># Load all datasets</span></span>
+<span id="cb1-7"><a href=""></a>cj_data <span class="op">=</span> get_data()</span>
+<span id="cb1-8"><a href=""></a>cj_data.keys()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="303">
+<pre><code>dict_keys(['campaign_descriptions', 'coupons', 'promotions', 'campaigns', 'demographics', 'transactions', 'coupon_redemptions', 'products'])</code></pre>
+</div>
+</div>
+</div></div>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Note</strong></p>
+</div>
+<div class="callout-content">
+<p>Complete Journey Docs: <a href="bit.ly/completejourney">bit.ly/completejourney</a></p>
+</div>
+</div>
+</div>
+</section>
+<section id="small-group-brainstorm" class="slide level2 smaller">
+<h2>Small Group Brainstorm</h2>
+<p>In your group, come up with 2–3 questions you’d like to answer using these datasets. Think about business insights a grocery retailer might want.</p>
+<div class="columns">
+<div class="column" style="width:70%;">
+<p>Example questions:</p>
+<ul>
+<li>What income level is buying the most?</li>
+<li>Do families with kids spend more than families without kids?</li>
+<li>Which department and product is the most commonly purchased?</li>
+<li>Which coupon was used the most?</li>
+</ul>
+</div><div class="column" style="width:30%;">
+<center>
+<div id="5minWaiting">
+
+</div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("5minWaiting", 300, "slide"); 
+    });
+</script>
+</center>
+</div></div>
+<p>Then we’ll take a few responses…</p>
+</section>
+<section id="from-questions-to-analysis" class="slide level2 smaller">
+<h2>From Questions to Analysis</h2>
+<p>A lot of the insights you’ve just brainstormed will require:</p>
+<ul>
+<li><strong>Manipulating &amp; wrangling data</strong> to prepare it for analysis
+<ul>
+<li>Cleaning up column names for clarity<br>
+</li>
+<li>Creating new columns based on existing ones<br>
+</li>
+</ul></li>
+<li><strong>Aggregating data</strong>
+<ul>
+<li>Summarizing at different levels (by product, by customer, by time)<br>
+</li>
+<li>Computing summary statistics<br>
+</li>
+</ul></li>
+<li><strong>Joining datasets</strong>
+<ul>
+<li>Combining related tables to get a complete picture</li>
+</ul></li>
+</ul>
+<p><br></p>
+<div class="callout callout-none no-icon callout-style-simple">
+<div class="callout-body">
+<div class="callout-content">
+<p>💡 <strong>And that’s exactly what we’re going to cover this week!</strong></p>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="manipulating-data" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Manipulating Data</h1>
+
+</section>
+<section id="why-is-this-important" class="slide level2 smaller">
+<h2>Why Is This Important?</h2>
+<ul>
+<li>Data rarely comes perfectly ready for analysis.</li>
+<li>Column names might be unclear or inconsistent.</li>
+<li>Some columns might not be needed at all.</li>
+<li>You might need to create new columns from existing ones.</li>
+<li><strong>Clean, well-structured data = easier, faster, and more accurate analysis.</strong></li>
+</ul>
+</section>
+<section id="messy-data" class="slide level2 smaller">
+<h2>Messy Data</h2>
+<p>Our complete journey data is not too bad; however, let’s look at this raw Ames data.</p>
+<p><mark>What do you notice?</mark></p>
+<div id="7dfc144e" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href=""></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb3-2"><a href=""></a></span>
+<span id="cb3-3"><a href=""></a>ames <span class="op">=</span> pd.read_csv(<span class="st">"../data/ames_raw.csv"</span>)</span>
+<span id="cb3-4"><a href=""></a>ames.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="304">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Order</th>
+<th data-quarto-table-cell-role="th">PID</th>
+<th data-quarto-table-cell-role="th">MS SubClass</th>
+<th data-quarto-table-cell-role="th">MS Zoning</th>
+<th data-quarto-table-cell-role="th">Lot Frontage</th>
+<th data-quarto-table-cell-role="th">Lot Area</th>
+<th data-quarto-table-cell-role="th">Street</th>
+<th data-quarto-table-cell-role="th">Alley</th>
+<th data-quarto-table-cell-role="th">Lot Shape</th>
+<th data-quarto-table-cell-role="th">Land Contour</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">Pool Area</th>
+<th data-quarto-table-cell-role="th">Pool QC</th>
+<th data-quarto-table-cell-role="th">Fence</th>
+<th data-quarto-table-cell-role="th">Misc Feature</th>
+<th data-quarto-table-cell-role="th">Misc Val</th>
+<th data-quarto-table-cell-role="th">Mo Sold</th>
+<th data-quarto-table-cell-role="th">Yr Sold</th>
+<th data-quarto-table-cell-role="th">Sale Type</th>
+<th data-quarto-table-cell-role="th">Sale Condition</th>
+<th data-quarto-table-cell-role="th">SalePrice</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1</td>
+<td>526301100</td>
+<td>20</td>
+<td>RL</td>
+<td>141.0</td>
+<td>31770</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>5</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>215000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>2</td>
+<td>526350040</td>
+<td>20</td>
+<td>RH</td>
+<td>80.0</td>
+<td>11622</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>105000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>3</td>
+<td>526351010</td>
+<td>20</td>
+<td>RL</td>
+<td>81.0</td>
+<td>14267</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>Gar2</td>
+<td>12500</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>172000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>4</td>
+<td>526353030</td>
+<td>20</td>
+<td>RL</td>
+<td>93.0</td>
+<td>11160</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>4</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>244000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>5</td>
+<td>527105010</td>
+<td>60</td>
+<td>RL</td>
+<td>74.0</td>
+<td>13830</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>3</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>189900</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 82 columns</p>
+</div>
+</div>
+</div>
+</section>
+<section id="examples-from-our-data" class="slide level2 smaller">
+<h2>Examples from Our Data</h2>
+<p><br></p>
+<ul>
+<li>Columns differ (<code>Order</code>, <code>MS SubClass</code>, <code>SalePrice</code>) - might want to standardize.</li>
+<li>Do we really need all these columns (<code>Order</code>, <code>PID</code>) - might want to drop irrelevant ones.</li>
+<li>Could we add new columns (<code>price_per_sqft</code>)</li>
+<li>We’ve got missing values - (houses without pools or misc features)</li>
+</ul>
+</section>
+<section id="renaming-columns" class="slide level2 smaller">
+<h2>Renaming Columns</h2>
+<p>We can easily <code>rename</code> specific columns</p>
+<div class="columns">
+<div class="column">
+<ul>
+<li>Use <code>rename</code> to rename certain columns</li>
+<li>Feed it <code>dict</code> with {<code>old</code>: <code>new</code>} pairings</li>
+<li>Note the use of <code>inplace=True</code></li>
+</ul>
+<div class="callout callout-caution callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Caution</strong></p>
+</div>
+<div class="callout-content">
+<p>Great, but we have 82 columns!</p>
+</div>
+</div>
+</div>
+</div><div class="column">
+<div id="502b6972" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href=""></a>ames.rename(columns<span class="op">=</span>{</span>
+<span id="cb4-2"><a href=""></a>    <span class="st">'MS SubClass'</span>: <span class="st">'ms_subclass'</span>,</span>
+<span id="cb4-3"><a href=""></a>    <span class="st">'MS Zoning'</span>: <span class="st">'ms_zoning'</span></span>
+<span id="cb4-4"><a href=""></a>    }, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-5"><a href=""></a></span>
+<span id="cb4-6"><a href=""></a>ames.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="305">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Order</th>
+<th data-quarto-table-cell-role="th">PID</th>
+<th data-quarto-table-cell-role="th">ms_subclass</th>
+<th data-quarto-table-cell-role="th">ms_zoning</th>
+<th data-quarto-table-cell-role="th">Lot Frontage</th>
+<th data-quarto-table-cell-role="th">Lot Area</th>
+<th data-quarto-table-cell-role="th">Street</th>
+<th data-quarto-table-cell-role="th">Alley</th>
+<th data-quarto-table-cell-role="th">Lot Shape</th>
+<th data-quarto-table-cell-role="th">Land Contour</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">Pool Area</th>
+<th data-quarto-table-cell-role="th">Pool QC</th>
+<th data-quarto-table-cell-role="th">Fence</th>
+<th data-quarto-table-cell-role="th">Misc Feature</th>
+<th data-quarto-table-cell-role="th">Misc Val</th>
+<th data-quarto-table-cell-role="th">Mo Sold</th>
+<th data-quarto-table-cell-role="th">Yr Sold</th>
+<th data-quarto-table-cell-role="th">Sale Type</th>
+<th data-quarto-table-cell-role="th">Sale Condition</th>
+<th data-quarto-table-cell-role="th">SalePrice</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1</td>
+<td>526301100</td>
+<td>20</td>
+<td>RL</td>
+<td>141.0</td>
+<td>31770</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>5</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>215000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>2</td>
+<td>526350040</td>
+<td>20</td>
+<td>RH</td>
+<td>80.0</td>
+<td>11622</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>105000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>3</td>
+<td>526351010</td>
+<td>20</td>
+<td>RL</td>
+<td>81.0</td>
+<td>14267</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>Gar2</td>
+<td>12500</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>172000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>4</td>
+<td>526353030</td>
+<td>20</td>
+<td>RL</td>
+<td>93.0</td>
+<td>11160</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>4</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>244000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>5</td>
+<td>527105010</td>
+<td>60</td>
+<td>RL</td>
+<td>74.0</td>
+<td>13830</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>3</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>189900</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 82 columns</p>
+</div>
+</div>
+</div>
+</div></div>
+</section>
+<section id="reformatting-many-columns" class="slide level2 smaller">
+<h2>Reformatting Many Columns</h2>
+<p>😳</p>
+<div id="dd096971" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href=""></a>(</span>
+<span id="cb5-2"><a href=""></a>  ames.columns.</span>
+<span id="cb5-3"><a href=""></a>  <span class="bu">str</span>.lower()               <span class="co"># convert to lowercase</span></span>
+<span id="cb5-4"><a href=""></a>  .<span class="bu">str</span>.replace(<span class="st">' '</span>, <span class="st">'_'</span>)    <span class="co"># replace spaces with underscores</span></span>
+<span id="cb5-5"><a href=""></a>  .<span class="bu">str</span>.replace(<span class="st">'-'</span>, <span class="st">'_'</span>)    <span class="co"># replace hyphens with underscores</span></span>
+<span id="cb5-6"><a href=""></a>  .<span class="bu">str</span>.strip()              <span class="co"># strip out extra leading/ending spaces</span></span>
+<span id="cb5-7"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="306">
+<pre><code>Index(['order', 'pid', 'ms_subclass', 'ms_zoning', 'lot_frontage', 'lot_area',
+       'street', 'alley', 'lot_shape', 'land_contour', 'utilities',
+       'lot_config', 'land_slope', 'neighborhood', 'condition_1',
+       'condition_2', 'bldg_type', 'house_style', 'overall_qual',
+       'overall_cond', 'year_built', 'year_remod/add', 'roof_style',
+       'roof_matl', 'exterior_1st', 'exterior_2nd', 'mas_vnr_type',
+       'mas_vnr_area', 'exter_qual', 'exter_cond', 'foundation', 'bsmt_qual',
+       'bsmt_cond', 'bsmt_exposure', 'bsmtfin_type_1', 'bsmtfin_sf_1',
+       'bsmtfin_type_2', 'bsmtfin_sf_2', 'bsmt_unf_sf', 'total_bsmt_sf',
+       'heating', 'heating_qc', 'central_air', 'electrical', '1st_flr_sf',
+       '2nd_flr_sf', 'low_qual_fin_sf', 'gr_liv_area', 'bsmt_full_bath',
+       'bsmt_half_bath', 'full_bath', 'half_bath', 'bedroom_abvgr',
+       'kitchen_abvgr', 'kitchen_qual', 'totrms_abvgrd', 'functional',
+       'fireplaces', 'fireplace_qu', 'garage_type', 'garage_yr_blt',
+       'garage_finish', 'garage_cars', 'garage_area', 'garage_qual',
+       'garage_cond', 'paved_drive', 'wood_deck_sf', 'open_porch_sf',
+       'enclosed_porch', '3ssn_porch', 'screen_porch', 'pool_area', 'pool_qc',
+       'fence', 'misc_feature', 'misc_val', 'mo_sold', 'yr_sold', 'sale_type',
+       'sale_condition', 'saleprice'],
+      dtype='object')</code></pre>
+</div>
+</div>
+</section>
+<section id="reformatting-many-columns-1" class="slide level2 smaller">
+<h2>Reformatting Many Columns</h2>
+<p>😎</p>
+<div id="3bd03278" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href=""></a>ames.columns <span class="op">=</span> (</span>
+<span id="cb7-2"><a href=""></a>  ames.columns.</span>
+<span id="cb7-3"><a href=""></a>  <span class="bu">str</span>.lower()               <span class="co"># convert to lowercase</span></span>
+<span id="cb7-4"><a href=""></a>  .<span class="bu">str</span>.replace(<span class="st">' '</span>, <span class="st">'_'</span>)    <span class="co"># replace spaces with underscores</span></span>
+<span id="cb7-5"><a href=""></a>  .<span class="bu">str</span>.replace(<span class="st">'-'</span>, <span class="st">'_'</span>)    <span class="co"># replace hyphens with underscores</span></span>
+<span id="cb7-6"><a href=""></a>  .<span class="bu">str</span>.strip()              <span class="co"># strip out extra leading/ending spaces</span></span>
+<span id="cb7-7"><a href=""></a>)</span>
+<span id="cb7-8"><a href=""></a></span>
+<span id="cb7-9"><a href=""></a>ames.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="307">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">order</th>
+<th data-quarto-table-cell-role="th">pid</th>
+<th data-quarto-table-cell-role="th">ms_subclass</th>
+<th data-quarto-table-cell-role="th">ms_zoning</th>
+<th data-quarto-table-cell-role="th">lot_frontage</th>
+<th data-quarto-table-cell-role="th">lot_area</th>
+<th data-quarto-table-cell-role="th">street</th>
+<th data-quarto-table-cell-role="th">alley</th>
+<th data-quarto-table-cell-role="th">lot_shape</th>
+<th data-quarto-table-cell-role="th">land_contour</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">pool_area</th>
+<th data-quarto-table-cell-role="th">pool_qc</th>
+<th data-quarto-table-cell-role="th">fence</th>
+<th data-quarto-table-cell-role="th">misc_feature</th>
+<th data-quarto-table-cell-role="th">misc_val</th>
+<th data-quarto-table-cell-role="th">mo_sold</th>
+<th data-quarto-table-cell-role="th">yr_sold</th>
+<th data-quarto-table-cell-role="th">sale_type</th>
+<th data-quarto-table-cell-role="th">sale_condition</th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1</td>
+<td>526301100</td>
+<td>20</td>
+<td>RL</td>
+<td>141.0</td>
+<td>31770</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>5</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>215000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>2</td>
+<td>526350040</td>
+<td>20</td>
+<td>RH</td>
+<td>80.0</td>
+<td>11622</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>105000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>3</td>
+<td>526351010</td>
+<td>20</td>
+<td>RL</td>
+<td>81.0</td>
+<td>14267</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>Gar2</td>
+<td>12500</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>172000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>4</td>
+<td>526353030</td>
+<td>20</td>
+<td>RL</td>
+<td>93.0</td>
+<td>11160</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>4</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>244000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>5</td>
+<td>527105010</td>
+<td>60</td>
+<td>RL</td>
+<td>74.0</td>
+<td>13830</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>3</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>189900</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 82 columns</p>
+</div>
+</div>
+</div>
+</section>
+<section id="dropping-columns" class="slide level2 smaller">
+<h2>Dropping Columns</h2>
+<p>Last week we learned how to select columns of interest.</p>
+<p>But we may also want to invert that thinking and just <mark>drop columns of disinterest</mark>!</p>
+<div class="fragment">
+<p><br></p>
+<div class="columns">
+<div class="column">
+<p><strong>Selecting columns of interest</strong></p>
+<div id="5f3d531e" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href=""></a>cols <span class="op">=</span> [<span class="st">'gr_liv_area'</span>, <span class="st">'saleprice'</span>, <span class="st">'overall_qual'</span>]</span>
+<span id="cb8-2"><a href=""></a></span>
+<span id="cb8-3"><a href=""></a>ames[cols].head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="308">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">gr_liv_area</th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+<th data-quarto-table-cell-role="th">overall_qual</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>1656</td>
+<td>215000</td>
+<td>6</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>896</td>
+<td>105000</td>
+<td>5</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>1329</td>
+<td>172000</td>
+<td>6</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>2110</td>
+<td>244000</td>
+<td>7</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>1629</td>
+<td>189900</td>
+<td>5</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div><div class="column">
+<p><strong>Dropping columns of disinterest</strong></p>
+<div id="e858a4fc" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href=""></a>cols <span class="op">=</span> [<span class="st">'order'</span>, <span class="st">'pid'</span>, <span class="st">'ms_subclass'</span>]</span>
+<span id="cb9-2"><a href=""></a></span>
+<span id="cb9-3"><a href=""></a>ames.drop(columns<span class="op">=</span>cols, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb9-4"><a href=""></a>ames.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="309">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">ms_zoning</th>
+<th data-quarto-table-cell-role="th">lot_frontage</th>
+<th data-quarto-table-cell-role="th">lot_area</th>
+<th data-quarto-table-cell-role="th">street</th>
+<th data-quarto-table-cell-role="th">alley</th>
+<th data-quarto-table-cell-role="th">lot_shape</th>
+<th data-quarto-table-cell-role="th">land_contour</th>
+<th data-quarto-table-cell-role="th">utilities</th>
+<th data-quarto-table-cell-role="th">lot_config</th>
+<th data-quarto-table-cell-role="th">land_slope</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">pool_area</th>
+<th data-quarto-table-cell-role="th">pool_qc</th>
+<th data-quarto-table-cell-role="th">fence</th>
+<th data-quarto-table-cell-role="th">misc_feature</th>
+<th data-quarto-table-cell-role="th">misc_val</th>
+<th data-quarto-table-cell-role="th">mo_sold</th>
+<th data-quarto-table-cell-role="th">yr_sold</th>
+<th data-quarto-table-cell-role="th">sale_type</th>
+<th data-quarto-table-cell-role="th">sale_condition</th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>RL</td>
+<td>141.0</td>
+<td>31770</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>5</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>215000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>RH</td>
+<td>80.0</td>
+<td>11622</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Inside</td>
+<td>Gtl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>105000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>RL</td>
+<td>81.0</td>
+<td>14267</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>Gar2</td>
+<td>12500</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>172000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>RL</td>
+<td>93.0</td>
+<td>11160</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>4</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>244000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>RL</td>
+<td>74.0</td>
+<td>13830</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Inside</td>
+<td>Gtl</td>
+<td>...</td>
+<td>0</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>3</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>189900</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 79 columns</p>
+</div>
+</div>
+</div>
+</div></div>
+</div>
+</section>
+<section id="addingmodifying-new-columns" class="slide level2 smaller">
+<h2>Adding/Modifying New Columns</h2>
+<p>Why we might do this:</p>
+<ul>
+<li>To create <strong>new metrics</strong> that don’t exist in the raw data (e.g., <code>price_per_sqft</code>, <code>unit_price</code>).</li>
+<li>To <strong>transform existing data</strong> into a more useful format (e.g., converting grams to pounds).</li>
+<li>To <strong>transform values</strong> (e.g., months <code>1</code>, <code>2</code>, <code>3</code> → <code>"Jan"</code>, <code>"Feb"</code>, <code>"Mar"</code>).</li>
+</ul>
+</section>
+<section id="addingmodifying-new-columns-1" class="slide level2 smaller">
+<h2>Adding/Modifying New Columns</h2>
+<p>Why we might do this:</p>
+<ul>
+<li><mark>To create <strong>new metrics</strong> that don’t exist in the raw data (e.g., <code>price_per_sqft</code>, <code>unit_price</code>).</mark></li>
+<li>To <strong>transform existing data</strong> into a more useful format (e.g., converting grams to pounds).</li>
+<li>To <strong>transform values</strong> (e.g., months <code>1</code>, <code>2</code>, <code>3</code> → <code>"Jan"</code>, <code>"Feb"</code>, <code>"Mar"</code>).</li>
+</ul>
+<div id="66917d85" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href=""></a><span class="co"># Create a price per sqft column</span></span>
+<span id="cb10-2"><a href=""></a>ames[<span class="st">'price_per_sqft'</span>] <span class="op">=</span> ames[<span class="st">'saleprice'</span>] <span class="op">/</span> ames[<span class="st">'gr_liv_area'</span>]</span>
+<span id="cb10-3"><a href=""></a></span>
+<span id="cb10-4"><a href=""></a>ames.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="310">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">ms_zoning</th>
+<th data-quarto-table-cell-role="th">lot_frontage</th>
+<th data-quarto-table-cell-role="th">lot_area</th>
+<th data-quarto-table-cell-role="th">street</th>
+<th data-quarto-table-cell-role="th">alley</th>
+<th data-quarto-table-cell-role="th">lot_shape</th>
+<th data-quarto-table-cell-role="th">land_contour</th>
+<th data-quarto-table-cell-role="th">utilities</th>
+<th data-quarto-table-cell-role="th">lot_config</th>
+<th data-quarto-table-cell-role="th">land_slope</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">pool_qc</th>
+<th data-quarto-table-cell-role="th">fence</th>
+<th data-quarto-table-cell-role="th">misc_feature</th>
+<th data-quarto-table-cell-role="th">misc_val</th>
+<th data-quarto-table-cell-role="th">mo_sold</th>
+<th data-quarto-table-cell-role="th">yr_sold</th>
+<th data-quarto-table-cell-role="th">sale_type</th>
+<th data-quarto-table-cell-role="th">sale_condition</th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+<th data-quarto-table-cell-role="th">price_per_sqft</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>RL</td>
+<td>141.0</td>
+<td>31770</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>5</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>215000</td>
+<td>129.830918</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>RH</td>
+<td>80.0</td>
+<td>11622</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Inside</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>105000</td>
+<td>117.187500</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>RL</td>
+<td>81.0</td>
+<td>14267</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>Gar2</td>
+<td>12500</td>
+<td>6</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>172000</td>
+<td>129.420617</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>RL</td>
+<td>93.0</td>
+<td>11160</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>4</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>244000</td>
+<td>115.639810</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>RL</td>
+<td>74.0</td>
+<td>13830</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Inside</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>3</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>189900</td>
+<td>116.574586</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 80 columns</p>
+</div>
+</div>
+</div>
+</section>
+<section id="addingmodifying-new-columns-2" class="slide level2 smaller">
+<h2>Adding/Modifying New Columns</h2>
+<p>Why we might do this:</p>
+<ul>
+<li>To create <strong>new metrics</strong> that don’t exist in the raw data (e.g., <code>price_per_sqft</code>, <code>unit_price</code>).</li>
+<li>To <strong>transform existing data</strong> into a more useful format (e.g., converting grams to pounds).</li>
+<li><mark>To <strong>transform values</strong> (e.g., months <code>1</code>, <code>2</code>, <code>3</code> → <code>"Jan"</code>, <code>"Feb"</code>, <code>"Mar"</code>).</mark></li>
+</ul>
+<div id="880e3e23" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb11" data-code-line-numbers="7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href=""></a>months <span class="op">=</span> {</span>
+<span id="cb11-2"><a href=""></a>    <span class="dv">1</span>: <span class="st">'Jan'</span>, <span class="dv">2</span>: <span class="st">'Feb'</span>, <span class="dv">3</span>: <span class="st">'Mar'</span>, <span class="dv">4</span>: <span class="st">'Apr'</span>, <span class="dv">5</span>: <span class="st">'May'</span>, <span class="dv">6</span>: <span class="st">'Jun'</span>, </span>
+<span id="cb11-3"><a href=""></a>    <span class="dv">7</span>: <span class="st">'Jul'</span>, <span class="dv">8</span>: <span class="st">'Aug'</span>, <span class="dv">9</span>: <span class="st">'Sep'</span>, <span class="dv">10</span>: <span class="st">'Oct'</span>, <span class="dv">11</span>: <span class="st">'Nov'</span>, <span class="dv">12</span>: <span class="st">'Dec'</span></span>
+<span id="cb11-4"><a href=""></a>}</span>
+<span id="cb11-5"><a href=""></a></span>
+<span id="cb11-6"><a href=""></a>ames[<span class="st">'mo_sold'</span>] <span class="op">=</span> ames[<span class="st">'mo_sold'</span>].<span class="bu">map</span>(months)</span>
+<span id="cb11-7"><a href=""></a>ames.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="311">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">ms_zoning</th>
+<th data-quarto-table-cell-role="th">lot_frontage</th>
+<th data-quarto-table-cell-role="th">lot_area</th>
+<th data-quarto-table-cell-role="th">street</th>
+<th data-quarto-table-cell-role="th">alley</th>
+<th data-quarto-table-cell-role="th">lot_shape</th>
+<th data-quarto-table-cell-role="th">land_contour</th>
+<th data-quarto-table-cell-role="th">utilities</th>
+<th data-quarto-table-cell-role="th">lot_config</th>
+<th data-quarto-table-cell-role="th">land_slope</th>
+<th data-quarto-table-cell-role="th">...</th>
+<th data-quarto-table-cell-role="th">pool_qc</th>
+<th data-quarto-table-cell-role="th">fence</th>
+<th data-quarto-table-cell-role="th">misc_feature</th>
+<th data-quarto-table-cell-role="th">misc_val</th>
+<th data-quarto-table-cell-role="th">mo_sold</th>
+<th data-quarto-table-cell-role="th">yr_sold</th>
+<th data-quarto-table-cell-role="th">sale_type</th>
+<th data-quarto-table-cell-role="th">sale_condition</th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+<th data-quarto-table-cell-role="th">price_per_sqft</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>RL</td>
+<td>141.0</td>
+<td>31770</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>May</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>215000</td>
+<td>129.830918</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>RH</td>
+<td>80.0</td>
+<td>11622</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Inside</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>Jun</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>105000</td>
+<td>117.187500</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>RL</td>
+<td>81.0</td>
+<td>14267</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>Gar2</td>
+<td>12500</td>
+<td>Jun</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>172000</td>
+<td>129.420617</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>RL</td>
+<td>93.0</td>
+<td>11160</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>Reg</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Corner</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>NaN</td>
+<td>0</td>
+<td>Apr</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>244000</td>
+<td>115.639810</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>RL</td>
+<td>74.0</td>
+<td>13830</td>
+<td>Pave</td>
+<td>NaN</td>
+<td>IR1</td>
+<td>Lvl</td>
+<td>AllPub</td>
+<td>Inside</td>
+<td>Gtl</td>
+<td>...</td>
+<td>NaN</td>
+<td>MnPrv</td>
+<td>NaN</td>
+<td>0</td>
+<td>Mar</td>
+<td>2010</td>
+<td>WD</td>
+<td>Normal</td>
+<td>189900</td>
+<td>116.574586</td>
+</tr>
+</tbody>
+</table>
+
+<p>5 rows × 80 columns</p>
+</div>
+</div>
+</div>
+</section>
+<section id="handling-missing-values" class="slide level2 smaller">
+<h2>Handling Missing Values</h2>
+<p>We can always check for missing values with <code>isnull()</code>.</p>
+<div id="df09dbf6" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href=""></a>ames.isnull().<span class="bu">sum</span>().sort_values(ascending<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="312">
+<pre><code>pool_qc            2917
+misc_feature       2824
+alley              2732
+fence              2358
+mas_vnr_type       1775
+                   ... 
+central_air           0
+1st_flr_sf            0
+2nd_flr_sf            0
+low_qual_fin_sf       0
+price_per_sqft        0
+Length: 80, dtype: int64</code></pre>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li>Understanding <em>why</em> data is missing helps choose the right strategy to handle it.</li>
+<li>Different causes of missingness require different approaches.</li>
+</ul>
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Warning</strong></p>
+</div>
+<div class="callout-content">
+<p>Why are there so many pool quality (<code>pool_qc</code>) values missing?</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="handling-missing-values-1" class="slide level2 smaller">
+<h2>Handling Missing Values</h2>
+<div class="columns">
+<div class="column">
+<div id="40cfef47" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href=""></a>ames[[<span class="st">'pool_area'</span>, <span class="st">'pool_qc'</span>]].head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="313">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">pool_area</th>
+<th data-quarto-table-cell-role="th">pool_qc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0</td>
+<td>NaN</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>0</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>0</td>
+<td>NaN</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p><br></p>
+<div id="b87c93bf" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href=""></a>ames[<span class="st">'pool_qc'</span>].value_counts()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="314">
+<pre><code>pool_qc
+Ex    4
+Gd    4
+TA    3
+Fa    2
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</div><div class="column">
+<div id="6f613bf1" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href=""></a>ames[<span class="st">'pool_qc'</span>].fillna(<span class="st">'no pool'</span>, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb17-2"><a href=""></a>ames[[<span class="st">'pool_area'</span>, <span class="st">'pool_qc'</span>]].head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="315">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">pool_area</th>
+<th data-quarto-table-cell-role="th">pool_qc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>0</td>
+<td>no pool</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0</td>
+<td>no pool</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0</td>
+<td>no pool</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>0</td>
+<td>no pool</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>0</td>
+<td>no pool</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p><br></p>
+<div id="5607f95c" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href=""></a>ames[[<span class="st">'pool_qc'</span>]].value_counts()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="316">
+<pre><code>pool_qc
+no pool    2917
+Ex            4
+Gd            4
+TA            3
+Fa            2
+Name: count, dtype: int64</code></pre>
+</div>
+</div>
+</div></div>
+</section></section>
+<section>
+<section id="summarizing-data" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Summarizing Data</h1>
+
+</section>
+<section id="why-is-this-important-1" class="slide level2">
+<h2>Why Is This Important?</h2>
+<ul>
+<li>Raw data often contains <strong>many individual records</strong> that need to be condensed for analysis.</li>
+<li>Summaries reveal <strong>patterns and trends</strong> that are hard to spot in row-level data.</li>
+<li>Many business questions are <strong>aggregate in nature</strong>:
+<ul>
+<li>Total sales by product category</li>
+<li>Average spend per customer</li>
+<li>Most frequent coupon usage</li>
+</ul></li>
+</ul>
+</section>
+<section id="simple-aggregation" class="slide level2 smaller">
+<h2>Simple Aggregation</h2>
+<p>Last week we saw how we can compute various summary stats for a given column:</p>
+<div id="c5b8df12" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href=""></a>avg_price <span class="op">=</span> ames[<span class="st">'saleprice'</span>].mean()</span>
+<span id="cb20-2"><a href=""></a><span class="bu">print</span>(<span class="ss">f"Avg Sale Price: $</span><span class="sc">{</span>avg_price<span class="sc">:,.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Avg Sale Price: $180,796.06</code></pre>
+</div>
+</div>
+<p><br></p>
+<div id="a5c772da" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href=""></a>min_ppsqft <span class="op">=</span> ames[<span class="st">'price_per_sqft'</span>].<span class="bu">min</span>()</span>
+<span id="cb22-2"><a href=""></a>max_ppsqft <span class="op">=</span> ames[<span class="st">'price_per_sqft'</span>].<span class="bu">max</span>()</span>
+<span id="cb22-3"><a href=""></a><span class="bu">print</span>(<span class="ss">f"Min &amp; Max Price per Sqft: $</span><span class="sc">{</span>min_ppsqft<span class="sc">:,.2f}</span><span class="ss"> - $</span><span class="sc">{</span>max_ppsqft<span class="sc">:,.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Min &amp; Max Price per Sqft: $15.37 - $276.25</code></pre>
+</div>
+</div>
+<div class="fragment">
+<p><br></p>
+<p>We can even get summary stats for multiple columns:</p>
+<div id="ffe0f676" class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href=""></a>cols <span class="op">=</span> [<span class="st">'gr_liv_area'</span>, <span class="st">'saleprice'</span>, <span class="st">'price_per_sqft'</span>]</span>
+<span id="cb24-2"><a href=""></a>ames[cols].mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="319">
+<pre><code>gr_liv_area         1499.690444
+saleprice         180796.060068
+price_per_sqft       121.303619
+dtype: float64</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="multiple-aggregations" class="slide level2 smaller">
+<h2>Multiple Aggregations</h2>
+<p>But, when we want to get more complicated and get:</p>
+<ul>
+<li>Multiple stats for different columns and…</li>
+<li>Multiple types of stats per column</li>
+</ul>
+<p>Then we should start using <code>.aggregate()</code> / <code>.agg()</code></p>
+<div class="fragment">
+<div class="columns">
+<div class="column">
+<div id="3aa2afd1" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href=""></a>ames.aggregate({</span>
+<span id="cb26-2"><a href=""></a>    <span class="st">'saleprice'</span>: [<span class="st">'mean'</span>, <span class="st">'median'</span>],</span>
+<span id="cb26-3"><a href=""></a>    <span class="st">'price_per_sqft'</span>: [<span class="st">'mean'</span>, <span class="st">'min'</span>, <span class="st">'max'</span>]</span>
+<span id="cb26-4"><a href=""></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="320">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+<th data-quarto-table-cell-role="th">price_per_sqft</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>180796.060068</td>
+<td>121.303619</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">median</td>
+<td>160000.000000</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">min</td>
+<td>NaN</td>
+<td>15.371394</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>NaN</td>
+<td>276.250881</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div><div class="column">
+<div id="2df50a63" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href=""></a>ames.agg({</span>
+<span id="cb27-2"><a href=""></a>    <span class="st">'saleprice'</span>: [<span class="st">'mean'</span>, <span class="st">'median'</span>],</span>
+<span id="cb27-3"><a href=""></a>    <span class="st">'price_per_sqft'</span>: [<span class="st">'mean'</span>, <span class="st">'min'</span>, <span class="st">'max'</span>]</span>
+<span id="cb27-4"><a href=""></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="321">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+<th data-quarto-table-cell-role="th">price_per_sqft</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">mean</td>
+<td>180796.060068</td>
+<td>121.303619</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">median</td>
+<td>160000.000000</td>
+<td>NaN</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">min</td>
+<td>NaN</td>
+<td>15.371394</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">max</td>
+<td>NaN</td>
+<td>276.250881</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div></div>
+</div>
+</section>
+<section id="group-level-aggregations" class="slide level2 smaller">
+<h2>Group-level Aggregations</h2>
+<p>That’s great and all but in many real-world analyses, we’re interested in <strong>summarizing within groups</strong> rather than across the whole dataset.</p>
+<ul>
+<li>Total home sales by neighborhood</li>
+<li>Average square footage by number of bedrooms</li>
+<li>Median sale price by year</li>
+<li>Maximum temperature by month</li>
+</ul>
+
+<img data-src="images/summarizing-by-groups.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<section id="the-groupby-model" class="slide level2 smaller">
+<h2>The Groupby Model</h2>
+<p>Grouped aggregation in Pandas always follows the same three-step process:</p>
+<ol type="1">
+<li>Group the data using groupby()</li>
+<li>Apply a summary method like .sum(), .agg(), or .describe()</li>
+<li>Return a DataFrame of group-level summaries</li>
+</ol>
+
+<img data-src="images/model-for-grouped-aggs.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<section id="avg-sale-price-by-neighborhood" class="slide level2 smaller">
+<h2>Avg Sale Price By Neighborhood</h2>
+<div id="ae2ecd19" class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href=""></a>(</span>
+<span id="cb28-2"><a href=""></a>  ames.</span>
+<span id="cb28-3"><a href=""></a>  groupby(<span class="st">'neighborhood'</span>, as_index<span class="op">=</span><span class="va">False</span>).</span>
+<span id="cb28-4"><a href=""></a>  agg({<span class="st">'saleprice'</span>: [<span class="st">'mean'</span>, <span class="st">'median'</span>]})</span>
+<span id="cb28-5"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="322">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead tr th {
+        text-align: left;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">neighborhood</th>
+<th colspan="2" data-quarto-table-cell-role="th" data-halign="left">saleprice</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">median</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>Blmngtn</td>
+<td>196661.678571</td>
+<td>191500.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>Blueste</td>
+<td>143590.000000</td>
+<td>130500.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>BrDale</td>
+<td>105608.333333</td>
+<td>106000.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>BrkSide</td>
+<td>124756.250000</td>
+<td>126750.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>ClearCr</td>
+<td>208662.090909</td>
+<td>197500.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">5</td>
+<td>CollgCr</td>
+<td>201803.434457</td>
+<td>200000.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">6</td>
+<td>Crawfor</td>
+<td>207550.834951</td>
+<td>200624.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">7</td>
+<td>Edwards</td>
+<td>130843.381443</td>
+<td>125000.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">8</td>
+<td>Gilbert</td>
+<td>190646.575758</td>
+<td>183000.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">9</td>
+<td>Greens</td>
+<td>193531.250000</td>
+<td>198000.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">10</td>
+<td>GrnHill</td>
+<td>280000.000000</td>
+<td>280000.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">11</td>
+<td>IDOTRR</td>
+<td>103752.903226</td>
+<td>106500.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12</td>
+<td>Landmrk</td>
+<td>137000.000000</td>
+<td>137000.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">13</td>
+<td>MeadowV</td>
+<td>95756.486486</td>
+<td>88250.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">14</td>
+<td>Mitchel</td>
+<td>162226.631579</td>
+<td>153500.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">15</td>
+<td>NAmes</td>
+<td>145097.349887</td>
+<td>140000.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">16</td>
+<td>NPkVill</td>
+<td>140710.869565</td>
+<td>143750.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">17</td>
+<td>NWAmes</td>
+<td>188406.908397</td>
+<td>181000.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">18</td>
+<td>NoRidge</td>
+<td>330319.126761</td>
+<td>302000.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">19</td>
+<td>NridgHt</td>
+<td>322018.265060</td>
+<td>317750.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">20</td>
+<td>OldTown</td>
+<td>123991.891213</td>
+<td>119900.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">21</td>
+<td>SWISU</td>
+<td>135071.937500</td>
+<td>136200.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">22</td>
+<td>Sawyer</td>
+<td>136751.152318</td>
+<td>135000.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">23</td>
+<td>SawyerW</td>
+<td>184070.184000</td>
+<td>180000.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">24</td>
+<td>Somerst</td>
+<td>229707.324176</td>
+<td>225500.0</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">25</td>
+<td>StoneBr</td>
+<td>324229.196078</td>
+<td>319000.0</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">26</td>
+<td>Timber</td>
+<td>246599.541667</td>
+<td>232106.5</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">27</td>
+<td>Veenker</td>
+<td>248314.583333</td>
+<td>250250.0</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="group-by-multiple-variables" class="slide level2 smaller">
+<h2>Group-by Multiple Variables</h2>
+<div id="cfd1685c" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href=""></a>(</span>
+<span id="cb29-2"><a href=""></a>  ames.</span>
+<span id="cb29-3"><a href=""></a>  groupby([<span class="st">'neighborhood'</span>, <span class="st">'mo_sold'</span>], as_index<span class="op">=</span><span class="va">False</span>).</span>
+<span id="cb29-4"><a href=""></a>  agg({<span class="st">'saleprice'</span>: <span class="st">'mean'</span>})</span>
+<span id="cb29-5"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="323">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">neighborhood</th>
+<th data-quarto-table-cell-role="th">mo_sold</th>
+<th data-quarto-table-cell-role="th">saleprice</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>Blmngtn</td>
+<td>Apr</td>
+<td>202745.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>Blmngtn</td>
+<td>Aug</td>
+<td>186828.333333</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>Blmngtn</td>
+<td>Feb</td>
+<td>194201.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>Blmngtn</td>
+<td>Jan</td>
+<td>160000.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>Blmngtn</td>
+<td>Jun</td>
+<td>167773.333333</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">281</td>
+<td>Veenker</td>
+<td>Jul</td>
+<td>234666.666667</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">282</td>
+<td>Veenker</td>
+<td>Jun</td>
+<td>205308.333333</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">283</td>
+<td>Veenker</td>
+<td>Mar</td>
+<td>314000.000000</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">284</td>
+<td>Veenker</td>
+<td>May</td>
+<td>268800.000000</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">285</td>
+<td>Veenker</td>
+<td>Nov</td>
+<td>385000.000000</td>
+</tr>
+</tbody>
+</table>
+
+<p>286 rows × 3 columns</p>
+</div>
+</div>
+</div>
+</section>
+<section id="get-familiar" class="slide level2">
+<h2>Get Familiar!</h2>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Important</strong></p>
+</div>
+<div class="callout-content">
+<p>We can answer so many typical business questions with just this skillset!</p>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="joining-data" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Joining Data</h1>
+
+</section>
+<section id="complete-journey" class="slide level2 smaller">
+<h2>Complete Journey</h2>
+<p>Think back to your brainstorm from earlier - Which of your group’s questions require <strong>information from more than one dataset</strong>?</p>
+<div class="columns">
+<div class="column">
+<p><br></p>
+<ul>
+<li>Comparing spend by income level → needs <code>transactions</code> + <code>demographics</code>.</li>
+<li>Most commonly purchased product → needs <code>transactions</code> + <code>products</code>.</li>
+<li>Most used coupons on products → needs <code>coupon_redemptions</code> + <code>coupons</code>.</li>
+</ul>
+</div><div class="column">
+<p><img data-src="images/cj_data_relationships.png" style="width:80.0%"></p>
+</div></div>
+</section>
+<section id="joining-data-1" class="slide level2 smaller">
+<h2>Joining Data</h2>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Important</strong></p>
+</div>
+<div class="callout-content">
+<p>Most organizations store data <strong>in separate tables</strong> for:</p>
+<ul>
+<li>Storage efficiency</li>
+<li>Different data collection processes</li>
+<li>Security and access control</li>
+</ul>
+<p>Being able to <strong>combine datasets</strong> is essential to answer more complex questions and see the bigger picture.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="the-importance-of-keys" class="slide level2 smaller">
+<h2>The Importance of Keys</h2>
+<ul>
+<li><strong>Keys</strong> are the columns used to match rows between two datasets.</li>
+</ul>
+<div class="fragment">
+<div class="columns">
+<div class="column">
+<ul>
+<li>Without a <strong>reliable, unique key</strong>, joins may:
+<ul>
+<li>Fail to match rows (missing data)</li>
+<li>Match incorrectly (wrong data)</li>
+<li>Duplicate rows unexpectedly</li>
+</ul></li>
+</ul>
+<p><strong>In the Complete Journey data:</strong></p>
+<ul>
+<li><code>household_id</code> connects <strong>transactions</strong> with <strong>demographics</strong></li>
+<li><code>product_id</code> connects <strong>transactions</strong> with <strong>products</strong></li>
+<li><code>coupon_upc</code> connects <strong>coupons</strong> with <strong>coupon_redemptions</strong></li>
+</ul>
+</div><div class="column">
+<p><img data-src="images/cj_data_relationships.png" style="width:80.0%"></p>
+</div></div>
+</div>
+</section>
+<section id="the-importance-of-keys-1" class="slide level2 smaller">
+<h2>The Importance of Keys</h2>
+<ul>
+<li><strong>Keys</strong> are the columns used to match rows between two datasets.</li>
+</ul>
+<div class="columns">
+<div class="column">
+<p><strong>Good key characteristics:</strong></p>
+<ul>
+<li><strong>Consistent naming</strong> across datasets</li>
+<li><strong>Same data type</strong> in both tables (e.g., both are integers or strings)</li>
+<li><strong>Unique values</strong> when needed (e.g., a <code>customer_id</code> in a customer table)</li>
+<li><strong>Stable over time</strong> (values don’t change)</li>
+</ul>
+</div><div class="column">
+<p><img data-src="images/cj_data_relationships.png" style="width:80.0%"></p>
+</div></div>
+</section>
+<section id="types-of-joins" class="slide level2 smaller">
+<h2>Types of Joins</h2>
+<p>There are 4 primary types of joins you’ll read about this week:</p>
+<div class="columns">
+<div class="column">
+<ul>
+<li><strong>Inner join</strong></li>
+<li><strong>Left join</strong><br>
+</li>
+<li><strong>Right join</strong></li>
+<li><strong>Outer join</strong></li>
+</ul>
+</div><div class="column">
+
+</div></div>
+</section>
+<section id="types-of-joins-1" class="slide level2 smaller">
+<h2>Types of Joins</h2>
+<p>There are 4 primary types of joins you’ll read about this week:</p>
+<div class="columns">
+<div class="column">
+<ul>
+<li><strong>Inner join</strong> → Only rows with matching keys in both tables</li>
+<li>Left join<br>
+</li>
+<li>Right join</li>
+<li>Outer join</li>
+</ul>
+</div><div class="column">
+<p><img data-src="images/join-inner.png"></p>
+</div></div>
+</section>
+<section id="types-of-joins-2" class="slide level2 smaller">
+<h2>Types of Joins</h2>
+<p>There are 4 primary types of joins you’ll read about this week:</p>
+<div class="columns">
+<div class="column">
+<ul>
+<li>Inner join</li>
+<li><strong>Left join</strong> → All rows from left table, matching from right<br>
+</li>
+<li>Right join</li>
+<li>Outer join</li>
+</ul>
+</div><div class="column">
+<p><img data-src="images/join-left.png"></p>
+</div></div>
+</section>
+<section id="types-of-joins-3" class="slide level2 smaller">
+<h2>Types of Joins</h2>
+<p>There are 4 primary types of joins you’ll read about this week:</p>
+<div class="columns">
+<div class="column">
+<ul>
+<li>Inner join</li>
+<li>Left join<br>
+</li>
+<li><strong>Right join</strong> → All rows from right table, matching from left<br>
+</li>
+<li>Outer join</li>
+</ul>
+</div><div class="column">
+<p><img data-src="images/join-right.png"></p>
+</div></div>
+</section>
+<section id="types-of-joins-4" class="slide level2 smaller">
+<h2>Types of Joins</h2>
+<p>There are 4 primary types of joins you’ll read about this week:</p>
+<div class="columns">
+<div class="column">
+<ul>
+<li>Inner join</li>
+<li>Left join<br>
+</li>
+<li>Right join</li>
+<li><strong>Outer join</strong> → All rows from both tables</li>
+</ul>
+</div><div class="column">
+<p><img data-src="images/join-outer-full.png"></p>
+</div></div>
+</section>
+<section id="pandas-merge-basics" class="slide level2 smaller">
+<h2>Pandas <code>merge()</code> Basics</h2>
+<p>We use <code>merge()</code> to join datasets.</p>
+<div class="columns">
+<div class="column">
+<div class="sourceCode" id="cb30"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href=""></a>pd.merge(</span>
+<span id="cb30-2"><a href=""></a>  left_df,          <span class="co"># left DF</span></span>
+<span id="cb30-3"><a href=""></a>  right_df,         <span class="co"># right DF</span></span>
+<span id="cb30-4"><a href=""></a>  on<span class="op">=</span><span class="st">'key_column'</span>,  <span class="co"># column(s) to join on</span></span>
+<span id="cb30-5"><a href=""></a>  how<span class="op">=</span><span class="st">'inner'</span>       <span class="co"># type of join</span></span>
+<span id="cb30-6"><a href=""></a>  )      </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div><div class="column">
+<div class="sourceCode" id="cb31"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href=""></a>(</span>
+<span id="cb31-2"><a href=""></a>  left_df.               <span class="co"># start with left DF</span></span>
+<span id="cb31-3"><a href=""></a>  merge(right_df,        <span class="co"># right DF</span></span>
+<span id="cb31-4"><a href=""></a>        on<span class="op">=</span><span class="st">'key_column'</span>, <span class="co"># column(s) to join on</span></span>
+<span id="cb31-5"><a href=""></a>        how<span class="op">=</span><span class="st">'inner'</span>      <span class="co"># type of join</span></span>
+<span id="cb31-6"><a href=""></a>        )           </span>
+<span id="cb31-7"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div>
+<p><br></p>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Note</strong></p>
+</div>
+<div class="callout-content">
+<p>Two general approaches your see. Either is fine.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="example" class="slide level2 smaller">
+<h2>Example</h2>
+<blockquote>
+<p>What is the total sales value for the top 10 selling products?</p>
+</blockquote>
+<p><br></p>
+<div id="e2aeaf8d" class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href=""></a>transactions <span class="op">=</span> cj_data[<span class="st">"transactions"</span>]</span>
+<span id="cb32-2"><a href=""></a>products <span class="op">=</span> cj_data[<span class="st">"products"</span>]</span>
+<span id="cb32-3"><a href=""></a></span>
+<span id="cb32-4"><a href=""></a>(</span>
+<span id="cb32-5"><a href=""></a>    transactions</span>
+<span id="cb32-6"><a href=""></a>    .merge(products, how<span class="op">=</span><span class="st">'inner'</span>, on<span class="op">=</span><span class="st">'product_id'</span>)</span>
+<span id="cb32-7"><a href=""></a>    .groupby([<span class="st">'product_id'</span>, <span class="st">'product_category'</span>], as_index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb32-8"><a href=""></a>    .agg({<span class="st">'sales_value'</span>: <span class="st">'sum'</span>})</span>
+<span id="cb32-9"><a href=""></a>    .nlargest(<span class="dv">10</span>, <span class="st">'sales_value'</span>)</span>
+<span id="cb32-10"><a href=""></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="324">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+
+<table class="dataframe caption-top" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header" style="text-align: right;">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">product_id</th>
+<th data-quarto-table-cell-role="th">product_category</th>
+<th data-quarto-table-cell-role="th">sales_value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">42214</td>
+<td>6534178</td>
+<td>COUPON/MISC ITEMS</td>
+<td>303116.02</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">42185</td>
+<td>6533889</td>
+<td>COUPON/MISC ITEMS</td>
+<td>27467.61</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">23017</td>
+<td>1029743</td>
+<td>FLUID MILK PRODUCTS</td>
+<td>22729.71</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">42210</td>
+<td>6534166</td>
+<td>COUPON/MISC ITEMS</td>
+<td>20477.54</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">42178</td>
+<td>6533765</td>
+<td>FUEL</td>
+<td>19451.66</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">27873</td>
+<td>1082185</td>
+<td>TROPICAL FRUIT</td>
+<td>17219.59</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">12489</td>
+<td>916122</td>
+<td>CHICKEN</td>
+<td>16120.01</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">30086</td>
+<td>1106523</td>
+<td>FLUID MILK PRODUCTS</td>
+<td>15629.95</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">19812</td>
+<td>995242</td>
+<td>FLUID MILK PRODUCTS</td>
+<td>15602.59</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">39340</td>
+<td>5569230</td>
+<td>SOFT DRINKS</td>
+<td>13410.46</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="lets-wrap-this-up" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Let’s Wrap This Up</h1>
+
+</section>
+<section id="recap-what-did-we-learn" class="slide level2">
+<h2>Recap: What Did We Learn?</h2>
+<ul>
+<li>Why clean, well-structured data matters for reliable analysis</li>
+<li><strong>Manipulating Data:</strong> rename/add/drop columns; handle missing values</li>
+<li><strong>Summarizing Data:</strong> <code>describe()</code>, <code>groupby()</code>, and aggregations</li>
+<li><strong>Joining Data:</strong> combine related tables with <code>merge()</code> (inner/left/right/outer)</li>
+<li>Used the <strong>Ames Housing Data</strong> and <strong>Complete Journey</strong> datasets to anchor real questions</li>
+</ul>
+</section>
+<section id="quick-reference" class="slide level2 smaller">
+<h2>🧾 Quick Reference</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 67%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Task</th>
+<th>Syntax Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rename columns</td>
+<td><code>df.rename(columns={"old":"new"}, inplace=True)</code></td>
+</tr>
+<tr class="even">
+<td>Create a new column</td>
+<td><code>df["unit_price"] = df["sales_value"] / df["quantity"]</code></td>
+</tr>
+<tr class="odd">
+<td>Drop column(s)</td>
+<td><code>df.drop(columns=["col1","col2"], inplace=True)</code></td>
+</tr>
+<tr class="even">
+<td>Fill missing values</td>
+<td><code>df["col"].fillna(0, inplace=True)</code></td>
+</tr>
+<tr class="odd">
+<td>Group and single aggregation</td>
+<td><code>df.groupby("dept")["sales_value"].sum()</code></td>
+</tr>
+<tr class="even">
+<td>Group with multiple aggregations</td>
+<td><code>df.groupby("dept").agg({"sales_value":["sum","mean"], "quantity":"sum"})</code></td>
+</tr>
+<tr class="odd">
+<td>Sort results</td>
+<td><code>df.sort_values(["sales_value"], ascending=False)</code></td>
+</tr>
+<tr class="even">
+<td>Most frequent items</td>
+<td><code>df["product_id"].value_counts()</code></td>
+</tr>
+<tr class="odd">
+<td>Join two tables (inner)</td>
+<td><code>pd.merge(left_df, right_df, on="key", how="left)</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="key-takeaways" class="slide level2">
+<h2>Key Takeaways</h2>
+<ul>
+<li>Most orgs store data <strong>across multiple tables</strong> → joins are essential</li>
+<li><strong>Clean columns + clear keys</strong> → fewer surprises when aggregating/joining</li>
+<li><strong>groupby + agg</strong> unlocks “who/what/where/how much” business questions</li>
+<li>Handling missingness requires <strong>reasoning</strong> (MCAR/MAR/MNAR), not just <code>.fillna()</code></li>
+<li>Build analysis from your questions → manipulate → summarize → join → summarize → interpret</li>
+</ul>
+</section>
+<section id="coming-up-next" class="slide level2">
+<h2>Coming Up Next…</h2>
+<ul>
+<li><strong>Thursday Lab:</strong> come ready to <strong>answer your group’s questions</strong> using joins &amp; aggregations</li>
+<li><strong>Homework:</strong> apply this week’s skills to manipulate, summarize, and join data</li>
+</ul>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Important</strong></p>
+</div>
+<div class="callout-content">
+<p>Be sure to finish the Week 4 readings <strong>before</strong> Thursday’s lab so you can hit the ground running!</p>
+</div>
+</div>
+</div>
+</section>
+<section id="qa" class="slide level2">
+<h2>Q&amp;A 🙋‍♀️</h2>
+<p>Open floor for any questions regarding…</p>
+<ul>
+<li>Today’s manipulation / aggregation / joining topics</li>
+<li>What to do before Thursday’s lab</li>
+<li>Reading clarifications or edge cases you’ve run into</li>
+<li>Anything else on your mind</li>
+</ul>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+<p>BANA 4080</p>
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="w4_tuesday_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="w4_tuesday_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/appearance/appearance.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="w4_tuesday_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="w4_tuesday_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': true,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'appearance': {"hideagain":true,"delay":300,"debug":false,"appearevent":"slidetransitionend","autoappear":false,"autoelements":false,"appearparents":false},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, Appearance, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+            const codeEl = trigger.previousElementSibling.cloneNode(true);
+            for (const childEl of codeEl.children) {
+              if (isCodeAnnotation(childEl)) {
+                childEl.remove();
+              }
+            }
+            return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
