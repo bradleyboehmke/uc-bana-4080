@@ -1,0 +1,797 @@
+---
+title: "Week 5 – Data Visualization Foundations"
+subtitle: "+ Midterm Project Preview"
+format:
+  revealjs:
+    slide-number: true
+    preview-links: auto
+    revealjs-plugins:
+      - appearance
+      - highlight-text
+    css: styles.css
+    mermaid:
+      theme: neutral
+footer: 'BANA 4080'
+title-slide-attributes:
+    data-background-image: images/data-viz-background.jpg
+    data-background-size: cover
+    data-background-opacity: "1.0"
+filters: 
+  - timer
+execute:
+    echo: true
+---
+
+## Welcome to Week 5
+
+* Quick overview of today's plan:
+
+  * Quick review & questions on last week’s content
+  * Why data visualization matters in data science
+  * Overview: Pandas, Matplotlib, Bokeh for different purposes
+  * High-level plotting considerations & common pitfalls
+  * Midterm project preview & expectations
+
+# Discussion: Homework & Questions {background="#43464B"}
+
+## Questions from Week 5? {.smaller}
+
+* Manipulating & cleaning DataFrames?
+* Aggregating data with vs. without `groupby`?
+* Joining datasets for richer context
+* Anything confusing in the quiz or class lab?
+* Time to ask!
+
+. . .
+
+:::: {.columns}
+::: {.column width='70%'}
+::: {.callout}
+## Activity
+
+Converse with your neighbor and identify...
+
+* 1 new thing you learned last week that you can see yourself using often
+* 1 thing we covered last week that is still confusing
+:::
+:::
+::: {.column width='30%'}
+<center>
+
+<div id="3minWaiting"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minWaiting", 180, "slide"); 
+    });
+</script>
+</center>
+:::
+::::
+
+# Importance of Data Visualization {background="#43464B"}
+
+## Why We Visualize {.smaller}
+
+* **Communicate insights quickly & clearly** – visuals make complex data understandable at a glance
+* **Reveal patterns, trends, and outliers** – helps discover what might be hidden in tables
+* **Support decision-making** – effective visuals can influence strategic direction
+* **Engage your audience** – people connect with visual stories more than raw numbers
+
+## How Quickly Can You Spot Insights? {.smaller}
+
+Tell me, what are some insights you gather from this [table]{style="color:blue;"}:
+
+<br>
+
+| Month | Product A | Product B | Product C |
+| ----- | --------- | --------- | --------- |
+| Jan   | 1050      | 1501      | 1200      |
+| Feb   | 987       | 1482      | 1093      |
+| Mar   | 1119      | 1428      | 1139      |
+| Apr   | 1129      | 1420      | 1081      |
+| May   | 1099      | 148       | 1018      |
+| Jun   | 1199      | 1396      | 1018      |
+
+## How Quickly Can You Spot Insights? {.smaller}
+
+Tell me, what are some insights you gather from this [plot]{style="color:blue;"}:
+
+![](images/product_sales_trends_updated_numbers.png)
+
+## Different Vizualization Needs
+
+::: {.callout}
+## Activity
+
+* I’ll give you three scenarios.
+* In your small groups (or with a partner), discuss:
+   - What is the main goal of the visualization in each case?
+   - What characteristics of the visualization will be most important?
+   - How do these differ in terms of speed, polish, customization, and interactivity?
+   - What trade-offs would you make for each?
+
+You have 4 minutes.
+:::
+
+## Different Vizualization Needs {.smaller}
+
+:::: {.columns}
+::: {.column width='70%'}
+
+::: {.callout}
+## Scenario 1
+
+You’ve just pulled a messy dataset and need to quickly see if there are obvious data quality issues or trends before cleaning it.
+:::
+
+::: {.callout}
+## Scenario 2
+
+You’re presenting quarterly revenue trends to the CFO and CEO in a boardroom setting. The chart will appear in a formal report and on a slide.
+:::
+
+::: {.callout}
+## Scenario 3
+
+You’re building a tool for the marketing team that lets them interactively filter sales data by product category, store, and date range, and explore patterns themselves.
+:::
+
+:::
+::: {.column width='30%'}
+<center>
+
+<div id="4minWaiting"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("4minWaiting", 240, "slide"); 
+    });
+</script>
+</center>
+:::
+::::
+
+## Different Needs, Different Visualizations {.smaller}
+
+We should match ***how*** we visualize to the goal we have in mind.
+
+. . .
+
+* **Quick plots during data exploration**
+  * Purpose: Spot-check patterns, identify data quality issues, guide next analysis steps
+  * Characteristics: Fast, minimal customization
+
+. . .
+
+* **Refined plots for reports/presentations**
+  * Purpose: Communicate results clearly to stakeholders
+  * Characteristics: Well-labeled, polished, consistent styling, tailored to audience
+
+. . .
+
+* **Interactive plots for user-facing apps**
+  * Purpose: Allow exploration, filtering, drilling down into details
+  * Characteristics: Hover tools, zoom/pan, interlinked plots
+
+## Different Needs, Different Visualizations {.smaller}
+
+We should match ***how*** we visualize to the goal we have in mind.
+
+<br>
+
+| Purpose            | Example Tool     | Example Use Case                 |
+| ------------------ | ---------------- | -------------------------------- |
+| Quick EDA          | Pandas `.plot()` | Checking missing data by month   |
+| Polished reporting | Matplotlib       | Quarterly sales trends for execs |
+| Interactive apps   | Bokeh            | Customer behavior dashboard      |
+
+
+## Why It Matters to Choose the Right Type {.smaller}
+
+**Main Points:**
+
+* The **same dataset** can be visualized in multiple ways depending on the goal
+* A quick plot during EDA might be **ugly but informative** — and that’s okay
+* A polished plot for executives should be **clean, clear, and focused**
+* Interactive plots shine when your audience needs to **explore, not just consume**
+
+. . .
+
+::: {.callout-tip}
+
+Growing as a data scientist means growing your **understanding of visualization as a whole**.
+
+This includes improving your ability to choose, design, and present visuals that best **communicate your analytic findings** for the specific task and audience at hand.
+
+:::
+
+Here’s the **Section 3 outline** we discussed earlier for introducing **Pandas**, **Matplotlib**, and **Bokeh** in the context of visualization:
+
+# Pandas {background="#43464B"}
+
+## Pandas for Quick Plots {.smaller}
+
+* Perfect for **fast exploratory data analysis** tied directly to DataFrames/Series
+* Minimal customization (but enough for quick insights)
+* Chart types: line (default), bar, scatter, histograms, etc.
+* When to use: **Speed over polish**
+
+## Pandas for Quick Plots {.smaller}
+
+Pandas provides a `.plot`...
+
+<br>
+
+```{python}
+#| echo: false
+
+import pandas as pd
+
+df = pd.read_csv("../data/ames_clean.csv")
+```
+
+:::: {.columns}
+::: {.column}
+**Method**
+
+```{python}
+df['SalePrice'].plot(kind='hist')
+```
+
+:::
+::: {.column}
+**Attribute**
+
+```{python}
+df['SalePrice'].plot.hist()
+```
+
+:::
+::::
+
+## Lots of Plotting Choices {.smaller}
+
+:::: {.columns}
+::: {.column}
+* Histograms
+:::
+::: {.column}
+```{python}
+df['SalePrice'].plot(kind='hist')
+```
+:::
+
+::::
+
+## Lots of Plotting Choices {.smaller}
+
+:::: {.columns}
+::: {.column}
+* Histograms
+* Boxplots
+:::
+::: {.column}
+```{python}
+df['SalePrice'].plot(kind='box')
+```
+:::
+
+::::
+
+## Lots of Plotting Choices {.smaller}
+
+:::: {.columns}
+::: {.column}
+* Histograms
+* Boxplots
+* Scatter plots
+:::
+::: {.column}
+```{python}
+df.plot(kind='scatter', x='GrLivArea', y='SalePrice')
+```
+:::
+
+::::
+
+## Lots of Plotting Choices {.smaller}
+
+:::: {.columns}
+::: {.column}
+* Histograms
+* Boxplots
+* Scatter plots
+* Bar charts
+
+:::
+::: {.column}
+```{python}
+(
+    df['Neighborhood']
+    .value_counts()
+    .sort_values()
+    .plot(kind='barh')
+)
+```
+:::
+
+::::
+
+## Lots of Plotting Choices {.smaller}
+
+:::: {.columns}
+::: {.column}
+* Histograms
+* Boxplots
+* Scatter plots
+* Bar charts
+* Line plots
+
+<br>
+
+::: {.callout}
+And many more options!
+:::
+
+:::
+::: {.column}
+```{python}
+(
+    df[['MoSold', 'SalePrice']]
+    .groupby('MoSold', as_index=False)
+    .agg(avg_sale_price = ('SalePrice', 'mean'))
+    .plot(kind='line', x='MoSold', y='avg_sale_price')
+)
+```
+:::
+
+::::
+
+## Just a wrapper over Matplotlib {.smaller}
+
+Pandas `.plot()` method is just a wrapper around Matplotlib
+
+
+```{python}
+import matplotlib.pyplot as plt
+
+plt.style.use('fivethirtyeight')
+
+(
+    df[['MoSold', 'SalePrice']]
+    .groupby('MoSold')
+    .agg(avg_sale_price = ('SalePrice', 'median'))
+    .plot.bar(title='Median home sales price by month', figsize=(10,3), legend=False)
+)
+```
+
+## Just a wrapper over Matplotlib {.smaller}
+
+Pandas `.plot()` method is just a wrapper around Matplotlib
+
+<br>
+
+::: {.callout-tip}
+This provides us more refined control [assuming we understand Matplotlib!]{style="color:blue;"}
+:::
+
+# Matplotlib {background="#43464B"}
+
+## Matplotlib for Full Control
+
+* The most widely used Python plotting library
+* **Full customization**: labels, legends, colors, annotations, grids, styles
+* Basis for many other visualization libraries (Pandas, Seaborn, etc.)
+* When to use: **Polish and precision over speed**
+
+::: {.callout-tip}
+Use Matplotlib for Custom, Publication-Ready Visuals!
+:::
+
+## From Pandas → Polished Matplotlib (Step 0: Quick Pandas) {.smaller}
+
+Start with the same data used in the Pandas section.
+
+```{python}
+#| echo: false
+
+monthly = (
+    df[['MoSold','SalePrice']]
+    .groupby('MoSold', as_index=False)
+    .agg(avg_sale_price=('SalePrice','median'))
+    .sort_values('MoSold')
+)
+
+plt.style.use('default')
+```
+
+```{python}
+# Quick EDA-style Pandas plot
+monthly.plot(kind='line', x='MoSold', y='avg_sale_price', legend=False)
+```
+
+
+## Step 1: Move to Figure/Axes API {.smaller}
+
+Gives you handles (`fig`, `ax`) for fine-grained control.
+
+```{python}
+fig, ax = plt.subplots(figsize=(8, 3.5))
+ax.plot(
+    monthly['MoSold'], monthly['avg_sale_price'],
+    marker='o'
+)
+ax.set_title("Median Home Sale Price by Month")
+ax.set_xlabel("Month")
+ax.set_ylabel("Sale Price ($)")
+plt.tight_layout()
+plt.show()
+```
+
+
+## Step 2: Make It Executive-Ready {.smaller .scrollable}
+
+Add formatting, spacing, and readable ticks.
+
+```{python}
+from matplotlib.ticker import StrMethodFormatter
+
+fig, ax = plt.subplots(figsize=(10, 4))
+
+ax.plot(
+    monthly['MoSold'], monthly['avg_sale_price'],
+    marker='o', linewidth=2
+)
+
+# Titles & labels
+ax.set_title("Median Home Sale Price by Month", pad=10)
+ax.set_xlabel("Month (1–12)")
+ax.set_ylabel("Median Sale Price")
+
+# Currency formatting with thousands separators
+ax.yaxis.set_major_formatter(StrMethodFormatter('${x:,.0f}'))
+
+# Tick improvements
+ax.set_xticks(range(1,13))
+ax.grid(True, alpha=0.3)
+
+# Remove top/right spines for a cleaner look
+for spine in ["top", "right"]:
+    ax.spines[spine].set_visible(False)
+
+plt.tight_layout()
+plt.show()
+```
+
+
+## Step 3: Highlight Insights (Annotations & Reference Lines) {.smaller .scrollable}
+
+Direct attention to the takeaway.
+
+```{python}
+fig, ax = plt.subplots(figsize=(10, 5))
+
+ax.plot(monthly['MoSold'], monthly['avg_sale_price'], marker='o', linewidth=2)
+
+# Format
+ax.yaxis.set_major_formatter(StrMethodFormatter('${x:,.0f}'))
+ax.set_xticks(range(1,13))
+ax.grid(True, alpha=0.3)
+for spine in ["top","right"]:
+    ax.spines[spine].set_visible(False)
+
+# Identify peak month
+peak_idx = monthly['avg_sale_price'].idxmax()
+peak_month = int(monthly.loc[peak_idx, 'MoSold'])
+peak_value = float(monthly.loc[peak_idx, 'avg_sale_price'])
+
+# Annotate the peak
+ax.annotate(
+    f"Peak: {peak_month} (~{peak_value:,.0f})",
+    xy=(peak_month, peak_value),
+    xytext=(peak_month-3, peak_value),
+    arrowprops=dict(arrowstyle="->", lw=1.2),
+    fontsize=9
+)
+
+# Optional: reference line at annual median
+ref = monthly['avg_sale_price'].median()
+ax.axhline(ref, linestyle='--', linewidth=1, alpha=0.6)
+ax.text(12.05, ref, f"  Annual median ≈ ${ref:,.0f}", va='center')
+
+ax.set_title("Median Home Sale Price by Month — Highlighting Peak & Annual Median", pad=10)
+ax.set_xlabel("Month (1–12)")
+ax.set_ylabel("Median Sale Price")
+
+plt.tight_layout()
+plt.show()
+```
+
+
+## Step 4: Final Touches & Export {.smaller .scrollable}
+
+Make it reproducible and ready for a report.
+
+```{python}
+plt.rcParams.update({
+    "figure.dpi": 120,
+    "savefig.dpi": 300
+})
+
+fig, ax = plt.subplots(figsize=(10, 4))
+ax.plot(monthly['MoSold'], monthly['avg_sale_price'], marker='o', linewidth=2)
+
+ax.set_title("Median Home Sale Price by Month (Ames, IA)", pad=10)
+ax.set_xlabel("Month (1–12)")
+ax.set_ylabel("Median Sale Price")
+ax.yaxis.set_major_formatter(StrMethodFormatter('${x:,.0f}'))
+ax.set_xticks(range(1,13))
+ax.grid(True, alpha=0.3)
+for spine in ["top","right"]:
+    ax.spines[spine].set_visible(False)
+
+plt.tight_layout()
+plt.savefig("images/median_sale_price_by_month.png", bbox_inches="tight")
+plt.show()
+```
+
+
+## Common Gotchas (and Quick Fixes) {.smaller}
+
+* **Unreadable axes** → rotate ticks, add thousands separators, set sensible limits
+* **Cluttered legends** → label lines clearly, reduce categories, or annotate directly
+* **Overplotting** → use transparency (`alpha`), smaller markers, or aggregate first
+* **Inconsistent styles** → set `plt.style.use()` once and for all plots
+* **Cramped layout** → use `plt.tight_layout()` or `constrained_layout=True`
+
+<br>
+
+::: {.callout-caution}
+## A Word of Caution on Matplotlib
+
+Matplotlib is incredibly powerful, but it’s not always the most intuitive library—especially when you’re just getting started. Its API can feel verbose and a bit clunky compared to higher-level tools.
+
+The good news? There’s a massive amount of example code out there, so if you can describe what you want, you can almost always find a solution by Googling or using your friendly AI copilot tool. Learning to adapt those examples to your needs is a valuable skill in itself.
+:::
+
+## Takeaway {.smaller}
+
+* Use **Pandas** for speed during EDA
+* Use **Matplotlib** when clarity, control, and polish are required
+* Small incremental steps (labels → formatting → annotations → export) turn a quick plot into a **CEO-ready** visual
+
+# Interactive Visualizations {background="#43464B"}
+
+## Why Interactive Visualizations?
+
+* Enable **deeper exploration** of the data without writing new code
+* Allow users to **filter, zoom, and hover** for more details
+* Great for **storytelling** when the audience needs to discover insights themselves
+* Especially valuable in **dashboards** or **public-facing tools**
+
+## When to Use Interactive Visualizations
+
+* **Exploratory data analysis** with many dimensions to explore
+* Presenting to **decision-makers** who want to “poke around” the data
+* Building **internal dashboards** or **data-driven applications**
+* When static plots **cannot capture all the nuance** or details
+
+## Tools for Interactive Plots {.smaller}
+
+Several Python libraries support interactivity:
+
+* **Bokeh** — Great for creating rich, interactive visualizations for the web
+* **Plotly** — Very popular, integrates well with Dash for dashboarding
+* **Altair** — Grammar-of-graphics style with easy interactivity
+* **Seaborn + Widgets** — More limited interactivity via notebooks
+* **Holoviews / Panel** — High-level interface for Bokeh
+
+## Example: Interactive Bokeh Line Chart {.smaller .scrollable}
+
+Let's create a nice plot showing the relationship between home sale price and living area — but interactive.
+
+```{python}
+from bokeh.plotting import figure, show
+from bokeh.models import HoverTool, ColumnDataSource, NumeralTickFormatter
+from bokeh.transform import factor_cmap
+from bokeh.io import output_notebook
+
+# Render Bokeh plots inline (Jupyter/Colab)
+output_notebook()
+
+# If needed, load your data:
+# df = pd.read_csv("../data/ames_clean.csv")[['GrLivArea','SalePrice','CentralAir']].dropna()
+
+# ColumnDataSource
+source = ColumnDataSource(df)
+
+# Color map by CentralAir (adjust palette/order as desired)
+palette = ['red', 'blue']
+factors = list(df['CentralAir'].unique())
+color_mapper = factor_cmap('CentralAir', palette=palette, factors=factors)
+
+# Create the figure, stored in variable `p`
+p = figure(
+    frame_width=700,
+    frame_height=350,
+    title='Relationship between home sale price and living area \nAmes, Iowa (2006-2010)',
+    x_axis_label='Living Area (Square feet)',
+    y_axis_label='Sale Price',
+    tools="pan,wheel_zoom,box_zoom,reset,save"  # common interactive tools
+)
+
+# Scatter (with shared color mapping for fill & line)
+p.scatter(
+    source=source,
+    x='GrLivArea',
+    y='SalePrice',
+    marker='circle',
+    alpha=0.25,
+    fill_color=color_mapper,
+    line_color=color_mapper,
+    legend_field='CentralAir'
+)
+
+# Legend & axis formatting
+p.legend.title = "Has central air"
+p.yaxis.formatter = NumeralTickFormatter(format="$,")
+p.xaxis.formatter = NumeralTickFormatter(format=",")
+
+# Hover tooltips
+tooltips = [("Sale Price","@SalePrice{$0,0}"), ("SqFt","@GrLivArea{0,0}")]
+hover = HoverTool(tooltips=tooltips, mode='mouse')
+p.add_tools(hover)
+
+# Show the plot inline
+show(p)
+
+```
+
+
+## So Many Options!
+
+![](images/bokeh-gallery.png){fig-align="center"}
+
+::: footer
+See more at: [https://docs.bokeh.org/en/latest/docs/gallery.html](https://docs.bokeh.org/en/latest/docs/gallery.html)
+:::
+
+## Recap of Visualization Tools {.smaller}
+
+<br>
+
+| Tool           | Strengths                               | Best Use Cases                                         |
+| -------------- | --------------------------------------- | ------------------------------------------------------ |
+| **Pandas**     | Fast, tied to DataFrames, minimal setup | Quick EDA during analysis                              |
+| **Matplotlib** | Complete control, high-quality output   | Reports, presentations, publications                   |
+| **Bokeh**      | Interactive, web-friendly               | Dashboards, stakeholder exploration, exploratory tools |
+
+
+# Mid-term {background="#43464B"}
+
+
+## Mid-term: It’s Closer Than You Think!
+
+* **We’re a little over 2 weeks out** from the mid-term deadline.
+* **Why talk about it now?**
+  * You have **two upcoming lab sessions** to work on it:
+    * **This Thursday:** Explore possible directions & form groups.
+    * **Next Thursday:** Entire lab dedicated to mid-term work.
+
+. . .
+
+* **Action this week:**
+  * Form your group (2–4 students).
+  * Review the mid-term instructions & grading rubric.
+
+## What’s the Goal?
+
+**Scenario Recap:**
+
+* You’re a data scientist at **Regork**, a national grocery chain.
+* You’ve been asked to **identify a potential area of growth** that could increase revenue or profits.
+* Deliverables:
+
+  * **Written report** with clear business question, analysis, and recommendations.
+  * **3-minute presentation** for the CEO.
+
+
+## Project Details {.smaller}
+
+* **Group Size:** 2–4 students
+* **Choose 1 clear business question** and fully address it
+* Use the datasets provided (Complete Journey data)
+* **Analysis Requirements:**
+  * Data wrangling & cleaning
+  * Aggregations & visualizations
+  * Logical analytic approach that connects to the business question
+
+. . .
+
+::: {.callout-important}
+## Grading Criteria
+
+We'll discuss these in more depth in future classes:
+
+* Clarity of business question
+* Soundness of analytic approach
+* Quality & clarity of visuals
+* Actionable insights & recommendations
+:::
+
+
+
+## Example Business Questions
+
+::: incremental
+* Are certain demographic groups underrepresented in specific product categories?
+* Do purchasing patterns shift seasonally or around holidays?
+* Are certain products frequently bought together?
+* Which promotions drive the most revenue uplift?
+* Are there product categories with declining sales in specific demographics?
+:::
+
+. . .
+
+::: {.callout-important}
+## Get Creative!
+
+These are examples—you can explore your own ideas.
+:::
+
+## What “Good” Looks Like {.smaller}
+
+* **Clear narrative** that ties analysis back to the business question
+* **Appropriate visuals** that enhance the story (not just charts for the sake of charts)
+* **Actionable recommendations**—tell the CEO *what to do next*
+
+**Example:**
+
+* **Business Question:** *Are frozen pizzas and beer commonly purchased together?*
+* **Approach:** Join transactions + products, identify relevant items, compute co-purchase rates, visualize results.
+* **Recommendation:** Targeted “Pizza & Beer” weekend promotions.
+* **Dig Deeper:**
+  * Is the co-purchase **more common leading into the weekend** than earlier in the week?
+  * Does it **spike during football season** vs. the rest of the year?
+  * Are these items co-purchased **more by households with kids** than those without?
+
+## What “Good” Looks Like {.smaller}
+
+* **Clear narrative** that ties analysis back to the business question
+* **Appropriate visuals** that enhance the story (not just charts for the sake of charts)
+* **Actionable recommendations**—tell the CEO *what to do next*
+
+**Example:**
+
+* **Business Question:** *Are frozen pizzas and beer commonly purchased together?*
+* **Approach:** Join transactions + products, identify relevant items, compute co-purchase rates, visualize results.
+* **Recommendation:** Targeted “Pizza & Beer” weekend promotions.
+
+::: {.callout-important}
+## Dig Deeper
+
+Bottom line: Provide a **robust, multi-angle understanding** of the business problem so you can **paint a complete picture for the CEO**.
+:::
+
+
+## Key Takeaways for Today
+
+* Form your group by **Thursday**
+* Come to Thursday’s lab ready to explore possible directions
+* Think both **analytically** and **visually**—what’s the story you want to tell?
+* Your business question may evolve as you explore the data—that’s normal!
+
+
+::: {.callout-important}
+Don't worry, we'll continue to discuss the details & expectations of this mid-term over the next couple weeks.
+:::
+
+## Q&A 🙋🏾‍♂️
+
+Open floor for any questions regarding...
+
+- Today’s manipulation / aggregation / joining topics
+- What to do before Thursday’s lab
+- Reading clarifications or edge cases you’ve run into
+- Anything else on your mind
