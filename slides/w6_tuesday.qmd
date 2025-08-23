@@ -1,0 +1,745 @@
+---
+title: "Week 6 – Control Flow, Iteration, and Functions"
+subtitle: "+ Mid-term Project Discussion"
+format:
+  revealjs:
+    slide-number: true
+    preview-links: auto
+    revealjs-plugins:
+      - appearance
+      - highlight-text
+    css: styles.css
+    mermaid:
+      theme: neutral
+footer: 'BANA 4080'
+title-slide-attributes:
+    data-background-image: images/programming-background.png
+    data-background-size: cover
+    data-background-opacity: "0.90"
+filters: 
+  - timer
+execute:
+    echo: true
+---
+
+## Welcome to Week 6
+
+**Today's Agenda:**
+
+- Week 5 Review & Business Pop Quiz
+- Control statements for business logic
+- Iteration for automation
+- Functions for reusable code
+- Mid-term project discussion & timeline
+
+# Week 5 Review & Pop Quiz {background="#43464B"}
+
+## Quick Review: Data Visualization Tools {.smaller}
+
+Last week we covered three main approaches to visualization in Python:
+
+| Tool           | Purpose                    | Best Use Cases                        |
+| -------------- | -------------------------- | ------------------------------------- |
+| **Pandas**     | Quick exploratory plots    | Fast EDA during analysis              |
+| **Matplotlib** | Polished, customized plots | Reports, presentations, publications  |
+| **Bokeh**      | Interactive visualizations | Dashboards, user exploration tools    |
+
+## Business Scenarios Pop Quiz {.smaller}
+
+::: {.callout}
+## Scenario-Based Questions
+
+I'll present 4 real business scenarios. For each one, think about:
+
+- What visualization approach would you recommend?
+- What type of chart would be most effective?
+- What business insights are you trying to reveal?
+:::
+
+:::: {.columns}
+::: {.column width='70%'}
+Work with a partner and be ready to explain your reasoning!
+:::
+::: {.column width='30%'}
+<center>
+
+<div id="5minQuiz"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("5minQuiz", 300, "slide"); 
+    });
+</script>
+</center>
+:::
+::::
+
+## Pop Quiz Question 1 {.smaller}
+
+::: {.callout}
+## Scenario 1: Monthly Sales Report
+
+Your manager wants to see monthly sales trends across 5 different product categories for the past 2 years. This will be presented to executives in a formal quarterly business review.
+
+**Your recommendation:**
+
+- Visualization tool?
+- Chart type?
+- Why this choice?
+:::
+
+## Pop Quiz Question 2 {.smaller}
+
+::: {.callout}
+## Scenario 2: Customer Segmentation Exploration
+
+You've just finished clustering analysis and identified 6 customer segments. The marketing team wants to explore these segments interactively - filtering by demographics, purchase behavior, and geographic region.
+
+**Your recommendation:**
+
+- Visualization tool?
+- Chart type?
+- Why this choice?
+:::
+
+## Pop Quiz Question 3 {.smaller}
+
+::: {.callout}
+## Scenario 3: Data Quality Check
+
+You've just received a new dataset with customer transaction data. You need to quickly check for missing values, outliers, and basic patterns before starting your analysis.
+
+**Your recommendation:**
+
+- Visualization tool?
+- Chart type?
+- Why this choice?
+:::
+
+## Pop Quiz Question 4 {.smaller}
+
+::: {.callout}
+## Scenario 4: Marketing Spend vs Revenue
+
+A stakeholder asks: "What's the relationship between our digital marketing spend and online revenue?" You need to analyze this relationship and present findings that could influence next quarter's marketing budget.
+
+**Your recommendation:**
+
+- Visualization tool?
+- Chart type?
+- Why this choice?
+:::
+
+## Quick Debrief {.smaller}
+
+**Key takeaways from the pop quiz:**
+
+- **Context drives choice** - same data, different tools depending on audience and purpose
+- **Pandas** for quick data exploration and quality checks
+- **Matplotlib** for polished presentations to executives
+- **Bokeh** for interactive exploration by business users
+- **Chart type matters** - match the visual to the business question
+
+**Any lingering questions from Week 5?**
+
+# Control Statements for Business Logic {background="#43464B"}
+
+## Why Programs Need to "Make Decisions" {.smaller}
+
+In business, we constantly make decisions based on conditions:
+
+:::: {.columns}
+::: {.column}
+**Business Examples:**
+
+- If customer is VIP → offer premium discount
+- If inventory is low → reorder products  
+- If sales exceed target → pay bonus
+- If credit score is high → approve loan
+:::
+::: {.column}
+**Python Equivalent:**
+```python
+if customer_type == 'VIP':
+    discount = 0.20
+elif customer_type == 'Premium':
+    discount = 0.15
+else:
+    discount = 0.05
+```
+:::
+::::
+
+**Control statements let your code make business decisions automatically.**
+
+## Basic if/elif/else Syntax {.smaller}
+
+```python
+# Customer segmentation example
+def segment_customer(annual_spend):
+    if annual_spend >= 10000:
+        return "High Value"
+    elif annual_spend >= 5000:
+        return "Medium Value"  
+    elif annual_spend >= 1000:
+        return "Low Value"
+    else:
+        return "Inactive"
+
+# Test it out
+print(segment_customer(12500))  # High Value
+print(segment_customer(3000))   # Low Value
+```
+
+## Business Logic: Discount Eligibility {.smaller}
+
+```python
+def calculate_discount(customer_type, order_amount, is_member):
+    """Calculate customer discount based on business rules"""
+    
+    base_discount = 0
+    
+    # VIP customers always get 15% minimum
+    if customer_type == 'VIP':
+        base_discount = 0.15
+    elif customer_type == 'Premium':
+        base_discount = 0.10
+    
+    # Large orders get additional discount
+    if order_amount > 500:
+        base_discount += 0.05
+    
+    # Loyalty members get extra 5%
+    if is_member:
+        base_discount += 0.05
+    
+    # Cap maximum discount at 25%
+    return min(base_discount, 0.25)
+```
+
+## Dictionary-Based Business Rules {.smaller}
+
+**Alternative to long if/elif chains:**
+
+```python
+# Product pricing rules
+pricing_tiers = {
+    'basic': 29.99,
+    'premium': 49.99,
+    'enterprise': 99.99,
+    'custom': None  # requires quote
+}
+
+def get_price(product_tier):
+    return pricing_tiers.get(product_tier, "Contact sales")
+
+# Usage
+print(get_price('premium'))    # 49.99
+print(get_price('invalid'))   # Contact sales
+```
+
+**When to use:** Clean, readable rules that map inputs to outputs.
+
+## Vectorized Conditionals in Pandas {.smaller}
+
+**For large datasets, use pandas instead of loops:**
+
+```python
+import pandas as pd
+
+# Sample customer data
+customers = pd.DataFrame({
+    'customer_id': [1, 2, 3, 4, 5],
+    'annual_spend': [15000, 3000, 8000, 500, 12000],
+    'years_active': [5, 1, 3, 0.5, 7]
+})
+
+# Vectorized customer segmentation
+customers['segment'] = pd.cut(
+    customers['annual_spend'], 
+    bins=[0, 1000, 5000, 10000, float('inf')],
+    labels=['Inactive', 'Low', 'Medium', 'High']
+)
+
+print(customers[['customer_id', 'annual_spend', 'segment']])
+```
+
+# Iteration for Business Automation {background="#43464B"}
+
+## Why Automate Repetitive Business Tasks? {.smaller}
+
+**Common business scenarios where iteration saves time:**
+
+:::: {.columns}
+::: {.column}
+
+- **Processing monthly reports** from multiple stores
+- **Calculating metrics** across product categories
+- **Data quality checks** on multiple datasets
+- **Sending personalized emails** to customer segments
+- **Applying transformations** across time periods
+:::
+::: {.column}
+**Before automation:**
+
+- Manual work for each file/category
+- Error-prone copy/paste
+- Hours of repetitive tasks
+
+**After automation:**
+
+- Write once, run many times
+- Consistent results
+- Focus on analysis, not busy work
+:::
+::::
+
+## for Loops: Processing Multiple Files {.smaller}
+
+**Scenario:** Process monthly sales reports from 12 different stores
+
+```python
+import pandas as pd
+import glob
+
+# Get all monthly sales files
+sales_files = glob.glob("data/monthly_sales/*.csv")
+
+# Process each file
+monthly_summaries = []
+
+for file in sales_files:
+    # Load each store's data
+    df = pd.read_csv(file)
+    
+    # Calculate key metrics
+    summary = {
+        'store': file.split('/')[-1].replace('.csv', ''),
+        'total_sales': df['sales_amount'].sum(),
+        'avg_transaction': df['sales_amount'].mean(),
+        'transaction_count': len(df)
+    }
+    
+    monthly_summaries.append(summary)
+
+# Combine all store summaries
+results = pd.DataFrame(monthly_summaries)
+```
+
+## while Loops: Conditional Processing {.smaller}
+
+**Scenario:** Process inventory until reorder threshold is met
+
+```python
+import random
+
+def process_daily_inventory():
+    """Simulate daily inventory processing"""
+    
+    current_inventory = 1000
+    reorder_threshold = 200
+    days = 0
+    
+    while current_inventory > reorder_threshold:
+        # Simulate daily sales (random between 50-150 units)
+        daily_sales = random.randint(50, 150)
+        current_inventory -= daily_sales
+        days += 1
+        
+        print(f"Day {days}: Sold {daily_sales}, Remaining: {current_inventory}")
+    
+    print(f"Reorder needed after {days} days!")
+    print(f"Current inventory: {current_inventory}")
+
+process_daily_inventory()
+```
+
+## List Comprehensions for Data Transformations {.smaller}
+
+**Efficient way to transform data:**
+
+```python
+# Calculate profit margins for all products
+product_data = [
+    {'name': 'Widget A', 'cost': 10, 'price': 15},
+    {'name': 'Widget B', 'cost': 25, 'price': 40},
+    {'name': 'Widget C', 'cost': 8, 'price': 12}
+]
+
+# List comprehension approach (Pythonic!)
+profit_margins = [
+    (item['price'] - item['cost']) / item['price'] 
+    for item in product_data
+]
+
+# Traditional loop approach (more verbose)
+profit_margins_loop = []
+for item in product_data:
+    margin = (item['price'] - item['cost']) / item['price']
+    profit_margins_loop.append(margin)
+```
+
+## When to Use Loops vs Pandas Operations {.smaller}
+
+**Use pandas vectorized operations when possible:**
+
+:::: {.columns}
+::: {.column}
+**❌ Slow (loop over rows):**
+```python
+# Don't do this
+for idx, row in df.iterrows():
+    if row['sales'] > 1000:
+        df.loc[idx, 'bonus'] = 100
+    else:
+        df.loc[idx, 'bonus'] = 0
+```
+:::
+::: {.column}
+**✅ Fast (vectorized):**
+```python
+# Do this instead
+df['bonus'] = df['sales'].apply(
+    lambda x: 100 if x > 1000 else 0
+)
+
+# Or even better
+df['bonus'] = np.where(
+    df['sales'] > 1000, 100, 0
+)
+```
+:::
+::::
+
+**Use loops for:** File processing, API calls, complex business logic  
+**Use pandas for:** Column calculations, filtering, aggregations
+
+# Functions for Reusable Code {background="#43464B"}
+
+## Why Business Analysts Need Functions {.smaller}
+
+**The DRY Principle: Don't Repeat Yourself**
+
+:::: {.columns}
+::: {.column}
+**Without functions:**
+```python
+# Calculate ROI for Campaign A
+roi_a = (revenue_a - cost_a) / cost_a * 100
+
+# Calculate ROI for Campaign B  
+roi_b = (revenue_b - cost_b) / cost_b * 100
+
+# Calculate ROI for Campaign C
+roi_c = (revenue_c - cost_c) / cost_c * 100
+```
+:::
+::: {.column}
+**With functions:**
+```python
+def calculate_roi(revenue, cost):
+    return (revenue - cost) / cost * 100
+
+roi_a = calculate_roi(revenue_a, cost_a)
+roi_b = calculate_roi(revenue_b, cost_b)
+roi_c = calculate_roi(revenue_c, cost_c)
+```
+:::
+::::
+
+**Benefits:** Less code, fewer errors, easier to modify, clearer intent
+
+## Business Metrics Functions {.smaller}
+
+```python
+def customer_lifetime_value(avg_order_value, purchase_frequency, 
+                           gross_margin, customer_lifespan):
+    """
+    Calculate Customer Lifetime Value (CLV)
+    
+    Args:
+        avg_order_value: Average amount spent per order
+        purchase_frequency: Purchases per year
+        gross_margin: Profit margin (as decimal, e.g., 0.20 for 20%)
+        customer_lifespan: Expected years as customer
+    
+    Returns:
+        CLV in dollars
+    """
+    annual_value = avg_order_value * purchase_frequency * gross_margin
+    clv = annual_value * customer_lifespan
+    return round(clv, 2)
+
+# Usage
+clv = customer_lifetime_value(
+    avg_order_value=150,
+    purchase_frequency=4,
+    gross_margin=0.25,
+    customer_lifespan=3
+)
+print(f"Customer Lifetime Value: ${clv}")
+```
+
+## Data Cleaning Pipeline Functions {.smaller}
+
+```python
+def clean_customer_data(df):
+    """Standardized data cleaning for customer datasets"""
+    
+    # Remove duplicates
+    df = df.drop_duplicates()
+    
+    # Standardize phone numbers
+    df['phone'] = df['phone'].str.replace(r'[^\d]', '', regex=True)
+    
+    # Clean email addresses
+    df['email'] = df['email'].str.lower().str.strip()
+    
+    # Handle missing values
+    df['age'] = df['age'].fillna(df['age'].median())
+    df['income'] = df['income'].fillna(df['income'].median())
+    
+    return df
+
+def validate_data_quality(df, required_columns):
+    """Check data quality and return summary"""
+    
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    missing_data = df.isnull().sum()
+    
+    return {
+        'missing_columns': missing_cols,
+        'missing_data': missing_data.to_dict(),
+        'total_rows': len(df)
+    }
+```
+
+## Lambda Functions for Quick Transformations {.smaller}
+
+**For simple, one-line transformations:**
+
+```python
+import pandas as pd
+
+# Sample sales data
+sales = pd.DataFrame({
+    'product': ['A', 'B', 'C', 'D'],
+    'revenue': [1200, 800, 1500, 950],
+    'cost': [600, 500, 900, 400]
+})
+
+# Calculate profit using lambda
+sales['profit'] = sales.apply(lambda row: row['revenue'] - row['cost'], axis=1)
+
+# Categorize performance using lambda
+sales['performance'] = sales['profit'].apply(
+    lambda x: 'High' if x > 600 else ('Medium' if x > 400 else 'Low')
+)
+
+print(sales)
+```
+
+**When to use:** Simple transformations, pandas apply operations  
+**When not to use:** Complex logic, reusable across projects
+
+## Function Documentation for Team Collaboration {.smaller}
+
+```python
+def calculate_churn_risk(days_since_last_purchase, avg_purchase_frequency, 
+                        customer_complaints, discount_usage_rate):
+    """
+    Calculate customer churn risk score.
+    
+    Args:
+        days_since_last_purchase (int): Days since last order
+        avg_purchase_frequency (float): Average days between purchases
+        customer_complaints (int): Number of complaints in last 6 months
+        discount_usage_rate (float): Fraction of purchases using discounts (0-1)
+    
+    Returns:
+        float: Churn risk score from 0-100 (higher = more likely to churn)
+    
+    Example:
+        >>> calculate_churn_risk(45, 30, 2, 0.8)
+        75.5
+    """
+    # Risk increases with time since last purchase
+    recency_risk = min((days_since_last_purchase / avg_purchase_frequency) * 30, 50)
+    
+    # Risk increases with complaints
+    complaint_risk = customer_complaints * 10
+    
+    # High discount usage may indicate price sensitivity
+    discount_risk = discount_usage_rate * 20
+    
+    total_risk = recency_risk + complaint_risk + discount_risk
+    return min(total_risk, 100)  # Cap at 100
+```
+
+# Mid-term Project Discussion {background="#43464B"}
+
+## Mid-term Timeline: We're Getting Close! {.smaller}
+
+**Timeline:**
+
+- **Today:** Discuss project requirements and expectations
+- **Thursday Lab:** Form groups, explore dataset, brainstorm questions  
+- **Next Tuesday:** Project work session & check-ins
+- **Next Thursday:** Final work session, presentations begin
+- **Deadline:** End of next week
+
+**Why discuss today?** You have **2 dedicated lab sessions** to work on this!
+
+## Project Scenario Reminder {.smaller}
+
+**You are data scientists at Regork, a national grocery chain.**
+
+**Your mission:** Identify a potential area of growth that could increase revenue or profits.
+
+**Deliverables:**
+
+1. **Written report** (3-4 pages) with business question, analysis, and recommendations
+2. **3-minute presentation** for the CEO
+
+**Dataset:** Complete Journey grocery transaction data (customers, products, transactions, promotions)
+
+## Team Formation Guidelines {.smaller}
+
+**Group Size:** 2-4 students
+
+**Forming your team:**
+
+- Mix of skills/backgrounds if possible
+- Clear communication expectations
+- Decide on meeting times early
+
+**This Thursday:** Come to lab ready to:
+
+- Form your group
+- Explore the dataset together  
+- Start brainstorming business questions
+- Divide initial tasks
+
+## Choosing Your Business Question {.smaller}
+
+**Good business questions are:**
+
+- **Specific and actionable** - not too broad
+- **Answerable with the available data**
+- **Relevant to business growth/profit**
+
+**Example progression:**
+
+❌ "What products sell well?" (too broad)  
+❌ "Do customers like organic food?" (can't answer with transaction data)  
+✅ "Which product categories show seasonal purchasing patterns that could inform promotional timing?"
+
+## Example Business Questions {.smaller}
+
+**Market Basket Analysis:**
+
+- Which products are frequently purchased together?
+- Can we identify cross-selling opportunities?
+
+**Customer Behavior:**
+
+- Do purchasing patterns vary by demographic segments?
+- Which customers are most responsive to promotions?
+
+**Seasonal/Temporal Patterns:**
+
+- How do sales patterns change throughout the year?
+- What drives weekend vs weekday shopping differences?
+
+**Promotion Effectiveness:**
+
+- Which types of promotions generate the highest revenue lift?
+- Do certain customer segments respond better to specific promotion types?
+
+## What Makes a Strong Project {.smaller}
+
+**Technical Requirements:**
+
+- Data cleaning and preprocessing
+- Multiple visualizations (using skills from Week 5!)
+- Statistical analysis or aggregations
+- Clear analytical methodology
+
+**Business Impact:**
+
+- Clear connection to revenue/profit opportunity
+- Actionable recommendations
+- Realistic implementation suggestions
+- Quantified potential impact when possible
+
+**Presentation:**
+
+- Tell a compelling story
+- Focus on insights, not just analysis
+- Professional visuals
+- Strong business case
+
+## Grading Criteria Overview {.smaller}
+
+**Written Report (60%):**
+
+- Clarity of business question (15%)
+- Quality of analysis and methodology (20%)
+- Visualization quality and appropriateness (15%)
+- Insights and recommendations (10%)
+
+**Presentation (30%):**
+
+- Clear communication (15%)
+- Business focus and impact (15%)
+
+**Collaboration (10%):**
+
+- Team contribution and collaboration
+
+**We'll discuss detailed rubric next week!**
+
+## Getting Started: Thursday Lab Plan {.smaller}
+
+**What to do Thursday:**
+
+1. **Form groups** (first 15 minutes)
+2. **Dataset exploration** - load data, understand structure
+3. **Brainstorm questions** - what business problems interest you?
+4. **Preliminary analysis** - start exploring patterns
+5. **Plan next steps** - divide tasks, set meeting times
+
+**Come prepared with:**
+
+- Ideas about what business problems interest you
+- Willingness to collaborate
+- Laptop/Colab access for data exploration
+
+## Questions & Discussion
+
+**Open floor for questions about:**
+
+- Control statements, iteration, and functions
+- Mid-term project requirements
+- Team formation process
+- Dataset or analysis approaches
+- Timeline and expectations
+
+# Summary and Next Steps {background="#43464B"}
+
+## Key Takeaways {.smaller}
+
+**Today we covered:**
+
+1. **Control statements** - Making business decisions in code
+2. **Iteration** - Automating repetitive business tasks  
+3. **Functions** - Creating reusable, maintainable code
+4. **Mid-term project** - Timeline, requirements, and expectations
+
+**Next steps:**
+
+- **Thursday:** Lab work on control flow + mid-term group formation
+- **Read:** Chapters 16-18 in the textbook
+- **Start thinking:** What business questions interest you for the mid-term?
+
+**Remember:** These programming concepts make you more efficient and your code more professional!
