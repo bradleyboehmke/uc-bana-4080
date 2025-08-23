@@ -172,56 +172,185 @@ else:
 
 **Control statements let your code make business decisions automatically.**
 
-## Basic if/elif/else Syntax {.smaller}
+## Scenario 1: Simple `if` Statement {.smaller}
 
-```python
-# Customer segmentation example
-def segment_customer(annual_spend):
-    if annual_spend >= 10000:
-        return "High Value"
-    elif annual_spend >= 5000:
-        return "Medium Value"  
-    elif annual_spend >= 1000:
-        return "Low Value"
-    else:
-        return "Inactive"
+**Business Context:** *"Alert warehouse staff when inventory is critically low"*
 
-# Test it out
-print(segment_customer(12500))  # High Value
-print(segment_customer(3000))   # Low Value
+When you just need to check one condition and take action if it's true:
+
+```{python}
+# Check current inventory level
+stock_level = 5
+
+if stock_level < 10:
+    print("🚨 URGENT: Reorder needed!")
+
+# Business continues regardless
+print(f"Current stock: {stock_level} units")
 ```
 
-## Business Logic: Discount Eligibility {.smaller}
+```{python}
+# Try with higher inventory
+stock_level = 50
 
-```python
-def calculate_discount(customer_type, order_amount, is_member):
-    """Calculate customer discount based on business rules"""
+if stock_level < 10:
+    print("🚨 URGENT: Reorder needed!")
     
-    base_discount = 0
-    
-    # VIP customers always get 15% minimum
-    if customer_type == 'VIP':
-        base_discount = 0.15
-    elif customer_type == 'Premium':
-        base_discount = 0.10
-    
-    # Large orders get additional discount
-    if order_amount > 500:
-        base_discount += 0.05
-    
-    # Loyalty members get extra 5%
-    if is_member:
-        base_discount += 0.05
-    
-    # Cap maximum discount at 25%
-    return min(base_discount, 0.25)
+print(f"Current stock: {stock_level} units")
 ```
 
-## Dictionary-Based Business Rules {.smaller}
+## Scenario 2: `if/else` Statement {.smaller}
 
-**Alternative to long if/elif chains:**
+**Business Context:** *"Apply VIP discount pricing for premium customers"*
 
-```python
+When you have exactly two paths - do one thing OR another:
+
+```{python}
+# VIP customer example
+base_price = 100
+is_vip = True
+
+if is_vip:
+    final_price = base_price * 0.8  # 20% VIP discount
+    print(f"VIP discount applied! Price: ${final_price}")
+else:
+    final_price = base_price
+    print(f"Standard price: ${final_price}")
+```
+
+```{python}
+# Regular customer example  
+base_price = 100
+is_vip = False
+
+if is_vip:
+    final_price = base_price * 0.8  # 20% VIP discount
+    print(f"VIP discount applied! Price: ${final_price}")
+else:
+    final_price = base_price
+    print(f"Standard price: ${final_price}")
+```
+
+## Scenario 3: `if/elif/else` Statement {.smaller .scrollable}
+
+**Business Context:** *"Segment customers by annual spending for targeted marketing"*
+
+When you have multiple categories to check in order:
+
+```{python}
+# High-value customer example
+annual_spend = 12500
+
+if annual_spend >= 10000:
+    segment = "High Value"
+    strategy = "Personal account manager"
+elif annual_spend >= 5000:
+    segment = "Medium Value"
+    strategy = "Quarterly check-ins"
+elif annual_spend >= 1000:
+    segment = "Low Value"
+    strategy = "Email campaigns"
+else:
+    segment = "Inactive"
+    strategy = "Re-engagement campaign"
+
+print(f"Customer segment: {segment} → {strategy}")
+```
+
+```{python}
+# Low-value customer example
+annual_spend = 3000
+
+if annual_spend >= 10000:
+    segment = "High Value"
+    strategy = "Personal account manager"
+elif annual_spend >= 5000:
+    segment = "Medium Value"
+    strategy = "Quarterly check-ins"
+elif annual_spend >= 1000:
+    segment = "Low Value"
+    strategy = "Email campaigns"
+else:
+    segment = "Inactive"
+    strategy = "Re-engagement campaign"
+
+print(f"Customer segment: {segment} → {strategy}")
+```
+
+## Business Logic: Complex Discount Rules {.smaller}
+
+**Business Context:** *"Combine multiple discount rules for sophisticated pricing"*
+
+```{python}
+# VIP customer with large order and membership - Example 1
+customer_type = 'VIP'
+order_amount = 600
+is_member = True
+
+base_discount = 0
+
+# VIP customers always get 15% minimum
+if customer_type == 'VIP':
+    base_discount = 0.15
+elif customer_type == 'Premium':
+    base_discount = 0.10
+
+# Large orders get additional discount
+if order_amount > 500:
+    base_discount += 0.05
+
+# Loyalty members get extra 5%
+if is_member:
+    base_discount += 0.05
+
+# Cap maximum discount at 25%
+final_discount = min(base_discount, 0.25)
+
+print(f"VIP customer final discount: {final_discount:.1%}")
+```
+
+```{python}
+# Premium customer with small order, no membership - Example 2
+customer_type = 'Premium'
+order_amount = 300
+is_member = False
+
+base_discount = 0
+
+# VIP customers always get 15% minimum
+if customer_type == 'VIP':
+    base_discount = 0.15
+elif customer_type == 'Premium':
+    base_discount = 0.10
+
+# Large orders get additional discount
+if order_amount > 500:
+    base_discount += 0.05
+
+# Loyalty members get extra 5%
+if is_member:
+    base_discount += 0.05
+
+# Cap maximum discount at 25%
+final_discount = min(base_discount, 0.25)
+
+print(f"Premium customer final discount: {final_discount:.1%}")
+```
+
+## Dictionary-Based Business Rules {.smaller .scrollable}
+
+**Business Context:** *"SaaS company needs dynamic pricing lookup for subscription tiers"*
+
+Your company offers software subscriptions with different pricing tiers. Rather than writing long if/elif chains to determine pricing, you can use Python dictionaries for clean, maintainable pricing logic.
+
+**Why dictionaries beat if/elif chains:**
+
+- **Cleaner code:** No nested conditions to debug
+- **Easy updates:** Change prices in one place  
+- **Scalable:** Add new tiers without touching logic
+- **Data-driven:** Pricing rules can come from databases
+
+```{python}
 # Product pricing rules
 pricing_tiers = {
     'basic': 29.99,
@@ -230,21 +359,29 @@ pricing_tiers = {
     'custom': None  # requires quote
 }
 
-def get_price(product_tier):
-    return pricing_tiers.get(product_tier, "Contact sales")
+# Look up premium tier pricing
+pricing_tiers.get('premium', "Contact sales")
+```
 
-# Usage
-print(get_price('premium'))    # 49.99
-print(get_price('invalid'))   # Contact sales
+```{python}
+# Look up basic tier pricing
+pricing_tiers.get('basic', "Contact sales")
+```
+
+```{python}
+# Look up invalid tier (demonstrates default behavior)
+pricing_tiers.get('invalid', "Contact sales")
 ```
 
 **When to use:** Clean, readable rules that map inputs to outputs.
 
 ## Vectorized Conditionals in Pandas {.smaller}
 
+**Business Context:** *"Segment thousands of customers efficiently"*
+
 **For large datasets, use pandas instead of loops:**
 
-```python
+```{python}
 import pandas as pd
 
 # Sample customer data
@@ -254,13 +391,14 @@ customers = pd.DataFrame({
     'years_active': [5, 1, 3, 0.5, 7]
 })
 
-# Vectorized customer segmentation
+# Vectorized customer segmentation - processes all rows at once!
 customers['segment'] = pd.cut(
     customers['annual_spend'], 
     bins=[0, 1000, 5000, 10000, float('inf')],
     labels=['Inactive', 'Low', 'Medium', 'High']
 )
 
+print("Customer segmentation results:")
 print(customers[['customer_id', 'annual_spend', 'segment']])
 ```
 
@@ -294,89 +432,153 @@ print(customers[['customer_id', 'annual_spend', 'segment']])
 :::
 ::::
 
-## for Loops: Processing Multiple Files {.smaller}
+## Business Example: Why Use for Loops? {.smaller}
 
-**Scenario:** Process monthly sales reports from 12 different stores
+**Business Context:** *"Calculate sales commission for each sales representative"*
 
+Your company has 5 sales reps with different sales amounts. You need to calculate 10% commission for each.
+
+:::: {.columns}
+::: {.column}
+**Manual approach (repetitive):**
 ```python
-import pandas as pd
-import glob
+# Rep 1
+sales_rep1 = 45000
+commission1 = sales_rep1 * 0.10
 
-# Get all monthly sales files
-sales_files = glob.glob("data/monthly_sales/*.csv")
+# Rep 2  
+sales_rep2 = 52000
+commission2 = sales_rep2 * 0.10
 
-# Process each file
-monthly_summaries = []
-
-for file in sales_files:
-    # Load each store's data
-    df = pd.read_csv(file)
-    
-    # Calculate key metrics
-    summary = {
-        'store': file.split('/')[-1].replace('.csv', ''),
-        'total_sales': df['sales_amount'].sum(),
-        'avg_transaction': df['sales_amount'].mean(),
-        'transaction_count': len(df)
-    }
-    
-    monthly_summaries.append(summary)
-
-# Combine all store summaries
-results = pd.DataFrame(monthly_summaries)
+# Rep 3
+sales_rep3 = 38000
+commission3 = sales_rep3 * 0.10
+# ... continue for all reps
 ```
-
-## while Loops: Conditional Processing {.smaller}
-
-**Scenario:** Process inventory until reorder threshold is met
-
+:::
+::: {.column}
+**for loop approach (automated):**
 ```python
-import random
+sales_amounts = [45000, 52000, 38000, 41000, 67000]
 
-def process_daily_inventory():
-    """Simulate daily inventory processing"""
-    
-    current_inventory = 1000
-    reorder_threshold = 200
-    days = 0
-    
-    while current_inventory > reorder_threshold:
-        # Simulate daily sales (random between 50-150 units)
-        daily_sales = random.randint(50, 150)
-        current_inventory -= daily_sales
-        days += 1
-        
-        print(f"Day {days}: Sold {daily_sales}, Remaining: {current_inventory}")
-    
-    print(f"Reorder needed after {days} days!")
-    print(f"Current inventory: {current_inventory}")
-
-process_daily_inventory()
+for sales in sales_amounts:
+    commission = sales * 0.10
+    print(f"Sales: ${sales:,} → Commission: ${commission:,}")
 ```
+:::
+::::
 
-## List Comprehensions for Data Transformations {.smaller}
+**Result:** Same calculation applied consistently to all data with less code and fewer errors.
 
-**Efficient way to transform data:**
+## for Loops: Processing Store Performance {.smaller}
 
-```python
-# Calculate profit margins for all products
-product_data = [
-    {'name': 'Widget A', 'cost': 10, 'price': 15},
-    {'name': 'Widget B', 'cost': 25, 'price': 40},
-    {'name': 'Widget C', 'cost': 8, 'price': 12}
+**Scenario:** Calculate performance metrics for multiple store locations
+
+```{python}
+# Store sales data for 5 locations
+stores = [
+    {'name': 'Downtown', 'sales': 125000, 'target': 100000},
+    {'name': 'Mall', 'sales': 98000, 'target': 110000},
+    {'name': 'Suburbs', 'sales': 142000, 'target': 120000},
+    {'name': 'Airport', 'sales': 87000, 'target': 90000},
+    {'name': 'University', 'sales': 156000, 'target': 140000}
 ]
 
-# List comprehension approach (Pythonic!)
-profit_margins = [
-    (item['price'] - item['cost']) / item['price'] 
-    for item in product_data
-]
+# Calculate performance for each store
+print("Store Performance Report:")
+print("-" * 40)
 
-# Traditional loop approach (more verbose)
-profit_margins_loop = []
-for item in product_data:
-    margin = (item['price'] - item['cost']) / item['price']
-    profit_margins_loop.append(margin)
+for store in stores:
+    performance = (store['sales'] / store['target']) * 100
+    status = "✅ Above Target" if performance >= 100 else "❌ Below Target"
+    
+    print(f"{store['name']:12} | {performance:5.1f}% | {status}")
+```
+
+## while Loops: Conditional Processing {.smaller .scrollable}
+
+**Business Context:** *"Automate inventory monitoring to prevent stockouts"*
+
+Your company needs to track product inventory daily and trigger reorders automatically when stock gets too low. Unlike `for` loops that run a fixed number of times, `while` loops continue until a condition is met - perfect for monitoring situations.
+
+**When to use while loops:**
+
+- You don't know exactly how many iterations you need
+- You want to continue until a specific business condition is reached
+- You're monitoring thresholds, limits, or targets
+
+## while Loops: Conditional Processing {.smaller .scrollable}
+
+**Business Context:** *"Automate inventory monitoring to prevent stockouts"*
+
+**Scenario:** Track daily inventory until reorder threshold is reached
+
+```{python}
+# Starting inventory and business rules
+current_inventory = 1000
+reorder_threshold = 200
+days = 0
+
+# Daily sales amounts (simulating a week)
+daily_sales = [95, 120, 85, 110, 140, 75, 130]
+
+print("Daily Inventory Tracking:")
+print("-" * 35)
+
+# Process sales until we need to reorder
+sale_index = 0
+while current_inventory > reorder_threshold and sale_index < len(daily_sales):
+    # Process today's sales
+    today_sales = daily_sales[sale_index]
+    current_inventory -= today_sales
+    days += 1
+    sale_index += 1
+    
+    print(f"Day {days}: Sold {today_sales:3d} | Remaining: {current_inventory:3d}")
+
+print("-" * 35)
+if current_inventory <= reorder_threshold:
+    print(f"🚨 Reorder needed after {days} days!")
+    print(f"Current inventory: {current_inventory} units")
+else:
+    print("✅ Inventory still sufficient")
+```
+
+## List Comprehensions for Data Transformations {.smaller .scrollable}
+
+**Business Context:** *"Apply 15% discount to all product prices"*
+
+List comprehensions let you create new lists in one line instead of writing loops:
+
+```{python}
+# Original product prices
+original_prices = [29.99, 49.99, 19.99, 89.99, 15.99]
+```
+
+<br>
+
+```{python}
+# Traditional for loop approach
+discounted_prices_loop = []
+for price in original_prices:
+    new_price = price * 0.85  # Apply 15% discount
+    discounted_prices_loop.append(new_price)
+
+print("For loop result:", discounted_prices_loop)
+```
+
+<br>
+
+```{python}
+# List comprehension approach (same result, one line!)
+discounted_prices_comp = [price * 0.85 for price in original_prices]
+
+print("List comprehension result:", discounted_prices_comp)
+
+# Syntax comparison:
+# [EXPRESSION for ITEM in LIST]
+#     ↑           ↑        ↑
+#   what to do   loop   source data
 ```
 
 ## When to Use Loops vs Pandas Operations {.smaller}
@@ -449,9 +651,46 @@ roi_c = calculate_roi(revenue_c, cost_c)
 
 **Benefits:** Less code, fewer errors, easier to modify, clearer intent
 
-## Business Metrics Functions {.smaller}
+## Function Basics: Building Blocks {.smaller}
 
-```python
+**Business Context:** *"Create reusable code for repeated business calculations"*
+
+Every function has 4 key components:
+
+```{python}
+def calculate_sales_tax(price, tax_rate=0.08):
+    """
+    Calculate sales tax for a given price.
+    
+    Args:
+        price (float): The base price of the item
+        tax_rate (float): Tax rate as decimal (default 8%)
+    
+    Returns:
+        float: The tax amount
+    """
+    tax_amount = price * tax_rate
+    return tax_amount
+
+# Using the function
+item_price = 100.00
+tax = calculate_sales_tax(item_price)
+print(f"Tax on ${item_price}: ${tax:.2f}")
+
+# Using with custom tax rate
+tax_custom = calculate_sales_tax(item_price, 0.10)
+print(f"Tax with 10% rate: ${tax_custom:.2f}")
+```
+
+**Four key parts:** `def` name, arguments, docstring, `return`
+
+## Business Metrics Functions {.smaller .scrollable}
+
+**Business Context:** *"Calculate key performance indicators consistently across the organization"*
+
+Your marketing team needs to calculate Customer Lifetime Value (CLV) for different customer segments to guide acquisition spending. Instead of recreating this calculation in every analysis, you create a reusable function.
+
+```{python}
 def customer_lifetime_value(avg_order_value, purchase_frequency, 
                            gross_margin, customer_lifespan):
     """
@@ -480,7 +719,11 @@ clv = customer_lifetime_value(
 print(f"Customer Lifetime Value: ${clv}")
 ```
 
-## Data Cleaning Pipeline Functions {.smaller}
+## Data Cleaning Pipeline Functions {.smaller .scrollable}
+
+**Business Context:** *"Standardize data processing across multiple datasets from different sources"*
+
+Your company receives customer data from various sources (website, CRM, mobile app) with different formats and quality issues. Instead of cleaning each dataset manually, you create standardized functions to ensure consistent data quality.
 
 ```python
 def clean_customer_data(df):
@@ -514,11 +757,11 @@ def validate_data_quality(df, required_columns):
     }
 ```
 
-## Lambda Functions for Quick Transformations {.smaller}
+## Lambda Functions for Quick Transformations {.smaller .scrollable}
 
 **For simple, one-line transformations:**
 
-```python
+```{python}
 import pandas as pd
 
 # Sample sales data
