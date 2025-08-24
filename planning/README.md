@@ -13,21 +13,26 @@ Use this space to:
 
 ## Organization
 
+### Subdirectories
+- **`quizzes/`** - Quiz questions and answer keys for each week/module (private, not for students)
+- **`templates/`** - Reusable templates for course materials (notebooks, slides, assessments)
+- **`gh-issues/`** - GitHub issue templates and planning documents for course improvements
+
 ### Content Development
-- `*_slides_issue.md` - Issue templates for creating weekly presentation slides
-- `*_lab_issue.md` - Issue templates for developing hands-on lab exercises  
-- `*_chapter_issue.md` - Issue templates for textbook chapter updates
-- `assessment_planning.md` - Ideas for homework, quizzes, and project development
+- Issue templates for creating weekly presentation slides
+- Templates for developing hands-on lab exercises  
+- Templates for textbook chapter updates
+- Assessment planning and quiz development
 
 ### Course Strategy
-- `pedagogical_notes.md` - Teaching strategies for business students new to programming
-- `technology_integration.md` - Plans for incorporating new tools, libraries, or platforms
-- `student_feedback_analysis.md` - Analysis of student feedback and improvement plans
+- Teaching strategies for business students new to programming
+- Plans for incorporating new tools, libraries, or platforms
+- Analysis of student feedback and improvement plans
 
 ### Coordination
-- `weekly_coordination.md` - Templates for aligning Tuesday lectures with Thursday labs
-- `module_progression.md` - Planning for logical skill building across modules
-- `real_world_connections.md` - Ideas for connecting course content to business applications
+- Templates for aligning Tuesday lectures with Thursday labs
+- Planning for logical skill building across modules
+- Ideas for connecting course content to business applications
 
 ## Usage Guidelines
 
