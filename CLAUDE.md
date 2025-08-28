@@ -84,9 +84,10 @@ jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace *.ipynb
 - **Purpose**: Step-by-step examples following textbook modules
 
 ### `/labs/` - Weekly Lab Activities
-- **Lab sequence**: `01_python_intro.ipynb` through `05_wk5_lab.ipynb`  
+- **Lab sequence**: `01_python_intro.ipynb` through `06_midterm_project_template.ipynb`  
 - **Answer keys**: Some labs include `_answer_key.ipynb` versions
 - **Interactive exercises**: Hands-on practice for students
+- **Project templates**: Structured frameworks for major assignments
 
 ### `/homework/` - Assignments
 - **Student assignments**: `homework1.ipynb`, `homework2.ipynb`
@@ -99,6 +100,13 @@ jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace *.ipynb
 - **Subdirectories**: `completejourney/` and `monthly_data/` for complex datasets
 - **Real-world data**: Datasets chosen for practical data science applications
 
+### `/planning/` - Course Development Materials
+- **Canvas documentation**: Weekly overview pages and course module descriptions
+- **Project materials**: Mid-term and final project specifications, rubrics, and templates
+- **Templates**: Reusable frameworks for slides, labs, and assessments
+- **GitHub issues**: Planning documents for course improvements and content creation
+- **Quizzes**: Assessment materials and answer keys (instructor use only)
+
 ## Development Workflow
 
 ### Adding New Course Content
@@ -106,6 +114,8 @@ jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace *.ipynb
 2. **Example notebooks**: Follow naming convention, ensure outputs are cleared before commit
 3. **Lab activities**: Create in `/labs/`, include both student and answer key versions
 4. **Datasets**: Add to `/data/`, document structure and source in relevant notebooks
+5. **Canvas documentation**: Create weekly overview pages in `/planning/canvas_docs/`
+6. **Project materials**: Develop specifications and rubrics in `/planning/projects/`
 
 ### Content Guidelines
 - **Jupyter notebooks**: Always clear cell outputs before committing (except answer keys)

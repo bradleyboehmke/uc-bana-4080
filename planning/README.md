@@ -17,12 +17,16 @@ Use this space to:
 - **`quizzes/`** - Quiz questions and answer keys for each week/module (private, not for students)
 - **`templates/`** - Reusable templates for course materials (notebooks, slides, assessments)
 - **`gh-issues/`** - GitHub issue templates and planning documents for course improvements
+- **`canvas_docs/`** - Canvas course documentation including weekly overview pages for students
+- **`projects/`** - Project planning materials including mid-term and final project documentation
 
 ### Content Development
 - Issue templates for creating weekly presentation slides
 - Templates for developing hands-on lab exercises  
 - Templates for textbook chapter updates
 - Assessment planning and quiz development
+- Canvas documentation for weekly course modules
+- Project documentation including rubrics and requirements
 
 ### Course Strategy
 - Teaching strategies for business students new to programming
@@ -49,6 +53,8 @@ This directory can house templates for:
 - Lab exercise creation  
 - Assessment design
 - Student project coordination
+- Canvas module documentation
+- Project specifications and rubrics
 - Guest lecture planning
 - Industry partnership content
 
