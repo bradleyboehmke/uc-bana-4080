@@ -46,7 +46,12 @@ execute:
 
 ## Intro Activity – Load the Data {.smaller}
 
-Open up Colab (Thursday's Lab notebook) and load the Complete Journey data
+::: {.callout-important}
+## Follow along
+
+Open up Colab and load the Complete Journey data: [tinyurl.com/bana4080-wk4-lecture](https://tinyurl.com/bana4080-wk4-lecture)
+:::
+
 
 :::: {.columns}
 ::: {.column}
@@ -283,13 +288,13 @@ Why we might do this:
 
 
 ```{python}
-#| code-line-numbers: "7"
-
+# dict containing mapping of {old values: new values}
 months = {
     1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 
     7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
 }
 
+# use map function to apply changes to a column
 ames['mo_sold'] = ames['mo_sold'].map(months)
 ames.head()
 ```
@@ -343,6 +348,58 @@ ames[['pool_qc']].value_counts()
 
 :::
 ::::
+
+## 🧑‍💻 Code With Me: Clean Product Names {.smaller .scrollable}
+
+**Business Question:** Our marketing team wants cleaner product category names for their dashboard. Can we standardize the Complete Journey product categories?
+
+```{python}
+# Load the products data
+products = cj_data["products"]
+products['product_category'].value_counts()
+```
+
+. . .
+
+**Your turn:** Help me clean these category names by:
+
+1. Converting to lowercase
+2. Replacing spaces/hyphens with underscores  
+3. Creating a new column called `clean_category`
+
+```python
+# Fill in the blanks together!
+products['clean_category'] = (
+    products['product_category']
+    .str.______()                    # convert to lowercase
+    .str.replace(' ', '_')           # replace spaces
+    .str.replace(__, __)           # replace hyphens
+)
+
+products[['product_category', 'clean_category']].head()
+```
+
+## 🧑‍💻 Code With Me: Create Business Metrics {.smaller .scrollable}
+
+**Business Question:** Our analytics team wants to calculate unit prices to identify premium vs budget products.
+
+```{python}
+# Let's look at our transaction data
+transactions = cj_data["transactions"]
+transactions[['sales_value', 'quantity']].head()
+```
+
+. . .
+
+**Your turn:** Help me create a `unit_price` column:
+
+```python
+# Fill in the blanks together!
+transactions['unit_price'] = transactions['_______'] / transactions['_______']
+
+# Let's see which products have the highest unit prices
+transactions[['product_id', 'sales_value', 'quantity', 'unit_price']].head()
+```
 
 # Summarizing Data {background="#43464B"}
 
@@ -462,6 +519,59 @@ Grouped aggregation in Pandas always follows the same three-step process:
 ::: {.callout-important}
 We can answer so many typical business questions with just this skillset!
 :::
+
+## 🧑‍💻 Code With Me: Top Revenue Products {.smaller .scrollable}
+
+**Business Question:** Which products generate the most revenue? Our merchandising team needs this for inventory planning.
+
+```{python}
+# Let's look at our transaction data
+transactions = cj_data["transactions"]
+transactions[['product_id', 'sales_value', 'quantity']].head()
+```
+
+. . .
+
+**Your turn:** Help me find the top revenue-generating products:
+
+```python
+# Fill in the blanks together!
+product_revenue = (
+    transactions
+    .groupby('_______', as_index=False)
+    .agg({'sales_value': '_______'})
+    .sort_values('sales_value', ascending=False)
+)
+
+product_revenue.head(10)
+```
+
+## 🧑‍💻 Code With Me: Store Performance {.smaller}
+
+**Business Question:** Which stores are performing best? Our operations team wants to understand store-level performance.
+
+```{python}
+# Look at store information in our transactions
+transactions['store_id'].value_counts().head()
+```
+
+. . .
+
+**Your turn:** Help me compare total sales and transaction counts by store:
+
+```python
+# Fill in the blanks together!
+store_performance = (
+    transactions
+    .groupby('_______', as_index=False)
+    .agg({
+        'sales_value': ['_______', '_______'],  # sum, mean
+        'basket_id': '_______'                  # count (for # of transactions)
+    })
+)
+
+store_performance.head()
+```
 
 # Joining Data {background="#43464B"}
 
@@ -672,6 +782,50 @@ products = cj_data["products"]
 )
 ```
 
+## 🧑‍💻 Code With Me: Customer Demographics Analysis {.smaller .scrollable}
+
+**Business Question:** Do families with kids spend more than families without kids? Our marketing team wants to target family-friendly promotions.
+
+```{python}
+# Let's explore what we have
+transactions = cj_data["transactions"]
+demographics = cj_data["demographics"] 
+
+demographics[['household_id', 'kids_count']].head()
+```
+
+. . .
+
+**Your turn:** Help me join transactions with demographics:
+
+```python
+# Fill in the blanks together!
+family_data = (
+    transactions
+    .merge(demographics, on='_______', how='_______')
+)
+
+family_data[['household_id', 'sales_value', 'kids_count']].head()
+```
+
+## 🧑‍💻 Code With Me: Family Spending Analysis {.smaller}
+
+**Continuing our analysis:** Now let's compare average spending by family type.
+
+```python
+# Fill in the blanks together!
+family_spending = (
+    family_data
+    .groupby('_______', as_index=False)
+    .agg({'sales_value': ['_______', '_______', 'count']})  # mean, sum
+)
+
+family_spending
+```
+
+. . .
+
+**Discussion:** What does this tell us about family spending patterns?
 
 # Let's Wrap This Up {background="#43464B"}
 
