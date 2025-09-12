@@ -1,0 +1,405 @@
+# Introduction to Machine Learning and Artificial Intelligence
+
+Throughout this course, you've been building a solid foundation in Python and data science fundamentals. You've learned to import datasets, clean and manipulate data with pandas, create compelling visualizations, and write functions to automate your work. Much of what you've accomplished so far falls under **exploratory data analysis** — the essential practice of understanding your data through summary statistics, visualizations, and descriptive insights.
+
+But data mining encompasses more than just exploration. It's also about **uncovering hidden patterns** in your data that can help you make predictions, discover relationships, and automate decision-making. This is where **machine learning** enters the picture. While you've been using code to *describe* what happened in your data, machine learning allows you to *predict* what might happen next or *discover* patterns you never would have found manually.
+
+This chapter introduces you to the fundamental concepts of artificial intelligence, machine learning, and how they fit into the broader data mining workflow you've been developing. In the chapters that follow, you'll start applying these concepts hands-on, using ML techniques to uncover patterns in real datasets and make data-driven predictions. The Python skills you've built will serve as the perfect foundation for this next phase of your data science journey.
+
+## Learning Objectives
+By the end of this chapter, you should be able to:
+
+- Define **Artificial Intelligence (AI)** and **Machine Learning (ML)** and explain how they relate to data mining
+- Distinguish between **supervised learning** and **unsupervised learning** approaches
+- Identify specialized ML/AI approaches including **reinforcement learning** and **generative AI (GenAI)**
+- Recognize real-world ML applications in recommendation systems, fraud detection, and personalization
+- Match specific business problems to appropriate ML approaches
+
+## What is AI? What is ML? Where Does Data Mining Fit?
+
+When you hear terms like **AI** and **machine learning** in the news, they often sound like science fiction. In reality, these concepts are built on straightforward ideas about using data to make better decisions.
+
+- **Artificial Intelligence (AI)** refers to the broad field of building computer systems that can mimic or approximate human-like intelligence. This might mean reasoning, problem solving, or adapting to new information.
+- **Machine Learning (ML)** is a subset of AI focused on algorithms that *learn patterns from data*. Instead of being explicitly programmed with step-by-step rules, ML models improve their performance as they are exposed to more examples.
+- **Data Mining** is the process of discovering useful insights and patterns in data. ML and AI techniques are often used as advanced tools within data mining projects.
+
+![](images/ai_ml_dm.png){fig-align="center" width="75%"}
+
+Think of it this way:
+
+- **Data mining** is like digging into data to uncover hidden gems.
+- **ML** provides the machinery — the drills and excavators — to dig deeper and automate predictions.
+- **AI** is the broader ambition: building systems that act intelligently using those insights.
+
+::: {.callout-note}
+## A Soft Intro to Machine Learning
+
+{{< video https://www.youtube.com/watch?v=f_uwKZIAeM0 >}}
+:::
+
+### Knowledge Check
+
+::: {.callout}
+## Classify AI, ML, and Data Mining:
+
+Let's think about some data science techniques you've learned in this course so far and some that you will learn about in future weeks. Consider the following scenarios and classify each as primarily **data mining**, **machine learning**, or **artificial intelligence**:
+
+1. Using Python to calculate the average price of houses in a dataset
+2. Building a system that automatically recommends movies to users based on their viewing history
+3. Creating a chatbot that can answer customer service questions in natural language
+4. Using pandas to find patterns in customer purchase data
+
+Write your answers and reasoning. Consider: What makes each scenario fit into its category? How do the definitions we discussed help you classify them?
+:::
+
+
+## Types of Machine Learning
+
+Although the ML field includes many different approaches, most methods fall into two main categories: **supervised learning** and **unsupervised learning**.
+
+### Supervised Learning
+
+In supervised learning, the model is trained on data where both the **inputs** (features) and the **outputs** (labels) are known. The goal is to learn a mapping from inputs → outputs that generalizes to new, unseen data.
+
+Think of supervised learning like learning with a teacher who provides both the questions and the correct answers. The algorithm studies these examples to understand the relationship between the input features and the desired output. Once trained, it can make predictions on new data where only the inputs are provided.
+
+**Why is it called "supervised"?** Because we supervise the learning process by providing the correct answers (labels) during training. The algorithm learns by comparing its predictions to these known correct answers and adjusting accordingly.
+
+```{mermaid}
+%%| fig-cap: "Supervised learning workflow: First, historical data with known inputs and outputs trains the model. Then, the trained model makes predictions on new input data."
+
+flowchart BT
+    subgraph Prediction ["Making Predictions"]
+        D[New Inputs<br/>1900 sq_ft, 3 bedrooms] --> E[Trained Model]
+        E --> F[Predictions<br/>$250,000]
+    end
+    subgraph Training ["Model Training"]
+        A[Inputs<br/>sq_feet, bedrooms] --> C[Trained Model]
+        B[Outputs<br/>sale_price] --> C
+    end
+    
+    style A fill:#e8f5e8
+    style B fill:#ffe6cc
+    style C fill:#fff2cc
+    style E fill:#fff2cc
+    style D fill:#e8f5e8
+    style F fill:#ffe6cc
+```
+
+Supervised learning problems fall into two main categories based on what type of output we're trying to predict:
+
+![Regression vs Classification](images/regression_vs_classification.jpg){fig-align="center" width="75%"}
+
+#### Regression Problems
+
+**Regression** predicts continuous numerical values — numbers that can take any value within a range.
+
+**How it works:** The algorithm finds patterns between features (sq_feet, bedrooms) and the continuous output (sale_price). For example, it might learn that each additional square foot adds about $120 to the price, and each bedroom adds $15,000.
+
+```{python}
+#| echo: false
+import pandas as pd
+# Example: House Price Prediction (Regression)
+regression_data = pd.DataFrame({
+    'feature 1: sq_feet': [1200, 1500, 1800, 2100, 2400],
+    'feature 2: bedrooms': [2, 3, 3, 4, 4],
+    'output: sale_price': [150000, 200000, 240000, 280000, 320000]  # Continuous values
+})
+
+print("Regression example - predicting house prices:")
+print(regression_data)
+```
+
+**Real-world prediction:** When a new home comes on the market with 1,900 sq_feet and 3 bedrooms, Zillow can use this learned pattern to predict an expected sale price of approximately $250,000.
+
+#### Classification Problems
+
+**Classification** predicts discrete categories or classes — specific labels from a predefined set.
+
+**How it works:** The algorithm learns patterns that distinguish between categories. It might discover that emails with more than 5 links and more than 3 exclamation marks are usually spam.
+
+```{python}
+#| echo: false
+# Example: Email Spam Detection (Classification)
+classification_data = pd.DataFrame({
+    'feature 1: num_links': [0, 8, 2, 15, 1],
+    'feature 2: exclamation_marks': [1, 12, 0, 8, 2],
+    'output: spam_category': ['Not Spam', 'Spam', 'Not Spam', 'Spam', 'Not Spam']  # Categories
+})
+
+print("Classification example - predicting spam:")
+print(classification_data)
+```
+
+**Real-world prediction:** When a new email arrives with 10 links and 6 exclamation marks, the model can classify it as "Spam" and automatically move it to the spam folder.
+
+### Business Applications
+
+Supervised learning is everywhere in the business world. From the moment you wake up and check your phone (spam filtering), to applying for a loan (credit approval), to watching Netflix recommendations (personalization), supervised learning algorithms are working behind the scenes. Companies across every industry use these techniques because they provide concrete, actionable predictions that directly support business decisions and automate complex processes.
+
+**Regression Applications:**
+
+- **Finance**: Banks may use number of credit cards, current limits and balances, along with previous defaults, and job details (years employed, income, etc.) to predict the amount of money an applicant is approved for for a mortgage.
+- **Retail**: E-commerce companies may use customer age, purchase history, browsing behavior, and seasonal trends to predict how much revenue a specific customer will generate over the next 12 months.
+- **Real Estate**: Property platforms like Zillow may use square footage, number of bedrooms/bathrooms, neighborhood characteristics, and recent comparable sales to predict the market value of a home.
+- **Marketing**: Digital marketing teams may use ad spend, audience demographics, campaign type, and historical performance data to predict the return on investment (ROI) for a new advertising campaign.
+
+**Classification Applications:**
+
+- **Healthcare**: Medical systems may use patient symptoms, test results, medical history, and demographic information to classify whether a patient is likely to have a specific disease or condition.
+- **Banking**: Financial institutions may use transaction amount, time of day, location, merchant type, and spending patterns to classify whether a credit card transaction is fraudulent or legitimate.
+- **Technology**: Social media platforms may use image pixels, metadata, user reports, and content analysis to classify whether a posted image contains inappropriate content that should be removed.
+- **Manufacturing**: Quality control systems may use sensor readings, temperature data, production line speed, and material specifications to classify whether a manufactured product meets quality standards or should be rejected.
+
+The key insight is that supervised learning models identify mathematical patterns between input features and known outputs, allowing them to make accurate predictions on new, unseen data. This makes them incredibly valuable for business decision-making across virtually every industry.
+
+### Unsupervised Learning
+
+In unsupervised learning, the model is given inputs ***without labeled outputs***. The goal is to discover patterns, structures, or groupings within the data.
+
+Think of unsupervised learning like exploring a new city without a map or tour guide. You have to discover the neighborhoods, landmarks, and patterns of organization on your own. The algorithm looks at the data and tries to find hidden structures or natural groupings that weren't obvious before.
+
+**Why is it called "unsupervised"?** Because there's no teacher providing correct answers. The algorithm must find patterns and relationships in the data without any guidance about what the "right" groups or structures should be.
+
+```{mermaid}
+%%| fig-cap: "Unsupervised learning workflow: The algorithm analyzes unlabeled data to discover hidden patterns, groups, or structures that weren't previously known."
+
+flowchart TB
+    subgraph Data ["Raw Data (No Labels)"]
+        A[Feature 1<br/>Annual Spending] --> D
+        B[Feature 2<br/>Visit Frequency] --> D
+        C[Feature 3<br/>Average Purchase] --> D
+    end
+    
+    subgraph Discovery ["Pattern Discovery"]
+        D[Trained Model] --> E[Hidden Patterns<br/>Customer Segments]
+        E --> F["Non Loyal Customers"]
+        E --> G["Moderatly Loyal Customers"]
+        E --> H["Highly Loyal Customers"]
+    end
+    
+    style A fill:#fff0f5
+    style B fill:#fff0f5
+    style C fill:#fff0f5
+    style D fill:#f0f8ff
+    style E fill:#f5f5dc
+```
+
+A very common type of unsupervised learning is **clustering**, which focuses on finding natural groups or segments in the data where similar items are grouped together.
+
+**How it works:** The algorithm analyzes features (annual spending, visit frequency, purchase amounts) and identifies customers that behave similarly, grouping them into segments like "Budget Shoppers," "Premium Customers," and "Occasional Buyers."
+
+```{python}
+#| echo: false
+import pandas as pd
+
+# Example: Customer Segmentation (Clustering)
+clustering_data = pd.DataFrame({
+    'feat1: annual_spending': [2500, 15000, 3200, 18000, 2800, 16500],
+    'feat2: visits_per_month': [2, 8, 3, 10, 2, 9],
+    'feat3: avg_purchase': [125, 400, 160, 450, 140, 380]
+    # Notice: NO 'customer_segment' column - the algorithm discovers groups
+})
+
+print("Clustering example - discovering customer segments:")
+print(clustering_data)
+```
+
+**Real-world discovery:** After analyzing thousands of customers, the algorithm might discover three distinct groups: Budget Shoppers (low spending, infrequent visits), Premium Customers (high spending, frequent visits), and Casual Browsers (moderate spending, moderate visits).
+
+### Business Applications
+
+Unsupervised learning is the detective of the business world. When companies have lots of data but don't know what insights might be hidden within it, unsupervised learning helps them discover unexpected patterns, customer segments, and market opportunities they never knew existed. It's particularly valuable for exploratory analysis and uncovering new business strategies.
+
+**Clustering Applications:**
+
+- **Retail**: E-commerce companies may use purchase history, browsing patterns, time spent on site, and product preferences to discover natural customer segments for targeted marketing campaigns.
+
+- **Marketing**: Digital platforms may use user demographics, content engagement, click patterns, and time spent to discover distinct audience segments for personalized advertising strategies.
+
+- **Healthcare**: Medical researchers may use patient symptoms, test results, genetic markers, and treatment responses to discover new disease subtypes or patient groups.
+
+- **Finance**: Investment firms may use trading patterns, risk preferences, portfolio compositions, and market behaviors to discover different investor personality types.
+
+**Other Unsupervised Applications:**
+
+- **Market Research**: Companies may use survey responses, purchasing data, and demographic information to discover unrecognized market segments and consumer preferences.
+
+- **Operations**: Manufacturing companies may use sensor data, production metrics, and quality measurements to discover hidden operational inefficiencies or process improvements.
+
+- **Technology**: Social media platforms may use user interactions, content preferences, and network connections to discover communities and recommend new connections.
+
+- **Supply Chain**: Logistics companies may use delivery patterns, route data, and timing information to discover optimal distribution strategies and warehouse locations.
+
+The key insight is that unsupervised learning reveals hidden structures and relationships in data that weren't previously known, enabling businesses to discover new opportunities, understand their customers better, and optimize operations in ways they never considered before.
+
+::: {.callout-note}
+## Supervised vs. Unsupervised Learning
+
+{{< video https://www.youtube.com/watch?v=W01tIRP_Rqs >}}
+:::
+
+### Knowledge Check
+
+::: {.callout}
+## Supervised vs. Unsupervised Learning:
+
+You're working as a data analyst for different companies. For each scenario below, determine whether you would use **supervised** or **unsupervised** learning:
+
+1. **Email Company**: You have 10,000 emails labeled as "spam" or "not spam" and want to build a system to automatically classify new emails.
+2. **Retail Store**: You have customer purchase data but no existing categories. You want to discover natural groupings of customers to create targeted marketing campaigns.
+3. **Insurance Company**: Using historical data of past claims (labeled as "fraudulent" or "legitimate"), you want to predict whether new claims are likely to be fraudulent.
+4. **Streaming Service**: You have viewing data for all users but no predefined customer segments. You want to identify different viewing behavior patterns.
+
+For each scenario, explain your reasoning: What clues in the problem description helped you decide? What would your algorithm be trying to learn?
+:::
+
+
+## Specialized Topics
+
+While supervised and unsupervised learning are the main pillars, there are other types of learning that are frequently discussed in the ML/AI space. We won’t dive deeply into them in this course, but it’s important to know they exist.
+
+::: {.callout collapse="true"}
+## Reinforcement Learning (RL)
+
+- **How it works:** An agent learns by interacting with an environment and receiving feedback in the form of rewards or penalties.
+- **Examples:**  
+  - Training a robot to walk.  
+  - AlphaGo (the system that beat human champions at the game of Go).  
+- **Want to Learn More?**
+{{< video https://www.youtube.com/watch?v=2pWv7GOvuf0 >}}
+
+:::
+
+::: {.callout collapse="true"}
+## Generative AI (GenAI)
+- **How it works:** Models are trained on vast amounts of data and then generate new content based on the patterns they've learned.
+- **Examples:**  
+  - Large language models (LLMs) like ChatGPT.  
+  - Image generators like Stable Diffusion or DALL·E.  
+- **Why it matters:** GenAI has opened new opportunities for creativity and productivity, from automated report writing to code generation.
+- **Want to Learn More?**
+{{< video https://www.youtube.com/watch?v=SVcsDDABEkM >}}
+:::
+
+::: {.callout collapse="true"}
+## Semi-Supervised Learning
+- **How it works:** Combines a small amount of labeled data with a large amount of unlabeled data during training. The model learns from both the explicit labels and the patterns in the unlabeled data.
+- **Examples:**  
+  - Medical image analysis where only some scans are labeled by doctors.  
+  - Document classification where manually labeling thousands of documents is expensive.  
+- **Why it matters:** Addresses the common real-world problem where labeling data is costly or time-consuming, but unlabeled data is abundant.
+- **Want to Learn More?**
+{{< video https://www.youtube.com/watch?v=C3Lr6Waw66g >}}
+:::
+
+::: {.callout collapse="true"}
+## Transfer Learning
+- **How it works:** Takes a model trained on one task and adapts it for a related but different task. Instead of starting from scratch, you leverage existing knowledge.
+- **Examples:**  
+  - Using a model trained on general images to identify specific medical conditions.  
+  - Adapting a language model trained on English to work with Spanish text.  
+- **Why it matters:** Dramatically reduces the data and computational resources needed for new applications, making AI more accessible and practical.
+- **Want to Learn More?**
+{{< video https://www.youtube.com/watch?v=3gyeDlZqWko >}}
+:::
+
+::: {.callout collapse="true"}
+## Ensemble Methods
+- **How it works:** Combines predictions from multiple different models to make a final decision. The idea is that a group of models can be more accurate than any single model.
+- **Examples:**  
+  - Random Forest (combines many decision trees).  
+  - Netflix Prize winners used ensembles of hundreds of models.  
+- **Why it matters:** Often achieves better performance than individual models and is widely used in competitive machine learning and high-stakes applications.
+- **Want to Learn More?**
+{{< video https://www.youtube.com/watch?v=r00tBoV1lHw >}}
+:::
+
+::: {.callout collapse="true"}
+## Anomaly Detection
+- **How it works:** Identifies unusual patterns or outliers that don't conform to expected normal behavior. Unlike clustering, it specifically focuses on finding the "weird" cases.
+- **Examples:**  
+  - Network security systems detecting unusual login patterns.  
+  - Manufacturing quality control identifying defective products.  
+- **Why it matters:** Critical for identifying problems, fraud, or rare events that could have significant consequences if missed.
+- **Want to Learn More?**
+{{< video https://www.youtube.com/watch?v=UYR5NH_D9g0 >}}
+:::
+
+
+## Summary
+
+This chapter has taken you from the exploratory data analysis techniques you've mastered to the exciting world of machine learning and artificial intelligence. You've discovered that ML is not science fiction, but rather a practical extension of the data mining skills you've been developing—a way to move from *describing* what happened in your data to *predicting* what might happen next or *discovering* hidden patterns automatically.
+
+Understanding the landscape of machine learning approaches gives you a roadmap for tackling different types of business problems. Supervised learning becomes your tool when you have clear examples of inputs and desired outputs—whether you're predicting house prices (regression) or classifying emails as spam (classification). Unsupervised learning serves as your detective tool for exploring data when you don't know what patterns might exist, helping you discover customer segments or identify natural groupings in your data.
+
+Beyond these foundational approaches, you've seen how specialized techniques like reinforcement learning, generative AI, transfer learning, and ensemble methods expand the ML toolkit for specific challenges. From the recommendation systems that suggest your next Netflix show to the fraud detection algorithms protecting your credit card, these techniques power the intelligent systems you interact with daily.
+
+**Key takeaways from this chapter:**
+
+- **AI, ML, and data mining** work together: AI is the broad ambition, ML provides the algorithmic pattern-finding machinery, and data mining encompasses the entire process of extracting insights from data
+- **Supervised learning** uses labeled examples to learn input-output mappings, supporting both regression (predicting numbers) and classification (predicting categories) problems
+- **Unsupervised learning** discovers hidden structures in data without pre-defined answers, with clustering being a common approach for finding natural groups
+- **Specialized approaches** like semi-supervised learning, transfer learning, and ensemble methods address real-world challenges beyond the basic supervised/unsupervised dichotomy
+- **Business applications** are everywhere—from personalized recommendations and fraud detection to customer segmentation and automated content generation
+
+**What's coming next:** In the next chapter, we'll step back from the excitement of ML techniques to focus on the critical considerations you need to address *before* building any model. Just as you wouldn't start cooking without checking if you have the right ingredients, successful ML projects require careful planning around data quality, problem definition, and evaluation strategies. Following that foundation, the upcoming modules will dive deep into fundamental algorithms—starting with simple but powerful techniques and building toward more sophisticated approaches. You'll learn not just the theory behind these algorithms, but how to implement them in Python and apply them to real business problems using the data science skills you've developed throughout this course.
+
+## End of Chapter Exercise
+
+You work as a data analyst for different organizations. For each business scenario below, determine the most appropriate approach to address the business need. Remember that not every business problem requires machine learning—sometimes simple data analysis techniques you've already learned are the best solution.
+
+For each scenario:
+1. **Identify the approach:** Is this a regression problem, classification problem, clustering problem, or can it be solved with data visualization/aggregation techniques you've already learned?
+2. **Explain your reasoning:** Why is this approach most appropriate? What clues in the problem description helped you decide?
+3. **Describe the expected output:** What would the final result look like?
+
+::: {.callout collapse="true"}
+## Scenario A: Regional Sales Performance
+
+**Business Context:** You work for a national retail chain with 500+ stores across the country. The executives are preparing for the quarterly board meeting and need to understand sales performance patterns.
+
+**Available Data:** Daily sales data for each store including: store location (state, city), sales revenue, number of transactions, store size, and demographics of surrounding area.
+
+**Business Question:** "Which regions are performing best this quarter, and are there any concerning trends we should address immediately?"
+:::
+
+::: {.callout collapse="true"}
+## Scenario B: Customer Lifetime Value Prediction  
+
+**Business Context:** You work for a subscription-based software company. The marketing team wants to optimize their customer acquisition spending by focusing on customers who will generate the most revenue over time.
+
+**Available Data:** Historical customer data including: subscription start date, monthly subscription fees, customer demographics, usage patterns (logins per month, features used), support tickets created, and churn date (if applicable).
+
+**Business Question:** "For each new customer, predict how much total revenue they will generate over their entire relationship with our company."
+:::
+
+::: {.callout collapse="true"}
+## Scenario C: Email Marketing Optimization
+
+**Business Context:** You work for an e-commerce company that sends promotional emails to customers. Recent complaints suggest customers are receiving irrelevant promotions, and email engagement rates are declining.
+
+**Available Data:** Customer transaction history, browsing behavior, email click-through rates, product categories purchased, demographic information, and email preferences.
+
+**Business Question:** "Determine whether each outgoing promotional email should be sent to a customer or not, based on their likelihood to engage with the specific promotion."
+:::
+
+::: {.callout collapse="true"}
+## Scenario D: Market Expansion Analysis
+
+**Business Context:** You work for a coffee shop chain considering expansion into new cities. Leadership wants to understand what types of locations and customer bases have made existing stores successful.
+
+**Available Data:** Store performance data including: daily revenue, customer traffic, location characteristics (foot traffic, nearby businesses, rent costs), customer demographics, and local competition data.
+
+**Business Question:** "Identify natural groups among our existing successful stores to understand different types of profitable locations and customer bases."
+:::
+
+::: {.callout collapse="true"}
+## Scenario E: Executive Dashboard Creation
+
+**Business Context:** You work for a manufacturing company. The CEO wants a monthly dashboard to quickly understand company performance across different product lines and regions without having to dig through detailed reports.
+
+**Available Data:** Manufacturing data including: production volumes, quality metrics, costs, sales by product line, regional performance, customer satisfaction scores, and employee productivity metrics.
+
+**Business Question:** "Create a visual summary that allows executives to quickly identify the top-performing and underperforming areas of the business each month."  
+:::
