@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.0">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>20&nbsp; Before You Build: Key Considerations – BANA 4080: Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./99-anaconda-install.html" rel="next">
+<link href="./19-intro-ml-ai.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0ed29b1f0e6f007c337b74d6a5232f88.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f90cbdadd06a7ce36d2760346202a0fd.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0ed29b1f0e6f007c337b74d6a5232f88.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-e234b1c2f56703045a23c8517037a3ca.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-c3e20594314329cb1460e644d4609265.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-e234b1c2f56703045a23c8517037a3ca.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<meta name="mermaid-theme" content="neutral">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./19-intro-ml-ai.html">Module 7</a></li><li class="breadcrumb-item"><a href="./20-before-we-build.html"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="./index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">BANA 4080: Data Mining</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./BANA-4080--Data-Mining.epub" title="Download ePub" class="quarto-navigation-tool px-1" aria-label="Download ePub"><i class="bi bi-journal"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 1</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 2</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 3</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 4</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 5</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-data-viz-matplotlib.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Fundamentals of Plotting with Matplotlib</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-data-viz-bokeh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Interactive Data Visualization with Bokeh</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 6</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 7</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20-before-we-build.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendix</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">20.1</span> Learning Objectives</a></li>
+  <li><a href="#framing-the-problem" id="toc-framing-the-problem" class="nav-link" data-scroll-target="#framing-the-problem"><span class="header-section-number">20.2</span> Framing the Problem</a>
+  <ul class="collapse">
+  <li><a href="#start-with-the-business-question" id="toc-start-with-the-business-question" class="nav-link" data-scroll-target="#start-with-the-business-question">Start with the Business Question</a></li>
+  <li><a href="#define-success-upfront" id="toc-define-success-upfront" class="nav-link" data-scroll-target="#define-success-upfront">Define Success Upfront</a></li>
+  <li><a href="#understand-the-decision-context" id="toc-understand-the-decision-context" class="nav-link" data-scroll-target="#understand-the-decision-context">Understand the Decision Context</a></li>
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#data-readiness" id="toc-data-readiness" class="nav-link" data-scroll-target="#data-readiness"><span class="header-section-number">20.3</span> Data Readiness</a>
+  <ul class="collapse">
+  <li><a href="#data-quality-garbage-in-garbage-out" id="toc-data-quality-garbage-in-garbage-out" class="nav-link" data-scroll-target="#data-quality-garbage-in-garbage-out">Data Quality: Garbage In, Garbage Out</a></li>
+  <li><a href="#the-critical-importance-of-traintest-splits" id="toc-the-critical-importance-of-traintest-splits" class="nav-link" data-scroll-target="#the-critical-importance-of-traintest-splits">The Critical Importance of Train/Test Splits</a></li>
+  <li><a href="#how-traintest-splits-work" id="toc-how-traintest-splits-work" class="nav-link" data-scroll-target="#how-traintest-splits-work">How Train/Test Splits Work</a></li>
+  <li><a href="#random-vs.-strategic-splitting" id="toc-random-vs.-strategic-splitting" class="nav-link" data-scroll-target="#random-vs.-strategic-splitting">Random vs.&nbsp;Strategic Splitting</a></li>
+  <li><a href="#knowledge-check-1" id="toc-knowledge-check-1" class="nav-link" data-scroll-target="#knowledge-check-1">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#data-leakage-the-silent-model-killer" id="toc-data-leakage-the-silent-model-killer" class="nav-link" data-scroll-target="#data-leakage-the-silent-model-killer"><span class="header-section-number">20.4</span> Data Leakage: The Silent Model Killer</a>
+  <ul class="collapse">
+  <li><a href="#what-is-data-leakage" id="toc-what-is-data-leakage" class="nav-link" data-scroll-target="#what-is-data-leakage">What Is Data Leakage?</a></li>
+  <li><a href="#types-of-data-leakage" id="toc-types-of-data-leakage" class="nav-link" data-scroll-target="#types-of-data-leakage">Types of Data Leakage</a></li>
+  <li><a href="#how-to-spot-data-leakage" id="toc-how-to-spot-data-leakage" class="nav-link" data-scroll-target="#how-to-spot-data-leakage">How to Spot Data Leakage</a></li>
+  <li><a href="#preventing-data-leakage" id="toc-preventing-data-leakage" class="nav-link" data-scroll-target="#preventing-data-leakage">Preventing Data Leakage</a></li>
+  <li><a href="#a-real-world-example-hospital-readmission-prediction" id="toc-a-real-world-example-hospital-readmission-prediction" class="nav-link" data-scroll-target="#a-real-world-example-hospital-readmission-prediction">A Real-World Example: Hospital Readmission Prediction</a></li>
+  <li><a href="#knowledge-check-2" id="toc-knowledge-check-2" class="nav-link" data-scroll-target="#knowledge-check-2">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#fairness-privacy-and-interpretability-the-human-impact" id="toc-fairness-privacy-and-interpretability-the-human-impact" class="nav-link" data-scroll-target="#fairness-privacy-and-interpretability-the-human-impact"><span class="header-section-number">20.5</span> Fairness, Privacy, and Interpretability: The Human Impact</a>
+  <ul class="collapse">
+  <li><a href="#fairness-avoiding-discriminatory-outcomes" id="toc-fairness-avoiding-discriminatory-outcomes" class="nav-link" data-scroll-target="#fairness-avoiding-discriminatory-outcomes">Fairness: Avoiding Discriminatory Outcomes</a></li>
+  <li><a href="#privacy-protecting-sensitive-information" id="toc-privacy-protecting-sensitive-information" class="nav-link" data-scroll-target="#privacy-protecting-sensitive-information">Privacy: Protecting Sensitive Information</a></li>
+  <li><a href="#interpretability-understanding-model-decisions" id="toc-interpretability-understanding-model-decisions" class="nav-link" data-scroll-target="#interpretability-understanding-model-decisions">Interpretability: Understanding Model Decisions</a></li>
+  <li><a href="#balancing-competing-concerns" id="toc-balancing-competing-concerns" class="nav-link" data-scroll-target="#balancing-competing-concerns">Balancing Competing Concerns</a></li>
+  <li><a href="#knowledge-check-3" id="toc-knowledge-check-3" class="nav-link" data-scroll-target="#knowledge-check-3">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">20.6</span> Summary</a></li>
+  <li><a href="#end-of-chapter-exercise-ml-project-pitfall-analysis" id="toc-end-of-chapter-exercise-ml-project-pitfall-analysis" class="nav-link" data-scroll-target="#end-of-chapter-exercise-ml-project-pitfall-analysis"><span class="header-section-number">20.7</span> End of Chapter Exercise: ML Project Pitfall Analysis</a>
+  <ul class="collapse">
+  <li><a href="#reflection-questions" id="toc-reflection-questions" class="nav-link" data-scroll-target="#reflection-questions">Reflection Questions</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/20-before-we-build.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./19-intro-ml-ai.html">Module 7</a></li><li class="breadcrumb-item"><a href="./20-before-we-build.html"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Picture This
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>You’ve just learned about the exciting world of machine learning and you’re eager to dive in. You have a dataset, you know whether your problem is regression or classification, and you’re ready to start building models. But hold on—successful machine learning projects aren’t built in a day, and they certainly aren’t built without careful planning.</p>
+</div>
+</div>
+<p>Think of machine learning like building a house. You wouldn’t start hammering nails without first checking your foundation, reviewing your blueprints, and ensuring you have the right permits. Similarly, before you write a single line of modeling code, you need to establish a solid foundation: <strong>What exactly are you trying to solve? Is your data ready? How will you know if your model is working? And what ethical considerations should guide your decisions?</strong></p>
+<p>This chapter focuses on the critical thinking and planning that separates successful ML projects from costly failures. You won’t find complex algorithms or extensive coding here—instead, you’ll develop the judgment to ask the right questions, spot potential pitfalls, and set your projects up for success from the very beginning.</p>
+<p>The goal isn’t to overwhelm you with theory, but to give you the practical wisdom that experienced data scientists use every day. By the end of this chapter, you’ll have a mental checklist that will guide you through the early stages of any machine learning project, helping you avoid common mistakes and build models that actually solve real business problems.</p>
+<section id="learning-objectives" class="level2" data-number="20.1">
+<h2 data-number="20.1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">20.1</span> Learning Objectives</h2>
+<p>By the end of this chapter, you should be able to:</p>
+<ul>
+<li><strong>Frame machine learning problems</strong> by defining clear business questions and success criteria</li>
+<li><strong>Assess data readiness</strong> including data quality and the importance of proper train/test splits</li>
+<li><strong>Identify data leakage</strong> and understand why using “future” information invalidates model results</li>
+<li><strong>Recognize ethical considerations</strong> around fairness, privacy, and interpretability in ML applications</li>
+<li><strong>Apply a systematic pre-modeling checklist</strong> to real business scenarios</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>A Foundation for Deeper Learning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This chapter’s goal is to get you thinking about these critical concepts and developing the right mindset for successful machine learning projects. Many of the topics we introduce here—from data splitting techniques to evaluation metrics to ethical considerations—will be explored in much greater detail in later chapters where you’ll learn the practical implementation skills and hands-on techniques to apply these concepts in real projects.</p>
+</div>
+</div>
+</section>
+<section id="framing-the-problem" class="level2" data-number="20.2">
+<h2 data-number="20.2" class="anchored" data-anchor-id="framing-the-problem"><span class="header-section-number">20.2</span> Framing the Problem</h2>
+<p>The most critical step in any machine learning project happens before you even touch your data: <strong>clearly defining what you’re trying to accomplish</strong>. This might sound obvious, but it’s where many projects go astray. Without a clear problem statement and definition of success, you’ll find yourself building technically impressive models that don’t actually solve business problems.</p>
+<section id="start-with-the-business-question" class="level3">
+<h3 class="anchored" data-anchor-id="start-with-the-business-question">Start with the Business Question</h3>
+<p>Machine learning should always begin with a specific, answerable business question. Vague goals like “use AI to improve our business” or “build a model to predict customer behavior” are recipes for failure. Instead, successful ML projects start with questions like:</p>
+<ul>
+<li>“Can we predict which customers are likely to cancel their subscription in the next 30 days?”</li>
+<li>“What price should we set for this product to maximize profit while remaining competitive?”</li>
+<li>“Which marketing email should we send to each customer to maximize click-through rates?”</li>
+</ul>
+<p>Notice how each of these questions has specific, measurable outcomes. They define exactly what you’re trying to predict, over what time horizon, and for what business purpose.</p>
+</section>
+<section id="define-success-upfront" class="level3">
+<h3 class="anchored" data-anchor-id="define-success-upfront">Define Success Upfront</h3>
+<p>Before building any model, you need to answer: <strong>“How will I know if this model is successful?”</strong> This isn’t just about technical metrics—it’s about business impact.</p>
+<p>Consider these different perspectives on success:</p>
+<p><strong>Technical Success:</strong> “Our model achieves 85% accuracy on our test set”<br>
+<strong>Business Success:</strong> “Using our model’s predictions, we reduced customer churn by 15% this quarter”</p>
+<p>Both matter, but business success is what justifies the time and resources invested in your project. You should establish both technical benchmarks (maximum accuracy, minimum error rates) and business benchmarks (cost savings, revenue increase, time saved) before you begin modeling.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div id="fig-performance-metrics" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-performance-metrics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-performance-metrics">flowchart LR
+  subgraph ML[ML System]
+    direction BT
+    subgraph p0[Overall Performance]
+    end
+    subgraph p1[Model performance metrics]
+    end
+    subgraph p2[Business performance metrics]
+    end
+
+   p1 --&gt; p0
+   p2 --&gt; p0
+  end
+
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-performance-metrics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20.1: Understanding an ML sytems performance requires understanding model performance metrics and business performance metrics.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Ensuring Metric Alignment:</strong> The most critical consideration is ensuring your technical and business metrics are aligned and incentivize the same behavior. For example, if your business goal is to minimize customer complaints, optimizing purely for model accuracy might not be the right approach—a model that achieves high accuracy by being overly cautious might miss too many legitimate issues, leading to more complaints. Instead, you might prioritize recall (catching more potential problems) even if it means lower overall accuracy. The key is choosing technical metrics that, when optimized, naturally drive the business outcomes you care about.</p>
+<p><strong>Stakeholder Communication:</strong> It’s equally important to educate stakeholders about how models are measured technically and why those measurements matter for business outcomes. Business leaders often focus solely on bottom-line results, but understanding technical metrics helps them make informed decisions about model deployment, resource allocation, and acceptable trade-offs. When stakeholders understand that a 95% accurate fraud detection model still flags thousands of legitimate transactions for review, they can better plan operational processes and set realistic expectations for the model’s impact.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Model Performance Metrics
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>These metrics evaluate the accuracy and reliability of the ML model in making predictions. These metrics include common metrics you may have heard before if you’ve done any ML tasks such as mean squared error, <span class="math inline">\(R^2\)</span>, and mean absolute error for regression problems; accuracy, precision, and recall for classification problems; or BLEU, BERTScore, and perplexity for large language models. The choice of metric depends on the type of ML task (e.g., classification, regression) and the consequences of different kinds of errors.</p>
+<p><strong>Further reading</strong>: We’ll discuss model performance metrics more in later weeks but here are some additional readings you can browse now regarding selecting the right metric for evaluating ML models - <a href="https://medium.com/usf-msds/choosing-the-right-metric-for-machine-learning-models-part-1-a99d7d7414e4">Part 1</a>, <a href="https://medium.com/usf-msds/choosing-the-right-metric-for-evaluating-machine-learning-models-part-2-86d5649a5428">Part 2</a></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Business Performance Metrics
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>These metrics measure the real-world impact of your ML system on business outcomes and organizational goals. Common business metrics for ML projects include:</p>
+<ul>
+<li><strong>Financial Metrics:</strong> Revenue increase, cost savings, profit margin improvement, return on investment (ROI), customer lifetime value changes</li>
+<li><strong>Operational Metrics:</strong> Process automation percentage, time savings, error reduction, productivity improvements, resource utilization</li>
+<li><strong>Customer Metrics:</strong> Customer satisfaction scores, churn rate reduction, conversion rate improvement, engagement increases, retention rates</li>
+<li><strong>Risk Metrics:</strong> Fraud detection rates, compliance improvements, risk exposure reduction, safety incident decreases</li>
+<li><strong>Efficiency Metrics:</strong> Decision-making speed, manual review time reduction, processing capacity increases, workflow optimization</li>
+</ul>
+<p>The key is selecting business metrics that directly connect to your organization’s strategic objectives and can be clearly attributed to your ML system’s performance. Remember that business impact often takes time to materialize and may require longer measurement periods than technical metrics.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="understand-the-decision-context" class="level3">
+<h3 class="anchored" data-anchor-id="understand-the-decision-context">Understand the Decision Context</h3>
+<p>Every ML model exists to support human decision-making. Understanding exactly how your predictions will be used helps you frame the problem correctly.</p>
+<p><strong>Why this matters so much:</strong> The consequences of model failures can range from minor inconveniences to life-changing impacts. History is filled with examples of well-intentioned ML systems that caused significant harm because their creators didn’t fully consider the decision context. From biased hiring algorithms that discriminated against qualified candidates to criminal justice risk assessment tools that perpetuated racial inequities, the stakes of getting this wrong can be enormous.</p>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Real-World Impact
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Machine learning models are increasingly used in high-stakes decisions affecting people’s lives—from loan approvals and job applications to medical diagnoses and criminal sentencing. For a sobering look at what can go wrong when models are deployed without careful consideration of their decision context, see Cathy O’Neil’s “<a href="https://www.amazon.com/Weapons-Math-Destruction-Increases-Inequality/dp/0553418815">Weapons of Math Destruction</a>” which documents how algorithmic bias can perpetuate and amplify inequality.</p>
+</div>
+</div>
+<p>Ask yourself:</p>
+<ul>
+<li><strong>Who will use these predictions?</strong> (Marketing team, customer service reps, automated system)</li>
+<li><strong>What action will they take?</strong> (Send targeted offers, flag for manual review, adjust pricing)</li>
+<li><strong>How quickly do they need results?</strong> (Real-time, daily batch, weekly reports)</li>
+<li><strong>What happens if the model is wrong?</strong> (Minor inconvenience, financial loss, safety risk)</li>
+<li><strong>Who is affected by these decisions?</strong> (Internal teams, customers, broader society)</li>
+<li><strong>What are the potential unintended consequences?</strong> (Bias amplification, privacy violations, safety risks)</li>
+</ul>
+<p>For example, a model predicting whether a customer will purchase a product has very different requirements than a model predicting whether a medical device will fail. The first might tolerate some false positives if it leads to higher overall sales; the second requires extremely high precision to avoid potential safety hazards. Similarly, a model used for automated loan approvals carries legal and ethical responsibilities that don’t apply to a model suggesting Netflix recommendations.</p>
+</section>
+<section id="knowledge-check" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Problem Framing Practice:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Background:</strong> You work for TechFlow, a software company with 50,000+ customers. Your customer service team is drowning in support tickets and needs help managing their workload effectively.</li>
+<li><strong>Current Situation:</strong>
+<ul>
+<li><strong>Volume:</strong> 2,000+ tickets per day across email, chat, and phone</li>
+<li><strong>Team:</strong> 15 customer service representatives working regular business hours</li>
+<li><strong>Response Goals:</strong> Respond to all tickets within 4 hours, resolve within 24 hours</li>
+<li><strong>Current Problems:</strong> Missing response deadlines, customers complaining about slow service, team working overtime</li>
+</ul></li>
+<li><strong>Ticket Types Include:</strong>
+<ul>
+<li><strong>Password resets</strong> (25% of tickets) - Usually quick, can be automated</li>
+<li><strong>Billing questions</strong> (20% of tickets) - Require access to account details, moderate complexity</li>
+<li><strong>Technical bugs</strong> (30% of tickets) - Range from simple to complex, may need engineering team</li>
+<li><strong>Feature requests</strong> (15% of tickets) - Need to be forwarded to product team</li>
+<li><strong>Account cancellations</strong> (10% of tickets) - High priority, need immediate attention to retain customers</li>
+</ul></li>
+<li><strong>Available Data:</strong>
+<ul>
+<li>Historical ticket data including subject lines, descriptions, categories, resolution times</li>
+<li>Customer information (subscription type, tenure, previous tickets)</li>
+<li>Representative performance data and specializations</li>
+</ul></li>
+<li><strong>Business Context:</strong>
+<ul>
+<li><strong>Cost of delay:</strong> Each hour of delay costs approximately $50 in customer satisfaction</li>
+<li><strong>Staff constraints:</strong> Can’t hire more representatives immediately due to budget/training time</li>
+<li><strong>Customer retention:</strong> Quick resolution of cancellation requests can save 30% of departing customers</li>
+</ul></li>
+</ul>
+<p><strong>The Ask:</strong> The customer service manager says: <em>“Use machine learning to help manage our workload—we’re drowning and need any help we can get!”</em></p>
+<p><strong>Your Task:</strong></p>
+<ol type="1">
+<li><strong>Rewrite this request</strong> as a specific, measurable business question that a machine learning model could address.</li>
+<li><strong>Define what success would look like</strong> from both technical and business perspectives.</li>
+<li><strong>Identify the decision context:</strong> Who would use this model? What actions would they take based on the predictions?</li>
+</ol>
+<p>Consider the different approaches you could take and which would provide the most business value!</p>
+</div>
+</div>
+</section>
+</section>
+<section id="data-readiness" class="level2" data-number="20.3">
+<h2 data-number="20.3" class="anchored" data-anchor-id="data-readiness"><span class="header-section-number">20.3</span> Data Readiness</h2>
+<p>Once you’ve clearly defined your problem, the next step is ensuring your data is ready to support that goal. This isn’t just about having “enough” data—it’s about having the <strong>right</strong> data of sufficient <strong>quality</strong>, organized in a way that allows for <strong>valid</strong> model training and testing.</p>
+<section id="data-quality-garbage-in-garbage-out" class="level3">
+<h3 class="anchored" data-anchor-id="data-quality-garbage-in-garbage-out">Data Quality: Garbage In, Garbage Out</h3>
+<p>The famous computer science principle “garbage in, garbage out” is especially true for machine learning. Even the most sophisticated algorithms can’t overcome fundamentally flawed data. Before you begin modeling, you need to honestly assess whether your data can support your goals.</p>
+<p><strong>Common data quality issues include:</strong></p>
+<ul>
+<li><strong>Missing values:</strong> Are there gaps in your data? Are they random, or do they follow patterns that could bias your model?</li>
+<li><strong>Inconsistent formats:</strong> Do you have dates recorded as “2023-01-15” in some places and “Jan 15, 2023” in others?</li>
+<li><strong>Duplicate records:</strong> The same customer or transaction appearing multiple times can skew your results</li>
+<li><strong>Outliers and errors:</strong> Unrealistic values like negative ages or sales dates in the future</li>
+<li><strong>Inconsistent definitions:</strong> What exactly counts as a “customer”? An “active user”? A “conversion”?</li>
+</ul>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Partner with Data Owners Early
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In most organizations, specific teams own the data assets you’ll be using for your analysis—whether it’s the marketing team managing customer data, the finance team handling transaction records, or the engineering team maintaining system logs. It’s extremely important to work with these data owners upfront to fully understand what you’re working with. They can explain what each field represents, how the data is collected, what business rules affect the data, and any nuances or quirks you should be aware of. This partnership can save you from making costly assumptions and help you identify potential data quality issues before they derail your project.</p>
+</div>
+</div>
+</section>
+<section id="the-critical-importance-of-traintest-splits" class="level3">
+<h3 class="anchored" data-anchor-id="the-critical-importance-of-traintest-splits">The Critical Importance of Train/Test Splits</h3>
+<p>One of the most fundamental concepts in machine learning is the <strong>train/test split</strong>. This is so important that getting it wrong can invalidate your entire project, regardless of how sophisticated your model is.</p>
+<p>While later chapters will dive deep into the practical implementation of data splitting techniques and how to incorporate them into your Python workflow, for now it’s crucial to understand that <strong>how you prepare and split your data is a major factor in how well your model will perform on unseen data</strong>. The choices you make here directly impact whether your model will succeed or fail in real-world deployment.</p>
+<div class="callout callout-style-simple callout-important">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Here’s the basic principle: <strong>You cannot fairly evaluate a model using the same data you used to train it.</strong></p>
+</div>
+</div>
+</div>
+<p>Think of it like studying for an exam. If you practice using the exact same questions that will appear on the test, your practice score will be unrealistically high—it doesn’t reflect how well you’ll perform on new, unseen questions. Similarly, a model’s performance on its training data is almost always overly optimistic.</p>
+</section>
+<section id="how-traintest-splits-work" class="level3">
+<h3 class="anchored" data-anchor-id="how-traintest-splits-work">How Train/Test Splits Work</h3>
+<p>The solution is to split your data into distinct portions:</p>
+<ul>
+<li><strong>Training Set (typically 70-80% of data):</strong> Used to build and tune your model</li>
+<li><strong>Test Set (typically 20-30% of data):</strong> Used only to evaluate final model performance</li>
+<li><strong>Validation Set (optional, for complex projects):</strong> Used for model selection and tuning</li>
+</ul>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-data-split" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data-split-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-data-split">flowchart TD
+    A[Complete Dataset] --&gt; B[Training Set&lt;br/&gt;70-80%]
+    A --&gt; C[Test Set&lt;br/&gt;20-30%]
+    
+    B --&gt; D[Train Model]
+    D --&gt; E[Trained Model]
+    
+    C --&gt; F[Evaluate Performance]
+    E --&gt; F
+    F --&gt; G[Unbiased Performance&lt;br/&gt;Estimate]
+    
+    style A fill:#f0f8ff
+    style B fill:#e8f5e8
+    style C fill:#ffe6e6
+    style G fill:#fff2cc
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data-split-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;20.2: Proper data splitting ensures unbiased evaluation by keeping test data completely separate from model training.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>The golden rule:</strong> Once you set aside your test set, don’t touch it until you’re completely done with model development. The moment you use test data to make decisions about your model, it’s no longer a fair evaluation.</p>
+</section>
+<section id="random-vs.-strategic-splitting" class="level3">
+<h3 class="anchored" data-anchor-id="random-vs.-strategic-splitting">Random vs.&nbsp;Strategic Splitting</h3>
+<p><strong>The central principle:</strong> How you split your data is crucial and depends entirely on the type of problem you’re solving. The wrong splitting strategy can lead to overly optimistic results that don’t translate to real-world performance, while the right strategy sets your model up for success from the start. We’ll explore the technical implementation of these strategies in later chapters, but understanding when and why to use different approaches is fundamental.</p>
+<section id="random-splitting-the-default-approach" class="level4">
+<h4 class="anchored" data-anchor-id="random-splitting-the-default-approach">Random Splitting: The Default Approach</h4>
+<p><strong>How it works:</strong> Random splitting assigns each row in your dataset to either training or testing using pure chance—like flipping a coin for each record. This ensures that your training and test sets are representative samples of your overall data, with similar distributions of features and outcomes.</p>
+<p><strong>When it’s appropriate:</strong> Random splitting works well when:</p>
+<ul>
+<li>Your data represents a single time period or snapshot</li>
+<li>Each row is independent (no customer groupings, time sequences, or hierarchical relationships)</li>
+<li>You’re not trying to predict future events</li>
+<li>Your outcome variable is reasonably balanced</li>
+</ul>
+<p><strong>Example:</strong> Predicting whether customers will respond to a marketing email using data from a single campaign where each customer received one email.</p>
+</section>
+<section id="when-random-splitting-fails-strategic-alternatives" class="level4">
+<h4 class="anchored" data-anchor-id="when-random-splitting-fails-strategic-alternatives">When Random Splitting Fails: Strategic Alternatives</h4>
+<p>However, many real-world problems require more thoughtful splitting strategies:</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Time-Based Data: Predicting the Future
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><em>Problem:</em> You’re building a model to predict which customers will churn next month using 2 years of customer data.</p>
+<p><em>Why random splitting fails:</em> If you randomly split this data, your model might use information from December 2023 to predict churn that happened in January 2023—essentially using the future to predict the past!</p>
+<p><em>Strategic solution:</em> Split by time—train on data from January 2022 to December 2022, test on data from January 2023 to December 2023. This mirrors real-world deployment where you use historical data to predict future events.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Grouped Data: Avoiding Customer Leakage
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><em>Problem:</em> Predicting transaction fraud using a dataset where each customer has multiple transactions.</p>
+<p><em>Why random splitting fails:</em> If Customer A’s transactions appear in both training and test sets, your model might just learn to recognize Customer A rather than learning general fraud patterns.</p>
+<p><em>Strategic solution:</em> Keep all of each customer’s transactions together—if Customer A is in training, ALL their transactions stay in training.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Imbalanced Outcomes: Rare Events
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><em>Problem:</em> Detecting equipment failures where only 2% of your data represents actual failures.</p>
+<p><em>Why random splitting fails:</em> You might randomly end up with very few (or even zero) failure cases in your test set, making evaluation impossible.</p>
+<p><em>Strategic solution:</em> Use stratified splitting to ensure both training and test sets maintain the same 2% failure rate as your original dataset.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Hierarchical or Nested Data: Multiple Levels
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><em>Problem:</em> Predicting student performance using data from multiple schools and classrooms.</p>
+<p><em>Why random splitting fails:</em> Students from the same classroom might be more similar to each other than to students from other classrooms, creating hidden dependencies.</p>
+<p><em>Strategic solution:</em> Split at the school or classroom level rather than at the student level to ensure true independence.</p>
+</div>
+</div>
+</div>
+<p>The key insight is that <strong>your splitting strategy should mirror how your model will be used in the real world</strong>. If you’ll use historical data to predict future events, split by time. If you’ll make predictions about new customers, split by customer. The goal is always to create test conditions that simulate actual deployment as closely as possible.</p>
+</section>
+</section>
+<section id="knowledge-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-1">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Data Readiness Assessment:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Business Context:</strong> You work for RetailMax, an e-commerce company that wants to launch a targeted marketing campaign. The marketing team plans to send personalized discount offers to customers who are likely to make a purchase in the next 30 days, hoping to convert them before they buy from competitors. They’ve allocated a budget for 10,000 targeted emails and want to maximize return on investment by selecting the customers most likely to purchase.</li>
+<li><strong>Your Dataset:</strong> 100,000 customer records spanning the past 2 years, including purchase history, browsing behavior, demographic information, and customer service interactions. The marketing team wants to deploy this model next month to identify targets for their campaign.</li>
+<li><strong>Your Task:</strong>
+<ol type="1">
+<li><strong>Identify potential data quality issues</strong> you should check for before modeling.</li>
+<li><strong>Design your train/test split strategy:</strong> How would you split this data? Why might a random split not be appropriate for this time-sensitive prediction?</li>
+<li><strong>Spot the problem:</strong> A colleague tells you they achieved 99% accuracy by including “days_since_last_purchase” as a feature. What might be wrong with this approach?</li>
+</ol></li>
+</ul>
+<p>Consider these questions carefully—they represent some of the most common pitfalls in ML projects!</p>
+</div>
+</div>
+</section>
+</section>
+<section id="data-leakage-the-silent-model-killer" class="level2" data-number="20.4">
+<h2 data-number="20.4" class="anchored" data-anchor-id="data-leakage-the-silent-model-killer"><span class="header-section-number">20.4</span> Data Leakage: The Silent Model Killer</h2>
+<p>Data leakage is one of the most insidious problems in machine learning. It makes your model look incredibly successful during development, only to fail spectacularly when deployed in the real world. Understanding and preventing data leakage is crucial for building models that actually work.</p>
+<section id="what-is-data-leakage" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-data-leakage">What Is Data Leakage?</h3>
+<p>Data leakage occurs when information that <strong>would not be available at prediction time</strong> somehow finds its way into your training data. Essentially, your model is “cheating” by using information from the future or information that contains the answer you’re trying to predict.</p>
+<p>The tricky part is that leakage often leads to models with impressive performance metrics—99% accuracy, perfect predictions, results that seem too good to be true. And they are too good to be true.</p>
+</section>
+<section id="types-of-data-leakage" class="level3">
+<h3 class="anchored" data-anchor-id="types-of-data-leakage">Types of Data Leakage</h3>
+<p>Data leakage can creep into your models through several different pathways, each with its own characteristics and warning signs. Understanding these distinct types helps you systematically check for and prevent leakage in your own projects.</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Temporal Leakage (Using Future Information)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>This happens when you accidentally include information from after the time you’re trying to make predictions.</p>
+<p><em>Example:</em> You’re building a model to predict which customers will cancel their subscription in January 2024. You accidentally include a feature called “customer_satisfaction_survey_february_2024” in your training data. Your model performs amazingly well—of course it does, because customers who cancelled in January probably gave poor satisfaction ratings in February!</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Target Leakage (Information That Contains the Answer)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>This occurs when you include features that are directly caused by or contain information about the outcome you’re predicting.</p>
+<p><em>Example:</em> You’re predicting whether someone will default on a loan, and you include a feature called “account_status” which has values like “current,” “late,” and “charged_off.” The “charged_off” status literally means the person defaulted—you’ve accidentally included the answer in your features!</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Feature Leakage (Using Information Not Available at Prediction Time)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>This happens when you include features that wouldn’t be available when you actually need to make predictions.</p>
+<p><em>Example:</em> You’re building a model to approve credit applications instantly online. You include features from a detailed financial audit that takes 30 days to complete. Your model might be accurate, but it’s useless because you can’t wait 30 days to approve applications.</p>
+</div>
+</div>
+</div>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/UYHCwBUjxeQ" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</section>
+<section id="how-to-spot-data-leakage" class="level3">
+<h3 class="anchored" data-anchor-id="how-to-spot-data-leakage">How to Spot Data Leakage</h3>
+<p><strong>Warning signs that might indicate leakage:</strong></p>
+<ul>
+<li><strong>Performance that’s too good:</strong> If your model achieves near-perfect accuracy on a complex real-world problem, be suspicious</li>
+<li><strong>One feature dominates:</strong> If removing a single feature causes model performance to collapse dramatically</li>
+<li><strong>Perfect correlation:</strong> If any feature correlates almost perfectly with your target variable</li>
+<li><strong>Temporal inconsistencies:</strong> Features that would only be available after the event you’re predicting</li>
+</ul>
+</section>
+<section id="preventing-data-leakage" class="level3">
+<h3 class="anchored" data-anchor-id="preventing-data-leakage">Preventing Data Leakage</h3>
+<p>Successfully preventing data leakage requires developing a systematic mindset and establishing rigorous practices throughout your model development process. The most effective approach is to <strong>think like your model will actually be deployed</strong>—constantly asking yourself whether each piece of information would realistically be available at the moment you need to make a prediction. This simple question can prevent most leakage issues before they occur.</p>
+<p><strong>Understanding your data timeline</strong> is equally crucial. Before you begin feature engineering, create a clear timeline showing when each piece of information becomes available in your business process. Your model can only use information that exists before the prediction moment, so mapping out these temporal relationships helps you identify potential temporal leakage early. For instance, if you’re predicting monthly churn, you should only use data that would be available at the beginning of that month, not data that accumulates during the month itself.</p>
+<p><strong>Be especially suspicious of features that seem too good to be true.</strong> If a feature appears to be a perfect predictor—correlating almost perfectly with your target variable—investigate thoroughly. Often, these “perfect” predictors are actually just different ways of measuring the outcome you’re trying to predict, or they contain information that wouldn’t be available at prediction time. Features that dramatically improve your model’s performance deserve extra scrutiny rather than celebration.</p>
+<p>Finally, <strong>implement time-aware validation strategies</strong> for any problem involving temporal data. Instead of randomly splitting your data, use time-based validation where you train on earlier data and test on later data. This approach mirrors real-world deployment conditions and helps catch temporal leakage that might slip through random validation splits.</p>
+</section>
+<section id="a-real-world-example-hospital-readmission-prediction" class="level3">
+<h3 class="anchored" data-anchor-id="a-real-world-example-hospital-readmission-prediction">A Real-World Example: Hospital Readmission Prediction</h3>
+<p>Consider a common healthcare analytics challenge: building a model to predict which patients will be readmitted to the hospital within 30 days of discharge. This type of model is valuable for hospitals trying to improve patient care and reduce costs, but it’s also prone to subtle leakage issues that can make the model appear more accurate than it actually is.</p>
+<p>Imagine you’re working with a feature called “length_of_initial_stay” measured in days. At first glance, this seems like a perfectly legitimate feature—longer hospital stays might indicate more severe conditions that increase readmission risk. However, the way you calculate this feature makes all the difference between a valid model and a leaky one.</p>
+<p><strong>The leaky approach</strong> might seem logical: calculate length_of_stay as the total number of days from initial admission to final discharge. If a patient is readmitted within your 30-day prediction window, this calculation would include the readmission dates, artificially inflating the stay length for patients who end up being readmitted. The model might then show a strong correlation between longer stays and readmission risk—but this is circular logic since the readmission itself is contributing to the “longer stay” measurement.</p>
+<p><strong>The correct approach</strong> calculates length_of_stay only from admission to the initial discharge date, completely ignoring any subsequent readmissions. This ensures you’re only using information that would have been available at the moment of initial discharge when you would actually need to make your prediction. While this version might show weaker correlations, it represents genuine predictive relationships that will hold up in real-world deployment.</p>
+<p>This example illustrates how subtle definitional choices can introduce leakage that dramatically inflates apparent model performance while rendering the model useless for its intended purpose. The leaky version might achieve impressive accuracy in testing but would fail completely when deployed because the “future information” it relies on wouldn’t be available for new patients.</p>
+</section>
+<section id="knowledge-check-2" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-2">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Spot the Leakage:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For each scenario below, identify whether data leakage is present and explain why:</p>
+<ol type="1">
+<li><p><strong>Email Spam Detection:</strong> You’re predicting whether emails are spam. One of your features is “email_moved_to_spam_folder” (yes/no). The model achieves 95% accuracy.</p></li>
+<li><p><strong>Customer Churn Prediction:</strong> You’re predicting which customers will cancel next month. Your features include last month’s purchase amount, customer age, and account creation date.</p></li>
+<li><p><strong>Stock Price Prediction:</strong> You’re predicting tomorrow’s stock price using today’s opening price, trading volume, and tomorrow’s closing volume.</p></li>
+<li><p><strong>Medical Diagnosis:</strong> You’re predicting disease presence using patient symptoms, lab results from the day of diagnosis, and treatment prescribed by the doctor.</p></li>
+</ol>
+<p>Which scenarios contain leakage? What makes them problematic?</p>
+</div>
+</div>
+</section>
+</section>
+<section id="fairness-privacy-and-interpretability-the-human-impact" class="level2" data-number="20.5">
+<h2 data-number="20.5" class="anchored" data-anchor-id="fairness-privacy-and-interpretability-the-human-impact"><span class="header-section-number">20.5</span> Fairness, Privacy, and Interpretability: The Human Impact</h2>
+<p>Machine learning models don’t exist in a vacuum—they make decisions that affect real people’s lives. Whether it’s determining who gets a loan, which job candidates get interviews, or what content people see on social media, your models have ethical implications that go far beyond technical performance metrics.</p>
+<section id="fairness-avoiding-discriminatory-outcomes" class="level3">
+<h3 class="anchored" data-anchor-id="fairness-avoiding-discriminatory-outcomes">Fairness: Avoiding Discriminatory Outcomes</h3>
+<p>Algorithmic fairness means ensuring your model doesn’t systematically discriminate against protected groups based on characteristics like race, gender, age, or other sensitive attributes. The challenge is that bias can creep into models in subtle ways, even when you’re trying to be fair, often through the very data we use to train them.</p>
+<p>Bias typically enters through several pathways: <strong>historical bias</strong> reflects past discrimination embedded in your training data (like historical hiring records that favor certain groups), <strong>representation bias</strong> occurs when some groups are underrepresented in your dataset, <strong>measurement bias</strong> stems from biased ways of measuring outcomes (such as credit scores that reflect historical lending discrimination), and <strong>proxy variables</strong> that seem neutral but correlate with protected characteristics (like zip codes that correlate with race).</p>
+<p>Consider a hiring model trained on historical data that learns certain universities predict success. If those universities had discriminatory admission practices, the model perpetuates that bias into future hiring decisions. <strong>Promoting fairness requires proactive steps:</strong> auditing your data to understand demographics and historical outcomes, testing for disparate impact across different groups, considering algorithms that can optimize for both accuracy and fairness simultaneously, and maintaining human oversight for high-stakes decisions, especially edge cases.</p>
+</section>
+<section id="privacy-protecting-sensitive-information" class="level3">
+<h3 class="anchored" data-anchor-id="privacy-protecting-sensitive-information">Privacy: Protecting Sensitive Information</h3>
+<p>Machine learning models can inadvertently reveal sensitive information about individuals in your training data or make predictions that expose private details. <strong>Privacy concerns span multiple dimensions:</strong> data collection practices may gather more personal information than necessary, model inversion attacks can use outputs to infer sensitive information about training individuals, re-identification can occur when “anonymized” data is combined with other sources, and prediction privacy issues arise when models reveal sensitive information through their outputs (like predicting health conditions from seemingly unrelated data).</p>
+<p><strong>Protecting privacy requires systematic practices:</strong> data minimization ensures you only collect and use necessary information, proper anonymization removes or encrypts personally identifiable information, differential privacy adds carefully calibrated noise to protect individual privacy while preserving statistical patterns, and secure storage ensures data and models are properly protected and accessed only by authorized personnel.</p>
+</section>
+<section id="interpretability-understanding-model-decisions" class="level3">
+<h3 class="anchored" data-anchor-id="interpretability-understanding-model-decisions">Interpretability: Understanding Model Decisions</h3>
+<p>As models become more complex, understanding why they make specific decisions becomes increasingly difficult. This “black box” problem is particularly concerning for high-stakes applications where decisions significantly impact people’s lives. <strong>Interpretability matters for multiple reasons:</strong> it enables debugging by helping you understand and fix model mistakes, builds trust among users and stakeholders who need to understand decisions, ensures compliance with regulations that require explainable decisions (like certain credit approval requirements), and supports fairness efforts since you can’t fix bias without understanding how decisions are made.</p>
+<p><strong>Interpretability operates at different levels.</strong> Global interpretability helps you understand how the model works overall (such as knowing a credit model primarily relies on credit score and income), while local interpretability explains specific decisions (like understanding a particular loan was denied primarily due to high debt-to-income ratio). <strong>Common approaches include</strong> using inherently interpretable models like linear regression and decision trees, analyzing feature importance to understand which variables matter most, applying techniques like SHAP values to explain individual predictions, and providing counterfactual explanations that show how different inputs would change outcomes.</p>
+</section>
+<section id="balancing-competing-concerns" class="level3">
+<h3 class="anchored" data-anchor-id="balancing-competing-concerns">Balancing Competing Concerns</h3>
+<p>You’ll often face trade-offs between accuracy, fairness, privacy, and interpretability, and there’s no single “right” answer. The key is making these trade-offs consciously and transparently, guided by your specific application context and stakeholder needs. <strong>Critical questions to consider include:</strong> whether a small decrease in accuracy is justified by significant fairness improvements, how much model complexity is warranted by performance gains, what level of privacy protection is appropriate for your application, and who needs to understand model decisions and at what level of detail. These decisions should align with your organization’s values, regulatory requirements, and the real-world impact of your model’s deployment.</p>
+</section>
+<section id="knowledge-check-3" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-3">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Ethical Considerations in Practice:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider a model being developed to screen job applications for a tech company.</p>
+<ol type="1">
+<li><p><strong>Identify potential fairness issues:</strong> What sources of bias might affect this model? What groups might be unfairly disadvantaged?</p></li>
+<li><p><strong>Privacy concerns:</strong> What personal information might this model expose? How could the company protect applicant privacy?</p></li>
+<li><p><strong>Interpretability requirements:</strong> Who would need to understand this model’s decisions? What level of explanation would be appropriate?</p></li>
+<li><p><strong>Design better practices:</strong> How would you modify the model development process to address these concerns?</p></li>
+</ol>
+<p>Think about how you would balance model performance with ethical considerations in this scenario.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="summary" class="level2" data-number="20.6">
+<h2 data-number="20.6" class="anchored" data-anchor-id="summary"><span class="header-section-number">20.6</span> Summary</h2>
+<p>Building successful machine learning models requires much more than selecting the right algorithm and achieving high accuracy scores. The foundation of any ML project lies in careful planning, thoughtful problem framing, and systematic consideration of potential pitfalls before you write your first line of modeling code.</p>
+<p>Throughout this chapter, you’ve learned that effective machine learning begins with <strong>clearly defining your business problem</strong> and establishing concrete success criteria. You’ve seen how <strong>data quality and proper train/test splits</strong> form the bedrock of reliable model evaluation, and how <strong>data leakage</strong> can make models appear deceptively successful while actually being worthless in practice. Finally, you’ve considered the <strong>human impact</strong> of machine learning through the lenses of fairness, privacy, and interpretability—recognizing that technical excellence alone isn’t sufficient when models affect people’s lives.</p>
+<p>The key insight is that good machine learning isn’t just about algorithms, it’s about <strong>problem framing, data discipline, appropriate evaluation, and responsible use</strong>. The time you invest in these foundational considerations will pay dividends throughout your project, helping you avoid costly mistakes and build models that actually solve real business problems.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Your pre-modeling checklist should include:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Clear problem definition:</strong> Specific, measurable business questions with defined success criteria</li>
+<li><strong>Data quality assessment:</strong> Understanding your data’s limitations, biases, and gaps</li>
+<li><strong>Proper validation strategy:</strong> Time-aware train/test splits that reflect real-world deployment</li>
+<li><strong>Leakage prevention:</strong> Ensuring only information available at prediction time is used for training</li>
+<li><strong>Appropriate metrics:</strong> Evaluation criteria aligned with business objectives and model type</li>
+<li><strong>Ethical considerations:</strong> Proactive assessment of fairness, privacy, and interpretability requirements</li>
+</ul>
+</div>
+</div>
+<p>As you move forward in your machine learning journey, remember that the most sophisticated algorithms in the world can’t compensate for poor foundational planning. The habits and mindset you develop now—asking the right questions, being suspicious of results that seem too good to be true, and always considering the human impact of your models—will serve you well regardless of which specific techniques you eventually master.</p>
+</section>
+<section id="end-of-chapter-exercise-ml-project-pitfall-analysis" class="level2" data-number="20.7">
+<h2 data-number="20.7" class="anchored" data-anchor-id="end-of-chapter-exercise-ml-project-pitfall-analysis"><span class="header-section-number">20.7</span> End of Chapter Exercise: ML Project Pitfall Analysis</h2>
+<p>You work as a consultant helping companies identify potential problems in their machine learning projects before they invest significant resources. For each scenario below, identify the key issues that could derail the project and suggest what the team should address before building their models.</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Scenario 1: Predicting Customer Lifetime Value
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-19" class="callout-19-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> A subscription streaming service<br>
+<strong>Goal:</strong> “Build a model to predict how much revenue each new customer will generate over their entire relationship with our company”<br>
+<strong>Proposed Approach:</strong> The data science team plans to use all available customer data, including viewing history, payment information, and customer service interactions. They want to achieve 90% accuracy to justify the project to executives.<br>
+<strong>Timeline:</strong> “We need this model deployed in 2 weeks for the next marketing campaign”</p>
+<p><strong>Your Analysis:</strong></p>
+<ol type="1">
+<li><strong>Problem Framing Issues:</strong> What’s unclear or problematic about how they’ve defined their goal?</li>
+<li><strong>Data and Methodology Concerns:</strong> What potential issues do you see with their proposed approach?</li>
+<li><strong>Timeline and Expectations:</strong> What’s unrealistic about their timeline and success metrics?</li>
+<li><strong>Recommendations:</strong> What should they clarify or change before proceeding?</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-20-contents" aria-controls="callout-20" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Scenario 2: Loan Approval Automation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-20" class="callout-20-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> A regional bank<br>
+<strong>Goal:</strong> Automate loan approval decisions to reduce processing time and costs<br>
+<strong>Current Approach:</strong> The team has 10 years of historical loan data including applicant demographics, credit scores, employment history, and loan outcomes. They plan to train a model that achieves 95% accuracy, then deploy it to make instant approval decisions.<br>
+<strong>Special Note:</strong> “We included a feature called ‘loan_officer_final_decision’ because it correlates perfectly with whether loans were approved—this will make our model really accurate!”</p>
+<p><strong>Your Analysis:</strong></p>
+<ol type="1">
+<li><strong>Data Leakage:</strong> What’s the obvious leakage problem in this scenario?</li>
+<li><strong>Fairness Concerns:</strong> What bias issues might this model have?</li>
+<li><strong>Evaluation Strategy:</strong> How should they properly evaluate this model?</li>
+<li><strong>Ethical Considerations:</strong> What additional considerations should guide this project?</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Scenario 3: Medical Diagnosis Support
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-21" class="callout-21-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> A healthcare technology startup<br>
+<strong>Goal:</strong> Build a model to help doctors diagnose skin conditions from photographs<br>
+<strong>Data:</strong> 50,000 images labeled by dermatologists, with 95% showing healthy skin and 5% showing various conditions<br>
+<strong>Approach:</strong> Random train/test split with 80/20 division. They’re excited because their model achieves 95% accuracy!<br>
+<strong>Deployment Plan:</strong> “The model will provide diagnostic suggestions directly to patients through our app”</p>
+<p><strong>Your Analysis:</strong></p>
+<ol type="1">
+<li><strong>Data Issues:</strong> What problems do you see with their dataset composition?</li>
+<li><strong>Evaluation Problems:</strong> Why might 95% accuracy be misleading here?</li>
+<li><strong>Deployment Concerns:</strong> What’s risky about their deployment plan?</li>
+<li><strong>Regulatory and Safety Issues:</strong> What additional considerations apply to medical applications?</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Scenario 4: Social Media Content Moderation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-22" class="callout-22-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> A social media platform<br>
+<strong>Goal:</strong> Automatically detect and remove hate speech from user posts<br>
+<strong>Data:</strong> 1 million posts from the last 6 months, labeled by content moderators<br>
+<strong>Approach:</strong> The team wants to optimize for maximum recall (“we want to catch all hate speech”) and plans to use all available data including user profiles, posting history, and network connections.<br>
+<strong>Success Metric:</strong> “If we can catch 99% of hate speech, we’ll have solved the problem”</p>
+<p><strong>Your Analysis:</strong></p>
+<ol type="1">
+<li><strong>Problem Framing:</strong> What’s oversimplified about their success metric?</li>
+<li><strong>Privacy Concerns:</strong> What privacy issues arise from their data usage?</li>
+<li><strong>Fairness Issues:</strong> How might this model create unfair outcomes?</li>
+<li><strong>Metric Selection:</strong> What trade-offs are they ignoring by focusing only on recall?</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-23-contents" aria-controls="callout-23" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Scenario 5: Predictive Maintenance for Manufacturing
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-23" class="callout-23-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> A manufacturing plant<br>
+<strong>Goal:</strong> Predict equipment failures to schedule maintenance before breakdowns occur<br>
+<strong>Data:</strong> 2 years of sensor readings (temperature, vibration, pressure) and maintenance records<br>
+<strong>Approach:</strong> They plan to include a feature called “maintenance_scheduled_next_week” because it seems predictive of failures. Their validation shows perfect predictions!<br>
+<strong>Business Case:</strong> “This will save millions by preventing unexpected downtime”</p>
+<p><strong>Your Analysis:</strong></p>
+<ol type="1">
+<li><strong>Leakage Detection:</strong> What’s the leakage issue here?</li>
+<li><strong>Temporal Considerations:</strong> How should they handle the time-series nature of this data?</li>
+<li><strong>Cost-Benefit Analysis:</strong> What additional factors should they consider beyond prediction accuracy?</li>
+<li><strong>Practical Deployment:</strong> What challenges might they face when actually using this model?</li>
+</ol>
+</div>
+</div>
+</div>
+<section id="reflection-questions" class="level3">
+<h3 class="anchored" data-anchor-id="reflection-questions">Reflection Questions</h3>
+<p>After analyzing these scenarios, consider:</p>
+<ol type="1">
+<li><strong>Common Patterns:</strong> What types of mistakes appear across multiple scenarios?</li>
+<li><strong>Detection Skills:</strong> How can you develop the ability to spot these issues early in your own projects?</li>
+<li><strong>Prevention Strategies:</strong> What processes or checklists could help teams avoid these pitfalls?</li>
+<li><strong>Stakeholder Communication:</strong> How would you explain these technical issues to non-technical business leaders?</li>
+</ol>
+<p>The goal of this exercise isn’t to memorize specific problems, but to develop the critical thinking skills and systematic approach that will help you identify and address issues before they derail your machine learning projects.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./19-intro-ml-ai.html" class="pagination-link" aria-label="Introduction to Machine Learning and Artificial Intelligence">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./99-anaconda-install.html" class="pagination-link" aria-label="Anaconda Installation">
+        <span class="nav-page-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/20-before-we-build.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
