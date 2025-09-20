@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.0">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>22&nbsp; Evaluating Regression Models – BANA 4080: Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./99-anaconda-install.html" rel="next">
+<link href="./21-correlation-regression.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0ed29b1f0e6f007c337b74d6a5232f88.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-f90cbdadd06a7ce36d2760346202a0fd.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-0ed29b1f0e6f007c337b74d6a5232f88.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-e234b1c2f56703045a23c8517037a3ca.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-c3e20594314329cb1460e644d4609265.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-e234b1c2f56703045a23c8517037a3ca.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<meta name="mermaid-theme" content="neutral">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./21-correlation-regression.html">Module 8</a></li><li class="breadcrumb-item"><a href="./22-regression-evaluation.html"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="./index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">BANA 4080: Data Mining</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./BANA-4080--Data-Mining.epub" title="Download ePub" class="quarto-navigation-tool px-1" aria-label="Download ePub"><i class="bi bi-journal"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 1</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 2</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 3</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 4</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 5</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-data-viz-matplotlib.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Fundamentals of Plotting with Matplotlib</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-data-viz-bokeh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Interactive Data Visualization with Bokeh</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 6</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 7</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20-before-we-build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 8</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./21-correlation-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./22-regression-evaluation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendix</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#understanding-the-best-fit-line" id="toc-understanding-the-best-fit-line" class="nav-link active" data-scroll-target="#understanding-the-best-fit-line"><span class="header-section-number">22.1</span> Understanding the “Best-Fit” Line</a>
+  <ul class="collapse">
+  <li><a href="#from-visual-intuition-to-mathematical-precision" id="toc-from-visual-intuition-to-mathematical-precision" class="nav-link" data-scroll-target="#from-visual-intuition-to-mathematical-precision">From Visual Intuition to Mathematical Precision</a></li>
+  <li><a href="#why-square-the-errors" id="toc-why-square-the-errors" class="nav-link" data-scroll-target="#why-square-the-errors">Why Square the Errors?</a></li>
+  <li><a href="#computing-sse-manually" id="toc-computing-sse-manually" class="nav-link" data-scroll-target="#computing-sse-manually">Computing SSE Manually</a></li>
+  </ul></li>
+  <li><a href="#goodness-of-fit-r²-r-squared" id="toc-goodness-of-fit-r²-r-squared" class="nav-link" data-scroll-target="#goodness-of-fit-r²-r-squared"><span class="header-section-number">22.2</span> Goodness of Fit: R² (R-Squared)</a>
+  <ul class="collapse">
+  <li><a href="#understanding-the-r²-formula" id="toc-understanding-the-r²-formula" class="nav-link" data-scroll-target="#understanding-the-r²-formula">Understanding the R² Formula</a></li>
+  <li><a href="#interpreting-r²-values" id="toc-interpreting-r²-values" class="nav-link" data-scroll-target="#interpreting-r²-values">Interpreting R² Values</a></li>
+  </ul></li>
+  <li><a href="#error-metrics-for-business-decisions" id="toc-error-metrics-for-business-decisions" class="nav-link" data-scroll-target="#error-metrics-for-business-decisions"><span class="header-section-number">22.3</span> Error Metrics for Business Decisions</a>
+  <ul class="collapse">
+  <li><a href="#mean-squared-error-mse-and-root-mean-squared-error-rmse" id="toc-mean-squared-error-mse-and-root-mean-squared-error-rmse" class="nav-link" data-scroll-target="#mean-squared-error-mse-and-root-mean-squared-error-rmse">Mean Squared Error (MSE) and Root Mean Squared Error (RMSE)</a></li>
+  <li><a href="#mean-absolute-error-mae" id="toc-mean-absolute-error-mae" class="nav-link" data-scroll-target="#mean-absolute-error-mae">Mean Absolute Error (MAE)</a></li>
+  <li><a href="#mean-absolute-percentage-error-mape" id="toc-mean-absolute-percentage-error-mape" class="nav-link" data-scroll-target="#mean-absolute-percentage-error-mape">Mean Absolute Percentage Error (MAPE)</a></li>
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#the-critical-importance-of-generalization" id="toc-the-critical-importance-of-generalization" class="nav-link" data-scroll-target="#the-critical-importance-of-generalization"><span class="header-section-number">22.4</span> The Critical Importance of Generalization</a>
+  <ul class="collapse">
+  <li><a href="#traintest-splits-simulating-the-future" id="toc-traintest-splits-simulating-the-future" class="nav-link" data-scroll-target="#traintest-splits-simulating-the-future">Train/Test Splits: Simulating the Future</a></li>
+  <li><a href="#interpreting-training-vs-test-performance" id="toc-interpreting-training-vs-test-performance" class="nav-link" data-scroll-target="#interpreting-training-vs-test-performance">Interpreting Training vs Test Performance</a></li>
+  <li><a href="#overfitting-vs-underfitting-finding-the-sweet-spot" id="toc-overfitting-vs-underfitting-finding-the-sweet-spot" class="nav-link" data-scroll-target="#overfitting-vs-underfitting-finding-the-sweet-spot">Overfitting vs Underfitting: Finding the Sweet Spot</a></li>
+  <li><a href="#knowledge-check-1" id="toc-knowledge-check-1" class="nav-link" data-scroll-target="#knowledge-check-1">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#business-alignment-connecting-model-and-business-performance" id="toc-business-alignment-connecting-model-and-business-performance" class="nav-link" data-scroll-target="#business-alignment-connecting-model-and-business-performance"><span class="header-section-number">22.5</span> Business Alignment: Connecting Model and Business Performance</a>
+  <ul class="collapse">
+  <li><a href="#the-critical-connection-why-metric-choice-matters" id="toc-the-critical-connection-why-metric-choice-matters" class="nav-link" data-scroll-target="#the-critical-connection-why-metric-choice-matters">The Critical Connection: Why Metric Choice Matters</a></li>
+  <li><a href="#knowledge-check-2" id="toc-knowledge-check-2" class="nav-link" data-scroll-target="#knowledge-check-2">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">22.6</span> Summary</a>
+  <ul class="collapse">
+  <li><a href="#quick-reference-regression-evaluation-metrics" id="toc-quick-reference-regression-evaluation-metrics" class="nav-link" data-scroll-target="#quick-reference-regression-evaluation-metrics">Quick Reference: Regression Evaluation Metrics</a></li>
+  </ul></li>
+  <li><a href="#end-of-chapter-exercise" id="toc-end-of-chapter-exercise" class="nav-link" data-scroll-target="#end-of-chapter-exercise"><span class="header-section-number">22.7</span> End of Chapter Exercise</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/22-regression-evaluation.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./21-correlation-regression.html">Module 8</a></li><li class="breadcrumb-item"><a href="./22-regression-evaluation.html"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In business, building a model is only half the battle. The real question is: <em>How good is your model?</em> Consider these scenarios:</p>
+<ul>
+<li><em>A marketing manager builds a model to predict campaign ROI. Should they trust predictions of 15% returns?</em></li>
+<li><em>A supply chain analyst forecasts demand to optimize inventory. How far off might their estimates be?</em></li>
+<li><em>A finance team predicts quarterly revenue for budgeting. What’s their margin of error?</em></li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Experiential Learning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Think of a time you made a prediction about something important—maybe estimating how long a project would take, forecasting sales for your business, or predicting your final grade in a course.</p>
+<p>How did you know if your prediction was good? Did you wait until the actual outcome to see how close you were? What would have helped you assess the quality of your prediction beforehand?</p>
+<p>By the end of this chapter, you’ll have concrete tools to measure prediction quality before you need to make critical business decisions.</p>
+</div>
+</div>
+<p><strong>Model evaluation</strong> answers the fundamental question: “How well does our model perform?” Without proper evaluation, you might deploy a model that makes systematically poor predictions, leading to costly business mistakes. This chapter teaches you to measure model performance using various metrics and understand when each metric is most appropriate for business decision-making.</p>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>Explain how regression finds the best-fit line by minimizing Sum of Squared Errors (SSE)</li>
+<li>Calculate and interpret R², MSE, RMSE, MAE, and MAPE for regression models</li>
+<li>Apply train/test splits to evaluate model performance on unseen data<br>
+</li>
+<li>Connect different error metrics to specific business decision contexts</li>
+<li>Recognize the importance of generalization for real-world model deployment</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>📓 Follow Along in Colab!
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you read through this chapter, we encourage you to follow along using the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/22_regression_evaluation.ipynb">companion notebook</a> in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.</p>
+<p>👉 Open the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/22_regression_evaluation.ipynb">Regression Evaluation Notebook in Colab</a>.</p>
+</div>
+</div>
+<section id="understanding-the-best-fit-line" class="level2" data-number="22.1">
+<h2 data-number="22.1" class="anchored" data-anchor-id="understanding-the-best-fit-line"><span class="header-section-number">22.1</span> Understanding the “Best-Fit” Line</h2>
+<p>When we build a regression model, the algorithm automatically finds the <strong>“best-fit line”</strong> through our data points. But what makes one line “better” than another? The answer lies in <strong>prediction errors</strong>—the differences between what our model predicts and what actually happens.</p>
+<section id="from-visual-intuition-to-mathematical-precision" class="level3">
+<h3 class="anchored" data-anchor-id="from-visual-intuition-to-mathematical-precision">From Visual Intuition to Mathematical Precision</h3>
+<p>Let’s return to our advertising example from the previous chapter. When you look at a scatterplot, you can imagine drawing many different lines through the data points. Some would fit the pattern well, others would miss it entirely. We use <strong>residuals</strong> to guide us on which line is best.</p>
+<p>The dashed lines in the plot below represent residuals (or errors), the vertical distances between each actual data point and our prediction line. Linear regression finds the line that minimizes the <strong>Sum of Squared Errors (SSE)</strong>, which is exactly what it sounds like: add up all the squared residuals.</p>
+<p><span class="math display">\[ SSE = \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 \]</span></p>
+<p>Where <span class="math inline">\(y_i\)</span> is the actual value, <span class="math inline">\(\hat{y}_i\)</span> is the predicted value, and <span class="math inline">\(n\)</span> is the number of data points.</p>
+<div id="4a77eddc" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Show code for regression line errors</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error, mean_absolute_error, r2_score, root_mean_squared_error</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Recreate our advertising data</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ad_spend"</span>: [<span class="dv">400</span>, <span class="dv">500</span>, <span class="dv">600</span>, <span class="dv">700</span>, <span class="dv">800</span>, <span class="dv">900</span>, <span class="dv">1000</span>, <span class="dv">1100</span>, <span class="dv">1200</span>, <span class="dv">1300</span>, <span class="dv">1400</span>, <span class="dv">1500</span>, <span class="dv">1600</span>, <span class="dv">1700</span>, <span class="dv">1800</span>, <span class="dv">1900</span>, <span class="dv">2000</span>, <span class="dv">2100</span>, <span class="dv">2200</span>, <span class="dv">2300</span>],</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"weekly_sales"</span>: [<span class="dv">4200</span>, <span class="dv">4400</span>, <span class="dv">4100</span>, <span class="dv">4800</span>, <span class="dv">5600</span>, <span class="dv">5200</span>, <span class="dv">4900</span>, <span class="dv">5500</span>, <span class="dv">5300</span>, <span class="dv">5900</span>, <span class="dv">5700</span>, <span class="dv">6300</span>, <span class="dv">6900</span>, <span class="dv">6200</span>, <span class="dv">5800</span>, <span class="dv">6600</span>, <span class="dv">7100</span>, <span class="dv">6800</span>, <span class="dv">7300</span>, <span class="dv">7800</span>]</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit our regression model</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> data[[<span class="st">'ad_spend'</span>]]</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> data[<span class="st">'weekly_sales'</span>]</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LinearRegression()</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>model.fit(X, y)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Make predictions</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> model.predict(X)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the fit</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>plt.scatter(data[<span class="st">'ad_spend'</span>], data[<span class="st">'weekly_sales'</span>], alpha<span class="op">=</span><span class="fl">0.7</span>, label<span class="op">=</span><span class="st">'Actual data'</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>plt.plot(data[<span class="st">'ad_spend'</span>], predictions, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="st">'Best-fit line'</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Show residuals for a few points</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="bu">len</span>(data), <span class="dv">4</span>):  <span class="co"># Show every 4th point to avoid clutter</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    plt.plot([data[<span class="st">'ad_spend'</span>].iloc[i], data[<span class="st">'ad_spend'</span>].iloc[i]], </span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>             [data[<span class="st">'weekly_sales'</span>].iloc[i], predictions[i]], </span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>             <span class="st">'k--'</span>, alpha<span class="op">=</span><span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Advertising Spend ($)'</span>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Weekly Sales'</span>)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Regression Line with Prediction Errors (Residuals)'</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="22-regression-evaluation_files/figure-html/cell-2-output-1.png" width="825" height="523" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="why-square-the-errors" class="level3">
+<h3 class="anchored" data-anchor-id="why-square-the-errors">Why Square the Errors?</h3>
+<p>You might wonder: why square the errors instead of just adding them up directly? There are several important reasons:</p>
+<ol type="1">
+<li><p><strong>Positive and negative errors don’t cancel out</strong>: Without squaring, a prediction that’s $100 too high would cancel out one that’s $100 too low, making it look like we have zero error when we actually have significant prediction problems.</p></li>
+<li><p><strong>Larger errors get penalized more</strong>: Squaring means that one prediction that’s off by $200 contributes more to our error measure than two predictions that are each off by $100. This reflects the business reality that big mistakes are often disproportionately costly.</p></li>
+<li><p><strong>Mathematical convenience</strong>: Squared errors have nice mathematical properties that make the optimization problem solvable with standard techniques.</p></li>
+</ol>
+</section>
+<section id="computing-sse-manually" class="level3">
+<h3 class="anchored" data-anchor-id="computing-sse-manually">Computing SSE Manually</h3>
+<p>Let’s calculate the Sum of Squared Errors step-by-step for our advertising model to see this concept in action:</p>
+<div id="eb51ab26" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate SSE manually using our advertising data</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (Using the same data and model from the visualization above)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Calculate residuals (errors) for each prediction</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>residuals <span class="op">=</span> y <span class="op">-</span> predictions</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Square each residual</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>squared_residuals <span class="op">=</span> residuals <span class="op">**</span> <span class="dv">2</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: Sum all squared residuals to get SSE</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>sse_manual <span class="op">=</span> np.<span class="bu">sum</span>(squared_residuals)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sum of Squared Errors: </span><span class="sc">{</span>sse_manual<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Number of data points: </span><span class="sc">{</span><span class="bu">len</span>(y)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Average squared error per point: </span><span class="sc">{</span>sse_manual<span class="op">/</span><span class="bu">len</span>(y)<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the calculation for the first 5 data points</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Breaking down the first 5 predictions:"</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Point'</span><span class="sc">:&lt;8}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Actual'</span><span class="sc">:&lt;8}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Predicted'</span><span class="sc">:&lt;10}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Error'</span><span class="sc">:&lt;8}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Squared Error'</span><span class="sc">:&lt;12}</span><span class="ss">"</span>)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'-'</span><span class="op">*</span><span class="dv">50</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    actual <span class="op">=</span> y.iloc[i]</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    predicted <span class="op">=</span> predictions[i]</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    error <span class="op">=</span> actual <span class="op">-</span> predicted</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    squared_error <span class="op">=</span> error <span class="op">**</span> <span class="dv">2</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>i<span class="op">+</span><span class="dv">1</span><span class="sc">:&lt;8}</span><span class="ss"> $</span><span class="sc">{</span>actual<span class="sc">:&lt;7.0f}</span><span class="ss"> $</span><span class="sc">{</span>predicted<span class="sc">:&lt;9.0f}</span><span class="ss"> </span><span class="sc">{</span>error<span class="sc">:&lt;+7.0f}</span><span class="ss"> </span><span class="sc">{</span>squared_error<span class="sc">:&lt;11.0f}</span><span class="ss">"</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Sum of first 5 squared errors: </span><span class="sc">{</span>np<span class="sc">.</span><span class="bu">sum</span>(squared_residuals[:<span class="dv">5</span>])<span class="sc">:.0f}</span><span class="ss">"</span>)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total SSE for all </span><span class="sc">{</span><span class="bu">len</span>(y)<span class="sc">}</span><span class="ss"> points: </span><span class="sc">{</span>sse_manual<span class="sc">:.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sum of Squared Errors: 2,409,759
+Number of data points: 20
+Average squared error per point: 120,488
+
+Breaking down the first 5 predictions:
+Point    Actual   Predicted  Error    Squared Error
+--------------------------------------------------
+1        $4200    $4224      -24     590        
+2        $4400    $4392      +8      60         
+3        $4100    $4560      -460    211808     
+4        $4800    $4728      +72     5156       
+5        $5600    $4896      +704    495383     
+
+Sum of first 5 squared errors: 712996
+Total SSE for all 20 points: 2409759</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Why SSE Matters (But Isn’t Always Interpretable)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Although SSE is crucial for our regression algorithm to converge on the optimal solution—it’s literally what the algorithm minimizes—it’s not very interpretable for business decision-making. An SSE of several hundred thousand represents our total prediction error across all 20 data points, but this number alone doesn’t tell us if our model is good or poor.</p>
+<p>Consequently, we tend to lean on other metrics that are more interpretable to the problem at hand, such as R² (which gives us a percentage), RMSE (which is in the same units as our target variable), or business-specific metrics that directly relate to costs and outcomes.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="goodness-of-fit-r²-r-squared" class="level2" data-number="22.2">
+<h2 data-number="22.2" class="anchored" data-anchor-id="goodness-of-fit-r²-r-squared"><span class="header-section-number">22.2</span> Goodness of Fit: R² (R-Squared)</h2>
+<p>While SSE tells us about total error, it’s hard to interpret on its own. Is an SSE of 500,000 good or bad? It depends on the scale of your data. <strong>R² (R-squared)</strong> solves this problem by converting error into a more interpretable percentage.</p>
+<section id="understanding-the-r²-formula" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-the-r²-formula">Understanding the R² Formula</h3>
+<p>R² measures the <strong>proportion of variation in your target variable that’s explained by your model</strong>. It’s calculated using this relationship:</p>
+<p><span class="math display">\[ R^2 = 1 - \frac{SSE}{TSS} = 1 - \frac{\text{Sum of Squared Errors}}{\text{Total Sum of Squares}} \]</span></p>
+<p>Where:</p>
+<ul>
+<li><strong>SSE</strong> = Sum of squared differences between actual and predicted values</li>
+<li><strong>TSS</strong> = Sum of squared differences between actual values and the mean</li>
+</ul>
+<p>Think of it this way: TSS represents how much your data varies around its average (if you had no model at all), while SSE represents how much it varies around your model’s predictions. R² tells you what fraction of the original variation your model successfully “explains.”</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Manual vs Automated R² Calculation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>We can calculate R² manually as shown below, but since this is a very common metric used in machine learning, scikit-learn provides the <code>r2_score</code> function to simplify this for us, which we also see in the code below.</p>
+</div>
+</div>
+<div id="c2ba8d4f" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate R² step by step</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>y_mean <span class="op">=</span> np.mean(y)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>tss <span class="op">=</span> np.<span class="bu">sum</span>((y <span class="op">-</span> y_mean) <span class="op">**</span> <span class="dv">2</span>)  <span class="co"># Total Sum of Squares</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>sse <span class="op">=</span> np.<span class="bu">sum</span>((y <span class="op">-</span> predictions) <span class="op">**</span> <span class="dv">2</span>)  <span class="co"># Sum of Squared Errors</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>r_squared_manual <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> (sse <span class="op">/</span> tss)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare with sklearn's calculation</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>r_squared_sklearn <span class="op">=</span> r2_score(y, predictions)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Manual R² calculation: </span><span class="sc">{</span>r_squared_manual<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sklearn R² calculation: </span><span class="sc">{</span>r_squared_sklearn<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Model R² (from .score() method): </span><span class="sc">{</span>model<span class="sc">.</span>score(X, y)<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Interpretation: </span><span class="sc">{</span>r_squared_manual<span class="sc">:.1%}</span><span class="ss"> of the variation in weekly sales"</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"is explained by advertising spend in our model."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Manual R² calculation: 0.8862
+Sklearn R² calculation: 0.8862
+Model R² (from .score() method): 0.8862
+
+Interpretation: 88.6% of the variation in weekly sales
+is explained by advertising spend in our model.</code></pre>
+</div>
+</div>
+</section>
+<section id="interpreting-r²-values" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-r²-values">Interpreting R² Values</h3>
+<p>R² ranges from 0 to 1 (and can be negative for very poor models):</p>
+<ul>
+<li><strong>R² = 1.0</strong>: Perfect fit—your model explains 100% of the variation</li>
+<li><strong>R² = 0.8</strong>: Strong fit—your model explains 80% of the variation<br>
+</li>
+<li><strong>R² = 0.5</strong>: Moderate fit—your model explains 50% of the variation</li>
+<li><strong>R² = 0.0</strong>: No relationship—your model is no better than just predicting the average</li>
+</ul>
+<p>In business contexts, what constitutes a “good” R² depends heavily on your domain:</p>
+<ul>
+<li><strong>Financial markets</strong>: R² of 0.1-0.3 might be excellent (markets are noisy!)</li>
+<li><strong>Manufacturing quality</strong>: R² of 0.9+ might be expected (controlled processes)</li>
+<li><strong>Marketing response</strong>: R² of 0.5-0.8 is often realistic (human behavior varies)</li>
+</ul>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>The Bottom Line on “Good” R² Values
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>There is no universal threshold that determines whether an R² value is “good” or “bad.” What constitutes a strong R² is entirely dependent on the domain and problem at hand. A seemingly low R² of 0.2 might be groundbreaking in a noisy field like stock market prediction, while the same value would be concerning in a controlled manufacturing setting. Always evaluate R² in the context of your specific industry, the inherent variability of your data, and the standards established by previous research in your domain.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="error-metrics-for-business-decisions" class="level2" data-number="22.3">
+<h2 data-number="22.3" class="anchored" data-anchor-id="error-metrics-for-business-decisions"><span class="header-section-number">22.3</span> Error Metrics for Business Decisions</h2>
+<p>While R² gives us a general sense of model quality, specific business decisions often require more targeted metrics. Different error measures emphasize different aspects of prediction accuracy.</p>
+<section id="mean-squared-error-mse-and-root-mean-squared-error-rmse" class="level3">
+<h3 class="anchored" data-anchor-id="mean-squared-error-mse-and-root-mean-squared-error-rmse">Mean Squared Error (MSE) and Root Mean Squared Error (RMSE)</h3>
+<p><strong>MSE</strong> is simply the average of our squared errors, while <strong>RMSE</strong> is the square root of MSE. RMSE has a crucial advantage: it’s in the same units as our target variable, making it much easier to interpret.</p>
+<p><span class="math display">\[ MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2 \]</span></p>
+<p><span class="math display">\[ RMSE = \sqrt{MSE} \]</span></p>
+<p>For our advertising example, the RMSE is approximately $347. This means that when we predict weekly sales based on advertising spend, our predictions are typically off by about $347. To put this in business context: if we predict weekly sales of $6,000, the actual sales could reasonably range from about $5,653 to $6,347. For a marketing manager planning inventory or staffing, this level of uncertainty might be quite acceptable for weekly planning.</p>
+<div id="bba8f642" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate MSE and RMSE</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mse <span class="op">=</span> mean_squared_error(y, predictions)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>rmse <span class="op">=</span> root_mean_squared_error(y, predictions)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean Squared Error (MSE): </span><span class="sc">{</span>mse<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Root Mean Squared Error (RMSE): $</span><span class="sc">{</span>rmse<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Interpretation: On average, our predictions are off by about $</span><span class="sc">{</span>rmse<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"when predicting weekly sales."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean Squared Error (MSE): 120,488
+Root Mean Squared Error (RMSE): $347
+
+Interpretation: On average, our predictions are off by about $347
+when predicting weekly sales.</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Business Context for RMSE
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you’re a marketing manager and your model has an RMSE of $347 (like our advertising example), you know that your weekly sales predictions are typically within about $347 of the actual values. This helps you set realistic expectations and plan appropriate safety margins. The key advantage of RMSE is that it speaks in the same units as your business outcome—dollars, units sold, customers served—making it immediately interpretable for operational planning and risk assessment.</p>
+</div>
+</div>
+</section>
+<section id="mean-absolute-error-mae" class="level3">
+<h3 class="anchored" data-anchor-id="mean-absolute-error-mae">Mean Absolute Error (MAE)</h3>
+<p><strong>MAE</strong> calculates the average absolute difference between predictions and actual values. Unlike RMSE, it doesn’t square the errors, so it treats all errors equally regardless of size.</p>
+<p><span class="math display">\[ MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i| \]</span></p>
+<div id="7653390d" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate MAE</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>mae <span class="op">=</span> mean_absolute_error(y, predictions)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean Absolute Error (MAE): $</span><span class="sc">{</span>mae<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Root Mean Squared Error (RMSE): $</span><span class="sc">{</span>rmse<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Notice that RMSE &gt; MAE because RMSE penalizes large errors more heavily."</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Demonstrate the difference with an extreme outlier</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>y_with_outlier <span class="op">=</span> y.copy()</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>predictions_with_outlier <span class="op">=</span> predictions.copy()</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>y_with_outlier.iloc[<span class="dv">0</span>] <span class="op">=</span> <span class="dv">10000</span>  <span class="co"># Simulate one very bad prediction</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>mae_outlier <span class="op">=</span> mean_absolute_error(y_with_outlier, predictions_with_outlier)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>rmse_outlier <span class="op">=</span> root_mean_squared_error(y_with_outlier, predictions_with_outlier)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">With one extreme outlier:"</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"MAE changes from $</span><span class="sc">{</span>mae<span class="sc">:,.0f}</span><span class="ss"> to $</span><span class="sc">{</span>mae_outlier<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"RMSE changes from $</span><span class="sc">{</span>rmse<span class="sc">:,.0f}</span><span class="ss"> to $</span><span class="sc">{</span>rmse_outlier<span class="sc">:,.0f}</span><span class="ss">"</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"RMSE is much more sensitive to outliers!"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean Absolute Error (MAE): $270
+Root Mean Squared Error (RMSE): $347
+
+Notice that RMSE &gt; MAE because RMSE penalizes large errors more heavily.
+
+With one extreme outlier:
+MAE changes from $270 to $557
+RMSE changes from $347 to $1,337
+RMSE is much more sensitive to outliers!</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Business Takeaway: Choosing Between MAE and RMSE
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The choice between MAE and RMSE should align with your business risk tolerance. If one large prediction error could cause significant business damage—like underestimating demand for a critical product launch or miscalculating loan default risk—use RMSE because it heavily penalizes these costly outliers. However, if prediction errors have roughly linear business costs—such as staffing customer service or managing routine inventory—MAE provides a clearer picture of typical performance without being skewed by occasional extreme cases.</p>
+</div>
+</div>
+<p><strong>When to use MAE vs RMSE:</strong></p>
+<ul>
+<li><strong>MAE</strong> when all errors are equally costly (e.g., customer support response time)</li>
+<li><strong>RMSE</strong> when large errors are disproportionately bad (e.g., financial risk models)</li>
+</ul>
+</section>
+<section id="mean-absolute-percentage-error-mape" class="level3">
+<h3 class="anchored" data-anchor-id="mean-absolute-percentage-error-mape">Mean Absolute Percentage Error (MAPE)</h3>
+<p><strong>MAPE</strong> expresses errors as percentages of the actual values, making it useful for comparing models across different scales or for relative performance evaluation.</p>
+<p><span class="math display">\[ MAPE = \frac{1}{n} \sum_{i=1}^{n} \left| \frac{y_i - \hat{y}_i}{y_i} \right| \times 100\% \]</span></p>
+<div id="2c5d3009" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate MAPE using scikit-learn</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_absolute_percentage_error</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>mape <span class="op">=</span> mean_absolute_percentage_error(y, predictions) <span class="op">*</span> <span class="dv">100</span>  <span class="co"># Convert to percentage</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean Absolute Percentage Error (MAPE): </span><span class="sc">{</span>mape<span class="sc">:.1f}</span><span class="ss">%"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Interpretation: On average, our predictions are off by </span><span class="sc">{</span>mape<span class="sc">:.1f}</span><span class="ss">%"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"of the actual weekly sales value."</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show example: if actual sales are $6,000</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>example_sales <span class="op">=</span> <span class="dv">6000</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>example_error <span class="op">=</span> example_sales <span class="op">*</span> (mape <span class="op">/</span> <span class="dv">100</span>)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Example: For actual sales of $</span><span class="sc">{</span>example_sales<span class="sc">:,}</span><span class="ss">"</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"we'd expect our prediction to be off by about $</span><span class="sc">{</span>example_error<span class="sc">:.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean Absolute Percentage Error (MAPE): 4.7%
+
+Interpretation: On average, our predictions are off by 4.7%
+of the actual weekly sales value.
+
+Example: For actual sales of $6,000
+we'd expect our prediction to be off by about $280</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>When MAPE is Most Valuable
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>MAPE shines in scenarios where relative performance matters more than absolute errors. Retail forecasting often uses MAPE because a 10% error means the same thing whether you’re predicting sales of $100 or $10,000—it represents the same proportional impact on inventory planning or revenue projections. MAPE is ideal when comparing models across different product categories, time periods, or business units with vastly different scales.</p>
+<p><strong>Important limitation:</strong> Be cautious with MAPE when actual values can be close to zero, as it can explode to infinity and provide misleading results.</p>
+</div>
+</div>
+</section>
+<section id="knowledge-check" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Hands-On: Build and Evaluate Your Own Model
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Now it’s your turn to build a regression model and compute all the evaluation metrics we’ve learned about. You’ll use the Advertising dataset from Chapter 21.</p>
+<p><strong>Dataset:</strong> Load the Advertising data and build a model to predict <code>sales</code> using all three advertising channels (<code>TV</code>, <code>radio</code>, <code>newspaper</code>).</p>
+<div id="44bc8d42" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the data (adjust path as needed for local files)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>advertising <span class="op">=</span> pd.read_csv(<span class="st">"../data/Advertising.csv"</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Alternative: Load directly from GitHub if you don't have local access</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># advertising = pd.read_csv("https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/main/data/Advertising.csv")</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Advertising dataset shape:"</span>, advertising.shape)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(advertising.head())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Advertising dataset shape: (200, 4)
+      TV  radio  newspaper  sales
+0  230.1   37.8       69.2   22.1
+1   44.5   39.3       45.1   10.4
+2   17.2   45.9       69.3    9.3
+3  151.5   41.3       58.5   18.5
+4  180.8   10.8       58.4   12.9</code></pre>
+</div>
+</div>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Build the model</strong>: Create a multiple regression model predicting <code>sales</code> from <code>TV</code>, <code>radio</code>, and <code>newspaper</code> advertising spend.</li>
+<li><strong>Calculate all metrics</strong>: Compute and report:
+<ul>
+<li>SSE (Sum of Squared Errors)</li>
+<li>R² (R-squared)</li>
+<li>MSE (Mean Squared Error)</li>
+<li>RMSE (Root Mean Squared Error)</li>
+<li>MAE (Mean Absolute Error)</li>
+<li>MAPE (Mean Absolute Percentage Error)</li>
+</ul></li>
+<li><strong>Interpret the results</strong>:
+<ul>
+<li>What does each metric tell you about model performance?</li>
+<li>If you were a marketing manager, which metric would be most useful for budget planning?</li>
+<li>How would you explain the model’s accuracy to a business stakeholder?</li>
+</ul></li>
+<li><strong>Business context</strong>: Given your results, would you trust this model to guide a $50,000 advertising budget allocation? Why or why not?</li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="the-critical-importance-of-generalization" class="level2" data-number="22.4">
+<h2 data-number="22.4" class="anchored" data-anchor-id="the-critical-importance-of-generalization"><span class="header-section-number">22.4</span> The Critical Importance of Generalization</h2>
+<p>All the metrics we’ve calculated so far have a fundamental problem: we computed them on the same data we used to train our model. This is like a student grading their own homework—the results will be overly optimistic.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The Business Reality of Model Performance
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In business, what matters isn’t how well your model fits historical data, but how well it predicts <strong>future, unseen data</strong>. This is called <strong>generalization</strong>.</p>
+</div>
+</div>
+<section id="traintest-splits-simulating-the-future" class="level3">
+<h3 class="anchored" data-anchor-id="traintest-splits-simulating-the-future">Train/Test Splits: Simulating the Future</h3>
+<p>The solution is to split our data into two parts:</p>
+<ul>
+<li><strong>Training set</strong> (~70-80%): Used to fit the model</li>
+<li><strong>Test set</strong> (~20-30%): Used to evaluate performance (model never sees this during training)</li>
+</ul>
+<p>This simulates the real-world scenario where you build a model on historical data and then use it to predict future outcomes.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-data-split" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-data-split-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-data-split">flowchart TD
+    A[Complete Dataset] --&gt; B[Training Set&lt;br/&gt;70-80%]
+    A --&gt; C[Test Set&lt;br/&gt;20-30%]
+    
+    B --&gt; D[Train Model]
+    D --&gt; E[Trained Model]
+    
+    C --&gt; F[Evaluate Performance]
+    E --&gt; F
+    F --&gt; G[Unbiased Performance&lt;br/&gt;Estimate]
+    
+    style A fill:#f0f8ff
+    style B fill:#e8f5e8
+    style C fill:#ffe6e6
+    style G fill:#fff2cc
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-data-split-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;22.1: Proper data splitting ensures unbiased evaluation by keeping test data completely separate from model training.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="splitting-the-data" class="level4">
+<h4 class="anchored" data-anchor-id="splitting-the-data">Splitting the Data</h4>
+<p>Let’s first look at how to properly split our data using random sampling. The <code>random_state</code> parameter ensures our results are reproducible—anyone running this code will get the same split.</p>
+<div id="184c1d9b" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the data randomly with reproducible results</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">30</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total data points: </span><span class="sc">{</span><span class="bu">len</span>(X)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Training set: </span><span class="sc">{</span><span class="bu">len</span>(X_train)<span class="sc">}</span><span class="ss"> points (</span><span class="sc">{</span><span class="bu">len</span>(X_train)<span class="op">/</span><span class="bu">len</span>(X)<span class="sc">:.1%}</span><span class="ss">)"</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test set: </span><span class="sc">{</span><span class="bu">len</span>(X_test)<span class="sc">}</span><span class="ss"> points (</span><span class="sc">{</span><span class="bu">len</span>(X_test)<span class="op">/</span><span class="bu">len</span>(X)<span class="sc">:.1%}</span><span class="ss">)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Total data points: 20
+Training set: 14 points (70.0%)
+Test set: 6 points (30.0%)</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Reproducible Results with <code>random_state</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>What <code>random_state=30</code> does:</strong> This parameter controls the randomness of the split. Setting it to a specific number (like 30) ensures that every time you run this code, you’ll get exactly the same train/test split. This is crucial for reproducible results—without it, your model performance might vary slightly each time you run your analysis simply due to different random splits.</p>
+</div>
+</div>
+<p><strong>The golden rule:</strong> Once you set aside your test set, don’t touch it until you’re completely done with model development. The moment you use test data to make decisions about your model (like choosing features or tuning parameters), it’s no longer a fair evaluation.</p>
+</section>
+<section id="training-and-evaluating-the-model" class="level4">
+<h4 class="anchored" data-anchor-id="training-and-evaluating-the-model">Training and Evaluating the Model</h4>
+<p>Now that we have our data split, we follow a two-step process: first train the model only on the training data, then evaluate its performance on both the training and test sets.</p>
+<div id="4c691d4c" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train model on training data only</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>model_train <span class="op">=</span> LinearRegression()</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>model_train.fit(X_train, y_train)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate on both training and test sets</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>train_predictions <span class="op">=</span> model_train.predict(X_train)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>test_predictions <span class="op">=</span> model_train.predict(X_test)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate metrics for both sets</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="sc">{</span><span class="st">'Metric'</span><span class="sc">:&lt;20}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Training Set'</span><span class="sc">:&lt;15}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Test Set'</span><span class="sc">:&lt;15}</span><span class="ss">"</span>)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'-'</span><span class="op">*</span><span class="dv">50</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'R²'</span><span class="sc">:&lt;20}</span><span class="ss"> </span><span class="sc">{</span>r2_score(y_train, train_predictions)<span class="sc">:&lt;15.3f}</span><span class="ss"> </span><span class="sc">{</span>r2_score(y_test, test_predictions)<span class="sc">:&lt;15.3f}</span><span class="ss">"</span>)</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'RMSE'</span><span class="sc">:&lt;20}</span><span class="ss"> </span><span class="sc">{</span>root_mean_squared_error(y_train, train_predictions)<span class="sc">:&lt;15.0f}</span><span class="ss"> </span><span class="sc">{</span>root_mean_squared_error(y_test, test_predictions)<span class="sc">:&lt;15.0f}</span><span class="ss">"</span>)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'MAE'</span><span class="sc">:&lt;20}</span><span class="ss"> </span><span class="sc">{</span>mean_absolute_error(y_train, train_predictions)<span class="sc">:&lt;15.0f}</span><span class="ss"> </span><span class="sc">{</span>mean_absolute_error(y_test, test_predictions)<span class="sc">:&lt;15.0f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Metric               Training Set    Test Set       
+--------------------------------------------------
+R²                   0.909           0.760          
+RMSE                 330             403            
+MAE                  258             296            </code></pre>
+</div>
+</div>
+<p>Our example uses <strong>random splitting</strong>, which works well when each data point is independent and we’re not dealing with time-series data. For many business problems involving temporal data (like predicting next month’s sales), you’d want to use time-based splitting instead—training on earlier periods and testing on later ones to better simulate real-world deployment.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Time-Series Splitting in Scikit-Learn
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For time-series data, scikit-learn provides <code>TimeSeriesSplit</code> from <code>sklearn.model_selection</code>. This class creates multiple train/test splits where each split respects the temporal order—you always train on earlier data and test on later data. This is essential for problems like sales forecasting, stock prediction, or any scenario where you’re predicting future events based on historical patterns.</p>
+</div>
+</div>
+<p>Looking at our results, we can see that our model performs better on the training set (RMSE ≈ $330) compared to the test set (RMSE ≈ $403). This pattern—where training performance exceeds test performance—is actually quite common and tells us something important about how well our model generalizes to new data.</p>
+</section>
+</section>
+<section id="interpreting-training-vs-test-performance" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-training-vs-test-performance">Interpreting Training vs Test Performance</h3>
+<p>The relationship between training and test performance is one of the most important diagnostic tools in machine learning. It tells you not just how accurate your model is, but how trustworthy those accuracy estimates are for real-world deployment. The key insight is comparing training and test performance:</p>
+<ul>
+<li><strong>Similar performance</strong>: Good sign—your model generalizes well</li>
+<li><strong>Training much better than test</strong>: <strong>Overfitting</strong>—your model memorized the training data</li>
+<li><strong>Test much better than training</strong>: Unusual—might indicate data leakage or a lucky split</li>
+</ul>
+<p>Our example shows the second scenario, where training RMSE ($330) is notably better than test RMSE ($403). This 22% performance gap suggests our model may be slightly overfitting, but isn’t necessarily a major concern for a simple linear model like ours. Let’s visualize this difference to better understand what’s happening.</p>
+<div id="7efec54e" class="cell" data-execution_count="10">
+<details class="code-fold">
+<summary>Show code for training vs test performance visualization</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize training vs test performance</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">5</span>))</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Training set</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>plt.subplot(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">1</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>plt.scatter(X_train, y_train, alpha<span class="op">=</span><span class="fl">0.7</span>, color<span class="op">=</span><span class="st">'blue'</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>plt.plot(X_train, train_predictions, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Ad Spend ($)'</span>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Weekly Sales'</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="ss">f'Training Set</span><span class="ch">\n</span><span class="ss">R² = </span><span class="sc">{</span>r2_score(y_train, train_predictions)<span class="sc">:.3f}</span><span class="ss">'</span>)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Test set</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>plt.subplot(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>)</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>plt.scatter(X_test, y_test, alpha<span class="op">=</span><span class="fl">0.7</span>, color<span class="op">=</span><span class="st">'green'</span>)</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>plt.plot(X_test, test_predictions, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Ad Spend ($)'</span>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Weekly Sales'</span>)</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="ss">f'Test Set</span><span class="ch">\n</span><span class="ss">R² = </span><span class="sc">{</span>r2_score(y_test, test_predictions)<span class="sc">:.3f}</span><span class="ss">'</span>)</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="22-regression-evaluation_files/figure-html/cell-11-output-1.png" width="1142" height="471" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The side-by-side plots above show the same model (red line) applied to two different datasets. Notice how the training set (left) shows a tighter fit with less scatter around the line, while the test set (right) shows more variability and a slightly lower R² value. This visual comparison makes it clear why we can’t rely solely on training performance—the test set reveals how our model actually performs on unseen data, which is what matters for business decision-making.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Impact of Dataset Size on Performance Variation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Keep in mind that our example dataset is quite small (only 20 data points total). With small datasets, it’s not uncommon to see larger disparities between training and test performance simply due to random variation in how the data gets split. Smaller test sets are more susceptible to containing “unlucky” or particularly challenging examples that make the model appear worse than it actually is. As your datasets grow larger (thousands or tens of thousands of observations), the performance gap between training and test sets typically becomes more stable and meaningful.</p>
+</div>
+</div>
+</section>
+<section id="overfitting-vs-underfitting-finding-the-sweet-spot" class="level3">
+<h3 class="anchored" data-anchor-id="overfitting-vs-underfitting-finding-the-sweet-spot">Overfitting vs Underfitting: Finding the Sweet Spot</h3>
+<p>Our evaluation process is fundamentally about finding a model that <strong>generalizes well</strong>—one that performs consistently on both training and test data. This means avoiding two common pitfalls: underfitting (too simple) and overfitting (too complex). Understanding the balance between these extremes is crucial for building models that work in practice:</p>
+<ul>
+<li><strong>Underfitting</strong>: Model is too simple—misses important patterns (high training error, high test error)</li>
+<li><strong>Good fit</strong>: Model captures real patterns—generalizes well (low training error, low test error)<br>
+</li>
+<li><strong>Overfitting</strong>: Model is too complex—memorizes noise (very low training error, high test error)</li>
+</ul>
+<p>Let’s create some examples to illustrate these concepts visually. So far in this course, we’ve focused on linear relationships—where the relationship between variables can be represented by a straight line. However, not all real-world scenarios are linear in nature. Sometimes there are curved, non-linear patterns in data where a straight line simply won’t capture the true relationship.</p>
+<p>When we encounter non-linear patterns, we can use more complex models to try to capture these curvatures and bends in the data. We’ll explore these advanced techniques in future chapters. For now, the plots below demonstrate how different model complexities handle non-linear data: we can create models that underfit (don’t capture the non-linear curvature), provide a good fit (capture the essential pattern), and overfit (add too much complexity and noise):</p>
+<div id="ae1c36d0" class="cell" data-execution_count="11">
+<details class="code-fold">
+<summary>Show code for underfitting, good fit, and overfitting examples</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Import necessary libraries</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> PolynomialFeatures</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.pipeline <span class="im">import</span> Pipeline</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Suppress numerical warnings for high-degree polynomial demonstration</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>warnings.filterwarnings(<span class="st">'ignore'</span>, category<span class="op">=</span><span class="pp">RuntimeWarning</span>)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create synthetic datasets to demonstrate different fitting scenarios</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate underlying non-linear relationship</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>X_demo <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">50</span>).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>y_true <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> X_demo.ravel() <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> X_demo.ravel()<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> np.random.normal(<span class="dv">0</span>, <span class="dv">8</span>, <span class="dv">50</span>)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the demonstration data</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>X_demo_train, X_demo_test, y_demo_train, y_demo_test <span class="op">=</span> train_test_split(</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    X_demo, y_true, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Create three models: underfitting, good fit, overfitting</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">5</span>))</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Model 1: Underfitting (linear model on non-linear data)</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>linear_model <span class="op">=</span> LinearRegression()</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>linear_model.fit(X_demo_train, y_demo_train)</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>X_smooth <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">200</span>).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>y_linear <span class="op">=</span> linear_model.predict(X_smooth)</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>train_rmse_linear <span class="op">=</span> root_mean_squared_error(y_demo_train, linear_model.predict(X_demo_train))</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>test_rmse_linear <span class="op">=</span> root_mean_squared_error(y_demo_test, linear_model.predict(X_demo_test))</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].scatter(X_demo_train, y_demo_train, alpha<span class="op">=</span><span class="fl">0.6</span>, color<span class="op">=</span><span class="st">'blue'</span>, label<span class="op">=</span><span class="st">'Training'</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].scatter(X_demo_test, y_demo_test, alpha<span class="op">=</span><span class="fl">0.6</span>, color<span class="op">=</span><span class="st">'green'</span>, label<span class="op">=</span><span class="st">'Test'</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(X_smooth, y_linear, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="st">'Linear Model'</span>)</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="ss">f'Underfitting</span><span class="ch">\n</span><span class="ss">Train RMSE: </span><span class="sc">{</span>train_rmse_linear<span class="sc">:.1f}</span><span class="ss">, Test RMSE: </span><span class="sc">{</span>test_rmse_linear<span class="sc">:.1f}</span><span class="ss">'</span>)</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_xlabel(<span class="st">'X'</span>)</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">'Y'</span>)</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend()</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Model 2: Good fit (polynomial degree 2)</span></span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>poly_good <span class="op">=</span> Pipeline([</span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'poly'</span>, PolynomialFeatures(degree<span class="op">=</span><span class="dv">2</span>)),</span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'linear'</span>, LinearRegression())</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>poly_good.fit(X_demo_train, y_demo_train)</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>y_poly_good <span class="op">=</span> poly_good.predict(X_smooth)</span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>train_rmse_good <span class="op">=</span> root_mean_squared_error(y_demo_train, poly_good.predict(X_demo_train))</span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>test_rmse_good <span class="op">=</span> root_mean_squared_error(y_demo_test, poly_good.predict(X_demo_test))</span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].scatter(X_demo_train, y_demo_train, alpha<span class="op">=</span><span class="fl">0.6</span>, color<span class="op">=</span><span class="st">'blue'</span>, label<span class="op">=</span><span class="st">'Training'</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].scatter(X_demo_test, y_demo_test, alpha<span class="op">=</span><span class="fl">0.6</span>, color<span class="op">=</span><span class="st">'green'</span>, label<span class="op">=</span><span class="st">'Test'</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(X_smooth, y_poly_good, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="st">'Polynomial (degree 2)'</span>)</span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="ss">f'Good Fit</span><span class="ch">\n</span><span class="ss">Train RMSE: </span><span class="sc">{</span>train_rmse_good<span class="sc">:.1f}</span><span class="ss">, Test RMSE: </span><span class="sc">{</span>test_rmse_good<span class="sc">:.1f}</span><span class="ss">'</span>)</span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xlabel(<span class="st">'X'</span>)</span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">'Y'</span>)</span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend()</span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a><span class="co"># Model 3: Overfitting (high-degree polynomial)</span></span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a>poly_overfit <span class="op">=</span> Pipeline([</span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'poly'</span>, PolynomialFeatures(degree<span class="op">=</span><span class="dv">15</span>)),</span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a>    (<span class="st">'linear'</span>, LinearRegression())</span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a>poly_overfit.fit(X_demo_train, y_demo_train)</span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a>y_poly_overfit <span class="op">=</span> poly_overfit.predict(X_smooth)</span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a>train_rmse_overfit <span class="op">=</span> root_mean_squared_error(y_demo_train, poly_overfit.predict(X_demo_train))</span>
+<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a>test_rmse_overfit <span class="op">=</span> root_mean_squared_error(y_demo_test, poly_overfit.predict(X_demo_test))</span>
+<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-76"><a href="#cb19-76" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].scatter(X_demo_train, y_demo_train, alpha<span class="op">=</span><span class="fl">0.6</span>, color<span class="op">=</span><span class="st">'blue'</span>, label<span class="op">=</span><span class="st">'Training'</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb19-77"><a href="#cb19-77" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].scatter(X_demo_test, y_demo_test, alpha<span class="op">=</span><span class="fl">0.6</span>, color<span class="op">=</span><span class="st">'green'</span>, label<span class="op">=</span><span class="st">'Test'</span>, s<span class="op">=</span><span class="dv">30</span>)</span>
+<span id="cb19-78"><a href="#cb19-78" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].plot(X_smooth, y_poly_overfit, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="st">'Polynomial (degree 15)'</span>)</span>
+<span id="cb19-79"><a href="#cb19-79" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="ss">f'Overfitting</span><span class="ch">\n</span><span class="ss">Train RMSE: </span><span class="sc">{</span>train_rmse_overfit<span class="sc">:.1f}</span><span class="ss">, Test RMSE: </span><span class="sc">{</span>test_rmse_overfit<span class="sc">:.1f}</span><span class="ss">'</span>)</span>
+<span id="cb19-80"><a href="#cb19-80" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_xlabel(<span class="st">'X'</span>)</span>
+<span id="cb19-81"><a href="#cb19-81" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_ylabel(<span class="st">'Y'</span>)</span>
+<span id="cb19-82"><a href="#cb19-82" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].legend()</span>
+<span id="cb19-83"><a href="#cb19-83" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb19-84"><a href="#cb19-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-85"><a href="#cb19-85" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb19-86"><a href="#cb19-86" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="22-regression-evaluation_files/figure-html/cell-12-output-1.png" width="1430" height="471" class="figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Although we can visualize the models above and clearly see underfitting and overfitting happening, in most real-world cases we will not be able to visualize our models because we are working with many predictor variables. When you have 5, 10, or even hundreds of features, creating meaningful visualizations becomes impossible. Instead, we rely on the train and test evaluation metrics to point us to these problems—which is exactly what the RMSE comparison table below demonstrates.</p>
+<div id="860f927d" class="cell" data-execution_count="12">
+<details class="code-fold">
+<summary>Show code for RMSE comparison table</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Summary of RMSE comparison</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"RMSE Comparison:"</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Model'</span><span class="sc">:&lt;25}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Train RMSE'</span><span class="sc">:&lt;12}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Test RMSE'</span><span class="sc">:&lt;12}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Interpretation'</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'-'</span><span class="op">*</span><span class="dv">70</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Linear (Underfit)'</span><span class="sc">:&lt;25}</span><span class="ss"> </span><span class="sc">{</span>train_rmse_linear<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span>test_rmse_linear<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Poor on both'</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Polynomial-2 (Good)'</span><span class="sc">:&lt;25}</span><span class="ss"> </span><span class="sc">{</span>train_rmse_good<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span>test_rmse_good<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Good on both'</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Polynomial-15 (Overfit)'</span><span class="sc">:&lt;25}</span><span class="ss"> </span><span class="sc">{</span>train_rmse_overfit<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span>test_rmse_overfit<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Great on train, poor on test'</span><span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>RMSE Comparison:
+Model                     Train RMSE   Test RMSE    Interpretation
+----------------------------------------------------------------------
+Linear (Underfit)         8.5          9.6          Poor on both
+Polynomial-2 (Good)       7.2          7.2          Good on both
+Polynomial-15 (Overfit)   5.7          9.6          Great on train, poor on test</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Diagnosing Model Fit with Train/Test Metrics
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The key insight is that we can diagnose these scenarios by comparing training and test RMSE values. <strong>Underfitting</strong> shows poor performance on both sets because the model is too simple to capture the underlying pattern. <strong>Good fit</strong> shows similar, reasonably low error on both training and test sets. <strong>Overfitting</strong> shows excellent training performance but significantly worse test performance—the model has memorized the training data rather than learning generalizable patterns.</p>
+</div>
+</div>
+<p>Train/test splits are just the first step in finding a well-fitting model. In future chapters, you’ll learn how to systematically iterate through different models, tune model parameters, and implement additional validation procedures like cross-validation to help identify the best-fitting model for your specific problem.</p>
+</section>
+<section id="knowledge-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-1">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Hands-On: Train/Test Split Practice
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Now it’s your turn to apply proper train/test evaluation! You’ll use the full Advertising dataset you imported in the previous knowledge check to build and evaluate a multiple regression model.</p>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Split the data</strong> into train/test sets using a 70/30 split with <code>random_state=42</code></li>
+<li><strong>Build a multiple regression model</strong> using all three predictor variables (TV, radio, newspaper) on the training data only</li>
+<li><strong>Evaluate the model</strong> by calculating these metrics for both training and test sets:
+<ul>
+<li>R² (R-squared)</li>
+<li>RMSE (Root Mean Squared Error)</li>
+<li>MAE (Mean Absolute Error)</li>
+</ul></li>
+<li><strong>Interpret your results</strong>:
+<ul>
+<li>Is your model overfitting, underfitting, or showing good generalization?</li>
+<li>What does the RMSE tell you about prediction accuracy in business terms?</li>
+<li>How would you explain these results to a marketing manager planning next quarter’s advertising budget?</li>
+</ul></li>
+</ol>
+<p><strong>Bonus Challenge:</strong> Compare your multiple regression results with a simple model using only TV advertising. Which generalizes better to the test set?</p>
+</div>
+</div>
+</section>
+</section>
+<section id="business-alignment-connecting-model-and-business-performance" class="level2" data-number="22.5">
+<h2 data-number="22.5" class="anchored" data-anchor-id="business-alignment-connecting-model-and-business-performance"><span class="header-section-number">22.5</span> Business Alignment: Connecting Model and Business Performance</h2>
+<p>As we discussed in Chapter 20, successful machine learning requires aligning your <strong>model performance metrics</strong> (like RMSE, MAE, and R²) with your <strong>business performance metrics</strong> (like cost savings, revenue increase, and customer satisfaction). The goal isn’t just to build a model that generalizes well to new data—it’s to build a model that generalizes well to your specific business scenario and drives meaningful outcomes.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-business-model-alignment" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-business-model-alignment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-business-model-alignment">flowchart LR
+  subgraph ML[Successful ML System]
+    direction BT
+    subgraph p0[Business Impact]
+    end
+    subgraph p1[Model Performance&lt;br/&gt;RMSE, MAE, R², MAPE]
+    end
+    subgraph p2[Business Performance&lt;br/&gt;Cost reduction, Revenue, Efficiency]
+    end
+
+   p1 --&gt; p0
+   p2 --&gt; p0
+  end
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-business-model-alignment-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;22.2: Model evaluation success requires both technical performance and business impact alignment.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="the-critical-connection-why-metric-choice-matters" class="level3">
+<h3 class="anchored" data-anchor-id="the-critical-connection-why-metric-choice-matters">The Critical Connection: Why Metric Choice Matters</h3>
+<p>The evaluation metrics you choose directly influence how your model learns and what it optimizes for. This means <strong>your choice of evaluation metric can make or break your business outcomes</strong>. Consider these scenarios:</p>
+<p><strong>Scenario 1: Inventory Forecasting</strong></p>
+<ul>
+<li><strong>Business goal</strong>: Minimize total inventory costs (storage + stockouts)</li>
+<li><strong>Poor metric choice</strong>: R² only—ignores the cost asymmetry between overstocking and understocking</li>
+<li><strong>Better alignment</strong>: MAPE or MAE—reflects proportional costs across different product values</li>
+<li><strong>Business result</strong>: Model optimizes for error patterns that actually reduce operational costs</li>
+</ul>
+<p><strong>Scenario 2: Financial Risk Assessment</strong></p>
+<ul>
+<li><strong>Business goal</strong>: Prevent catastrophic losses while maintaining profitability</li>
+<li><strong>Poor metric choice</strong>: MAE—treats small and large losses equally</li>
+<li><strong>Better alignment</strong>: RMSE—heavily penalizes the large errors that could bankrupt the business</li>
+<li><strong>Business result</strong>: Model prioritizes avoiding devastating losses over minor improvements</li>
+</ul>
+<p><strong>Scenario 3: Customer Service Staffing</strong></p>
+<ul>
+<li><strong>Business goal</strong>: Match staffing levels to call volume for consistent service quality</li>
+<li><strong>Poor metric choice</strong>: MAPE—percentage errors don’t reflect linear staffing costs</li>
+<li><strong>Better alignment</strong>: MAE—each additional call has roughly the same staffing cost</li>
+<li><strong>Business result</strong>: Model predictions translate directly to operational planning</li>
+</ul>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>A Framework for Metric-Business Alignment
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Instead of asking “What’s the best metric?” ask “What business outcomes am I trying to drive?” Then work backward:</p>
+<ol type="1">
+<li><strong>Identify your business cost structure</strong>: Are errors linear, quadratic, or asymmetric in cost?</li>
+<li><strong>Match the mathematical properties</strong>: Choose metrics whose optimization aligns with your cost structure</li>
+<li><strong>Consider stakeholder needs</strong>: Will decision-makers understand and trust the metric?</li>
+<li><strong>Test the alignment</strong>: Verify that improving your chosen metric actually improves business outcomes</li>
+</ol>
+</div>
+</div>
+</section>
+<section id="knowledge-check-2" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-2">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Applying Evaluation Metrics to Real Business Problems
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider these three business scenarios:</p>
+<p><strong>Scenario A: Restaurant Chain Food Cost Optimization</strong> A regional restaurant chain wants to predict daily food costs at each location to minimize waste while ensuring adequate supply. The business goal is to order the right amount of fresh ingredients each day—overordering leads to expensive food waste, while underordering results in menu items being unavailable and lost revenue. The cost of waste is roughly proportional to the amount ordered, and each dollar of prediction error translates directly to operational costs.</p>
+<p><strong>Scenario B: Insurance Premium Setting</strong><br>
+An insurance company needs to predict individual claim amounts to set appropriate premiums while remaining competitive. The business objective is to avoid catastrophic underpricing—one severely underpriced high-risk customer could cost millions in claims, potentially wiping out profits from hundreds of correctly priced policies. Small pricing errors are manageable, but large errors can threaten the company’s financial stability.</p>
+<p><strong>Scenario C: Retail Sales Forecasting Across Categories</strong> A retail store wants to predict next month’s sales across different product categories (electronics, clothing, home goods) to optimize inventory purchasing and staffing. The business goal is to have consistent prediction accuracy across all categories—whether predicting $1,000 in accessory sales or $50,000 in electronics sales. The store needs to compare model performance across vastly different sales volumes to make unified business decisions.</p>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>For each scenario</strong>, consider how each error metric (R², RMSE, MAE, MAPE) would be interpreted in the business context. What would each metric tell the decision-makers? Based on this analysis, do you think one metric would be more preferred over the others? Explain your reasoning.</li>
+<li><strong>Training vs Test Performance</strong>: If Scenario B showed these results, what would you conclude?
+<ul>
+<li>Training RMSE: $850</li>
+<li>Test RMSE: $1,200</li>
+<li>Training R²: 0.78</li>
+<li>Test R²: 0.52</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="summary" class="level2" data-number="22.6">
+<h2 data-number="22.6" class="anchored" data-anchor-id="summary"><span class="header-section-number">22.6</span> Summary</h2>
+<p>This chapter equipped you with essential tools for evaluating regression model performance and understanding whether your models are ready for real-world deployment. You learned that building a model is only the beginning—proper evaluation determines whether that model will actually help or hurt your business decisions.</p>
+<p><strong>Key evaluation concepts</strong> you mastered include:</p>
+<ul>
+<li><strong>R²</strong> as a measure of overall model fit, representing the proportion of variation your model explains</li>
+<li><strong>Error metrics</strong> (MSE, RMSE, MAE, MAPE) that quantify prediction accuracy in different ways</li>
+<li><strong>Train/test splits</strong> for honest evaluation that simulates real-world model deployment</li>
+<li><strong>Overfitting vs underfitting</strong> and why models must balance complexity with generalizability</li>
+<li><strong>Business-aligned metric selection</strong> based on the relative costs of different types of prediction errors</li>
+</ul>
+<p><strong>The critical insight</strong> is that model evaluation must align with business context. A model that minimizes RMSE might be perfect for financial risk management but inappropriate for inventory planning. Understanding when and why to use different metrics ensures your models support rather than undermine business objectives.</p>
+<p><strong>Looking ahead:</strong> The evaluation techniques you’ve learned here apply to every machine learning algorithm you’ll encounter. Whether you’re building decision trees, neural networks, or ensemble methods, the fundamental principles of train/test splits, metric selection, and generalization remain constant. In future chapters, we’ll also learn about additional evaluation metrics designed specifically for classification models (like accuracy, precision, and recall) and unsupervised models (like silhouette scores and inertia). In the next chapters, you’ll explore more sophisticated modeling techniques, but you’ll always return to these evaluation fundamentals to determine which models work best for your specific business challenges.</p>
+<section id="quick-reference-regression-evaluation-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="quick-reference-regression-evaluation-metrics">Quick Reference: Regression Evaluation Metrics</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 21%">
+<col style="width: 36%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Concept</strong></th>
+<th><strong>Description</strong></th>
+<th><strong>Scikit-Learn Function</strong></th>
+<th><strong>When to Use</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Sum of Squared Errors (SSE)</strong></td>
+<td>Total squared differences between actual and predicted values</td>
+<td>Manual calculation: <code>np.sum((y_actual - y_pred)**2)</code></td>
+<td>Understanding algorithm optimization</td>
+</tr>
+<tr class="even">
+<td><strong>R² (R-squared)</strong></td>
+<td>Proportion of variance in target variable explained by model</td>
+<td><code>r2_score(y_true, y_pred)</code> or <code>model.score(X, y)</code></td>
+<td>Overall model goodness-of-fit</td>
+</tr>
+<tr class="odd">
+<td><strong>Mean Squared Error (MSE)</strong></td>
+<td>Average of squared prediction errors</td>
+<td><code>mean_squared_error(y_true, y_pred)</code></td>
+<td>When large errors are costly</td>
+</tr>
+<tr class="even">
+<td><strong>Root Mean Squared Error (RMSE)</strong></td>
+<td>Square root of MSE, in same units as target</td>
+<td><code>root_mean_squared_error(y_true, y_pred)</code></td>
+<td>Interpretable error magnitude</td>
+</tr>
+<tr class="odd">
+<td><strong>Mean Absolute Error (MAE)</strong></td>
+<td>Average absolute difference between actual and predicted</td>
+<td><code>mean_absolute_error(y_true, y_pred)</code></td>
+<td>When all errors have equal cost</td>
+</tr>
+<tr class="even">
+<td><strong>Mean Absolute Percentage Error (MAPE)</strong></td>
+<td>Average percentage error relative to actual values</td>
+<td><code>mean_absolute_percentage_error(y_true, y_pred)</code></td>
+<td>Comparing across different scales</td>
+</tr>
+<tr class="odd">
+<td><strong>Train/Test Split</strong></td>
+<td>Dividing data for training and evaluation</td>
+<td><code>train_test_split(X, y, test_size=0.3, random_state=42)</code></td>
+<td>Honest model evaluation</td>
+</tr>
+<tr class="even">
+<td><strong>Time Series Split</strong></td>
+<td>Temporal data splitting for time-based problems</td>
+<td><code>TimeSeriesSplit(n_splits=5)</code></td>
+<td>Time-dependent data</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="end-of-chapter-exercise" class="level2" data-number="22.7">
+<h2 data-number="22.7" class="anchored" data-anchor-id="end-of-chapter-exercise"><span class="header-section-number">22.7</span> End of Chapter Exercise</h2>
+<p>These exercises align with the regression modeling from Chapter 21 but now focus on proper evaluation techniques. You’ll work with the same three datasets from ISLP, applying the train/test split methodology and error metrics you’ve learned to assess model performance and business readiness.</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-18-contents" aria-controls="callout-18" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Exercise 1: Credit Risk Analysis with Evaluation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-18" class="callout-18-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> A regional bank<br>
+<strong>Goal:</strong> Understand what drives customers’ credit card balances to inform risk management and marketing strategies, with proper model evaluation<br>
+<strong>Dataset:</strong> Credit dataset from ISLP package</p>
+<div id="4cdc4425" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ISLP <span class="im">import</span> load_data</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> r2_score, mean_squared_error, mean_absolute_error, root_mean_squared_error, mean_absolute_percentage_error</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>Credit <span class="op">=</span> load_data(<span class="st">'Credit'</span>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Credit dataset loaded"</span>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(Credit.head())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Credit dataset loaded
+   ID   Income  Limit  Rating  Cards  Age  Education  Gender Student Married  \
+0   1   14.891   3606     283      2   34         11    Male      No     Yes   
+1   2  106.025   6645     483      3   82         15  Female     Yes     Yes   
+2   3  104.593   7075     514      4   71         11    Male      No      No   
+3   4  148.924   9504     681      3   36         11  Female      No      No   
+4   5   55.882   4897     357      2   68         16    Male      No     Yes   
+
+   Ethnicity  Balance  
+0  Caucasian      333  
+1      Asian      903  
+2      Asian      580  
+3      Asian      964  
+4  Caucasian      331  </code></pre>
+</div>
+</div>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Split the data</strong> into training (70%) and test (30%) sets using <code>random_state=42</code></li>
+<li><strong>Build a regression model</strong> predicting <code>Balance</code> using <code>Income</code>, <code>Limit</code>, <code>Age</code>, and <code>Gender</code> (remember to dummy encode <code>Gender</code>)</li>
+<li><strong>Calculate all error metrics</strong> (R², RMSE, MAE, MAPE) for both training and test sets</li>
+<li><strong>Evaluate generalization</strong>: Is your model overfitting, underfitting, or showing good generalization? Compare training vs test performance</li>
+<li><strong>Business interpretation</strong>: What does the RMSE tell you about prediction accuracy in dollar terms? If the bank uses this model to set credit limits, what’s the practical meaning of your error metrics?</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Exercise 2: Baseball Salary Analysis with Evaluation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-19" class="callout-19-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> A professional baseball team<br>
+<strong>Goal:</strong> Better understand the drivers of player salaries to inform contract negotiations, with rigorous model evaluation<br>
+<strong>Dataset:</strong> Hitters dataset from ISLP package</p>
+<div id="4c0f08fe" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>Hitters <span class="op">=</span> load_data(<span class="st">'Hitters'</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Hitters dataset loaded"</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(Hitters.head())</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: You'll need to handle missing values in the Salary column</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Hitters dataset loaded
+   AtBat  Hits  HmRun  Runs  RBI  Walks  Years  CAtBat  CHits  CHmRun  CRuns  \
+0    293    66      1    30   29     14      1     293     66       1     30   
+1    315    81      7    24   38     39     14    3449    835      69    321   
+2    479   130     18    66   72     76      3    1624    457      63    224   
+3    496   141     20    65   78     37     11    5628   1575     225    828   
+4    321    87     10    39   42     30      2     396    101      12     48   
+
+   CRBI  CWalks League Division  PutOuts  Assists  Errors  Salary NewLeague  
+0    29      14      A        E      446       33      20     NaN         A  
+1   414     375      N        W      632       43      10   475.0         N  
+2   266     263      A        W      880       82      14   480.0         A  
+3   838     354      N        E      200       11       3   500.0         N  
+4    46      33      N        E      805       40       4    91.5         N  </code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Data Cleaning Hint:</strong> The Hitters dataset contains some missing values in the <code>Salary</code> column. You may need to remove rows with missing salary data before fitting your regression model. Consider using <code>dropna()</code> or similar methods to clean the data first.</p>
+</div>
+</div>
+</div>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Clean the data</strong> by removing rows with missing salary values</li>
+<li><strong>Split the data</strong> into training (70%) and test (30%) sets using <code>random_state=42</code></li>
+<li><strong>Build a regression model</strong> predicting <code>Salary</code> using <code>Years</code> (experience), <code>Hits</code> (recent batting performance), and <code>League</code> (dummy encode this categorical variable)</li>
+<li><strong>Calculate all error metrics</strong> (R², RMSE, MAE, MAPE) for both training and test sets</li>
+<li><strong>Assess model reliability</strong>: How well does your model generalize? What does the RMSE mean in terms of salary prediction accuracy?</li>
+<li><strong>Business application</strong>: If you were a player agent, how would you use these results to negotiate contracts? What are the limitations of your model’s predictions?</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-20-contents" aria-controls="callout-20" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Exercise 3: College Application Analysis with Evaluation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-20" class="callout-20-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> Higher education consulting firm<br>
+<strong>Goal:</strong> Analyze what factors drive the number of applications a college receives, with proper evaluation for advisory recommendations<br>
+<strong>Dataset:</strong> College dataset from ISLP package</p>
+<div id="11a3c877" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>College <span class="op">=</span> load_data(<span class="st">'College'</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"College dataset loaded"</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(College.head())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>College dataset loaded
+  Private  Apps  Accept  Enroll  Top10perc  Top25perc  F.Undergrad  \
+0     Yes  1660    1232     721         23         52         2885   
+1     Yes  2186    1924     512         16         29         2683   
+2     Yes  1428    1097     336         22         50         1036   
+3     Yes   417     349     137         60         89          510   
+4     Yes   193     146      55         16         44          249   
+
+   P.Undergrad  Outstate  Room.Board  Books  Personal  PhD  Terminal  \
+0          537      7440        3300    450      2200   70        78   
+1         1227     12280        6450    750      1500   29        30   
+2           99     11250        3750    400      1165   53        66   
+3           63     12960        5450    450       875   92        97   
+4          869      7560        4120    800      1500   76        72   
+
+   S.F.Ratio  perc.alumni  Expend  Grad.Rate  
+0       18.1           12    7041         60  
+1       12.2           16   10527         56  
+2       12.9           30    8735         54  
+3        7.7           37   19016         59  
+4       11.9            2   10922         15  </code></pre>
+</div>
+</div>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Split the data</strong> into training (70%) and test (30%) sets using <code>random_state=42</code></li>
+<li><strong>Build a regression model</strong> predicting <code>Apps</code> (applications received) using <code>Top10perc</code> (percent of students from top 10% of high school class), <code>Outstate</code> (out-of-state tuition), and <code>Private</code> (dummy encode this categorical variable)</li>
+<li><strong>Calculate all error metrics</strong> (R², RMSE, MAE, MAPE) for both training and test sets</li>
+<li><strong>Evaluate model performance</strong>: Does your model show good generalization? What do the error metrics tell you about prediction reliability?</li>
+<li><strong>Business context interpretation</strong>: What does the RMSE mean in terms of application prediction accuracy? If you’re advising college presidents on strategic decisions, how confident should they be in your model’s predictions?</li>
+<li><strong>Strategic recommendations</strong>: Based on your model’s coefficients and performance metrics, what strategies would you recommend to increase applications? What are the limitations and risks of using this model for decision-making?</li>
+<li><strong>Metric selection</strong>: Which error metric (R², RMSE, MAE, or MAPE) would be most useful for college administrators? Why?</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./21-correlation-regression.html" class="pagination-link" aria-label="Correlation and Linear Regression Foundations">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./99-anaconda-install.html" class="pagination-link" aria-label="Anaconda Installation">
+        <span class="nav-page-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/22-regression-evaluation.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
