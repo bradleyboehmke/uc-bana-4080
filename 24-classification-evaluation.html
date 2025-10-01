@@ -1,0 +1,2560 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.2">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>24&nbsp; Evaluating Classification Models – BANA 4080: Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./99-anaconda-install.html" rel="next">
+<link href="./23-logistic-regression.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-c6982bbdd90c704a9b15aa23d87ad911.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-bde34e67259f0164f180634cf40dccdc.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-c6982bbdd90c704a9b15aa23d87ad911.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-54ba87e1857bbaa32a381632a2aab8bf.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./23-logistic-regression.html">Module 9</a></li><li class="breadcrumb-item"><a href="./24-classification-evaluation.html"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header sidebar-header-stacked">
+      <a href="./index.html" class="sidebar-logo-link">
+      </a>
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">BANA 4080: Data Mining</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./BANA-4080--Data-Mining.epub" title="Download ePub" class="quarto-navigation-tool px-1" aria-label="Download ePub"><i class="bi bi-journal"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 1</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 2</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 3</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 4</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 5</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-data-viz-matplotlib.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Fundamentals of Plotting with Matplotlib</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-data-viz-bokeh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Interactive Data Visualization with Bokeh</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 6</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 7</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20-before-we-build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 8</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./21-correlation-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./22-regression-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 9</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./23-logistic-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Introduction to Logistic Regression for Classification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./24-classification-evaluation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendix</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#beyond-accuracy-why-we-need-better-metrics" id="toc-beyond-accuracy-why-we-need-better-metrics" class="nav-link active" data-scroll-target="#beyond-accuracy-why-we-need-better-metrics"><span class="header-section-number">24.1</span> Beyond Accuracy: Why We Need Better Metrics</a>
+  <ul class="collapse">
+  <li><a href="#the-accuracy-trap-when-95-accuracy-is-actually-terrible" id="toc-the-accuracy-trap-when-95-accuracy-is-actually-terrible" class="nav-link" data-scroll-target="#the-accuracy-trap-when-95-accuracy-is-actually-terrible">The Accuracy Trap: When 95% Accuracy is Actually Terrible</a></li>
+  <li><a href="#class-imbalance-when-the-obvious-choice-is-wrong" id="toc-class-imbalance-when-the-obvious-choice-is-wrong" class="nav-link" data-scroll-target="#class-imbalance-when-the-obvious-choice-is-wrong">Class Imbalance: When the Obvious Choice is Wrong</a></li>
+  <li><a href="#real-business-costs-matter-more-than-accuracy" id="toc-real-business-costs-matter-more-than-accuracy" class="nav-link" data-scroll-target="#real-business-costs-matter-more-than-accuracy">Real Business Costs Matter More Than Accuracy</a></li>
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#the-confusion-matrix-foundation-for-classification-evaluation" id="toc-the-confusion-matrix-foundation-for-classification-evaluation" class="nav-link" data-scroll-target="#the-confusion-matrix-foundation-for-classification-evaluation"><span class="header-section-number">24.2</span> The Confusion Matrix: Foundation for Classification Evaluation</a>
+  <ul class="collapse">
+  <li><a href="#understanding-what-a-confusion-matrix-shows" id="toc-understanding-what-a-confusion-matrix-shows" class="nav-link" data-scroll-target="#understanding-what-a-confusion-matrix-shows">Understanding What a Confusion Matrix Shows</a></li>
+  <li><a href="#applying-the-confusion-matrix-to-our-default-prediction-model" id="toc-applying-the-confusion-matrix-to-our-default-prediction-model" class="nav-link" data-scroll-target="#applying-the-confusion-matrix-to-our-default-prediction-model">Applying the Confusion Matrix to Our Default Prediction Model</a></li>
+  <li><a href="#interpreting-the-confusion-matrix-results" id="toc-interpreting-the-confusion-matrix-results" class="nav-link" data-scroll-target="#interpreting-the-confusion-matrix-results">Interpreting the Confusion Matrix Results</a></li>
+  <li><a href="#knowledge-check-1" id="toc-knowledge-check-1" class="nav-link" data-scroll-target="#knowledge-check-1">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#essential-classification-metrics-precision-recall-and-f1-score" id="toc-essential-classification-metrics-precision-recall-and-f1-score" class="nav-link" data-scroll-target="#essential-classification-metrics-precision-recall-and-f1-score"><span class="header-section-number">24.3</span> Essential Classification Metrics: Precision, Recall, and F1-Score</a>
+  <ul class="collapse">
+  <li><a href="#step-1-quick-refresh---extracting-key-values-from-the-confusion-matrix" id="toc-step-1-quick-refresh---extracting-key-values-from-the-confusion-matrix" class="nav-link" data-scroll-target="#step-1-quick-refresh---extracting-key-values-from-the-confusion-matrix">Step 1: Quick Refresh - Extracting Key Values from the Confusion Matrix</a></li>
+  <li><a href="#step-2-precision-and-recall---the-core-business-metrics" id="toc-step-2-precision-and-recall---the-core-business-metrics" class="nav-link" data-scroll-target="#step-2-precision-and-recall---the-core-business-metrics">Step 2: Precision and Recall - The Core Business Metrics</a></li>
+  <li><a href="#step-3-the-precision-recall-trade-off-and-f1-score" id="toc-step-3-the-precision-recall-trade-off-and-f1-score" class="nav-link" data-scroll-target="#step-3-the-precision-recall-trade-off-and-f1-score">Step 3: The Precision-Recall Trade-off and F1-Score</a></li>
+  <li><a href="#knowledge-check-2" id="toc-knowledge-check-2" class="nav-link" data-scroll-target="#knowledge-check-2">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#roc-curves-and-auc-when-you-need-to-rank-customers" id="toc-roc-curves-and-auc-when-you-need-to-rank-customers" class="nav-link" data-scroll-target="#roc-curves-and-auc-when-you-need-to-rank-customers"><span class="header-section-number">24.4</span> ROC Curves and AUC: When You Need to Rank Customers</a>
+  <ul class="collapse">
+  <li><a href="#what-is-auc-the-simple-explanation" id="toc-what-is-auc-the-simple-explanation" class="nav-link" data-scroll-target="#what-is-auc-the-simple-explanation">What is AUC? The Simple Explanation</a></li>
+  <li><a href="#roc-curves-visualizing-ranking-performance" id="toc-roc-curves-visualizing-ranking-performance" class="nav-link" data-scroll-target="#roc-curves-visualizing-ranking-performance">ROC Curves: Visualizing Ranking Performance</a></li>
+  <li><a href="#using-our-default-model-for-risk-based-pricing" id="toc-using-our-default-model-for-risk-based-pricing" class="nav-link" data-scroll-target="#using-our-default-model-for-risk-based-pricing">Using Our Default Model for Risk-Based Pricing</a></li>
+  <li><a href="#knowledge-check-3" id="toc-knowledge-check-3" class="nav-link" data-scroll-target="#knowledge-check-3">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#choosing-the-right-metric-for-your-business-context" id="toc-choosing-the-right-metric-for-your-business-context" class="nav-link" data-scroll-target="#choosing-the-right-metric-for-your-business-context"><span class="header-section-number">24.5</span> Choosing the Right Metric for Your Business Context</a>
+  <ul class="collapse">
+  <li><a href="#a-framework-for-metric-selection" id="toc-a-framework-for-metric-selection" class="nav-link" data-scroll-target="#a-framework-for-metric-selection">A Framework for Metric Selection</a></li>
+  <li><a href="#complete-metric-selection-reference" id="toc-complete-metric-selection-reference" class="nav-link" data-scroll-target="#complete-metric-selection-reference">Complete Metric Selection Reference</a></li>
+  <li><a href="#quick-decision-rules" id="toc-quick-decision-rules" class="nav-link" data-scroll-target="#quick-decision-rules">Quick Decision Rules</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">24.6</span> Summary</a>
+  <ul class="collapse">
+  <li><a href="#quick-reference-classification-evaluation-metrics" id="toc-quick-reference-classification-evaluation-metrics" class="nav-link" data-scroll-target="#quick-reference-classification-evaluation-metrics">Quick Reference: Classification Evaluation Metrics</a></li>
+  </ul></li>
+  <li><a href="#end-of-chapter-exercises" id="toc-end-of-chapter-exercises" class="nav-link" data-scroll-target="#end-of-chapter-exercises"><span class="header-section-number">24.7</span> End of Chapter Exercises</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/24-classification-evaluation.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./23-logistic-regression.html">Module 9</a></li><li class="breadcrumb-item"><a href="./24-classification-evaluation.html"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapter, you learned to build logistic regression models using the Default dataset from ISLP, successfully creating both simple (balance-only) and multiple regression models that achieved 97.3% accuracy in predicting customer default. But building a model is only the beginning. The critical question that follows is: <em>How good is your classification model?</em></p>
+<p>While 97.3% accuracy sounds impressive, you discovered that the Default dataset has a severe class imbalance problem—only 3% of customers actually default. This means your logistic regression model could achieve high accuracy simply by predicting “no default” for almost everyone, without actually learning to identify customers who are at risk of defaulting.</p>
+<p>Consider these high-stakes scenarios:</p>
+<ul>
+<li><em>A bank’s fraud detection system flags legitimate transactions as fraudulent, blocking customers from making purchases</em></li>
+<li><em>A medical screening test misses early-stage diseases, delaying critical treatment</em><br>
+</li>
+<li><em>An email spam filter sends important business emails to the junk folder</em></li>
+<li><em>A hiring algorithm systematically rejects qualified candidates from certain demographics</em></li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Experiential Learning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Think about a time when an automated system made the wrong classification decision about you—maybe your bank blocked a legitimate purchase, spam filter caught an important email, or a website incorrectly classified your account status.</p>
+<p>How did this incorrect classification affect you? What were the costs or frustrations? Would you have preferred the system to err in the other direction instead?</p>
+<p>By the end of this chapter, you’ll understand how to measure and optimize classification systems to minimize these real-world business costs.</p>
+</div>
+</div>
+<p><strong>Classification evaluation</strong> goes far beyond simple accuracy. In business contexts, different types of errors often have vastly different costs, and understanding these trade-offs is crucial for building models that truly serve business objectives. Using the Default dataset context from the previous chapter, this chapter teaches you to evaluate classification models using metrics that align with business reality.</p>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>Identify the “accuracy trap” and explain why 97.3% accuracy can be misleading with the Default dataset’s 3% default rate</li>
+<li>Construct and interpret confusion matrices to understand exactly how your model makes errors</li>
+<li>Calculate precision, recall, and F1-score and explain their business implications for different scenarios</li>
+<li>Use ROC curves and AUC to evaluate model ranking quality for risk-based pricing strategies</li>
+<li>Design business-aligned evaluation frameworks that select appropriate metrics based on specific costs and connect model performance to real-world outcomes</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>📓 Follow Along in Colab!
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you read through this chapter, we encourage you to follow along using the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/24_classification_evaluation.ipynb">companion notebook</a> in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.</p>
+<p>👉 Open the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/24_classification_evaluation.ipynb">Classification Evaluation Notebook in Colab</a>.</p>
+</div>
+</div>
+<section id="beyond-accuracy-why-we-need-better-metrics" class="level2" data-number="24.1">
+<h2 data-number="24.1" class="anchored" data-anchor-id="beyond-accuracy-why-we-need-better-metrics"><span class="header-section-number">24.1</span> Beyond Accuracy: Why We Need Better Metrics</h2>
+<p>When most people think about evaluating a classification model, they naturally gravitate toward <strong>accuracy</strong>—the percentage of predictions that are correct. While accuracy seems intuitive and straightforward, it can be deeply misleading in real business scenarios.</p>
+<section id="the-accuracy-trap-when-95-accuracy-is-actually-terrible" class="level3">
+<h3 class="anchored" data-anchor-id="the-accuracy-trap-when-95-accuracy-is-actually-terrible">The Accuracy Trap: When 95% Accuracy is Actually Terrible</h3>
+<p>Let’s explore this with a concrete business example. Imagine you work for a credit card company building a fraud detection system. You have 100,000 transactions, and historically, only 1% are fraudulent:</p>
+<ul>
+<li><strong>Fraudulent transactions</strong>: 1,000 (1%)</li>
+<li><strong>Legitimate transactions</strong>: 99,000 (99%)</li>
+</ul>
+<p>Now consider two possible fraud detection models:</p>
+<ul>
+<li><strong>Model A (Lazy)</strong>: Always predicts “legitimate” for every transaction</li>
+<li><strong>Model B (Smart)</strong>: Uses sophisticated algorithms to identify 80% of fraud while incorrectly flagging 2% of legitimate transactions</li>
+</ul>
+<p>We’ve trained both models on our dataset, and at first glance, they appear to perform quite similarly:</p>
+<ul>
+<li><strong>Model A (Lazy)</strong>: 99.0% accuracy</li>
+<li><strong>Model B (Smart)</strong>: 97.8% accuracy</li>
+</ul>
+<div id="4c2e4620" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Show code for model comparison simulation</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score, confusion_matrix, classification_report</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> precision_score, recall_score, f1_score, roc_auc_score, roc_curve</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate fraud detection scenario</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>n_transactions <span class="op">=</span> <span class="dv">100000</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>fraud_rate <span class="op">=</span> <span class="fl">0.01</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># True labels: 1% fraud, 99% legitimate</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>y_true <span class="op">=</span> np.random.binomial(<span class="dv">1</span>, fraud_rate, n_transactions)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Model A: "Lazy" model that always predicts "legitimate" </span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>y_pred_lazy <span class="op">=</span> np.zeros(n_transactions)  <span class="co"># Always predicts 0 (legitimate)</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Model B: "Smart" model that catches some fraud but makes some mistakes</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Let's say it correctly identifies 80% of fraud and incorrectly flags 2% of legitimate transactions</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>y_pred_smart <span class="op">=</span> y_true.copy()</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Miss 20% of fraud (false negatives)</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>fraud_indices <span class="op">=</span> np.where(y_true <span class="op">==</span> <span class="dv">1</span>)[<span class="dv">0</span>]</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>missed_fraud <span class="op">=</span> np.random.choice(fraud_indices, <span class="bu">int</span>(<span class="fl">0.2</span> <span class="op">*</span> <span class="bu">len</span>(fraud_indices)), replace<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>y_pred_smart[missed_fraud] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Flag 2% of legitimate transactions as fraud (false positives)  </span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>legit_indices <span class="op">=</span> np.where(y_true <span class="op">==</span> <span class="dv">0</span>)[<span class="dv">0</span>]</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>false_flags <span class="op">=</span> np.random.choice(legit_indices, <span class="bu">int</span>(<span class="fl">0.02</span> <span class="op">*</span> <span class="bu">len</span>(legit_indices)), replace<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>y_pred_smart[false_flags] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate accuracies</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>accuracy_lazy <span class="op">=</span> accuracy_score(y_true, y_pred_lazy)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>accuracy_smart <span class="op">=</span> accuracy_score(y_true, y_pred_smart)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Fraud Detection Model Comparison:"</span>)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dataset: </span><span class="sc">{</span>n_transactions<span class="sc">:,}</span><span class="ss"> transactions, </span><span class="sc">{</span>fraud_rate<span class="sc">:.1%}</span><span class="ss"> fraud rate"</span>)</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Model A (Lazy): </span><span class="sc">{</span>accuracy_lazy<span class="sc">:.1%}</span><span class="ss"> accuracy"</span>)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Model B (Smart): </span><span class="sc">{</span>accuracy_smart<span class="sc">:.1%}</span><span class="ss"> accuracy"</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Which model would you choose for your business?"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Fraud Detection Model Comparison:
+Dataset: 100,000 transactions, 1.0% fraud rate
+
+Model A (Lazy): 99.0% accuracy
+Model B (Smart): 97.8% accuracy
+
+Which model would you choose for your business?</code></pre>
+</div>
+</div>
+<p><strong>The Shocking Reality Behind These Numbers:</strong></p>
+<p>The results reveal a counterintuitive and deeply problematic outcome: the “lazy” model achieves 99.0% accuracy by never detecting fraud, while the “smart” model only achieves 97.8% accuracy despite actually catching 80% of fraudulent transactions!</p>
+<p>This demonstrates the fundamental problem with accuracy in imbalanced datasets—it can make completely useless models appear excellent. The lazy model provides zero business value (catches 0% of fraud) yet appears superior by accuracy metrics. Meanwhile, the smart model that actually protects the business from financial losses appears inferior by the same metric.</p>
+<p>This is exactly the trap that the 97.3% accuracy from chapter 23’s Default dataset model could represent—high accuracy that masks the model’s inability to identify the minority class (defaults) that the business actually cares about detecting.</p>
+</section>
+<section id="class-imbalance-when-the-obvious-choice-is-wrong" class="level3">
+<h3 class="anchored" data-anchor-id="class-imbalance-when-the-obvious-choice-is-wrong">Class Imbalance: When the Obvious Choice is Wrong</h3>
+<p>Class imbalance occurs when one category significantly outnumbers the others. This is extremely common in business:</p>
+<ul>
+<li><strong>Fraud detection</strong>: &lt;1% of transactions are fraudulent</li>
+<li><strong>Medical screening</strong>: &lt;5% of patients have rare diseases<br>
+</li>
+<li><strong>Customer churn</strong>: &lt;10% of customers leave per month</li>
+<li><strong>Email spam</strong>: ~15% of emails are spam</li>
+<li><strong>Quality control</strong>: &lt;2% of products are defective</li>
+</ul>
+<p>In these scenarios, a model can achieve high accuracy by simply predicting the majority class, but this provides zero business value.</p>
+<p><strong>The Accuracy Paradox Gets Worse with Extreme Imbalance:</strong></p>
+<p>To understand just how misleading accuracy becomes, let’s examine what happens when a “lazy model” (that always predicts the majority class) encounters different levels of class imbalance. The results are striking and counterintuitive:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><strong>Fraud Rate</strong></th>
+<th><strong>Lazy Model Accuracy</strong></th>
+<th><strong>Business Value</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>50.0%</td>
+<td>50.0%</td>
+<td>None - catches 0% of fraud</td>
+</tr>
+<tr class="even">
+<td>10.0%</td>
+<td>90.0%</td>
+<td>None - catches 0% of fraud</td>
+</tr>
+<tr class="odd">
+<td>5.0%</td>
+<td>95.0%</td>
+<td>None - catches 0% of fraud</td>
+</tr>
+<tr class="even">
+<td>1.0%</td>
+<td>99.0%</td>
+<td>None - catches 0% of fraud</td>
+</tr>
+<tr class="odd">
+<td>0.1%</td>
+<td>99.9%</td>
+<td>None - catches 0% of fraud</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The paradox is clear</strong>: The lazy model gets better accuracy as fraud becomes rarer, but provides ZERO business value by never catching fraud! This is exactly what happened with our Default dataset from chapter 23—the rarer the default events (3% rate), the easier it becomes for a useless model to achieve impressive accuracy scores.</p>
+</section>
+<section id="real-business-costs-matter-more-than-accuracy" class="level3">
+<h3 class="anchored" data-anchor-id="real-business-costs-matter-more-than-accuracy">Real Business Costs Matter More Than Accuracy</h3>
+<p>In business, different prediction errors have different costs. While accuracy treats all errors equally, understanding the specific types of errors—<strong>False Positives</strong> and <strong>False Negatives</strong>—in relation to your business problem is crucial for making informed decisions about model performance and thresholds.</p>
+<p><strong>Understanding the Two Types of Classification Errors:</strong></p>
+<ul>
+<li><strong>False Positive (FP)</strong>: Your model predicts the positive class (fraud, disease, spam) when it’s actually negative (legitimate, healthy, normal email)</li>
+<li><strong>False Negative (FN)</strong>: Your model predicts the negative class when it’s actually positive (missing the thing you’re trying to detect)</li>
+</ul>
+<p>The key insight is that these errors rarely have equal business impact. Understanding which type of error is more costly for your specific business context helps guide model evaluation, threshold selection, and deployment decisions.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 35%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Business Example</strong></th>
+<th><strong>False Positive (FP)</strong></th>
+<th><strong>False Negative (FN)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Credit Card Fraud Detection</strong></td>
+<td><strong>Flagging legitimate transaction as fraud</strong>: Customer tries to make a purchase but card is declined. Creates customer frustration, potential embarrassment at checkout, and may lead to customers switching to competitors. Bank loses transaction fees and risks customer churn (~$50 cost per incident)</td>
+<td><strong>Missing actual fraud</strong>: Fraudulent transactions go undetected, resulting in direct financial losses to the bank, potential legal liability, and costs associated with identity theft resolution for customers. Often involves multiple fraudulent transactions before detection (~$500-5,000 cost per incident)</td>
+</tr>
+<tr class="even">
+<td><strong>Medical Cancer Screening</strong></td>
+<td><strong>Incorrectly diagnosing healthy patient with cancer</strong>: Patient experiences severe psychological distress, undergoes unnecessary and potentially harmful treatments, faces insurance complications, and incurs substantial medical costs for follow-up tests and procedures (~$1,000-10,000 cost)</td>
+<td><strong>Missing actual cancer</strong>: Early-stage cancer goes undetected, leading to delayed treatment when disease has progressed to advanced stages. Dramatically reduces treatment success rates, increases treatment complexity and costs, and can be life-threatening (~$100,000+ cost, plus immeasurable human cost)</td>
+</tr>
+<tr class="odd">
+<td><strong>Email Spam Filter</strong></td>
+<td><strong>Important business email sent to spam folder</strong>: Critical business communications are missed, potentially leading to lost deals, missed meetings, delayed responses to urgent matters, and damaged professional relationships (~$500 cost per important missed email)</td>
+<td><strong>Spam reaching inbox</strong>: Users experience minor inconvenience from deleting unwanted emails, potential exposure to phishing attempts, and slight productivity loss from processing irrelevant content (~$1 cost per spam email)</td>
+</tr>
+</tbody>
+</table>
+<p>These cost differences mean that accuracy—which treats all errors equally—provides little guidance for business decision-making.</p>
+</section>
+<section id="knowledge-check" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Understanding Business Costs
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Consider these business scenarios and identify which type of error would be more costly:</p>
+<ol type="1">
+<li><strong>Airport Security Screening</strong>: Flagging safe passengers vs.&nbsp;missing dangerous items
+<ul>
+<li>Which error is more costly? Why?</li>
+<li>How might this influence the screening threshold?</li>
+</ul></li>
+<li><strong>Job Application Screening</strong>: Rejecting qualified candidates vs.&nbsp;interviewing unqualified candidates
+<ul>
+<li>What are the business costs of each error type?</li>
+<li>How might company hiring needs affect this trade-off?</li>
+</ul></li>
+<li><strong>Product Quality Control</strong>: Rejecting good products vs.&nbsp;shipping defective products
+<ul>
+<li>Consider both immediate costs and long-term reputation effects</li>
+<li>How would the costs differ for luxury vs.&nbsp;budget products?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="the-confusion-matrix-foundation-for-classification-evaluation" class="level2" data-number="24.2">
+<h2 data-number="24.2" class="anchored" data-anchor-id="the-confusion-matrix-foundation-for-classification-evaluation"><span class="header-section-number">24.2</span> The Confusion Matrix: Foundation for Classification Evaluation</h2>
+<p>The <strong>confusion matrix</strong> provides the foundation for understanding classification model performance by breaking down predictions into four categories. Rather than just telling you the percentage of correct predictions, it shows you exactly <em>how</em> your model is making mistakes.</p>
+<section id="understanding-what-a-confusion-matrix-shows" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-what-a-confusion-matrix-shows">Understanding What a Confusion Matrix Shows</h3>
+<p>Before diving into real examples, let’s understand the conceptual framework of a confusion matrix. Think of it as a 2×2 table that organizes all possible prediction outcomes:</p>
+<div id="e8f684b7" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="24-classification-evaluation_files/figure-html/cell-4-output-1.png" class="quarto-figure quarto-figure-center figure-img" width="581" height="565"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Understanding the Four Quadrants:</strong></p>
+<ul>
+<li><strong>True Positives (TP)</strong>: Model correctly identifies positive cases (e.g., correctly flagged default risk)</li>
+<li><strong>True Negatives (TN)</strong>: Model correctly identifies negative cases (e.g., correctly identified safe customers)</li>
+<li><strong>False Positives (FP)</strong>: Model incorrectly predicts positive (e.g., safe customer flagged as high risk) - <em>Type I Error</em></li>
+<li><strong>False Negatives (FN)</strong>: Model incorrectly predicts negative (e.g., risky customer marked as safe) - <em>Type II Error</em></li>
+</ul>
+<p>The key insight is that <strong>correct predictions</strong> (TP and TN) lie on the diagonal, while <strong>errors</strong> (FP and FN) lie off the diagonal.</p>
+</section>
+<section id="applying-the-confusion-matrix-to-our-default-prediction-model" class="level3">
+<h3 class="anchored" data-anchor-id="applying-the-confusion-matrix-to-our-default-prediction-model">Applying the Confusion Matrix to Our Default Prediction Model</h3>
+<p>Now let’s see how this framework applies to the same logistic regression model from chapter 23. We’ll use the exact same dataset preparation and model to ensure consistency:</p>
+<div id="c2bab33e" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use the Default dataset from chapter 23 with identical preparation</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ISLP <span class="im">import</span> load_data</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and prepare data exactly as in chapter 23</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>Default <span class="op">=</span> load_data(<span class="st">'Default'</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>Default_encoded <span class="op">=</span> pd.get_dummies(Default, columns<span class="op">=</span>[<span class="st">'student'</span>], drop_first<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>Default_encoded[<span class="st">'default_binary'</span>] <span class="op">=</span> (Default_encoded[<span class="st">'default'</span>] <span class="op">==</span> <span class="st">'Yes'</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Use the same feature matrix and target as chapter 23</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> Default_encoded[[<span class="st">'balance'</span>, <span class="st">'income'</span>, <span class="st">'student_Yes'</span>]]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> Default_encoded[<span class="st">'default_binary'</span>]</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Split the data using the same approach as chapter 23 for consistency</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>X_simple <span class="op">=</span> Default_encoded[[<span class="st">'balance'</span>]]</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>X_simple_train, X_simple_test, X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    X_simple, X, y, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit the same logistic regression model from chapter 23</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> LogisticRegression(random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>model.fit(X_train, y_train)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Make predictions on test set</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> model.predict(X_test)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>y_pred_proba <span class="op">=</span> model.predict_proba(X_test)[:, <span class="dv">1</span>]</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Create confusion matrix</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(y_test, y_pred)</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion Matrix for Default Prediction Model:"</span>)</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cm)</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Dataset context (matching chapter 23 results):"</span>)</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total test examples: </span><span class="sc">{</span><span class="bu">len</span>(y_test)<span class="sc">:,}</span><span class="ss">"</span>)</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Actual default cases: </span><span class="sc">{</span>y_test<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">:,}</span><span class="ss"> (</span><span class="sc">{</span>y_test<span class="sc">.</span>mean()<span class="sc">:.1%}</span><span class="ss">)"</span>)</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Actual non-default cases: </span><span class="sc">{</span><span class="bu">len</span>(y_test) <span class="op">-</span> y_test<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">:,}</span><span class="ss"> (</span><span class="sc">{</span><span class="dv">1</span><span class="op">-</span>y_test<span class="sc">.</span>mean()<span class="sc">:.1%}</span><span class="ss">)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix for Default Prediction Model:
+[[2895   11]
+ [  69   25]]
+
+Dataset context (matching chapter 23 results):
+Total test examples: 3,000
+Actual default cases: 94 (3.1%)
+Actual non-default cases: 2,906 (96.9%)</code></pre>
+</div>
+</div>
+</section>
+<section id="interpreting-the-confusion-matrix-results" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-the-confusion-matrix-results">Interpreting the Confusion Matrix Results</h3>
+<p>The matrix <code>[[2895, 11], [69, 25]]</code> represents our model’s performance in a 2×2 format where:</p>
+<ul>
+<li><strong>Position [0,0]: 2,895</strong> = True Negatives (correctly identified non-default customers)</li>
+<li><strong>Position [0,1]: 11</strong> = False Positives (safe customers incorrectly flagged as default risk)<br>
+</li>
+<li><strong>Position [1,0]: 69</strong> = False Negatives (risky customers that were missed)</li>
+<li><strong>Position [1,1]: 25</strong> = True Positives (correctly identified default customers)</li>
+</ul>
+<p><strong>Model Strengths:</strong></p>
+<ul>
+<li>Successfully identifies the vast majority of non-default customers<br>
+</li>
+<li>Achieves the same 97.3% accuracy we saw in chapter 23</li>
+<li>Shows very few false alarms (only 11 safe customers incorrectly flagged)</li>
+<li>Demonstrates consistency with the logistic regression results from the previous chapter</li>
+</ul>
+<p><strong>Model Limitations:</strong></p>
+<ul>
+<li>Catches only 25 out of 94 actual default cases</li>
+<li>Misses 69 customers who will actually default (73.4% of defaults missed)</li>
+<li>The severe class imbalance (3.1% default rate) makes detecting the minority class challenging</li>
+</ul>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Business Impact Analysis
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For a credit card company, the confusion matrix components translate directly to business costs:</p>
+<ul>
+<li><strong>False Positives (11 customers)</strong>: Good customers denied credit or charged higher rates → Lost revenue, customer churn</li>
+<li><strong>False Negatives (69 customers)</strong>: Bad customers approved for credit → Direct financial losses from defaults</li>
+</ul>
+<p>This analysis demonstrates why accuracy alone can be misleading—while our model achieves high overall accuracy, it fails to identify most actual default cases, which represents the primary business value we’re seeking. Understanding these trade-offs helps determine whether the model’s performance aligns with business objectives and risk tolerance.</p>
+</div>
+</div>
+</section>
+<section id="knowledge-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-1">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Reading Confusion Matrices
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Given this confusion matrix for a customer churn prediction model:</p>
+<pre><code>                 Predicted
+                Stay  Churn
+Actual  Stay   1850    150
+        Churn   200    100</code></pre>
+<p>Calculate and interpret:</p>
+<ol type="1">
+<li><strong>Basic metrics</strong>: What’s the accuracy of this model?</li>
+<li><strong>Business interpretation</strong>:
+<ul>
+<li>How many customers who churned were correctly identified?</li>
+<li>How many “churn risk” alerts were false alarms?</li>
+<li>What’s the cost if each missed churn loses $500 and each false alarm costs $50 in intervention efforts?</li>
+</ul></li>
+<li><strong>Model assessment</strong>: To improve business value with this model, would you rather focus on reducing the number of false positives or false negatives?</li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="essential-classification-metrics-precision-recall-and-f1-score" class="level2" data-number="24.3">
+<h2 data-number="24.3" class="anchored" data-anchor-id="essential-classification-metrics-precision-recall-and-f1-score"><span class="header-section-number">24.3</span> Essential Classification Metrics: Precision, Recall, and F1-Score</h2>
+<p>While accuracy treats all errors equally, business decisions require understanding the specific types of errors your model makes. This section builds on our confusion matrix foundation to introduce precision, recall, and F1-score—metrics that help align model evaluation with business priorities.</p>
+<section id="step-1-quick-refresh---extracting-key-values-from-the-confusion-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="step-1-quick-refresh---extracting-key-values-from-the-confusion-matrix">Step 1: Quick Refresh - Extracting Key Values from the Confusion Matrix</h3>
+<p>Before diving into advanced metrics, let’s quickly review how we extract the fundamental building blocks from our confusion matrix:</p>
+<div id="c8da506f" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract the four core values from our confusion matrix</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>tn, fp, fn, tp <span class="op">=</span> cm.ravel()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>total <span class="op">=</span> tn <span class="op">+</span> fp <span class="op">+</span> fn <span class="op">+</span> tp</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Manually calculate basic accuracy</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>accuracy <span class="op">=</span> (tp <span class="op">+</span> tn) <span class="op">/</span> total</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="9f73fed2" class="cell" data-execution_count="6">
+<details class="code-fold">
+<summary>Show code for printing results</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion Matrix Components for Default Prediction:"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">60</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"True Negatives (TN):  </span><span class="sc">{</span>tn<span class="sc">:,}</span><span class="ss"> - Correctly identified non-default customers"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"False Positives (FP): </span><span class="sc">{</span>fp<span class="sc">:,}</span><span class="ss"> - Safe customers incorrectly flagged as high risk"</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"False Negatives (FN): </span><span class="sc">{</span>fn<span class="sc">:,}</span><span class="ss"> - Risky customers that were missed"</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"True Positives (TP):  </span><span class="sc">{</span>tp<span class="sc">:,}</span><span class="ss"> - Correctly identified default customers"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Total customers:      </span><span class="sc">{</span>total<span class="sc">:,}</span><span class="ss">"</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Accuracy = (TP + TN) / Total = (</span><span class="sc">{</span>tp<span class="sc">}</span><span class="ss"> + </span><span class="sc">{</span>tn<span class="sc">}</span><span class="ss">) / </span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>accuracy<span class="sc">:.3f}</span><span class="ss"> or </span><span class="sc">{</span>accuracy<span class="sc">:.1%}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix Components for Default Prediction:
+============================================================
+True Negatives (TN):  2,895 - Correctly identified non-default customers
+False Positives (FP): 11 - Safe customers incorrectly flagged as high risk
+False Negatives (FN): 69 - Risky customers that were missed
+True Positives (TP):  25 - Correctly identified default customers
+Total customers:      3,000
+
+Accuracy = (TP + TN) / Total = (25 + 2895) / 3000 = 0.973 or 97.3%</code></pre>
+</div>
+</div>
+<p>These four values (TP, TN, FP, FN) are the foundation for <strong>all</strong> classification metrics. Think of them as the raw ingredients that we’ll use to cook up more sophisticated measures.</p>
+</section>
+<section id="step-2-precision-and-recall---the-core-business-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="step-2-precision-and-recall---the-core-business-metrics">Step 2: Precision and Recall - The Core Business Metrics</h3>
+<p>Now let’s use these building blocks to calculate precision and recall, two metrics that directly address business concerns about model performance.</p>
+<section id="understanding-precision-when-i-act-on-a-prediction-how-often-am-i-right" class="level4">
+<h4 class="anchored" data-anchor-id="understanding-precision-when-i-act-on-a-prediction-how-often-am-i-right">Understanding Precision: “When I Act on a Prediction, How Often Am I Right?”</h4>
+<p><strong>Precision</strong> answers the question: “Of all the times my model predicts the positive class (default, fraud, spam), what percentage are actually correct?”</p>
+<p><span class="math display">\[\text{Precision} = \frac{\text{True Positives}}{\text{True Positives + False Positives}} = \frac{TP}{TP + FP}\]</span></p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Business Translation: When Precision Matters Most
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Precision is critical when <strong>acting on a prediction is expensive or disruptive</strong>. In business contexts, this means:</p>
+<ul>
+<li><strong>High precision</strong> = Few false alarms = Lower operational costs and better customer experience</li>
+<li><strong>Low precision</strong> = Many false alarms = Wasted resources, frustrated customers, and damaged trust</li>
+</ul>
+<p>Think of precision as answering: <em>“When I decide to take action based on my model’s prediction, how confident can I be that I’m making the right decision?”</em></p>
+<p><strong>Real-world impact:</strong> A credit approval model with low precision might deny loans to many qualified applicants, leading to lost revenue and competitor advantage.</p>
+<p><strong>Business Examples Where Precision is Critical:</strong></p>
+<ul>
+<li><strong>Credit Card Fraud Detection</strong>: False positives block legitimate purchases → customer frustration</li>
+<li><strong>Email Spam Filtering</strong>: False positives send important emails to spam → missed opportunities</li>
+<li><strong>Medical Diagnosis</strong>: False positives cause unnecessary anxiety and expensive follow-up tests</li>
+</ul>
+</div>
+</div>
+<p>Now let’s calculate precision for our Default prediction model and see what it tells us about our model’s performance:</p>
+<div id="29d18cbd" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate precision manually and verify with sklearn</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>precision <span class="op">=</span> tp <span class="op">/</span> (tp <span class="op">+</span> fp)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify with sklearn's precision_score function</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> precision_score</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>sklearn_precision <span class="op">=</span> precision_score(y_test, y_pred)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="73736315" class="cell" data-execution_count="8">
+<details class="code-fold">
+<summary>Show code for detailed precision analysis</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"PRECISION ANALYSIS"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">30</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Precision = TP / (TP + FP) = </span><span class="sc">{</span>tp<span class="sc">}</span><span class="ss"> / (</span><span class="sc">{</span>tp<span class="sc">}</span><span class="ss"> + </span><span class="sc">{</span>fp<span class="sc">}</span><span class="ss">) = </span><span class="sc">{</span>precision<span class="sc">:.3f}</span><span class="ss"> or </span><span class="sc">{</span>precision<span class="sc">:.1%}</span><span class="ss">"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Business Interpretation:"</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• When our model flags a customer as 'high default risk', it's correct </span><span class="sc">{</span>precision<span class="sc">:.1%}</span><span class="ss"> of the time"</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Out of </span><span class="sc">{</span>tp <span class="op">+</span> fp<span class="sc">}</span><span class="ss"> customers flagged as high risk, </span><span class="sc">{</span>tp<span class="sc">}</span><span class="ss"> actually defaulted"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• </span><span class="sc">{</span>fp<span class="sc">}</span><span class="ss"> customers were incorrectly flagged (false alarms)"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Sklearn verification:"</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Manual calculation: </span><span class="sc">{</span>precision<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• sklearn precision_score: </span><span class="sc">{</span>sklearn_precision<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Results match: </span><span class="sc">{</span><span class="st">'✓'</span> <span class="cf">if</span> <span class="bu">abs</span>(precision <span class="op">-</span> sklearn_precision) <span class="op">&lt;</span> <span class="fl">0.001</span> <span class="cf">else</span> <span class="st">'✗'</span><span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>PRECISION ANALYSIS
+==============================
+Precision = TP / (TP + FP) = 25 / (25 + 11) = 0.694 or 69.4%
+
+Business Interpretation:
+• When our model flags a customer as 'high default risk', it's correct 69.4% of the time
+• Out of 36 customers flagged as high risk, 25 actually defaulted
+• 11 customers were incorrectly flagged (false alarms)
+
+Sklearn verification:
+• Manual calculation: 0.694
+• sklearn precision_score: 0.694
+• Results match: ✓</code></pre>
+</div>
+</div>
+</section>
+<section id="understanding-recall-of-all-the-cases-i-should-catch-how-many-do-i-actually-find" class="level4">
+<h4 class="anchored" data-anchor-id="understanding-recall-of-all-the-cases-i-should-catch-how-many-do-i-actually-find">Understanding Recall: “Of All the Cases I Should Catch, How Many Do I Actually Find?”</h4>
+<p><strong>Recall</strong> (also called sensitivity) answers: “Of all the actual positive cases that exist, what percentage does my model successfully identify?”</p>
+<p><span class="math display">\[\text{Recall} = \frac{\text{True Positives}}{\text{True Positives + False Negatives}} = \frac{TP}{TP + FN}\]</span></p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Business Translation: When Recall Matters Most
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Recall is critical when <strong>missing a positive case is costly or dangerous</strong>. In business contexts, this means:</p>
+<ul>
+<li><strong>High recall</strong> = Catch most/all important cases = Minimize catastrophic misses</li>
+<li><strong>Low recall</strong> = Miss many important cases = Risk serious consequences and liability</li>
+</ul>
+<p>Think of recall as answering: <em>“Of all the critical situations that actually exist, am I catching enough of them to protect my business and stakeholders?”</em></p>
+<p><strong>Real-world impact:</strong> A medical screening test with low recall might miss cancer cases, leading to delayed treatment when early detection could be life-saving. The cost of missing these cases far outweighs the inconvenience of false alarms.</p>
+<p><strong>Business Examples Where Recall is Critical:</strong></p>
+<ul>
+<li><strong>Disease Screening</strong>: Missing cancer cases delays treatment → life-threatening</li>
+<li><strong>Security Systems</strong>: Missing threats allows dangerous situations → safety risks<br>
+</li>
+<li><strong>Quality Control</strong>: Missing defective products damages brand reputation → long-term losses</li>
+</ul>
+</div>
+</div>
+<p>Now let’s calculate recall for our Default prediction model and see what it tells us about our model’s performance:</p>
+<div id="5965b958" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate recall manually and verify with sklearn</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>recall <span class="op">=</span> tp <span class="op">/</span> (tp <span class="op">+</span> fn)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify with sklearn's recall_score function</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> recall_score</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>sklearn_recall <span class="op">=</span> recall_score(y_test, y_pred)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="761fbb9e" class="cell" data-execution_count="10">
+<details class="code-fold">
+<summary>Show code for detailed recall analysis</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"RECALL ANALYSIS"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">30</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Recall = TP / (TP + FN) = </span><span class="sc">{</span>tp<span class="sc">}</span><span class="ss"> / (</span><span class="sc">{</span>tp<span class="sc">}</span><span class="ss"> + </span><span class="sc">{</span>fn<span class="sc">}</span><span class="ss">) = </span><span class="sc">{</span>recall<span class="sc">:.3f}</span><span class="ss"> or </span><span class="sc">{</span>recall<span class="sc">:.1%}</span><span class="ss">"</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Business Interpretation:"</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Our model catches </span><span class="sc">{</span>recall<span class="sc">:.1%}</span><span class="ss"> of all customers who actually default"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Out of </span><span class="sc">{</span>tp <span class="op">+</span> fn<span class="sc">}</span><span class="ss"> customers who actually defaulted, we caught </span><span class="sc">{</span>tp<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• We missed </span><span class="sc">{</span>fn<span class="sc">}</span><span class="ss"> customers who defaulted (this could be costly!)"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Sklearn verification:"</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Manual calculation: </span><span class="sc">{</span>recall<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• sklearn recall_score: </span><span class="sc">{</span>sklearn_recall<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Results match: </span><span class="sc">{</span><span class="st">'✓'</span> <span class="cf">if</span> <span class="bu">abs</span>(recall <span class="op">-</span> sklearn_recall) <span class="op">&lt;</span> <span class="fl">0.001</span> <span class="cf">else</span> <span class="st">'✗'</span><span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>RECALL ANALYSIS
+==============================
+Recall = TP / (TP + FN) = 25 / (25 + 69) = 0.266 or 26.6%
+
+Business Interpretation:
+• Our model catches 26.6% of all customers who actually default
+• Out of 94 customers who actually defaulted, we caught 25
+• We missed 69 customers who defaulted (this could be costly!)
+
+Sklearn verification:
+• Manual calculation: 0.266
+• sklearn recall_score: 0.266
+• Results match: ✓</code></pre>
+</div>
+</div>
+</section>
+<section id="putting-this-together-for-our-default-prediction-model" class="level4">
+<h4 class="anchored" data-anchor-id="putting-this-together-for-our-default-prediction-model">Putting this Together for Our Default Prediction Model</h4>
+<p>Now that we’ve calculated both precision and recall, let’s understand what they tell us about our Default prediction model’s performance and how they address different business concerns:</p>
+<p><strong>Key Difference Reminder:</strong></p>
+<ul>
+<li><strong>Precision</strong> focuses on the accuracy of our positive predictions: “When we flag a customer as high-risk, how often are we correct?”</li>
+<li><strong>Recall</strong> focuses on completeness of detection: “Of all customers who will actually default, what percentage do we catch?”</li>
+</ul>
+<p>For credit risk management, this creates a classic business trade-off:</p>
+<ul>
+<li><strong>High precision</strong> keeps customers happy (fewer false alarms) but may miss some defaults</li>
+<li><strong>High recall</strong> catches more defaults but may frustrate good customers with false flags</li>
+</ul>
+<p>Let’s see how our model performs on both dimensions:</p>
+<div id="7cde092a" class="cell" data-execution_count="11">
+<details class="code-fold">
+<summary>Show code for comprehensive Default model evaluation</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"DEFAULT PREDICTION MODEL EVALUATION"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">40</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Precision: </span><span class="sc">{</span>precision<span class="sc">:.1%}</span><span class="ss"> - When we flag someone as high risk, we're right </span><span class="sc">{</span>precision<span class="sc">:.1%}</span><span class="ss"> of the time"</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Recall: </span><span class="sc">{</span>recall<span class="sc">:.1%}</span><span class="ss"> - We catch </span><span class="sc">{</span>recall<span class="sc">:.1%}</span><span class="ss"> of all customers who actually default"</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Business cost implications</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Business Impact:"</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• High precision (</span><span class="sc">{</span>precision<span class="sc">:.1%}</span><span class="ss">) = Few false alarms = Happy customers"</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"• Low recall (</span><span class="sc">{</span>recall<span class="sc">:.1%}</span><span class="ss">) = Miss many defaults = Financial losses"</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">This suggests our model is conservative - it makes fewer false accusations,"</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"but it misses many customers who will actually default."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>DEFAULT PREDICTION MODEL EVALUATION
+========================================
+Precision: 69.4% - When we flag someone as high risk, we're right 69.4% of the time
+Recall: 26.6% - We catch 26.6% of all customers who actually default
+
+Business Impact:
+• High precision (69.4%) = Few false alarms = Happy customers
+• Low recall (26.6%) = Miss many defaults = Financial losses
+
+This suggests our model is conservative - it makes fewer false accusations,
+but it misses many customers who will actually default.</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="step-3-the-precision-recall-trade-off-and-f1-score" class="level3">
+<h3 class="anchored" data-anchor-id="step-3-the-precision-recall-trade-off-and-f1-score">Step 3: The Precision-Recall Trade-off and F1-Score</h3>
+<p>In most real-world scenarios, there’s a <strong>fundamental tension</strong> between precision and recall. Improving one often hurts the other. Understanding this trade-off leads us to a metric know as the <strong>F1-score</strong>.</p>
+<section id="why-the-trade-off-exists" class="level4">
+<h4 class="anchored" data-anchor-id="why-the-trade-off-exists">Why the Trade-off Exists</h4>
+<p>The precision-recall trade-off stems from how classification models make decisions. Most models (including logistic regression) output <strong>probabilities</strong> rather than direct classifications. To make final predictions, we apply a <strong>decision threshold</strong> (typically 0.5) where:</p>
+<ul>
+<li>Probabilities ≥ 0.5 → Predict “Default”</li>
+<li>Probabilities &lt; 0.5 → Predict “No Default”</li>
+</ul>
+<p><strong>The Business Reality:</strong> Adjusting this threshold changes how many customers we flag as risky, creating the trade-off:</p>
+<ul>
+<li><strong>Lower threshold</strong> (e.g., 0.3): Flag more customers as risky
+<ul>
+<li><strong>Effect</strong>: Catch more actual defaults (higher recall) but also flag more safe customers (lower precision)</li>
+<li><strong>Business impact</strong>: Better default detection but more customer complaints</li>
+</ul></li>
+<li><strong>Higher threshold</strong> (e.g., 0.7): Flag fewer customers as risky
+<ul>
+<li><strong>Effect</strong>: When we do flag someone, we’re usually right (higher precision) but miss more defaults (lower recall)</li>
+<li><strong>Business impact</strong>: Happier customers but more financial losses</li>
+</ul></li>
+</ul>
+<p><strong>Think of it like airport security:</strong> Stricter screening catches more threats but inconveniences more innocent travelers. Looser screening is faster but might miss dangerous items.</p>
+<p>Let’s demonstrate this trade-off with our Default dataset:</p>
+<div id="a619fd04" class="cell" data-execution_count="12">
+<details class="code-fold">
+<summary>Show code for precision-recall trade-off demonstration</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Demonstrate the precision-recall trade-off</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"PRECISION-RECALL TRADE-OFF DEMONSTRATION"</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">45</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Test different thresholds</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>thresholds <span class="op">=</span> [<span class="fl">0.1</span>, <span class="fl">0.3</span>, <span class="fl">0.5</span>, <span class="fl">0.7</span>, <span class="fl">0.9</span>]</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Threshold'</span><span class="sc">:&lt;12}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Precision'</span><span class="sc">:&lt;12}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Recall'</span><span class="sc">:&lt;12}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Business Impact'</span><span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">70</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> threshold <span class="kw">in</span> thresholds:</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Make predictions at this threshold</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    y_pred_thresh <span class="op">=</span> (y_pred_proba <span class="op">&gt;</span> threshold).astype(<span class="bu">int</span>)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> y_pred_thresh.<span class="bu">sum</span>() <span class="op">&gt;</span> <span class="dv">0</span>:  <span class="co"># Avoid division by zero</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        prec <span class="op">=</span> precision_score(y_test, y_pred_thresh)</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        rec <span class="op">=</span> recall_score(y_test, y_pred_thresh)</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Interpret the business impact</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> threshold <span class="op">&lt;=</span> <span class="fl">0.3</span>:</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>            impact <span class="op">=</span> <span class="st">"Flag many as risky - catch more defaults but annoy customers"</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> threshold <span class="op">&gt;=</span> <span class="fl">0.7</span>:</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>            impact <span class="op">=</span> <span class="st">"Flag few as risky - happy customers but miss defaults"</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>            impact <span class="op">=</span> <span class="st">"Balanced approach"</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>threshold<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span>prec<span class="sc">:&lt;12.3f}</span><span class="ss"> </span><span class="sc">{</span>rec<span class="sc">:&lt;12.3f}</span><span class="ss"> </span><span class="sc">{</span>impact<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>threshold<span class="sc">:&lt;12.1f}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'N/A'</span><span class="sc">:&lt;12}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'0.000'</span><span class="sc">:&lt;12}</span><span class="ss"> No customers flagged as risky"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>PRECISION-RECALL TRADE-OFF DEMONSTRATION
+=============================================
+Threshold    Precision    Recall       Business Impact
+----------------------------------------------------------------------
+0.1          0.273        0.691        Flag many as risky - catch more defaults but annoy customers
+0.3          0.487        0.415        Flag many as risky - catch more defaults but annoy customers
+0.5          0.694        0.266        Balanced approach
+0.7          0.750        0.128        Flag few as risky - happy customers but miss defaults
+0.9          0.500        0.011        Flag few as risky - happy customers but miss defaults</code></pre>
+</div>
+</div>
+</section>
+<section id="f1-score-balancing-precision-and-recall" class="level4">
+<h4 class="anchored" data-anchor-id="f1-score-balancing-precision-and-recall">F1-Score: Balancing Precision and Recall</h4>
+<p>In many business scenarios, you can’t simply choose to optimize only precision or only recall. You need a single metric that captures both dimensions of model performance. Not only is it easier to explain one number than two separate metrics to business leaders, but often its because the business problem requires us to balance the performance of both precision and reall.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Examples when a single metric is helpful
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Marketing campaigns</strong>: You need both precise targeting (don’t waste budget) AND good coverage (reach enough prospects)</li>
+<li><strong>Quality control</strong>: You need to catch defects (recall) while avoiding shutdowns for false alarms (precision)</li>
+<li><strong>Model comparison</strong>: When comparing multiple models, you need a single metric rather than separate precision and recall scores</li>
+</ul>
+</div>
+</div>
+<p>The F1-score provides a single metric that combines precision and recall using the harmonic mean:</p>
+<p><span class="math display">\[\text{F1-Score} = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}\]</span></p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Why harmonic mean instead of simple average?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The harmonic mean is much more sensitive to low values than arithmetic mean. This means:</p>
+<ul>
+<li>If either precision OR recall is poor, F1-score will be low</li>
+<li>You can’t “game” the system by making one metric extremely high while ignoring the other</li>
+<li>F1-score only rewards models that perform reasonably well on BOTH dimensions</li>
+</ul>
+</div>
+</div>
+<p>In practice, we often use F1-score when:</p>
+<ul>
+<li><strong>Balanced priorities</strong>: Both precision and recall are important to your business objectives</li>
+<li><strong>Model selection</strong>: You need a single metric to compare multiple models fairly</li>
+<li><strong>Imbalanced datasets</strong>: F1-score handles class imbalance better than accuracy</li>
+<li><strong>Equal error costs</strong>: The business impact of false positives and false negatives is roughly equivalent</li>
+<li><strong>Comprehensive evaluation</strong>: You want to avoid models that excel at one metric while failing at the other</li>
+</ul>
+<p>Let’s calculate the F1-score for our Default prediction model:</p>
+<div id="f6c46420" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate F1-score manually and verify with sklearn</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>f1 <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> (precision <span class="op">*</span> recall) <span class="op">/</span> (precision <span class="op">+</span> recall)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare with sklearn</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> f1_score</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>sklearn_f1 <span class="op">=</span> f1_score(y_test, y_pred)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="d42a7c5c" class="cell" data-execution_count="14">
+<details class="code-fold">
+<summary>Show code for F1-score calculation and verification</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"F1-SCORE CALCULATION"</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">25</span>)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"F1-Score = 2 × (Precision × Recall) / (Precision + Recall)"</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"F1-Score = 2 × (</span><span class="sc">{</span>precision<span class="sc">:.3f}</span><span class="ss"> × </span><span class="sc">{</span>recall<span class="sc">:.3f}</span><span class="ss">) / (</span><span class="sc">{</span>precision<span class="sc">:.3f}</span><span class="ss"> + </span><span class="sc">{</span>recall<span class="sc">:.3f}</span><span class="ss">)"</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"F1-Score = </span><span class="sc">{</span>f1<span class="sc">:.3f}</span><span class="ss"> or </span><span class="sc">{</span>f1<span class="sc">:.1%}</span><span class="ss">"</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Sklearn verification: F1-Score = </span><span class="sc">{</span>sklearn_f1<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Results match: </span><span class="sc">{</span><span class="st">'✓'</span> <span class="cf">if</span> <span class="bu">abs</span>(f1 <span class="op">-</span> sklearn_f1) <span class="op">&lt;</span> <span class="fl">0.001</span> <span class="cf">else</span> <span class="st">'✗'</span><span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>F1-SCORE CALCULATION
+=========================
+F1-Score = 2 × (Precision × Recall) / (Precision + Recall)
+F1-Score = 2 × (0.694 × 0.266) / (0.694 + 0.266)
+F1-Score = 0.385 or 38.5%
+
+Sklearn verification: F1-Score = 0.385
+Results match: ✓</code></pre>
+</div>
+</div>
+<p><strong>Interpreting Our F1-Score Results:</strong></p>
+<p>Our Default prediction model achieves an F1-score of 0.385 (38.5%), which reveals important insights about its performance and business implications. This relatively low F1-score reflects the fundamental challenge of predicting rare events in highly imbalanced datasets—while our model demonstrates good precision (69.4%), meaning that when it flags a customer as high-risk it’s usually correct, it suffers from poor recall (26.6%), missing nearly three-quarters of customers who will actually default.</p>
+<p>For a credit card company, this represents a critical business trade-off. The model’s conservative approach minimizes customer complaints from false alarms (maintaining good customer relationships), but it comes at the cost of substantial financial losses from the 69 defaults that go undetected. The low F1-score suggests that if the business objective requires balanced performance—catching more defaults while maintaining reasonable precision—the current 0.5 probability threshold may be too conservative. Lowering the threshold to capture more defaults would improve recall but reduce precision, highlighting the fundamental tension between these metrics that F1-score helps quantify in a single measure.</p>
+</section>
+</section>
+<section id="knowledge-check-2" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-2">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Precision vs.&nbsp;Recall Business Decisions
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For each scenario, determine whether you would prioritize <strong>precision</strong>, <strong>recall</strong>, or <strong>balanced F1-score</strong>:</p>
+<ol type="1">
+<li><strong>Airport Security</strong>: TSA screening for dangerous items
+<ul>
+<li>Which metric should be prioritized? Why?</li>
+<li>What are the consequences of optimizing for the wrong metric?</li>
+</ul></li>
+<li><strong>Job Resume Screening</strong>: Initial filter for qualified candidates
+<ul>
+<li>How do you balance missing good candidates vs.&nbsp;interviewing unqualified ones?</li>
+<li>How might this change if you’re hiring for a critical, hard-to-fill position?</li>
+</ul></li>
+<li><strong>Product Recommendation System</strong>: Suggesting items customers might buy
+<ul>
+<li>What happens if precision is too low? If recall is too low?</li>
+<li>How does the business model (advertising revenue vs.&nbsp;direct sales) affect this?</li>
+</ul></li>
+<li><strong>Quality Control</strong>: Detecting defective products before shipping
+<ul>
+<li>Consider both immediate costs and long-term brand reputation</li>
+<li>How might this differ for safety-critical vs.&nbsp;cosmetic defects?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="roc-curves-and-auc-when-you-need-to-rank-customers" class="level2" data-number="24.4">
+<h2 data-number="24.4" class="anchored" data-anchor-id="roc-curves-and-auc-when-you-need-to-rank-customers"><span class="header-section-number">24.4</span> ROC Curves and AUC: When You Need to Rank Customers</h2>
+<p>So far we’ve focused on making binary decisions—default or no default. But many business scenarios need something different: <strong>ranking customers from lowest risk to highest risk</strong>. This is where ROC curves and AUC become essential.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>When Rankings Matter More Than Binary Decisions:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Insurance pricing</strong>: You need to charge different rates based on risk levels, not just approve/deny</li>
+<li><strong>Loan approval workflows</strong>: Create different approval tiers with varying terms and rates<br>
+</li>
+<li><strong>Marketing prioritization</strong>: Rank prospects from most likely to least likely to respond</li>
+<li><strong>Investment analysis</strong>: Score opportunities from highest to lowest potential return</li>
+</ul>
+</div>
+</div>
+<section id="what-is-auc-the-simple-explanation" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-auc-the-simple-explanation">What is AUC? The Simple Explanation</h3>
+<p><strong>AUC (Area Under the Curve)</strong> answers this question: <em>“If I randomly pick one high-risk customer and one low-risk customer, what’s the chance my model will correctly rank the high-risk customer as more risky?”</em></p>
+<div id="987fadca" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate ROC curve and AUC score</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>fpr, tpr, roc_thresholds <span class="op">=</span> roc_curve(y_test, y_pred_proba)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>auc_score <span class="op">=</span> roc_auc_score(y_test, y_pred_proba)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="8d7658fc" class="cell" data-execution_count="16">
+<details class="code-fold">
+<summary>Show code for AUC explanation</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Our model's AUC: </span><span class="sc">{</span>auc_score<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Simple interpretation: </span><span class="sc">{</span>auc_score<span class="sc">:.1%}</span><span class="ss"> chance our model correctly ranks"</span>)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"a defaulting customer as higher risk than a non-defaulting customer."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Our model's AUC: 0.947
+
+Simple interpretation: 94.7% chance our model correctly ranks
+a defaulting customer as higher risk than a non-defaulting customer.</code></pre>
+</div>
+</div>
+<p><strong>Interpreting AUC Scores for Business Decisions:</strong></p>
+<p>Now that we know our model’s AUC score, how do we interpret whether this is good enough for business use? AUC scores range from 0.5 (random guessing) to 1.0 (perfect ranking), but what constitutes “good enough” depends on your business context and risk tolerance. Here’s a practical guide for interpreting AUC scores and making deployment decisions:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><strong>AUC Range</strong></th>
+<th><strong>Quality Rating</strong></th>
+<th><strong>Business Recommendation</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.9 - 1.0</td>
+<td>Outstanding</td>
+<td>Deploy with confidence</td>
+</tr>
+<tr class="even">
+<td>0.8 - 0.9</td>
+<td>Excellent</td>
+<td>Strong business value</td>
+</tr>
+<tr class="odd">
+<td>0.7 - 0.8</td>
+<td>Good</td>
+<td>Useful with monitoring</td>
+</tr>
+<tr class="even">
+<td>0.6 - 0.7</td>
+<td>Fair</td>
+<td>Limited value</td>
+</tr>
+<tr class="odd">
+<td>0.5 - 0.6</td>
+<td>Poor</td>
+<td>Barely better than random</td>
+</tr>
+<tr class="even">
+<td>Below 0.5</td>
+<td>Problematic</td>
+<td>Model has serious issues</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="roc-curves-visualizing-ranking-performance" class="level3">
+<h3 class="anchored" data-anchor-id="roc-curves-visualizing-ranking-performance">ROC Curves: Visualizing Ranking Performance</h3>
+<p>While the AUC gives us a single number to evaluate ranking quality, the <strong>ROC (Receiver Operating Characteristic) curve</strong> provides a visual representation of how our model performs across all possible decision thresholds. Think of it as a graph that shows the trade-off between catching defaults (True Positive Rate) and incorrectly flagging good customers (False Positive Rate).</p>
+<p>The ROC curve plots:</p>
+<ul>
+<li><strong>Y-axis (True Positive Rate)</strong>: How well we catch actual defaults = Recall</li>
+<li><strong>X-axis (False Positive Rate)</strong>: How often we incorrectly flag good customers</li>
+</ul>
+<p>The closer the curve is to the top-left corner, the better the ranking ability—this represents high recall with low false positive rates.</p>
+<div id="bf812dc4" class="cell" data-execution_count="17">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="24-classification-evaluation_files/figure-html/cell-18-output-1.png" class="quarto-figure quarto-figure-center figure-img" width="758" height="566"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="using-our-default-model-for-risk-based-pricing" class="level3">
+<h3 class="anchored" data-anchor-id="using-our-default-model-for-risk-based-pricing">Using Our Default Model for Risk-Based Pricing</h3>
+<p>Instead of just approving or denying credit applications, what if our bank could offer different interest rates based on each customer’s predicted risk? This is where our model’s ranking ability (AUC) becomes valuable for business strategy.</p>
+<p><strong>Why Risk-Based Pricing Makes Business Sense:</strong></p>
+<p>Rather than using a single “yes/no” decision threshold, banks can use the probability scores to create pricing tiers. Low-risk customers get better rates (attracting good business), while high-risk customers pay premiums that reflect their actual default risk. This approach maximizes both profitability and market coverage.</p>
+<div id="e9b2d4d5" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create risk tiers using our model's probability predictions</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>risk_buckets <span class="op">=</span> pd.qcut(y_pred_proba, q<span class="op">=</span><span class="dv">5</span>, labels<span class="op">=</span>[<span class="st">'Very Low'</span>, <span class="st">'Low'</span>, <span class="st">'Medium'</span>, <span class="st">'High'</span>, <span class="st">'Very High'</span>])</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>risk_analysis <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Risk_Bucket'</span>: risk_buckets,</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Actual_Default'</span>: y_test</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>}).groupby(<span class="st">'Risk_Bucket'</span>, observed<span class="op">=</span><span class="va">True</span>)[<span class="st">'Actual_Default'</span>].mean()</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Default Rates by Risk Tier:"</span>)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> bucket, default_rate <span class="kw">in</span> risk_analysis.items():</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>bucket<span class="sc">:&gt;10}</span><span class="ss">: </span><span class="sc">{</span>default_rate<span class="sc">:.4%}</span><span class="ss"> default rate"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Default Rates by Risk Tier:
+  Very Low: 0.0000% default rate
+       Low: 0.0000% default rate
+    Medium: 0.0000% default rate
+      High: 1.3333% default rate
+ Very High: 14.3333% default rate</code></pre>
+</div>
+</div>
+<p>Our model creates an excellent risk gradient from 0.0% (Very Low/Low/Medium tiers) to 14.3% (Very High) default rates. This demonstrates that our AUC of 0.947 translates into exceptional business value—the model creates such clear separation that the three lowest risk tiers have zero defaults, while the highest tier shows substantial risk. This enables confident risk-based pricing decisions.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The Bottom Line
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>ROC/AUC is excellent for ranking and risk assessment, but be cautious with highly imbalanced datasets like ours. The curves can make performance look better than it actually is for the minority class you care about most.</p>
+</div>
+</div>
+</section>
+<section id="knowledge-check-3" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-3">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>ROC vs.&nbsp;Precision-Recall: Choosing the Right Evaluation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For each business scenario, determine whether <strong>ROC/AUC</strong> or <strong>Precision-Recall curves</strong> would be more appropriate:</p>
+<ol type="1">
+<li><strong>Credit Scoring</strong>: Bank needs to rank loan applicants by default risk for pricing decisions
+<ul>
+<li>Dataset: 100,000 applications, 5% default rate</li>
+<li>Business goal: Risk-based pricing across risk spectrum</li>
+</ul></li>
+<li><strong>Rare Disease Detection</strong>: Medical test for disease affecting 0.1% of population
+<ul>
+<li>Dataset: 1,000,000 patients, 0.1% disease rate</li>
+<li>Business goal: Minimize missed cases while controlling false alarms</li>
+</ul></li>
+<li><strong>Customer Churn Prediction</strong>: Identify customers likely to cancel subscriptions
+<ul>
+<li>Dataset: 50,000 customers, 15% churn rate<br>
+</li>
+<li>Business goal: Target retention campaigns effectively</li>
+</ul></li>
+<li><strong>Quality Control</strong>: Detect defective products in manufacturing
+<ul>
+<li>Dataset: 100,000 products, 2% defect rate</li>
+<li>Business goal: Prevent defective products from shipping</li>
+</ul></li>
+<li><strong>Insurance Premium Pricing</strong>: Auto insurance company setting rates based on accident risk
+<ul>
+<li>Dataset: 500,000 drivers, 8% accident rate</li>
+<li>Business goal: Create tiered pricing structure from low-risk to high-risk drivers</li>
+</ul></li>
+</ol>
+<p>For each scenario, explain your reasoning and what the chosen metric tells you about model performance.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="choosing-the-right-metric-for-your-business-context" class="level2" data-number="24.5">
+<h2 data-number="24.5" class="anchored" data-anchor-id="choosing-the-right-metric-for-your-business-context"><span class="header-section-number">24.5</span> Choosing the Right Metric for Your Business Context</h2>
+<p>Throughout this chapter, we’ve explored multiple classification metrics—each serving different business purposes. The most sophisticated aspect of classification evaluation is aligning your choice of metrics with your specific business context and cost structure. Rather than asking “What’s the best metric?” the right question is “What business outcomes am I trying to optimize?”</p>
+<section id="a-framework-for-metric-selection" class="level3">
+<h3 class="anchored" data-anchor-id="a-framework-for-metric-selection">A Framework for Metric Selection</h3>
+<p>The decision process starts with understanding your primary business concern:</p>
+<div id="e30dd6de" class="cell" data-execution_count="19">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="24-classification-evaluation_files/figure-html/cell-20-output-1.png" class="quarto-figure quarto-figure-center figure-img" width="1142" height="758"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This framework guides you from your primary business concern to the most appropriate metric. Let’s translate this into practical guidance:</p>
+</section>
+<section id="complete-metric-selection-reference" class="level3">
+<h3 class="anchored" data-anchor-id="complete-metric-selection-reference">Complete Metric Selection Reference</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 26%">
+<col style="width: 19%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Business Priority</strong></th>
+<th><strong>Recommended Metric</strong></th>
+<th><strong>When to Use</strong></th>
+<th><strong>Example Scenarios</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Minimize False Alarms</strong></td>
+<td><strong>Precision</strong></td>
+<td>False positives are expensive or damaging</td>
+<td>• Credit card fraud detection<br>• Email spam filtering<br>• Medical diagnosis confirmation</td>
+</tr>
+<tr class="even">
+<td><strong>Catch All Important Cases</strong></td>
+<td><strong>Recall</strong></td>
+<td>Missing positives is dangerous or costly</td>
+<td>• Disease screening<br>• Safety system alerts<br>• Security threat detection</td>
+</tr>
+<tr class="odd">
+<td><strong>Balance Both Concerns</strong></td>
+<td><strong>F1-Score</strong></td>
+<td>Both error types matter equally</td>
+<td>• Marketing campaign targeting<br>• Quality control systems<br>• Model comparison studies</td>
+</tr>
+<tr class="even">
+<td><strong>Rank by Risk Level</strong></td>
+<td><strong>ROC-AUC</strong></td>
+<td>Need to stratify customers/cases</td>
+<td>• Insurance pricing<br>• Loan approval workflows<br>• Investment risk assessment</td>
+</tr>
+<tr class="odd">
+<td><strong>Simple Communication</strong></td>
+<td><strong>Accuracy</strong></td>
+<td>Balanced classes, equal error costs</td>
+<td>• Simple classification with balanced data<br>• Initial model exploration</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="quick-decision-rules" class="level3">
+<h3 class="anchored" data-anchor-id="quick-decision-rules">Quick Decision Rules</h3>
+<p>For rapid metric selection in common scenarios:</p>
+<ul>
+<li><strong>Use PRECISION when:</strong> False positives cost more than false negatives (customer experience focus)</li>
+<li><strong>Use RECALL when:</strong> False negatives cost more than false positives (safety/compliance focus)<br>
+</li>
+<li><strong>Use F1-SCORE when:</strong> You need balanced performance or want to compare models with a single metric</li>
+<li><strong>Use ROC-AUC when:</strong> You need ranking quality across all thresholds (pricing/stratification focus)</li>
+<li><strong>Avoid ACCURACY when:</strong> You have imbalanced classes (like our 3% default rate)</li>
+</ul>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Remember:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The “best” metric is the one that aligns with your business objectives and cost structure. Our Default dataset example showed how different metrics (precision = 69%, recall = 27%, F1 = 39%, AUC = 95%) tell different stories about the same model’s performance.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="summary" class="level2" data-number="24.6">
+<h2 data-number="24.6" class="anchored" data-anchor-id="summary"><span class="header-section-number">24.6</span> Summary</h2>
+<p>This chapter transformed your understanding of classification model evaluation from the simple but misleading concept of “accuracy” to a comprehensive toolkit that aligns with real business needs. You discovered that effective classification evaluation requires understanding not just whether your model is correct, but <em>how</em> it makes mistakes and what those mistakes cost your business.</p>
+<p><strong>Key evaluation concepts</strong> you mastered include:</p>
+<ul>
+<li><strong>The accuracy trap</strong>: Why 97.3% accuracy can be misleading when only 3% of customers default—high accuracy doesn’t guarantee business value</li>
+<li><strong>Confusion matrices</strong>: The 2×2 foundation showing exactly where your model succeeds and fails, enabling business impact analysis</li>
+<li><strong>Precision and recall</strong>: Understanding when to prioritize accuracy of positive predictions vs.&nbsp;completeness of detection</li>
+<li><strong>F1-score</strong>: Combining precision and recall into a single metric when both matter equally to your business</li>
+<li><strong>ROC curves and AUC</strong>: Evaluating ranking quality for risk-based pricing and customer stratification</li>
+<li><strong>Business-aligned frameworks</strong>: A systematic approach to selecting metrics based on error costs and business priorities</li>
+<li><strong>Proper evaluation methodology</strong>: Using train/test splits to ensure reliable model assessment</li>
+</ul>
+<p><strong>The critical business insight</strong> is that the “best” metric depends entirely on your business objectives and cost structure. Our Default dataset example demonstrated how the same model can appear excellent (95% AUC) or concerning (27% recall) depending on which business lens you apply. This chapter equipped you with the framework to make these trade-offs intelligently.</p>
+<p><strong>Real-world impact</strong> of this knowledge includes correctly evaluating credit risk models, fraud detection systems, medical screening tools, and marketing campaign algorithms. You learned to create risk-based pricing tiers, understand precision-recall trade-offs in customer experience vs.&nbsp;loss prevention, and design evaluation strategies that align with specific business costs.</p>
+<p><strong>Foundation for future learning</strong>: These evaluation principles apply to every classification algorithm you’ll encounter—decision trees, random forests, neural networks, and beyond. The framework for connecting model performance to business outcomes remains constant, regardless of algorithmic complexity. You now have the foundation to evaluate any classification model through the lens of business value rather than just technical metrics.</p>
+<section id="quick-reference-classification-evaluation-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="quick-reference-classification-evaluation-metrics">Quick Reference: Classification Evaluation Metrics</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 18%">
+<col style="width: 30%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Metric</strong></th>
+<th><strong>Formula</strong></th>
+<th><strong>Business Use Case</strong></th>
+<th><strong>When to Prioritize</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Accuracy</strong></td>
+<td>(TP + TN) / Total</td>
+<td>Overall correctness</td>
+<td>Balanced classes, equal error costs</td>
+</tr>
+<tr class="even">
+<td><strong>Precision</strong></td>
+<td>TP / (TP + FP)</td>
+<td>Quality of positive predictions</td>
+<td>High cost of false positives</td>
+</tr>
+<tr class="odd">
+<td><strong>Recall (Sensitivity)</strong></td>
+<td>TP / (TP + FN)</td>
+<td>Completeness of positive detection</td>
+<td>High cost of false negatives</td>
+</tr>
+<tr class="even">
+<td><strong>F1-Score</strong></td>
+<td>2 × (Precision × Recall) / (Precision + Recall)</td>
+<td>Balanced precision-recall</td>
+<td>Need single metric, balanced priorities</td>
+</tr>
+<tr class="odd">
+<td><strong>Specificity</strong></td>
+<td>TN / (TN + FP)</td>
+<td>Quality of negative predictions</td>
+<td>Important to correctly identify negatives</td>
+</tr>
+<tr class="even">
+<td><strong>ROC-AUC</strong></td>
+<td>Area under ROC curve</td>
+<td>Ranking/probability quality</td>
+<td>Risk stratification, pricing models</td>
+</tr>
+<tr class="odd">
+<td><strong>Confusion Matrix</strong></td>
+<td>2×2 table of predictions</td>
+<td>Error pattern analysis</td>
+<td>Understanding specific mistake types</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="end-of-chapter-exercises" class="level2" data-number="24.7">
+<h2 data-number="24.7" class="anchored" data-anchor-id="end-of-chapter-exercises"><span class="header-section-number">24.7</span> End of Chapter Exercises</h2>
+<p>These exercises build directly on the logistic regression exercises from Chapter 23, extending them to include the classification evaluation metrics and business-aligned thinking you’ve learned in this chapter. You’ll apply the same datasets and scenarios but now evaluate model performance using precision, recall, F1-score, ROC/AUC, and business cost analysis.</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Exercise 1: Stock Market Direction Prediction with Trading Strategy Evaluation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> Investment management firm<br>
+<strong>Goal:</strong> Build on Chapter 23’s market direction prediction but now evaluate trading strategy performance using classification metrics<br>
+<strong>Dataset:</strong> Weekly dataset from ISLP package<br>
+<strong>Business Context:</strong> The firm wants to implement an automated trading strategy. False positives (predicting “Up” when market goes down) lead to losses from bad trades (~$10,000 cost per mistake). False negatives (predicting “Down” when market goes up) represent missed profitable opportunities (~$5,000 opportunity cost per mistake).</p>
+<div id="e7c9a587" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ISLP <span class="im">import</span> load_data</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> confusion_matrix, precision_score, recall_score, f1_score, roc_auc_score, roc_curve</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>Weekly <span class="op">=</span> load_data(<span class="st">'Weekly'</span>)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Weekly dataset loaded for trading strategy evaluation"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Weekly dataset loaded for trading strategy evaluation</code></pre>
+</div>
+</div>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Reproduce Chapter 23 model</strong>: Build the logistic regression model predicting market direction using lag variables, but now split data properly into train/test sets</li>
+<li><strong>Business cost analysis</strong>:
+<ul>
+<li>Given the trading costs above, which type of error is more expensive?</li>
+<li>Should the trading firm prioritize precision or recall? Why?</li>
+<li>Calculate the total business cost of false positives vs.&nbsp;false negatives</li>
+</ul></li>
+<li><strong>Classification metrics evaluation</strong>:
+<ul>
+<li>Create and interpret the confusion matrix for trading decisions</li>
+<li>Calculate precision, recall, and F1-score</li>
+<li>Compute ROC-AUC for the model’s ranking ability</li>
+</ul></li>
+<li><strong>Trading strategy optimization</strong>:
+<ul>
+<li>Test different probability thresholds (0.3, 0.5, 0.7) for making “buy” decisions</li>
+<li>For each threshold, calculate precision, recall, and total business cost</li>
+<li>Which threshold minimizes total expected losses?</li>
+</ul></li>
+<li><strong>Business insights</strong>:
+<ul>
+<li>Using ROC-AUC, assess whether the model can effectively rank weeks by “up” probability</li>
+<li>How would you recommend the portfolio manager use this model?</li>
+<li>What are the limitations of this approach for real trading decisions?</li>
+</ul></li>
+<li><strong>Advanced analysis</strong>: Create a precision-recall curve and identify the threshold that maximizes profit given the business costs</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Exercise 2: Consumer Purchase Behavior with Marketing Campaign Optimization
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> Orange juice manufacturer<br>
+<strong>Goal:</strong> Extend Chapter 23’s brand choice prediction to optimize targeted marketing campaigns using classification evaluation<br>
+<strong>Dataset:</strong> OJ dataset from ISLP package<br>
+<strong>Business Context:</strong> The company wants to send targeted coupons to customers likely to purchase their brand (Citrus Hill). Each coupon costs $2 to send and process. Customers who receive coupons and purchase generate $8 profit. Customers who receive coupons but don’t purchase result in $2 loss. Missing customers who would have purchased (no coupon sent) represents $5 opportunity cost.</p>
+<div id="aa807532" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>OJ <span class="op">=</span> load_data(<span class="st">'OJ'</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"OJ dataset loaded for marketing campaign optimization"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>OJ dataset loaded for marketing campaign optimization</code></pre>
+</div>
+</div>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Reproduce Chapter 23 model</strong>: Build the logistic regression model predicting brand choice (focusing on Citrus Hill as positive class), including proper train/test evaluation</li>
+<li><strong>Marketing cost framework</strong>:
+<ul>
+<li>Which error type is more costly: sending coupons to non-buyers or missing potential buyers?</li>
+<li>Should the marketing team prioritize precision (coupon efficiency) or recall (market coverage)?</li>
+<li>Calculate expected ROI for different precision/recall combinations</li>
+</ul></li>
+<li><strong>Campaign targeting evaluation</strong>:
+<ul>
+<li>Create confusion matrix for coupon targeting decisions</li>
+<li>Calculate precision (% of coupon recipients who buy), recall (% of buyers who received coupons)</li>
+<li>Compute F1-score as a balanced campaign effectiveness measure</li>
+</ul></li>
+<li><strong>Threshold optimization for profitability</strong>:
+<ul>
+<li>Test probability thresholds from 0.1 to 0.9 in 0.1 increments</li>
+<li>For each threshold, calculate: customers targeted, expected profit, campaign ROI</li>
+<li>Identify the threshold that maximizes total profit</li>
+</ul></li>
+<li><strong>Segment analysis</strong>:
+<ul>
+<li>Compare model performance (precision, recall, AUC) for different customer segments</li>
+<li>Use the demographic variables in the dataset to identify high-value targeting opportunities</li>
+</ul></li>
+<li><strong>Strategic recommendations</strong>:
+<ul>
+<li>Based on your analysis, what targeting strategy would you recommend?</li>
+<li>How does the optimal strategy change if coupon costs increase to $3?</li>
+<li>What additional data would improve targeting effectiveness?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Exercise 3: Medical Risk Assessment with Clinical Decision Support
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-17" class="callout-17-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Company:</strong> Healthcare analytics firm<br>
+<strong>Goal:</strong> Extend Chapter 23’s heart disease prediction to support clinical decision-making using appropriate evaluation metrics<br>
+<strong>Dataset:</strong> Heart dataset from ISLP package (or simulated medical data)<br>
+<strong>Business Context:</strong> Doctors use the model to decide whether to order additional cardiac tests for patients. False positives lead to unnecessary tests (~$1,500 cost per patient) and patient anxiety. False negatives result in missed diagnoses, leading to delayed treatment and potentially serious health consequences (~$25,000 cost including treatment and liability).</p>
+<div id="8285eb8a" class="cell" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use simulated data as in Chapter 23 exercise</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Creating simulated medical data for clinical evaluation"</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulate realistic medical data</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>age <span class="op">=</span> np.random.normal(<span class="dv">55</span>, <span class="dv">15</span>, n)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>age <span class="op">=</span> np.clip(age, <span class="dv">20</span>, <span class="dv">85</span>)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>cholesterol <span class="op">=</span> np.random.normal(<span class="dv">220</span>, <span class="dv">40</span>, n)</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>cholesterol <span class="op">=</span> np.clip(cholesterol, <span class="dv">150</span>, <span class="dv">350</span>)</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>blood_pressure <span class="op">=</span> np.random.normal(<span class="dv">130</span>, <span class="dv">20</span>, n)</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>blood_pressure <span class="op">=</span> np.clip(blood_pressure, <span class="dv">90</span>, <span class="dv">200</span>)</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Heart disease probability increases with age, cholesterol, BP</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>risk_score <span class="op">=</span> <span class="op">-</span><span class="dv">8</span> <span class="op">+</span> <span class="fl">0.05</span><span class="op">*</span>age <span class="op">+</span> <span class="fl">0.01</span><span class="op">*</span>cholesterol <span class="op">+</span> <span class="fl">0.02</span><span class="op">*</span>blood_pressure</span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>heart_disease <span class="op">=</span> np.random.binomial(<span class="dv">1</span>, <span class="dv">1</span><span class="op">/</span>(<span class="dv">1</span> <span class="op">+</span> np.exp(<span class="op">-</span>risk_score)))</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>Heart <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Age'</span>: age,</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Cholesterol'</span>: cholesterol,</span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Blood_Pressure'</span>: blood_pressure,</span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Heart_Disease'</span>: heart_disease</span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Heart disease rate: </span><span class="sc">{</span>Heart[<span class="st">'Heart_Disease'</span>]<span class="sc">.</span>mean()<span class="sc">:.1%}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Creating simulated medical data for clinical evaluation
+Heart disease rate: 38.4%</code></pre>
+</div>
+</div>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Reproduce Chapter 23 model</strong>: Build the logistic regression model for heart disease prediction with proper train/test methodology</li>
+<li><strong>Clinical cost analysis</strong>:
+<ul>
+<li>Given the costs above, which error type has higher consequences?</li>
+<li>For patient safety, should the model prioritize precision or recall?</li>
+<li>Calculate expected cost per patient for false positives vs.&nbsp;false negatives</li>
+</ul></li>
+<li><strong>Medical decision support evaluation</strong>:
+<ul>
+<li>Create confusion matrix for test ordering decisions</li>
+<li>Calculate precision (% of positive predictions that are true cases)</li>
+<li>Calculate recall (% of actual cases detected) - critical for patient safety</li>
+<li>Assess ROC-AUC for the model’s ability to rank patients by risk</li>
+</ul></li>
+<li><strong>Clinical threshold analysis</strong>:
+<ul>
+<li>Test different probability thresholds for ordering additional tests</li>
+<li>For each threshold, calculate: sensitivity (recall), specificity, total expected cost</li>
+<li>Identify threshold that minimizes total healthcare costs while maintaining patient safety</li>
+</ul></li>
+<li><strong>Risk stratification</strong>:
+<ul>
+<li>Use probability scores to create risk tiers (low, medium, high, very high)</li>
+<li>Analyze heart disease rates in each tier</li>
+<li>Recommend different clinical actions for each risk level</li>
+</ul></li>
+<li><strong>Ethical considerations</strong>:
+<ul>
+<li>How do you balance healthcare costs with patient safety?</li>
+<li>What are the implications of false negatives in medical AI?</li>
+<li>How would you communicate model limitations to doctors?</li>
+<li>What additional validation would be needed before clinical deployment?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./23-logistic-regression.html" class="pagination-link" aria-label="Introduction to Logistic Regression for Classification">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Introduction to Logistic Regression for Classification</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./99-anaconda-install.html" class="pagination-link" aria-label="Anaconda Installation">
+        <span class="nav-page-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/24-classification-evaluation.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
