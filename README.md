@@ -29,10 +29,10 @@ By the end of the course, students will be able to:
 | 5    | Data Visualization (Matplotlib & Seaborn)                | Exploratory Data Analysis with Visuals                      |
 | 6    | Writing Efficient Python Code                            | Control Flow, Functions, List Comprehensions                |
 | 7    | **Midterm Project Kickoff**                              | **Midterm Project Work Session**                            |
-| 8    | Intro to Machine Learning                             | Train/Test Split, Features & Labels                         |
-| 9    | Intro to Unsupervised Learning                        | K-Means, PCA, t-SNE                                         |
-| 10   | Intro to Supervised Learning                         | Linear & Logistic Regression                                |
-| 11   | Intro to Deep Learning & Neural Networks             | Simple Keras Model Lab                                      |
-| 12   | Generative AI & Prompt Engineering                   | OpenAI API, LLM Labs, Agents                                |
-| 13   | **Final Project Kickoff**                                | Final Project Team Work                                     |
-| 14   | **Final Project Presentations**                          | Course Wrap-Up + Feedback                                   |
+| 8    | Intro to Machine Learning & Key Considerations           | Train/Test Split, Features & Labels, Model Building Process |
+| 9    | Correlation & Linear Regression                           | Building & Evaluating Regression Models                     |
+| 10   | Logistic Regression & Classification                     | Classification Models & Evaluation Metrics                  |
+| 11   | Tree-Based Models & Feature Importance                   | Decision Trees, Random Forests, Model Interpretation        |
+| 12   | Model Optimization & Validation                          | Feature Engineering, Cross-Validation, Hyperparameter Tuning |
+| 13   | Unsupervised Learning & Advanced Topics                  | Clustering, Dimensionality Reduction, Deep Learning Overview |
+| 14   | **Final Project Kickoff**                                | Course Wrap-Up + Feedback                                   |
