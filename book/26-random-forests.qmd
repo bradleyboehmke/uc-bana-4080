@@ -1,0 +1,217 @@
+# Random Forests: Ensemble Power and Robustness
+
+In business, critical decisions rarely rely on a single perspective. When making important choices, successful organizations typically:
+
+- *Consult multiple experts rather than trusting one person's judgment*
+- *Gather diverse viewpoints to reduce the risk of blind spots*
+- *Combine different data sources to get a complete picture*
+- *Use committee decisions for high-stakes choices like hiring or investments*
+
+::: {.callout-note}
+## Experiential Learning
+
+Think about a time when you made an important decision by gathering multiple opinions. Maybe you chose a restaurant by reading several review sites, selected a job offer after talking to multiple people, or made a purchase after comparing recommendations from different sources.
+
+Write down one example where combining multiple perspectives led to a better decision than relying on a single source. What made the combined approach more reliable? By the end of this chapter, you'll understand how random forests apply this same principle to machine learning.
+:::
+
+This chapter introduces **random forests**, which apply this "wisdom of crowds" principle to machine learning. Instead of relying on a single decision tree (which can be unstable and prone to overfitting), random forests build hundreds of different trees and combine their predictions. This ensemble approach creates models that are more accurate, stable, and reliable than any individual tree.
+
+By the end of this chapter, you will be able to:
+
+- Explain why ensembles often outperform individual models
+- Understand how random forests introduce diversity through bootstrap sampling and feature randomness
+- Build classification and regression random forests using scikit-learn's RandomForestClassifier and RandomForestRegressor
+- Compare single tree performance to random forest performance
+- Tune key hyperparameters like n_estimators, max_depth, and max_features
+- Recognize when random forests are the right choice for business problems
+- Understand the tradeoff between interpretability and performance in ensemble methods
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/26_random_forests.ipynb) in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.
+
+👉 Open the [Random Forests Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/26_random_forests.ipynb).
+:::
+
+## From Single Trees to Forest Wisdom
+
+In the previous chapter, you learned that decision trees are highly interpretable but can suffer from **instability**—small changes in the data can lead to very different trees. Additionally, complex trees tend to **overfit**, memorizing training data patterns that don't generalize to new situations.
+
+### The Problem with Single Trees
+
+Let's demonstrate this instability with a concrete example:
+
+```{python}
+# Show how small data changes create different trees
+import pandas as pd
+import numpy as np
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+# [Code showing tree instability with bootstrap samples]
+```
+
+### The Ensemble Solution
+
+Random forests solve these problems by combining multiple trees that are each trained on slightly different versions of the data. The key insight is that while individual trees might make errors, their collective wisdom tends to be more reliable.
+
+**Two sources of diversity:**
+1. **Bootstrap sampling**: Each tree sees a different random sample of the training data
+2. **Feature randomness**: Each split considers only a random subset of features
+
+## How Random Forests Work
+
+### Bootstrap Aggregating (Bagging)
+
+[Detailed explanation of bootstrap sampling and how it creates diverse trees]
+
+### Feature Randomness
+
+[How random feature selection at each split adds additional diversity]
+
+### Combining Predictions
+
+- **Classification**: Majority vote across all trees
+- **Regression**: Average of all tree predictions
+
+### Let's See This in Action
+
+```{python}
+# Build random forest step by step
+# Show individual tree predictions vs ensemble prediction
+# Demonstrate improved stability and performance
+```
+
+## Building Random Forest Models
+
+### Classification with Random Forests
+
+[Comprehensive example using business dataset like customer churn or loan approval]
+
+### Regression with Random Forests
+
+[Example predicting continuous outcomes like sales or property values]
+
+### Key Hyperparameters
+
+**n_estimators**: Number of trees in the forest
+- More trees = better performance (to a point)
+- Diminishing returns after ~100-500 trees
+- Tradeoff with computational cost
+
+**max_depth**: Maximum depth of individual trees
+- Controls overfitting of individual trees
+- Random forests can handle deeper trees than single trees
+
+**max_features**: Number of features considered at each split
+- Controls diversity between trees
+- Common choices: 'sqrt', 'log2', or specific numbers
+
+**min_samples_split/min_samples_leaf**: Controls tree complexity
+- Prevents trees from splitting on very small groups
+- Helps avoid overfitting
+
+## Performance Comparison: Trees vs Forests
+
+### Bias-Variance Tradeoff
+
+[Explanation of how ensembles reduce variance while maintaining low bias]
+
+### Empirical Comparison
+
+```{python}
+# Side-by-side comparison of:
+# - Single decision tree
+# - Random forest with few trees
+# - Random forest with many trees
+# Show learning curves and performance metrics
+```
+
+### When Random Forests Excel
+
+- High-dimensional data with many features
+- Mixed data types (numeric and categorical)
+- Datasets with complex, non-linear relationships
+- When robustness is more important than interpretability
+
+## Practical Implementation
+
+### Handling Different Data Types
+
+[How random forests naturally work with mixed data types]
+
+### Dealing with Imbalanced Classes
+
+[class_weight parameter and other strategies]
+
+### Computational Considerations
+
+[Memory usage, training time, parallelization with n_jobs]
+
+### Out-of-Bag (OOB) Error
+
+[Introduction to OOB as built-in validation method]
+
+## Hyperparameter Tuning
+
+### Grid Search for Optimal Parameters
+
+```{python}
+# Systematic hyperparameter tuning example
+from sklearn.model_selection import GridSearchCV
+# [Code for tuning n_estimators, max_depth, max_features]
+```
+
+### Understanding Learning Curves
+
+[How to determine optimal number of trees and depth]
+
+### Practical Tuning Guidelines
+
+[Rules of thumb for different business scenarios]
+
+## Random Forests in Business Context
+
+### Advantages Over Other Methods
+
+- Robust to outliers and noise
+- Handles missing values naturally
+- Built-in feature importance
+- Less prone to overfitting than single trees
+- Works well "out of the box" with minimal tuning
+
+### Limitations to Consider
+
+- Less interpretable than single trees
+- Can overfit with very noisy data
+- Biased toward categorical variables with many categories
+- Memory intensive for large datasets
+
+### Industry Applications
+
+[Examples from finance, healthcare, marketing, operations]
+
+## Summary
+
+[Key concepts and transition to feature importance chapter]
+
+## Knowledge Check
+
+::: {.callout}
+## Your Turn: Ensemble vs Individual Models
+
+Build both a single decision tree and random forest on the same dataset to compare their performance and stability.
+
+**Your Tasks:**
+1. Split data into train/test sets
+2. Build single decision tree and random forest
+3. Compare accuracy, precision, and recall
+4. Test stability by training multiple models with different random seeds
+5. Analyze the tradeoffs between interpretability and performance
+:::
+
+## End of Chapter Exercise
+
+[Practical scenarios where ensemble methods provide clear business value]

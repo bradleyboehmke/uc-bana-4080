@@ -1,0 +1,231 @@
+# Feature Importance and Model Interpretation
+
+After building sophisticated machine learning models, business leaders naturally ask critical questions:
+
+- *Which customer characteristics are most predictive of churn, and should we focus our retention efforts there?*
+- *What product features drive purchase decisions, and how should we prioritize development resources?*
+- *Which risk factors matter most for loan defaults, and how should we adjust our approval criteria?*
+- *Are our models making decisions for the right reasons, or are they picking up on spurious patterns?*
+
+::: {.callout-note}
+## Experiential Learning
+
+Think about a recent important purchase decision you made—buying a car, choosing a phone, or selecting a restaurant. After making the decision, someone asked you "Why did you choose that one?"
+
+Write down how you explained your decision. Did you rank the factors by importance? Did you mention some factors were more important than others? How confident were you in identifying what really mattered? By the end of this chapter, you'll learn how to extract similar explanations from machine learning models.
+:::
+
+This chapter focuses on **feature importance** and **model interpretation**—techniques for understanding which variables drive your model's predictions and why. While building accurate models is important, understanding how they work is often even more valuable for business decision-making, regulatory compliance, and building stakeholder trust.
+
+By the end of this chapter, you will be able to:
+
+- Calculate and interpret built-in feature importance from tree-based models
+- Understand the differences between different types of feature importance measures
+- Use permutation importance to evaluate feature importance across any model type
+- Create effective visualizations that communicate feature importance to business stakeholders
+- Recognize limitations and potential biases in feature importance calculations
+- Apply feature importance insights to improve business processes and model performance
+- Balance model complexity with interpretability based on business needs
+
+::: {.callout-note}
+## 📓 Follow Along in Colab!
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/27_feature_importance.ipynb) in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.
+
+👉 Open the [Feature Importance Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/27_feature_importance.ipynb).
+:::
+
+## Why Feature Importance Matters in Business
+
+Modern machine learning models can be incredibly accurate, but their complexity often makes them "black boxes" that provide predictions without explanations. In many business contexts, understanding the "why" behind predictions is just as important as the predictions themselves.
+
+### The Business Case for Interpretability
+
+**Regulatory Compliance**: Industries like finance and healthcare require explainable decisions for loan approvals, medical diagnoses, and insurance claims.
+
+**Trust and Adoption**: Stakeholders are more likely to trust and act on model recommendations when they understand the reasoning.
+
+**Process Improvement**: Understanding which factors drive outcomes helps businesses focus improvement efforts where they'll have the biggest impact.
+
+**Debugging Models**: Feature importance helps identify when models are making decisions based on irrelevant or biased factors.
+
+**Strategic Planning**: Knowing which factors matter most helps prioritize business investments and operational changes.
+
+### Types of Questions Feature Importance Answers
+
+1. **Which features matter most?** Ranking variables by their contribution to predictions
+2. **How much does each feature matter?** Quantifying the relative importance of different factors
+3. **Are the important features sensible?** Validating that models focus on business-relevant factors
+4. **What happens if we change this feature?** Understanding the impact of potential business changes
+
+## Tree-Based Feature Importance
+
+Tree-based models like decision trees and random forests provide built-in feature importance measures based on how much each feature contributes to decreasing impurity (uncertainty) in the model.
+
+### How Tree Importance is Calculated
+
+[Detailed explanation of Gini importance and information gain]
+
+### Let's See This in Action
+
+```{python}
+# Build random forest and extract feature importance
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import make_classification
+import matplotlib.pyplot as plt
+
+# [Code example showing feature importance extraction and visualization]
+```
+
+### Interpreting Tree-Based Importance
+
+[How to read feature importance values and what they mean for business decisions]
+
+## Permutation Importance: A Model-Agnostic Approach
+
+While tree-based importance is convenient, it only works with tree models and can be biased toward certain types of features. **Permutation importance** provides a more general approach that works with any model type.
+
+### How Permutation Importance Works
+
+The logic is simple and intuitive:
+1. Calculate the model's baseline performance on the test set
+2. For each feature, randomly shuffle its values (breaking its relationship with the target)
+3. Re-calculate performance with the shuffled feature
+4. The difference in performance indicates how important that feature is
+
+### Implementation and Interpretation
+
+```{python}
+# Permutation importance example
+from sklearn.inspection import permutation_importance
+# [Code showing permutation importance calculation and comparison to tree importance]
+```
+
+### Advantages of Permutation Importance
+
+- Works with any model type (linear, tree-based, neural networks, etc.)
+- Less biased than tree-based importance
+- Directly measures impact on model performance
+- Easy to understand conceptually
+
+## Visualizing Feature Importance
+
+Effective visualization is crucial for communicating feature importance insights to business stakeholders who may not have technical backgrounds.
+
+### Bar Charts for Ranking Features
+
+```{python}
+# Create clear, business-friendly importance visualizations
+# [Code for horizontal bar charts, sorted importance, with business labels]
+```
+
+### Comparative Visualizations
+
+[Showing importance across different models or time periods]
+
+### Interactive Dashboards
+
+[Introduction to tools for creating interactive importance visualizations]
+
+## Feature Importance in Practice
+
+### Case Study: Customer Churn Analysis
+
+[Comprehensive example using customer data to demonstrate end-to-end feature importance analysis]
+
+### Case Study: Loan Default Prediction
+
+[Financial services example showing how importance drives business decisions]
+
+### Dealing with Correlated Features
+
+[How correlation affects importance measures and what to do about it]
+
+## Limitations and Pitfalls
+
+### When Feature Importance Misleads
+
+**Correlated Features**: Importance can be split among correlated variables
+**Training vs Test Importance**: Features important in training may not generalize
+**Spurious Correlations**: Models might focus on irrelevant but predictive patterns
+**Sample Size Effects**: Importance can be unstable with small datasets
+
+### Best Practices for Reliable Importance
+
+1. **Use multiple methods**: Compare tree-based and permutation importance
+2. **Test on holdout data**: Calculate importance on data the model hasn't seen
+3. **Consider correlation**: Group correlated features for interpretation
+4. **Validate with domain expertise**: Ensure important features make business sense
+5. **Monitor over time**: Feature importance can change as business conditions evolve
+
+## Business Applications and Decision Making
+
+### Resource Allocation
+
+[How to use feature importance to prioritize business investments]
+
+### Process Improvement
+
+[Identifying which operational changes will have the biggest impact]
+
+### Risk Management
+
+[Understanding what drives risky outcomes and how to mitigate them]
+
+### Product Development
+
+[Using importance to guide feature development and user experience decisions]
+
+## Advanced Topics
+
+### Partial Dependence Plots
+
+[Introduction to understanding how features affect predictions across their range]
+
+### SHAP Values
+
+[Brief introduction to more sophisticated interpretation methods]
+
+### Feature Importance Over Time
+
+[Monitoring how importance changes and what it means for business strategy]
+
+## Balancing Interpretability and Performance
+
+Different business contexts require different balances between model performance and interpretability:
+
+**High Interpretability Need**: Regulatory environments, high-stakes decisions, building stakeholder trust
+**High Performance Need**: Competitive markets, automated decisions, large-scale operations
+
+### When to Choose Simpler Models
+
+[Guidelines for when interpretable models like linear regression or decision trees are preferable]
+
+### When Complex Models are Worth It
+
+[Scenarios where ensemble methods or neural networks provide sufficient value to justify reduced interpretability]
+
+## Summary
+
+[Key takeaways about feature importance and its role in business decision-making]
+
+## Knowledge Check
+
+::: {.callout}
+## Your Turn: Importance Analysis Pipeline
+
+Build a complete feature importance analysis for a business problem, including multiple importance methods and business-focused visualizations.
+
+**Your Tasks:**
+1. Choose a business dataset with clear outcome and predictors
+2. Build both tree-based and linear models
+3. Calculate tree-based and permutation importance
+4. Create business-friendly visualizations
+5. Write a one-page business summary of the key insights
+6. Recommend specific actions based on importance findings
+:::
+
+## End of Chapter Exercise
+
+[Real-world scenarios requiring feature importance analysis for business decision-making]
