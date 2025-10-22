@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>27&nbsp; Understanding Feature Importance: Peeking Inside the Black Box – BANA 4080: Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./99-anaconda-install.html" rel="next">
+<link href="./26-random-forests.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-095e6f6405c331e3b33229e03003579f.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-8162e5fc71f232ea33f1e8ee7aaa6861.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-095e6f6405c331e3b33229e03003579f.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-54ba87e1857bbaa32a381632a2aab8bf.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<meta name="mermaid-theme" content="neutral">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./25-decision-trees.html">Module 10</a></li><li class="breadcrumb-item"><a href="./27-feature-importance.html"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">BANA 4080: Data Mining</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./BANA-4080--Data-Mining.epub" title="Download ePub" class="quarto-navigation-tool px-1" aria-label="Download ePub"><i class="bi bi-journal"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 1</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 2</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 3</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 4</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 5</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-data-viz-matplotlib.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Fundamentals of Plotting with Matplotlib</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-data-viz-bokeh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Interactive Data Visualization with Bokeh</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 6</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 7</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20-before-we-build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 8</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./21-correlation-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./22-regression-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 9</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./23-logistic-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Introduction to Logistic Regression for Classification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./24-classification-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 10</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./25-decision-trees.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Decision Trees: Foundations and Interpretability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./26-random-forests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Random Forests: Ensemble Power and Robustness</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./27-feature-importance.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendix</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-transparency-to-black-boxes" id="toc-from-transparency-to-black-boxes" class="nav-link active" data-scroll-target="#from-transparency-to-black-boxes"><span class="header-section-number">27.1</span> From Transparency to Black Boxes</a>
+  <ul class="collapse">
+  <li><a href="#the-journey-from-glass-box-to-black-box" id="toc-the-journey-from-glass-box-to-black-box" class="nav-link" data-scroll-target="#the-journey-from-glass-box-to-black-box">The Journey from Glass Box to Black Box</a></li>
+  <li><a href="#visualizing-the-trade-off" id="toc-visualizing-the-trade-off" class="nav-link" data-scroll-target="#visualizing-the-trade-off">Visualizing the Trade-Off</a></li>
+  <li><a href="#why-this-trade-off-exists" id="toc-why-this-trade-off-exists" class="nav-link" data-scroll-target="#why-this-trade-off-exists">Why This Trade-Off Exists</a></li>
+  <li><a href="#the-business-dilemma" id="toc-the-business-dilemma" class="nav-link" data-scroll-target="#the-business-dilemma">The Business Dilemma</a></li>
+  </ul></li>
+  <li><a href="#why-feature-importance-matters" id="toc-why-feature-importance-matters" class="nav-link" data-scroll-target="#why-feature-importance-matters"><span class="header-section-number">27.2</span> Why Feature Importance Matters</a>
+  <ul class="collapse">
+  <li><a href="#building-trust-show-me-why" id="toc-building-trust-show-me-why" class="nav-link" data-scroll-target="#building-trust-show-me-why">Building Trust: “Show Me Why”</a></li>
+  <li><a href="#supporting-better-decisions-from-correlation-to-action" id="toc-supporting-better-decisions-from-correlation-to-action" class="nav-link" data-scroll-target="#supporting-better-decisions-from-correlation-to-action">Supporting Better Decisions: From Correlation to Action</a></li>
+  <li><a href="#feature-selection-simplicity-from-complexity" id="toc-feature-selection-simplicity-from-complexity" class="nav-link" data-scroll-target="#feature-selection-simplicity-from-complexity">Feature Selection: Simplicity from Complexity</a></li>
+  <li><a href="#debugging-when-models-learn-the-wrong-lessons" id="toc-debugging-when-models-learn-the-wrong-lessons" class="nav-link" data-scroll-target="#debugging-when-models-learn-the-wrong-lessons">Debugging: When Models Learn the Wrong Lessons</a></li>
+  <li><a href="#regulatory-compliance-and-ethical-ai" id="toc-regulatory-compliance-and-ethical-ai" class="nav-link" data-scroll-target="#regulatory-compliance-and-ethical-ai">Regulatory Compliance and Ethical AI</a></li>
+  <li><a href="#the-meta-lesson-understanding-what-your-model-learned" id="toc-the-meta-lesson-understanding-what-your-model-learned" class="nav-link" data-scroll-target="#the-meta-lesson-understanding-what-your-model-learned">The Meta-Lesson: Understanding What Your Model Learned</a></li>
+  </ul></li>
+  <li><a href="#types-of-feature-importance" id="toc-types-of-feature-importance" class="nav-link" data-scroll-target="#types-of-feature-importance"><span class="header-section-number">27.3</span> Types of Feature Importance</a>
+  <ul class="collapse">
+  <li><a href="#model-based-vs.-model-agnostic" id="toc-model-based-vs.-model-agnostic" class="nav-link" data-scroll-target="#model-based-vs.-model-agnostic">Model-Based vs.&nbsp;Model-Agnostic</a></li>
+  <li><a href="#global-vs.-local-importance" id="toc-global-vs.-local-importance" class="nav-link" data-scroll-target="#global-vs.-local-importance">Global vs.&nbsp;Local Importance</a></li>
+  <li><a href="#comparison-of-common-methods" id="toc-comparison-of-common-methods" class="nav-link" data-scroll-target="#comparison-of-common-methods">Comparison of Common Methods</a></li>
+  </ul></li>
+  <li><a href="#feature-importance-in-random-forests" id="toc-feature-importance-in-random-forests" class="nav-link" data-scroll-target="#feature-importance-in-random-forests"><span class="header-section-number">27.4</span> Feature Importance in Random Forests</a>
+  <ul class="collapse">
+  <li><a href="#building-on-what-you-already-know" id="toc-building-on-what-you-already-know" class="nav-link" data-scroll-target="#building-on-what-you-already-know">Building on What You Already Know</a></li>
+  <li><a href="#how-it-works" id="toc-how-it-works" class="nav-link" data-scroll-target="#how-it-works">How It Works</a></li>
+  <li><a href="#extracting-importance-from-scikit-learn" id="toc-extracting-importance-from-scikit-learn" class="nav-link" data-scroll-target="#extracting-importance-from-scikit-learn">Extracting Importance from Scikit-Learn</a></li>
+  <li><a href="#visualizing-importance" id="toc-visualizing-importance" class="nav-link" data-scroll-target="#visualizing-importance">Visualizing Importance</a></li>
+  <li><a href="#interpreting-the-results" id="toc-interpreting-the-results" class="nav-link" data-scroll-target="#interpreting-the-results">Interpreting the Results</a></li>
+  <li><a href="#limitations-of-impurity-based-importance" id="toc-limitations-of-impurity-based-importance" class="nav-link" data-scroll-target="#limitations-of-impurity-based-importance">Limitations of Impurity-Based Importance</a></li>
+  </ul></li>
+  <li><a href="#permutation-importance-a-more-reliable-alternative" id="toc-permutation-importance-a-more-reliable-alternative" class="nav-link" data-scroll-target="#permutation-importance-a-more-reliable-alternative"><span class="header-section-number">27.5</span> Permutation Importance: A More Reliable Alternative</a>
+  <ul class="collapse">
+  <li><a href="#the-core-idea-break-it-and-see-what-happens" id="toc-the-core-idea-break-it-and-see-what-happens" class="nav-link" data-scroll-target="#the-core-idea-break-it-and-see-what-happens">The Core Idea: Break It and See What Happens</a></li>
+  <li><a href="#how-it-works-1" id="toc-how-it-works-1" class="nav-link" data-scroll-target="#how-it-works-1">How It Works</a></li>
+  <li><a href="#implementation-with-scikit-learn" id="toc-implementation-with-scikit-learn" class="nav-link" data-scroll-target="#implementation-with-scikit-learn">Implementation with Scikit-Learn</a></li>
+  <li><a href="#comparing-impurity-based-vs.-permutation-importance" id="toc-comparing-impurity-based-vs.-permutation-importance" class="nav-link" data-scroll-target="#comparing-impurity-based-vs.-permutation-importance">Comparing Impurity-Based vs.&nbsp;Permutation Importance</a></li>
+  <li><a href="#when-to-use-each-method" id="toc-when-to-use-each-method" class="nav-link" data-scroll-target="#when-to-use-each-method">When to Use Each Method</a></li>
+  </ul></li>
+  <li><a href="#exploring-prediction-behavior-across-variables" id="toc-exploring-prediction-behavior-across-variables" class="nav-link" data-scroll-target="#exploring-prediction-behavior-across-variables"><span class="header-section-number">27.6</span> Exploring Prediction Behavior Across Variables</a>
+  <ul class="collapse">
+  <li><a href="#what-partial-dependence-plots-show" id="toc-what-partial-dependence-plots-show" class="nav-link" data-scroll-target="#what-partial-dependence-plots-show">What Partial Dependence Plots Show</a></li>
+  <li><a href="#creating-partial-dependence-plots" id="toc-creating-partial-dependence-plots" class="nav-link" data-scroll-target="#creating-partial-dependence-plots">Creating Partial Dependence Plots</a></li>
+  <li><a href="#interpreting-pdps" id="toc-interpreting-pdps" class="nav-link" data-scroll-target="#interpreting-pdps">Interpreting PDPs</a></li>
+  </ul></li>
+  <li><a href="#limitations-and-pitfalls" id="toc-limitations-and-pitfalls" class="nav-link" data-scroll-target="#limitations-and-pitfalls"><span class="header-section-number">27.7</span> Limitations and Pitfalls</a>
+  <ul class="collapse">
+  <li><a href="#when-feature-importance-can-mislead-you" id="toc-when-feature-importance-can-mislead-you" class="nav-link" data-scroll-target="#when-feature-importance-can-mislead-you">When Feature Importance Can Mislead You</a></li>
+  <li><a href="#practical-guidepos-for-trustworthy-interpretation" id="toc-practical-guidepos-for-trustworthy-interpretation" class="nav-link" data-scroll-target="#practical-guidepos-for-trustworthy-interpretation">Practical Guidepos for Trustworthy Interpretation</a></li>
+  </ul></li>
+  <li><a href="#beyond-the-basics-toward-explainable-ai" id="toc-beyond-the-basics-toward-explainable-ai" class="nav-link" data-scroll-target="#beyond-the-basics-toward-explainable-ai"><span class="header-section-number">27.8</span> Beyond the Basics: Toward Explainable AI</a></li>
+  <li><a href="#summary-and-reflection" id="toc-summary-and-reflection" class="nav-link" data-scroll-target="#summary-and-reflection"><span class="header-section-number">27.9</span> Summary and Reflection</a></li>
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check"><span class="header-section-number">27.10</span> Knowledge Check</a></li>
+  <li><a href="#end-of-chapter-exercises" id="toc-end-of-chapter-exercises" class="nav-link" data-scroll-target="#end-of-chapter-exercises"><span class="header-section-number">27.11</span> End of Chapter Exercises</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/27-feature-importance.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./25-decision-trees.html">Module 10</a></li><li class="breadcrumb-item"><a href="./27-feature-importance.html"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Throughout this course, you’ve progressed from simple, interpretable models like linear regression—where coefficients directly tell you how features affect predictions—to more powerful ensemble methods like random forests that combine hundreds of decision trees. As our models have grown more accurate, they’ve also become more opaque. A random forest might achieve 95% accuracy, but can you explain <em>why</em> it made a specific prediction? Which features drove that decision?</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Experiential Learning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Think about a recent important purchase decision you made—buying a car, choosing a phone, or selecting a restaurant. After making the decision, someone asked you “Why did you choose that one?”</p>
+<p>Write down how you explained your decision. Did you rank the factors by importance? Did you mention some factors were more important than others? How confident were you in identifying what really mattered?</p>
+<p>Now imagine you had a “black box” that made the decision for you and simply announced: “Buy this one.” How would you feel about trusting that recommendation without understanding the reasoning? By the end of this chapter, you’ll learn techniques for opening up machine learning “black boxes” to understand what’s happening inside.</p>
+</div>
+</div>
+<p>This chapter bridges the gap between <strong>model accuracy</strong> and <strong>model interpretability</strong>. You’ll learn techniques for understanding which features drive your model’s predictions, how to quantify their importance, and how to visualize these insights effectively. These skills are crucial not just for building stakeholder trust, but also for debugging models, ensuring they’re learning the right patterns, and making better business decisions.</p>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>Explain the accuracy-interpretability trade-off and why it matters for machine learning</li>
+<li>Articulate why feature importance is critical for building trust, debugging models, and making business decisions</li>
+<li>Distinguish between model-based (impurity-based) and model-agnostic (permutation) importance methods</li>
+<li>Calculate and interpret Gini/MSE importance from random forest models for both classification and regression</li>
+<li>Use permutation importance to validate and improve upon impurity-based rankings</li>
+<li>Create and interpret partial dependence plots to understand <em>how</em> features influence predictions</li>
+<li>Recognize common pitfalls including high-cardinality bias, correlation effects, and the causation fallacy</li>
+<li>Apply best practices for responsible feature importance analysis in real-world contexts</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>📓 Follow Along in Colab!
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you read through this chapter, we encourage you to follow along using the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/27_feature_importance.ipynb">companion notebook</a> in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.</p>
+<p>👉 Open the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/27_feature_importance.ipynb">Feature Importance Notebook in Colab</a>.</p>
+</div>
+</div>
+<section id="from-transparency-to-black-boxes" class="level2" data-number="27.1">
+<h2 data-number="27.1" class="anchored" data-anchor-id="from-transparency-to-black-boxes"><span class="header-section-number">27.1</span> From Transparency to Black Boxes</h2>
+<p>Think back to your first encounter with linear regression. Remember how straightforward it was to explain? “For each additional square foot, the house price increases by $45.” The model’s decision-making process was completely transparent—just a simple equation with coefficients you could point to and explain to anyone.</p>
+<p>But as you’ve progressed through this course, you’ve learned increasingly powerful models. Decision trees can capture non-linear relationships and interactions. Random forests ensemble hundreds of trees to achieve even better accuracy. Each step forward in predictive power has come with a cost: these models are harder to explain.</p>
+<section id="the-journey-from-glass-box-to-black-box" class="level3">
+<h3 class="anchored" data-anchor-id="the-journey-from-glass-box-to-black-box">The Journey from Glass Box to Black Box</h3>
+<p>Let’s trace this evolution with a concrete example: predicting customer churn for a telecommunications company.</p>
+<p><strong>Linear Regression (Logistic Regression for classification)</strong>: The epitome of interpretability. Your model might look like:</p>
+<p><span class="math display">\[
+\text{Churn Probability} = \frac{1}{1 + e^{-(0.8 \times \text{MonthlyCharges} - 0.6 \times \text{Tenure} + 0.4 \times \text{NoTechSupport})}}
+\]</span></p>
+<p>You can explain this to anyone: “Each $10 increase in monthly charges raises churn probability by about 8%. Each additional year of tenure reduces it by 6%.” The entire model fits on a single line.</p>
+<p><strong>Decision Tree</strong>: More complex, but still followable. You can trace the decision path:</p>
+<pre><code>Customer #1247:
+  MonthlyCharges &gt; $70? YES
+    → Tenure &lt; 2 years? YES
+      → No tech support? YES
+        → PREDICTION: Will Churn (85% probability)</code></pre>
+<p>You can tell this customer’s story. But what happens when your tree has 20 levels and 500 nodes? Following the logic becomes impractical.</p>
+<p><strong>Random Forest</strong>: The black box arrives. Your model doesn’t make one decision path—it makes <strong>100 different decision paths</strong> and averages them. Tree #17 might focus on monthly charges and contract type. Tree #58 might prioritize customer service calls and payment method. When you ask “Why did you predict this customer will churn?”, the model essentially responds: “Because 87 out of 100 trees said so, based on 87 different combinations of factors.”</p>
+<p>Accurate? Yes. Explainable? Not easily.</p>
+</section>
+<section id="visualizing-the-trade-off" class="level3">
+<h3 class="anchored" data-anchor-id="visualizing-the-trade-off">Visualizing the Trade-Off</h3>
+<p>This trade-off between accuracy and interpretability is fundamental to machine learning:</p>
+<div class="cell" data-fig-width="8" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">graph LR
+    A["Linear/Logistic&lt;br/&gt;Regression&lt;br/&gt;&lt;br/&gt;Accuracy: ⭐⭐&lt;br/&gt;Interpretability: ⭐⭐⭐⭐⭐"] --&gt; B["Decision&lt;br/&gt;Tree&lt;br/&gt;&lt;br/&gt;Accuracy: ⭐⭐⭐&lt;br/&gt;Interpretability: ⭐⭐⭐"]
+    B --&gt; C["Random&lt;br/&gt;Forest&lt;br/&gt;&lt;br/&gt;Accuracy: ⭐⭐⭐⭐&lt;br/&gt;Interpretability: ⭐"]
+    C --&gt; D["Deep Neural&lt;br/&gt;Network&lt;br/&gt;&lt;br/&gt;Accuracy: ⭐⭐⭐⭐⭐&lt;br/&gt;Interpretability: ⚫"]
+
+    style A fill:#90EE90,stroke:#228B22,stroke-width:2px
+    style B fill:#FFD700,stroke:#DAA520,stroke-width:2px
+    style C fill:#FFA07A,stroke:#FF6347,stroke-width:2px
+    style D fill:#FF6347,stroke:#8B0000,stroke-width:2px
+
+    classDef default font-size:11pt
+</pre>
+</div>
+<p></p><figcaption> The accuracy-interpretability trade-off: as models become more complex and accurate, they become harder to interpret</figcaption> </figure><p></p>
+</div>
+</div>
+</div>
+<p>The left side shows simpler models that are easy to understand but may miss complex patterns. The right side shows sophisticated models that capture subtle relationships but resist simple explanation.</p>
+</section>
+<section id="why-this-trade-off-exists" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-trade-off-exists">Why This Trade-Off Exists</h3>
+<p>The reason is straightforward: <strong>real-world relationships are often complex, and capturing complexity requires complex models</strong>.</p>
+<p>Linear regression assumes every relationship is a straight line. If you’re predicting house prices, it assumes one extra square foot has the same impact whether you’re going from 800 to 801 square feet (tiny apartment → small apartment) or 4,000 to 4,001 square feet (mansion → slightly bigger mansion). That assumption is probably wrong.</p>
+<p>Decision trees can capture threshold effects: “Below 1,200 square feet, each additional square foot adds $100/sqft. Above 1,200 square feet, it only adds $50/sqft.” Much more realistic.</p>
+<p>Random forests can capture interactions: “In urban areas, an extra bedroom dramatically increases value, but in rural areas it barely matters.” This is closer to how the world actually works—but now you’re combining hundreds of these complex decision rules.</p>
+</section>
+<section id="the-business-dilemma" class="level3">
+<h3 class="anchored" data-anchor-id="the-business-dilemma">The Business Dilemma</h3>
+<p>This creates a real challenge: stakeholders want both accuracy AND explanation. Consider this all-too-common conversation:</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>A Typical Business Meeting
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>You</strong>: “Great news! Our new Random Forest model predicts customer churn with 94% accuracy—up from 78% with our old logistic regression.”</p>
+<p><strong>VP of Marketing</strong>: “Excellent! So which customers should we focus our retention efforts on?”</p>
+<p><strong>You</strong>: “The model identified 500 high-risk customers. Here’s the list.”</p>
+<p><strong>VP</strong>: “Perfect. Now, what’s making them high risk? What should we do differently to retain them?”</p>
+<p><strong>You</strong>: “Well… the model doesn’t exactly tell us that in a straightforward way…”</p>
+<p><strong>VP</strong>: “What do you mean? How can it predict churn without knowing what causes churn?”</p>
+<p><strong>You</strong>: “It does know—sort of. The patterns are just… distributed across hundreds of decision trees…”</p>
+<p><strong>VP</strong> <em>(skeptically)</em>: “So you’re telling me to spend $200,000 on retention campaigns, but you can’t explain why these specific customers are at risk?”</p>
+</div>
+</div>
+<p>This is the moment where many data scientists realize that <strong>accuracy alone isn’t enough</strong>. The model’s predictions are only valuable if stakeholders trust them, act on them, and know how to intervene. You need interpretability.</p>
+<p>This is where <strong>feature importance</strong> becomes crucial—it lets us peek inside the black box and answer those “why” questions, even when the model itself is complex. We can’t always have perfect interpretability, but we can have enough insight to make informed business decisions and build stakeholder confidence.</p>
+</section>
+</section>
+<section id="why-feature-importance-matters" class="level2" data-number="27.2">
+<h2 data-number="27.2" class="anchored" data-anchor-id="why-feature-importance-matters"><span class="header-section-number">27.2</span> Why Feature Importance Matters</h2>
+<p>Now that we understand the interpretability challenge, let’s explore why solving it matters so much. Feature importance isn’t just an academic exercise—it’s often the difference between a model that sits on a shelf and one that drives real business value.</p>
+<section id="building-trust-show-me-why" class="level3">
+<h3 class="anchored" data-anchor-id="building-trust-show-me-why">Building Trust: “Show Me Why”</h3>
+<p>Imagine you’ve built a model that predicts which sales leads are most likely to convert. Your sales team is skeptical—they’ve seen “data science magic” before that didn’t pan out. You present your results:</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Two Ways to Present Your Model
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Approach 1</strong> <em>(without feature importance)</em>: &gt; “This model predicts conversion with 89% accuracy. Here are the 200 leads you should prioritize.”</p>
+<p><strong>Approach 2</strong> <em>(with feature importance)</em>: &gt; “This model achieves 89% accuracy by focusing on three key factors: leads from companies with 100+ employees (35% importance), leads who’ve visited our pricing page 3+ times (28% importance), and leads who engage with technical documentation (22% importance). Here are the 200 leads that score highest on these criteria.”</p>
+</div>
+</div>
+<p>Which presentation would you trust more? The second one doesn’t just tell you <em>what</em> to do—it explains <em>why</em>, giving you the context to understand, validate, and act on the recommendation.</p>
+<p>This applies across industries:</p>
+<ul>
+<li><strong>Healthcare</strong>: “Your model predicts high readmission risk—but why? Is it age, severity of diagnosis, or lack of follow-up care? The hospital can only intervene on the last one.”</li>
+<li><strong>Finance</strong>: “The model denied this loan—on what basis? Regulators require you to explain decisions, especially when they affect people’s lives.”</li>
+<li><strong>E-commerce</strong>: “The recommendation engine suggests these products—but are the recommendations based on genuine preferences or just what’s profitable for us?”</li>
+</ul>
+</section>
+<section id="supporting-better-decisions-from-correlation-to-action" class="level3">
+<h3 class="anchored" data-anchor-id="supporting-better-decisions-from-correlation-to-action">Supporting Better Decisions: From Correlation to Action</h3>
+<p>Feature importance helps translate statistical patterns into business strategy. Consider a real-world example:</p>
+<p>You build a churn prediction model for a subscription service. The model works great—92% accuracy! But what do you actually <em>do</em> with that?</p>
+<p>Feature importance analysis reveals:</p>
+<ol type="1">
+<li><strong>Contract type</strong> (importance: 0.32): Month-to-month contracts churn at 5x the rate of annual contracts</li>
+<li><strong>Customer service calls</strong> (importance: 0.24): Customers with 4+ calls in the last month are at high risk</li>
+<li><strong>Automatic payment</strong> (importance: 0.18): Manual payment customers churn at 2x the rate</li>
+<li><strong>Monthly charges</strong> (importance: 0.14): Customers paying over $80/month are at higher risk</li>
+<li>Everything else (importance: 0.12 combined)</li>
+</ol>
+<p>Now you can create an action plan:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 38%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Insight</th>
+<th>Business Action</th>
+<th>Expected Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Month-to-month contracts are risky</td>
+<td>Offer incentives to convert to annual plans</td>
+<td>Reduce churn in highest-risk segment</td>
+</tr>
+<tr class="even">
+<td>Multiple service calls signal problems</td>
+<td>Proactive outreach after 2nd call</td>
+<td>Intervene before frustration peaks</td>
+</tr>
+<tr class="odd">
+<td>Manual payment is a weak signal</td>
+<td>Promote autopay with small discount</td>
+<td>Easy win for moderate-risk customers</td>
+</tr>
+<tr class="even">
+<td>High charges correlate with churn</td>
+<td>Review pricing tiers; offer customization</td>
+<td>May need product, not just retention, fix</td>
+</tr>
+</tbody>
+</table>
+<p>Without feature importance, you’d just have a list of at-risk customers with no insight into <em>why</em> they’re at risk or <em>what</em> to do about it.</p>
+</section>
+<section id="feature-selection-simplicity-from-complexity" class="level3">
+<h3 class="anchored" data-anchor-id="feature-selection-simplicity-from-complexity">Feature Selection: Simplicity from Complexity</h3>
+<p>Sometimes feature importance reveals that simpler is better. You might discover that:</p>
+<ul>
+<li>Out of 50 features you’re collecting, only 8 drive meaningful predictions</li>
+<li>The other 42 add noise and complexity without improving accuracy</li>
+<li>Collecting those 42 features costs you time, money, and introduces more opportunities for data quality issues</li>
+</ul>
+<p><strong>Real example</strong>: A retail company was collecting 73 customer attributes for their purchase prediction model. Feature importance analysis showed that 12 features provided 94% of the predictive signal. They simplified data collection to focus on those 12, reducing database costs, improving data quality (fewer fields to validate), and actually <em>improving</em> model performance by reducing noise.</p>
+</section>
+<section id="debugging-when-models-learn-the-wrong-lessons" class="level3">
+<h3 class="anchored" data-anchor-id="debugging-when-models-learn-the-wrong-lessons">Debugging: When Models Learn the Wrong Lessons</h3>
+<p>Feature importance is your early warning system for model problems. Here are real scenarios where feature importance caught critical issues:</p>
+<p><strong>Data Leakage Caught Just in Time</strong>: A hospital built a readmission prediction model that achieved suspiciously high accuracy—97%. Feature importance revealed that “room_number” was the top predictor. Turns out, the hospital systematically assigned high-risk patients to rooms near the nurses’ station. The model learned to predict readmissions based on room assignment, not actual medical risk factors. Without feature importance, they might have deployed a fundamentally broken model.</p>
+<p><strong>Proxy Discrimination Revealed</strong>: A hiring model showed that “years_of_experience” and “leadership_roles” were top predictors—both seem reasonable. But deeper analysis revealed these features were proxies for gender in their historical data (due to past discrimination). The model was perpetuating bias. Feature importance flagged the issue; additional fairness analysis confirmed it.</p>
+<p><strong>Temporal Confusion</strong>: An e-commerce model to predict purchase likelihood gave high importance to “time_spent_on_checkout_page.” That seems logical until you realize: people only get to the checkout page <em>after</em> deciding to buy. The model was learning from a consequence of the decision, not a cause. Feature importance made this circular logic visible.</p>
+</section>
+<section id="regulatory-compliance-and-ethical-ai" class="level3">
+<h3 class="anchored" data-anchor-id="regulatory-compliance-and-ethical-ai">Regulatory Compliance and Ethical AI</h3>
+<p>In many industries, explainability isn’t optional—it’s legally required.</p>
+<p><strong>Finance</strong>: The Fair Credit Reporting Act (FCRA) requires you to provide “adverse action notices” explaining why credit was denied. “The model said so” isn’t acceptable; you need to cite specific factors.</p>
+<p><strong>Healthcare</strong>: Models influencing patient care must be explainable to satisfy medical ethics standards and legal liability concerns.</p>
+<p><strong>Employment</strong>: Using AI in hiring decisions increasingly requires transparency about what factors influence decisions.</p>
+<p><strong>European Union</strong>: The GDPR includes a “right to explanation” for automated decisions that significantly affect individuals.</p>
+<p>Beyond legal requirements, there’s an ethical imperative: <strong>systems that affect people’s lives should be understandable</strong>. Feature importance is a key tool for responsible AI development.</p>
+</section>
+<section id="the-meta-lesson-understanding-what-your-model-learned" class="level3">
+<h3 class="anchored" data-anchor-id="the-meta-lesson-understanding-what-your-model-learned">The Meta-Lesson: Understanding What Your Model Learned</h3>
+<p>Perhaps most importantly, feature importance teaches you about your business. When you see what actually predicts outcomes, you often learn surprising truths:</p>
+<ul>
+<li>Marketing teams discover that customer service quality predicts retention better than promotional discounts</li>
+<li>Product teams learn that simple reliability matters more than flashy features</li>
+<li>Operations teams find that small process delays compound into major customer dissatisfaction</li>
+</ul>
+<p>Your model has analyzed thousands or millions of examples. Feature importance helps you extract those lessons in a form you can understand, validate, and act upon. That’s why it matters.</p>
+</section>
+</section>
+<section id="types-of-feature-importance" class="level2" data-number="27.3">
+<h2 data-number="27.3" class="anchored" data-anchor-id="types-of-feature-importance"><span class="header-section-number">27.3</span> Types of Feature Importance</h2>
+<p>Before diving into specific techniques, it helps to understand that “feature importance” isn’t a single concept—there are fundamentally different ways to measure how much a feature matters.</p>
+<section id="model-based-vs.-model-agnostic" class="level3">
+<h3 class="anchored" data-anchor-id="model-based-vs.-model-agnostic">Model-Based vs.&nbsp;Model-Agnostic</h3>
+<p>The most important distinction is whether importance is tied to a specific model type:</p>
+<p><strong>Model-Based Importance</strong>: Derived from the model’s internal structure. For example, how much each feature reduces impurity in a random forest’s decision trees. These methods are:</p>
+<ul>
+<li>Fast to compute (already part of model training)</li>
+<li>Specific to certain model types</li>
+<li>Sometimes biased toward particular feature types</li>
+</ul>
+<p><strong>Model-Agnostic Importance</strong>: Measures importance by observing how predictions change when features are altered. These methods:</p>
+<ul>
+<li>Work with any model type (linear, tree, neural network, etc.)</li>
+<li>Generally more reliable</li>
+<li>Require extra computation</li>
+</ul>
+</section>
+<section id="global-vs.-local-importance" class="level3">
+<h3 class="anchored" data-anchor-id="global-vs.-local-importance">Global vs.&nbsp;Local Importance</h3>
+<p>Another key distinction is the scope of importance:</p>
+<p><strong>Global Importance</strong>: How important is this feature across all predictions? “Income is the #1 driver of loan default in our model.”</p>
+<p><strong>Local Importance</strong>: How important is this feature for a specific prediction? “For this particular customer, high credit utilization was the main reason for loan denial.”</p>
+</section>
+<section id="comparison-of-common-methods" class="level3">
+<h3 class="anchored" data-anchor-id="comparison-of-common-methods">Comparison of Common Methods</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 29%">
+<col style="width: 29%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Type</strong></th>
+<th><strong>Example Methods</strong></th>
+<th><strong>Model Dependence</strong></th>
+<th><strong>Description</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Model-based</td>
+<td>Gini importance (Random Forest)</td>
+<td>Tree-based only</td>
+<td>Measures how much each feature reduces impurity across all tree splits</td>
+</tr>
+<tr class="even">
+<td>Model-based</td>
+<td>Linear coefficients</td>
+<td>Linear models only</td>
+<td>The weight/coefficient for each feature in the equation</td>
+</tr>
+<tr class="odd">
+<td>Model-agnostic</td>
+<td>Permutation importance</td>
+<td>Any model</td>
+<td>Measures performance drop when feature values are randomly shuffled</td>
+</tr>
+<tr class="even">
+<td>Model-agnostic</td>
+<td>SHAP values</td>
+<td>Any model</td>
+<td>Game-theory approach to attribute prediction to each feature</td>
+</tr>
+<tr class="odd">
+<td>Model-agnostic</td>
+<td>LIME</td>
+<td>Any model</td>
+<td>Approximates model locally with interpretable surrogate</td>
+</tr>
+</tbody>
+</table>
+<p>In this chapter, we’ll focus on the two most practical techniques for your current skill level: <strong>Gini importance</strong> (model-based, for random forests) and <strong>permutation importance</strong> (model-agnostic). These give you powerful tools without requiring advanced mathematics.</p>
+<p>Later, we’ll briefly introduce <strong>partial dependence plots</strong>, which help you understand not just <em>which</em> features matter, but <em>how</em> they influence predictions.</p>
+</section>
+</section>
+<section id="feature-importance-in-random-forests" class="level2" data-number="27.4">
+<h2 data-number="27.4" class="anchored" data-anchor-id="feature-importance-in-random-forests"><span class="header-section-number">27.4</span> Feature Importance in Random Forests</h2>
+<p>Let’s start with the technique you’ll use most often with tree-based models: <strong>impurity-based feature importance</strong> (also called <strong>mean decrease in impurity</strong>).</p>
+<section id="building-on-what-you-already-know" class="level3">
+<h3 class="anchored" data-anchor-id="building-on-what-you-already-know">Building on What You Already Know</h3>
+<p>Remember when we covered decision trees? Each split in a tree is chosen to maximize improvement—reducing <strong>Gini impurity</strong> for classification or <strong>MSE</strong> for regression. The tree algorithm evaluates every possible split and picks the one that gives the biggest reduction.</p>
+<p>Feature importance simply aggregates this information: <strong>it tracks which features created the best splits across all the trees in your forest</strong>.</p>
+<p>Here’s the intuition: if <code>MonthlyCharges</code> is frequently chosen for splits that substantially reduce Gini impurity (in classification) or MSE (in regression), then <code>MonthlyCharges</code> gets a high importance score. If <code>CustomerID</code> rarely gets used for splits (because it doesn’t help separate classes or reduce variance), it gets a low importance score.</p>
+</section>
+<section id="how-it-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-it-works">How It Works</h3>
+<p>The calculation is straightforward:</p>
+<ol type="1">
+<li><strong>Track improvement</strong>: For every split in every tree, record how much it reduced Gini (for classification) or MSE (for regression)</li>
+<li><strong>Credit the feature</strong>: Give that reduction amount to whichever feature was used for the split</li>
+<li><strong>Weight by node size</strong>: Splits near the top of trees affect more observations, so they count more</li>
+<li><strong>Sum across all trees</strong>: Add up all the reductions each feature achieved across the entire forest</li>
+<li><strong>Normalize</strong>: Scale the scores so they sum to 1.0</li>
+</ol>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Example
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Imagine a random forest with 100 trees predicting customer churn:</p>
+<ul>
+<li><code>MonthlyCharges</code> is used 87 times across all trees, with an average Gini reduction of 0.08 per split</li>
+<li><code>Tenure</code> is used 72 times, with an average Gini reduction of 0.06 per split</li>
+<li><code>CustomerID</code> is used 3 times, with an average Gini reduction of 0.01 per split</li>
+</ul>
+<p>When you sum these up and normalize, <code>MonthlyCharges</code> gets the highest importance score, <code>Tenure</code> is second, and <code>CustomerID</code> is essentially zero.</p>
+</div>
+</div>
+<p><strong>The same logic applies to regression</strong>—you’re just measuring MSE reduction instead of Gini reduction. The mechanics are identical.</p>
+</section>
+<section id="extracting-importance-from-scikit-learn" class="level3">
+<h3 class="anchored" data-anchor-id="extracting-importance-from-scikit-learn">Extracting Importance from Scikit-Learn</h3>
+<p>Whether you’re using <code>RandomForestClassifier</code> or <code>RandomForestRegressor</code>, scikit-learn automatically calculates feature importance during training. Let’s see this in action with the Default dataset, where we’ll predict whether credit card customers default on their payments.</p>
+<div id="cd66f462" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Show data preparation code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and prepare the Default dataset</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ISLP <span class="im">import</span> load_data</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Load data</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>Default <span class="op">=</span> load_data(<span class="st">'Default'</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert 'default' and 'student' to binary (Yes=1, No=0)</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>Default[<span class="st">'default'</span>] <span class="op">=</span> (Default[<span class="st">'default'</span>] <span class="op">==</span> <span class="st">'Yes'</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>Default[<span class="st">'student'</span>] <span class="op">=</span> (Default[<span class="st">'student'</span>] <span class="op">==</span> <span class="st">'Yes'</span>).astype(<span class="bu">float</span>)  <span class="co"># float for PDP compatibility</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare features and target</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> Default[[<span class="st">'student'</span>, <span class="st">'balance'</span>, <span class="st">'income'</span>]].astype(<span class="bu">float</span>)  <span class="co"># Ensure all features are float</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> Default[<span class="st">'default'</span>]</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Train/test split</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Now that we have are data ready let’s train our model and extract the feature importance:</p>
+<div id="a57a415f" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train random forest</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>rf_model <span class="op">=</span> RandomForestClassifier(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>rf_model.fit(X_train, y_train)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract feature importance</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>importance_scores <span class="op">=</span> rf_model.feature_importances_</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a DataFrame for easy viewing</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>importance_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'feature'</span>: X_train.columns,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'importance'</span>: importance_scores</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>}).sort_values(<span class="st">'importance'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(importance_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   feature  importance
+1  balance    0.666104
+2   income    0.329728
+0  student    0.004168</code></pre>
+</div>
+</div>
+<p>The <code>.feature_importances_</code> attribute gives you normalized scores that sum to 1.0. Here we can see that <code>balance</code> (the customer’s credit card balance) is by far the most important predictor of default, followed by <code>income</code>, with <code>student</code> status contributing very little.</p>
+</section>
+<section id="visualizing-importance" class="level3">
+<h3 class="anchored" data-anchor-id="visualizing-importance">Visualizing Importance</h3>
+<p>Bar charts are the most common way you’ll see feature importance communicated. They make it easy to quickly identify which features matter most and compare their relative importance.</p>
+<div id="cell-fig-rf-importance" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create horizontal bar chart (sorted so largest is at top)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>importance_df.sort_values(<span class="st">'importance'</span>).set_index(<span class="st">'feature'</span>)[<span class="st">'importance'</span>].plot(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    kind<span class="op">=</span><span class="st">'barh'</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">3</span>),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    color<span class="op">=</span><span class="st">'steelblue'</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">'Feature Importance: Credit Card Default'</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-rf-importance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rf-importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="27-feature-importance_files/figure-html/fig-rf-importance-output-1.png" width="471" height="283" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rf-importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;27.1: Feature importance for predicting credit card default
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="interpreting-the-results" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-the-results">Interpreting the Results</h3>
+<p>Feature importance scores are more than just numbers—they’re a window into what your model learned and whether it’s learning the right things. When examining importance scores, ask yourself these critical questions:</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Do the important features make sense?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In our Default dataset example, seeing <code>balance</code> as the most important feature makes perfect business sense—customers with high outstanding balances are naturally more likely to default. This alignment between statistical importance and domain knowledge is reassuring.</p>
+<p>However, if you saw features like <code>customer_id</code>, <code>row_number</code>, or <code>random_noise_variable</code> ranking high, that’s a major red flag. These features shouldn’t be predictive, and their importance suggests problems like data leakage, overfitting, or preprocessing errors.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Is importance concentrated or distributed?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Our Default model shows high concentration—<code>balance</code> dominates with roughly 80% of total importance. This tells us the model relies heavily on a single variable, which could mean:</p>
+<ul>
+<li>That feature is genuinely powerful (likely true for <code>balance</code> in credit default prediction)</li>
+<li>Other features are weak predictors or redundant</li>
+<li>You might be able to simplify the model further</li>
+</ul>
+<p>Conversely, if importance is evenly distributed across many features (e.g., 20 features each with 5% importance), it suggests the prediction task requires combining many weak signals rather than relying on a few strong ones.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Are correlated features splitting importance?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>When features are correlated, importance gets diluted across them. For example, if you had both <code>income_annual</code> and <code>income_monthly</code> in the model, they’d likely both show moderate importance even though they’re measuring essentially the same underlying concept. This doesn’t mean they’re not important—just that the total importance of “income” as a concept is being split between two related variables.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>When Something Seems Off
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If your feature importance results seem strange, counterintuitive, or raise red flags (like ID variables being important), don’t ignore it. These are often symptoms of deeper problems:</p>
+<ul>
+<li><strong>Revisit your features</strong>: Are you including variables that shouldn’t be available at prediction time? Are there data quality issues?</li>
+<li><strong>Check your feature engineering</strong>: Did scaling, encoding, or transformations introduce unintended artifacts?</li>
+<li><strong>Question the model choice</strong>: Is a random forest appropriate for this problem, or would a simpler model be better?</li>
+</ul>
+<p>Feature importance is a diagnostic tool—use it to validate that your model is learning what you intended it to learn.</p>
+</div>
+</div>
+</section>
+<section id="limitations-of-impurity-based-importance" class="level3">
+<h3 class="anchored" data-anchor-id="limitations-of-impurity-based-importance">Limitations of Impurity-Based Importance</h3>
+<p>Impurity-based importance (whether using Gini, Entropy, or MSE) is fast and convenient, but has known biases:</p>
+<ul>
+<li><p><strong>Favors high-cardinality features</strong>: Features with many unique values (like continuous variables) tend to rank higher than low-cardinality features (like binary variables), even when the binary feature is more predictive. A continuous variable like <code>age</code> (with 60+ unique values) often outranks a binary feature like <code>has_warranty</code> simply because it has more possible split points.</p></li>
+<li><p><strong>Biased with correlated features</strong>: When features are correlated, importance gets distributed among them unpredictably. For example, <code>annual_income</code> and <code>monthly_income</code> might both show moderate importance, even though they’re measuring essentially the same thing.</p></li>
+<li><p><strong>Training-set specific</strong>: Calculated on training data, so it reflects what helped during training, not necessarily what generalizes. A feature might rank highly because it helped the model overfit to training data quirks.</p></li>
+<li><p><strong>No statistical significance</strong>: You get importance scores, but no indication of whether they’re meaningfully different from random chance, especially with small datasets.</p></li>
+</ul>
+<p>These limitations apply equally to classification (Gini/Entropy) and regression (MSE reduction) forests. For these reasons, it’s wise to also check permutation importance, which we’ll cover next.</p>
+</section>
+</section>
+<section id="permutation-importance-a-more-reliable-alternative" class="level2" data-number="27.5">
+<h2 data-number="27.5" class="anchored" data-anchor-id="permutation-importance-a-more-reliable-alternative"><span class="header-section-number">27.5</span> Permutation Importance: A More Reliable Alternative</h2>
+<p>While impurity-based importance is fast and convenient, it has biases we discussed earlier—particularly favoring high-cardinality features and struggling with correlated variables. More importantly, it only works with tree-based models. What if you want to understand feature importance for a logistic regression, a neural network, or any other model type?</p>
+<p>This is where <strong>permutation importance</strong> shines. It’s a model-agnostic approach that works with any model and directly measures how much each feature contributes to actual prediction performance.</p>
+<section id="the-core-idea-break-it-and-see-what-happens" class="level3">
+<h3 class="anchored" data-anchor-id="the-core-idea-break-it-and-see-what-happens">The Core Idea: Break It and See What Happens</h3>
+<p>The logic behind permutation importance is beautifully simple: <strong>if a feature is important, breaking its relationship with the target should hurt model performance</strong>.</p>
+<p>Here’s the intuition: imagine you’ve built a model to predict credit card default using <code>balance</code>, <code>income</code>, and <code>student</code> status. If <code>balance</code> is truly important, what happens if you randomly scramble the balance values while keeping everything else the same? The model’s predictions should get much worse—customers who actually have low balances might now be assigned high balance values, and vice versa.</p>
+<p>But if <code>student</code> status doesn’t actually help predictions, shuffling it should barely affect performance. The model wasn’t really using that information anyway.</p>
+<p>This is exactly what permutation importance measures: <strong>the drop in performance when you shuffle each feature</strong>.</p>
+</section>
+<section id="how-it-works-1" class="level3">
+<h3 class="anchored" data-anchor-id="how-it-works-1">How It Works</h3>
+<p>The algorithm is straightforward:</p>
+<ol type="1">
+<li><p><strong>Calculate baseline performance</strong>: Evaluate your model on the test set with real, unshuffled data (e.g., accuracy = 0.92)</p></li>
+<li><p><strong>For each feature, one at a time</strong>:</p>
+<ul>
+<li>Randomly shuffle that feature’s values, breaking its relationship with the target</li>
+<li>Re-calculate performance with the shuffled feature (e.g., accuracy drops to 0.78)</li>
+<li>Record the performance drop (0.92 - 0.78 = 0.14 importance for this feature)</li>
+<li>Restore the original values before moving to the next feature</li>
+</ul></li>
+<li><p><strong>Repeat the shuffling</strong> multiple times (usually 10-30 repetitions) to get stable estimates, since random shuffling introduces variability</p></li>
+<li><p><strong>Report the average</strong> performance drop as the feature’s importance</p></li>
+</ol>
+<div class="callout callout-style-simple callout-important">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Always use a <strong>held-out test set</strong>, not training data. You want to measure what matters for generalization, not what the model memorized during training.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="implementation-with-scikit-learn" class="level3">
+<h3 class="anchored" data-anchor-id="implementation-with-scikit-learn">Implementation with Scikit-Learn</h3>
+<p>Scikit-learn makes calculating permutation importance easy with the <code>permutation_importance</code> function. Let’s apply it to our Default dataset model:</p>
+<div id="ea418526" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.inspection <span class="im">import</span> permutation_importance</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate permutation importance on test set</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>perm_importance <span class="op">=</span> permutation_importance(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    rf_model,           <span class="co"># Our trained random forest</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    X_test,            <span class="co"># Test features (held-out data)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    y_test,            <span class="co"># Test labels</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    n_repeats<span class="op">=</span><span class="dv">10</span>,      <span class="co"># Shuffle each feature 10 times</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    scoring<span class="op">=</span><span class="st">'accuracy'</span> <span class="co"># For classification; use 'r2' for regression</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract results into a clean DataFrame</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>perm_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'feature'</span>: X_test.columns,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">'importance_mean'</span>: perm_importance.importances_mean,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">'importance_std'</span>: perm_importance.importances_std</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>}).sort_values(<span class="st">'importance_mean'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(perm_df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   feature  importance_mean  importance_std
+1  balance         0.023967        0.001224
+0  student         0.003133        0.001565
+2   income        -0.000900        0.001461</code></pre>
+</div>
+</div>
+<p>The <code>importances_mean</code> column shows the average performance drop across the 10 shuffles, and <code>importances_std</code> tells you how variable that estimate is. A high standard deviation suggests the importance is unstable—possibly because the feature interacts with others in complex ways.</p>
+</section>
+<section id="comparing-impurity-based-vs.-permutation-importance" class="level3">
+<h3 class="anchored" data-anchor-id="comparing-impurity-based-vs.-permutation-importance">Comparing Impurity-Based vs.&nbsp;Permutation Importance</h3>
+<p>One of the most valuable practices is comparing both methods side-by-side. They often agree on the most important features, but discrepancies can reveal important insights.</p>
+<div id="71b2427e" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merge both importance measures for comparison</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>comparison <span class="op">=</span> pd.merge(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    importance_df.rename(columns<span class="op">=</span>{<span class="st">'importance'</span>: <span class="st">'impurity_based'</span>}),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    perm_df[[<span class="st">'feature'</span>, <span class="st">'importance_mean'</span>]].rename(columns<span class="op">=</span>{<span class="st">'importance_mean'</span>: <span class="st">'permutation'</span>}),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    on<span class="op">=</span><span class="st">'feature'</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(comparison)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   feature  impurity_based  permutation
+0  balance        0.666104     0.023967
+1   income        0.329728    -0.000900
+2  student        0.004168     0.003133</code></pre>
+</div>
+</div>
+<p><strong>What to look for</strong>:</p>
+<ul>
+<li><p><strong>Rankings</strong>: Both methods rank <code>balance</code> as the most important feature, which is reassuring. However, notice the magnitude difference—impurity-based gives it 0.67 importance while permutation gives only 0.024.</p></li>
+<li><p><strong>Income discrepancy</strong>: <code>income</code> shows moderate impurity-based importance (0.33) but essentially zero permutation importance (-0.0009, effectively zero). This is a significant disagreement! It suggests that while the trees use <code>income</code> for splits during training, shuffling it on the test set doesn’t actually hurt predictions much.</p></li>
+<li><p><strong>Student status</strong>: Both methods agree this feature has minimal importance (0.004 vs 0.003).</p></li>
+</ul>
+<p><strong>What explains these discrepancies?</strong></p>
+<p>This is a textbook example of the <strong>high-cardinality bias</strong> we discussed earlier. Both <code>balance</code> and <code>income</code> are continuous variables with many unique values, while <code>student</code> is binary (only two values). Impurity-based importance naturally favors continuous features because they offer more split points.</p>
+<p>Permutation importance tells a different story: <code>balance</code> genuinely helps test-set predictions (0.024 drop when shuffled), but <code>income</code> doesn’t (-0.0009 actually suggests a tiny <em>improvement</em> when shuffled, though this is likely just noise). This suggests the trees might be using <code>income</code> in complex ways that don’t generalize well, or it’s redundant given <code>balance</code>.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The Takeaway
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When methods disagree this much, trust permutation importance more—especially when the discrepancy involves continuous vs.&nbsp;categorical features. For this problem, <code>balance</code> is clearly the dominant signal.</p>
+</div>
+</div>
+</section>
+<section id="when-to-use-each-method" class="level3">
+<h3 class="anchored" data-anchor-id="when-to-use-each-method">When to Use Each Method</h3>
+<p>Both approaches have their place. Here’s practical guidance on when to use each:</p>
+<p><strong>Use Permutation Importance when</strong>:</p>
+<ul>
+<li><strong>Working with any model type</strong>: Logistic regression, neural networks, gradient boosting—permutation importance works with all of them</li>
+<li><strong>You need reliable rankings</strong>: Especially important when features are correlated or have different cardinalities</li>
+<li><strong>The stakes are high</strong>: When decisions based on importance have significant business or ethical implications, use the more robust method</li>
+<li><strong>You’re validating results</strong>: Always good to check permutation importance to confirm impurity-based rankings</li>
+</ul>
+<p><strong>Use Impurity-Based Importance when</strong>:</p>
+<ul>
+<li><strong>You need quick feedback</strong>: It’s calculated during training at essentially no extra cost—perfect for rapid iteration</li>
+<li><strong>You’re doing initial exploration</strong>: Great for quickly identifying obviously important features before deeper analysis</li>
+<li><strong>Computational resources are limited</strong>: Permutation importance requires many additional predictions, which can be slow with large datasets or complex models</li>
+<li><strong>You’re specifically analyzing tree behavior</strong>: Understanding which features the trees actually split on, not just which features help predictions</li>
+</ul>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Best Practice
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use impurity-based importance for quick checks during model development, then validate your conclusions with permutation importance before making final decisions or reporting to stakeholders.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="exploring-prediction-behavior-across-variables" class="level2" data-number="27.6">
+<h2 data-number="27.6" class="anchored" data-anchor-id="exploring-prediction-behavior-across-variables"><span class="header-section-number">27.6</span> Exploring Prediction Behavior Across Variables</h2>
+<p>Feature importance tells you <em>which</em> features matter, but not <em>how</em> they influence predictions. Does increasing income linearly increase loan approval probability? Is there a threshold effect? This is where <strong>partial dependence plots</strong> (PDPs) become valuable.</p>
+<section id="what-partial-dependence-plots-show" class="level3">
+<h3 class="anchored" data-anchor-id="what-partial-dependence-plots-show">What Partial Dependence Plots Show</h3>
+<p>A PDP displays the average predicted outcome as you vary one feature while holding all others at their observed values. It answers: <strong>“On average, how does the prediction change as this feature changes?”</strong></p>
+<p>For example, a PDP for <code>credit_score</code> in a loan model might show:</p>
+<ul>
+<li>Below 600: ~80% predicted default rate</li>
+<li>600-700: Default rate drops steadily to ~40%</li>
+<li>Above 700: Default rate levels off around ~15%</li>
+</ul>
+<p>This reveals not just that credit score matters (importance already told you that), but exactly <em>how</em> it matters.</p>
+</section>
+<section id="creating-partial-dependence-plots" class="level3">
+<h3 class="anchored" data-anchor-id="creating-partial-dependence-plots">Creating Partial Dependence Plots</h3>
+<p>Scikit-learn’s <code>PartialDependenceDisplay</code> makes it easy to create PDPs for any trained model. Let’s visualize how <code>balance</code> affects default probability in our model:</p>
+<div id="cell-fig-pdp-balance" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.inspection <span class="im">import</span> PartialDependenceDisplay</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create PDP for balance (our most important feature)</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>PartialDependenceDisplay.from_estimator(</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    rf_model,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    X_train,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    features<span class="op">=</span>[<span class="st">'balance'</span>],</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    grid_resolution<span class="op">=</span><span class="dv">50</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-pdp-balance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pdp-balance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="27-feature-importance_files/figure-html/fig-pdp-balance-output-1.png" width="606" height="429" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pdp-balance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;27.2: Partial dependence plot showing how balance affects default probability
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>This plot reveals a clear threshold effect: default probability stays near zero for balances below ~$1,200, then rises steeply as balance increases. Notice the vertical lines at the bottom (called a “rug plot”)—these show where actual customer balances fall in the dataset. Most customers have balances below $1,500, which is why the plot gets noisier above that point (fewer data to average over).</p>
+<p>We can also create PDPs for multiple features at once to compare their effects:</p>
+<div id="cell-fig-pdp-all" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create figure with custom size (width, height in inches)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">3</span>))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create PDPs for all features</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>PartialDependenceDisplay.from_estimator(</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    rf_model,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    X_train,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    features<span class="op">=</span>[<span class="st">'balance'</span>, <span class="st">'income'</span>, <span class="st">'student'</span>],</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    grid_resolution<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    ax<span class="op">=</span>ax</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-pdp-all" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pdp-all-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="27-feature-importance_files/figure-html/fig-pdp-all-output-1.png" width="758" height="278" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pdp-all-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;27.3: Partial dependence plots for all three features in the Default model
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="interpreting-pdps" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-pdps">Interpreting PDPs</h3>
+<p>When reading partial dependence plots, look for these common patterns. Let’s use our Default dataset examples to illustrate:</p>
+<p><strong>Threshold effects</strong> (balance plot): The <code>balance</code> PDP is a textbook example—default probability remains essentially flat at near-zero for balances below $1,200, then climbs steeply. This tells you there’s a critical balance threshold where risk accelerates. From a business perspective, this suggests focusing credit monitoring and intervention efforts on customers approaching or exceeding $1,200 in balance.</p>
+<p><strong>Data density matters</strong>: Notice the rug plot (vertical lines at the bottom of each chart)—these show where actual observations fall. The <code>balance</code> plot gets jagged above $1,500 because fewer customers have such high balances, making the average less stable. Always check data density; interpretations are less reliable in sparse regions.</p>
+<p><strong>Threshold with noise</strong> (income plot): The <code>income</code> PDP reveals an interesting pattern—default probability stays low (around 2.5-5%) for incomes below ~$30,000, then jumps sharply to around 10-12.5% as income exceeds $30,000-$35,000. This is counterintuitive: higher income associated with higher default risk? This apparent paradox highlights an important lesson about correlation vs.&nbsp;causation and feature interactions. The pattern likely reflects that, <em>conditional on having accumulated high credit card balances</em>, higher-income customers are slightly more likely to default—perhaps because they’re more likely to have multiple credit lines or higher total debt. However, permutation importance was near-zero for income because this relationship is weak and doesn’t improve predictions much once you already know the balance. The noisiness of the plot also suggests limited data in higher income ranges (note the sparse rug plot).</p>
+<p><strong>Linear relationships</strong> (student plot): The <code>student</code> PDP shows a diagonal line from non-student (0) to student (1), with default probability rising from about 4% to 15%. This is interesting—it suggests being a student is associated with higher default risk. However, remember that permutation importance rated this feature as nearly worthless (~0.003). How can both be true? This is likely because the effect is real but small relative to balance, and most predictions are dominated by balance regardless of student status. When balance is very high or very low, student status doesn’t change the overall prediction much.</p>
+<p><strong>Non-monotonic patterns</strong>: Sometimes PDPs go up then down, or show more complex curves (e.g., moderate engagement optimal, very high suggests spam behavior). We don’t see this in the Default data, but watch for these in more complex business problems—they often reveal interesting threshold effects or saturation points.</p>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Important Limitations
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PDPs assume <strong>feature independence</strong>, which can be misleading with correlated features. For example:</p>
+<ul>
+<li>If <code>age</code> and <code>years_employed</code> are correlated, showing “age = 25 with years_employed = 30” doesn’t make sense</li>
+<li>The PDP averages over impossible combinations</li>
+</ul>
+<p>Despite this, PDPs remain one of the most practical interpretability tools for understanding feature effects.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="limitations-and-pitfalls" class="level2" data-number="27.7">
+<h2 data-number="27.7" class="anchored" data-anchor-id="limitations-and-pitfalls"><span class="header-section-number">27.7</span> Limitations and Pitfalls</h2>
+<p>Throughout this chapter, we’ve seen how powerful feature importance can be for understanding models. But like any analytical tool, it has limitations. Being aware of these pitfalls helps you use feature importance responsibly and interpret results correctly.</p>
+<section id="when-feature-importance-can-mislead-you" class="level3">
+<h3 class="anchored" data-anchor-id="when-feature-importance-can-mislead-you">When Feature Importance Can Mislead You</h3>
+<p>Feature importance is powerful, but it’s not foolproof. Here are the most common ways it can lead you astray. Click on each to learn more about the problem and what to do about it:</p>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Correlated Features Dilute Importance
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>We saw this clearly in our Default dataset: <code>balance</code> and <code>income</code> are likely correlated (people with high balances may have different income profiles), and impurity-based importance gave <code>income</code> a moderate score (0.33) even though permutation importance showed it barely helps predictions.</p>
+<p><strong>The problem</strong>: When features are correlated, importance gets split among them in unpredictable ways. If you had <code>monthly_sales</code>, <code>quarterly_sales</code>, and <code>annual_sales</code> all in your model, none might rank highly individually even though sales is the key driver.</p>
+<p><strong>What to do</strong>:</p>
+<ul>
+<li>Remove obvious redundancies before modeling</li>
+<li>Group correlated features conceptually when interpreting (“sales-related features are important”)</li>
+<li>Look for cases where permutation importance is much lower than impurity-based importance—often a sign of correlation issues</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>The Cardinality Trap
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Our Default dataset demonstrated this perfectly: continuous features (<code>balance</code> with 1000+ unique values, <code>income</code> with 500+ values) dominated impurity-based importance, while the binary <code>student</code> feature barely registered—even though the PDP showed it had a real effect.</p>
+<p><strong>The problem</strong>: Tree-based importance inherently favors features with many unique values because they offer more possible split points, not because they’re more predictive.</p>
+<p><strong>What to do</strong>:</p>
+<ul>
+<li>Always compare with permutation importance</li>
+<li>Don’t dismiss low-cardinality features based solely on impurity-based scores</li>
+<li>Be extra skeptical when continuous features dominate and categorical features vanish</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Importance Doesn’t Equal Causation
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>This is perhaps the most dangerous assumption. Consider this scenario: a model predicts hospital readmissions and finds that “number_of_medications” is highly important. You might conclude: “Let’s reduce prescriptions to prevent readmissions!” But the truth is likely reversed—sicker patients need more medications AND are more likely to be readmitted. The medications aren’t causing readmissions; they’re a marker of severity.</p>
+<p>Classic example: Ice cream sales are “important” for predicting drowning deaths. But ice cream doesn’t cause drownings—both are driven by hot summer weather.</p>
+<p><strong>What to do</strong>:</p>
+<ul>
+<li>Never assume important features are causal without additional evidence</li>
+<li>Use domain expertise to distinguish correlation from causation</li>
+<li>Consider whether the relationship makes logical sense or if there’s a lurking variable</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Training Set Overfitting
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Impurity-based importance is calculated entirely on training data. If your model overfits, it might split on noise patterns that don’t generalize, making random features appear important.</p>
+<p><strong>Example</strong>: Your model might discover that customers whose names start with ‘Q’ happened to churn more often in the training set (pure chance with a small sample). Impurity-based importance would credit this, but permutation importance on test data would reveal it’s meaningless.</p>
+<p><strong>What to do</strong>:</p>
+<ul>
+<li>Trust permutation importance on test data more than training-based measures</li>
+<li>If a feature has high training importance but low test importance, it’s likely overfit</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-17-contents" aria-controls="callout-17" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Small Data, Big Noise
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-17" class="callout-17-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>With limited data, importance scores become unstable. Retrain on a slightly different sample, and feature rankings might shuffle dramatically.</p>
+<p><strong>What to do</strong>:</p>
+<ul>
+<li>Use cross-validation to check importance stability across different data splits</li>
+<li>Report confidence intervals (permutation importance provides <code>importances_std</code> for this)</li>
+<li>Be humble about conclusions when working with small datasets</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section id="practical-guidepos-for-trustworthy-interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="practical-guidepos-for-trustworthy-interpretation">Practical Guidepos for Trustworthy Interpretation</h3>
+<p>Rather than a rigid checklist, think of these as questions to ask yourself:</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-18-contents" aria-controls="callout-18" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Did I use multiple importance methods?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-18" class="callout-18-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Comparing impurity-based and permutation importance catches many issues. When they agree strongly (like both saying <code>balance</code> is dominant), you can be confident. When they disagree (like with <code>income</code> in our Default example), investigate why.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-19-contents" aria-controls="callout-19" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Am I calculating importance on the right data?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-19" class="callout-19-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>For permutation importance, always use held-out test data. You want to know what matters for generalization, not what the model memorized.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-20-contents" aria-controls="callout-20" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Do the important features pass the “common sense” test?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-20" class="callout-20-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>If <code>customer_id</code> is important, something’s wrong. If <code>balance</code> is important for credit default, that makes sense. Trust your domain knowledge.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-21-contents" aria-controls="callout-21" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Am I confusing “important” with “actionable”?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-21" class="callout-21-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>A feature can be important for predictions but impossible to change (like age). Meanwhile, a less important feature might be highly actionable (like email response time). Importance tells you what drives predictions; business strategy determines what to do about it.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-22-contents" aria-controls="callout-22" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Did I check for data leakage?
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-22" class="callout-22-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>If “days_until_churn” is important in a churn prediction model, you’re leaking the future into your features. If “room_number” predicts readmissions, investigate why before trusting it.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Remember: Description, Not Prescription
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Feature importance methods are <strong>descriptive</strong>—they tell you what patterns the model found in the data. They are not <strong>prescriptive</strong>—they don’t tell you what those patterns mean, whether they’re causal, or what actions to take.</p>
+<p>A high importance score means “the model uses this feature heavily in its predictions,” not “changing this feature will change outcomes” or “this feature causes the target variable.”</p>
+<p>Always pair importance analysis with critical thinking, domain expertise, and—when stakes are high—causal inference methods.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="beyond-the-basics-toward-explainable-ai" class="level2" data-number="27.8">
+<h2 data-number="27.8" class="anchored" data-anchor-id="beyond-the-basics-toward-explainable-ai"><span class="header-section-number">27.8</span> Beyond the Basics: Toward Explainable AI</h2>
+<p>The techniques in this chapter—Gini importance, permutation importance, and partial dependence plots—give you a solid foundation for understanding model behavior. But the field of <strong>explainable AI (XAI)</strong> has developed more sophisticated methods that you’ll likely encounter as you advance in your data science career. While these are beyond the scope of this introductory course, it’s valuable to know they exist and when you might need them.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-24-contents" aria-controls="callout-24" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>SHAP (SHapley Additive exPlanations)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-24" class="callout-24-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What it does</strong>: Uses game theory to calculate how much each feature contributed to moving a prediction away from the average prediction, providing both global and local explanations.</p>
+<p><strong>Learn more</strong>: <a href="https://shap.readthedocs.io/">SHAP documentation</a></p>
+<p><strong>Python package</strong>: <code>shap</code> (<a href="https://github.com/slundberg/shap">GitHub</a>)</p>
+<p><strong>When to use</strong>: When you need mathematically rigorous feature attributions that are consistent across all predictions, especially for explaining individual high-stakes decisions.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-25-contents" aria-controls="callout-25" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>LIME (Local Interpretable Model-Agnostic Explanations)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-25" class="callout-25-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What it does</strong>: Explains individual predictions by fitting a simple, interpretable model (like linear regression) locally around that specific prediction.</p>
+<p><strong>Learn more</strong>: <a href="https://github.com/marcotcr/lime">LIME documentation</a></p>
+<p><strong>Python package</strong>: <code>lime</code> (<a href="https://github.com/marcotcr/lime">GitHub</a>)</p>
+<p><strong>When to use</strong>: When you need to explain specific predictions in a way that’s intuitive to non-technical stakeholders, working with any model type.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-26-contents" aria-controls="callout-26" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Counterfactual Explanations
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-26" class="callout-26-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What it does</strong>: Identifies the minimal changes to input features that would flip a prediction to a different outcome (e.g., “If your income were $5,000 higher, the loan would be approved”).</p>
+<p><strong>Learn more</strong>: <a href="https://github.com/interpretml/DiCE">DiCE (Diverse Counterfactual Explanations)</a></p>
+<p><strong>Python package</strong>: <code>dice-ml</code> (<a href="https://interpret.ml/DiCE/">Documentation</a>)</p>
+<p><strong>When to use</strong>: When stakeholders need actionable insights about what would change a prediction, particularly valuable in lending, hiring, and healthcare contexts.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-27-contents" aria-controls="callout-27" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Anchors
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-27" class="callout-27-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What it does</strong>: Finds sufficient conditions (rules) that “anchor” a prediction—features that, when present, guarantee the prediction regardless of other feature values.</p>
+<p><strong>Learn more</strong>: <a href="https://homes.cs.washington.edu/~marcotcr/aaai18.pdf">Anchors: High-Precision Model-Agnostic Explanations</a></p>
+<p><strong>Python package</strong>: Part of <code>alibi</code> package (<a href="https://docs.seldon.io/projects/alibi/">Documentation</a>)</p>
+<p><strong>When to use</strong>: When you need to identify robust rules that ensure certain predictions, useful for validating model behavior in critical applications.</p>
+</div>
+</div>
+</div>
+<p>The core principle remains the same: <strong>powerful models are most useful when we can explain their behavior</strong>. As you advance in your career and encounter high-stakes applications, these advanced methods become essential tools for responsible AI development.</p>
+</section>
+<section id="summary-and-reflection" class="level2" data-number="27.9">
+<h2 data-number="27.9" class="anchored" data-anchor-id="summary-and-reflection"><span class="header-section-number">27.9</span> Summary and Reflection</h2>
+<p>This chapter has equipped you with practical tools for understanding what drives your machine learning models’ predictions. Here’s what you’ve learned:</p>
+<p><strong>The Core Challenge</strong>: As you’ve progressed from linear regression through decision trees to random forests, your models have become more accurate but less interpretable. A random forest combining hundreds of trees resists simple explanation—but stakeholders still need to understand <em>why</em> predictions are being made.</p>
+<p><strong>Why Feature Importance Matters</strong>: Beyond satisfying curiosity, feature importance serves critical purposes:</p>
+<ul>
+<li><strong>Building trust</strong> with stakeholders by explaining model decisions</li>
+<li><strong>Supporting action</strong> by translating predictions into business strategies</li>
+<li><strong>Debugging models</strong> to catch data leakage, bias, and logical errors</li>
+<li><strong>Meeting regulatory requirements</strong> in finance, healthcare, and other high-stakes domains</li>
+<li><strong>Learning about your business</strong> by discovering what actually drives outcomes</li>
+</ul>
+<p><strong>Two Complementary Approaches</strong>:</p>
+<ul>
+<li><p><strong>Impurity-Based Importance (Gini/MSE)</strong>: Built into random forests, measuring how much each feature reduces Gini impurity (classification) or MSE (regression) across tree splits. Fast and convenient, but biased toward high-cardinality features and calculated on training data.</p></li>
+<li><p><strong>Permutation Importance</strong>: Model-agnostic method that measures performance drop when shuffling each feature on test data. More reliable and works with any model type, though computationally more expensive.</p></li>
+</ul>
+<p><strong>Best Practice</strong>: Use impurity-based importance for quick iteration during development, then validate with permutation importance before final decisions.</p>
+<p><strong>Understanding How Features Work</strong>: Partial dependence plots (PDPs) go beyond <em>which</em> features matter to show <em>how</em> they influence predictions—revealing threshold effects, linear relationships, and non-monotonic patterns. Through the Default dataset, you saw how balance exhibits a clear threshold at ~$1,200, while income showed counterintuitive patterns that required careful interpretation.</p>
+<p><strong>Critical Pitfalls to Avoid</strong>:</p>
+<ul>
+<li><strong>Correlated features</strong> dilute importance unpredictably</li>
+<li><strong>High-cardinality bias</strong> makes continuous features dominate tree-based importance</li>
+<li><strong>Importance ≠ causation</strong>—correlation doesn’t imply you can change outcomes by manipulating features</li>
+<li><strong>Training set overfitting</strong> can make random noise appear important</li>
+<li><strong>Small datasets</strong> produce unstable importance scores</li>
+</ul>
+<p><strong>The Path Forward</strong>: While this chapter focused on practical methods (Gini, permutation, PDPs), advanced techniques like SHAP, LIME, and counterfactual explanations offer even deeper insights for high-stakes applications. The fundamental principle remains constant: <strong>models are most valuable when we can explain their behavior</strong>.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Reflection Question
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Think about a prediction model you might build in your field. Your model achieves 92% accuracy, and your manager asks: <em>“Which variables most influenced your model’s predictions—and why?”</em></p>
+<p>How would you answer using the techniques from this chapter? What combination of methods would you use, and how would you communicate the results to a non-technical stakeholder?</p>
+</div>
+</div>
+</section>
+<section id="knowledge-check" class="level2" data-number="27.10">
+<h2 data-number="27.10" class="anchored" data-anchor-id="knowledge-check"><span class="header-section-number">27.10</span> Knowledge Check</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Your Turn: Comprehensive Feature Importance Analysis
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Apply everything you’ve learned to analyze a real dataset.</p>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><p><strong>Data Selection</strong>: Choose a classification or regression dataset (Ames housing, customer churn, or one of your choice)</p></li>
+<li><p><strong>Model Training</strong>: Train a Random Forest model with appropriate train/test split</p></li>
+<li><p><strong>Multiple Importance Methods</strong>:</p>
+<ul>
+<li>Extract and visualize Gini importance</li>
+<li>Calculate and visualize permutation importance on test data</li>
+<li>Compare the two methods—do they agree? Where do they disagree?</li>
+</ul></li>
+<li><p><strong>Partial Dependence</strong>:</p>
+<ul>
+<li>Create PDPs for the top 3-4 most important features</li>
+<li>Describe the relationships you observe (linear, threshold, diminishing returns, etc.)</li>
+</ul></li>
+<li><p><strong>Critical Analysis</strong>:</p>
+<ul>
+<li>Identify any suspicious patterns (data leakage, spurious correlations, etc.)</li>
+<li>Check for correlated features that might be splitting importance</li>
+<li>Validate that important features make domain sense</li>
+</ul></li>
+<li><p><strong>Business Communication</strong>:</p>
+<ul>
+<li>Write a one-page summary for a non-technical stakeholder explaining:
+<ul>
+<li>Which 3-5 features drive predictions most strongly</li>
+<li>How these features influence the outcome (using PDP insights)</li>
+<li>What actions the business might take based on these insights</li>
+<li>Any caveats or limitations in the interpretation</li>
+</ul></li>
+</ul></li>
+</ol>
+<p><strong>Bonus Challenge</strong>: Compare feature importance from your Random Forest with coefficients from a Logistic Regression (for classification) or Linear Regression (for regression) on the same data. What do the differences tell you about the patterns each model learned?</p>
+</div>
+</div>
+</section>
+<section id="end-of-chapter-exercises" class="level2" data-number="27.11">
+<h2 data-number="27.11" class="anchored" data-anchor-id="end-of-chapter-exercises"><span class="header-section-number">27.11</span> End of Chapter Exercises</h2>
+<p>These exercises revisit the random forest models you built in Chapter 26. Now you’ll apply feature importance techniques to understand <em>which</em> features drive your predictions and <em>how</em> they influence outcomes. This is where the models you built previously become truly actionable!</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-30-contents" aria-controls="callout-30" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 1: Understanding Baseball Salary Predictions
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-30" class="callout-30-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In Chapter 26, you built random forest models to predict baseball player salaries using the Hitters dataset. Now let’s understand what drives those predictions.</p>
+<p><strong>Recall your best model</strong> from Chapter 26 Exercise 1 (likely the tuned random forest with features: <code>Years</code>, <code>Hits</code>, <code>RBI</code>, <code>Walks</code>, <code>PutOuts</code>).</p>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Extract and Visualize Impurity-Based Importance:</strong>
+<ul>
+<li>Use <code>.feature_importances_</code> from your trained random forest</li>
+<li>Create a horizontal bar chart showing feature importance</li>
+<li>Which feature dominates salary predictions?</li>
+<li>Does this align with baseball domain knowledge?</li>
+</ul></li>
+<li><strong>Calculate Permutation Importance:</strong>
+<ul>
+<li>Use <code>permutation_importance()</code> on your test set</li>
+<li>Calculate with <code>n_repeats=10</code> and <code>scoring='r2'</code></li>
+<li>Create a comparison table or chart showing both importance types</li>
+<li>Do the two methods agree on the top features? Where do they disagree?</li>
+</ul></li>
+<li><strong>Investigate Discrepancies:</strong>
+<ul>
+<li>If impurity-based and permutation importance disagree, explain why</li>
+<li>Consider: Are some features continuous vs.&nbsp;categorical?</li>
+<li>Are any features correlated (e.g., <code>Hits</code> and <code>RBI</code> might be)?</li>
+<li>Which importance measure do you trust more for this dataset?</li>
+</ul></li>
+<li><strong>Partial Dependence Analysis:</strong>
+<ul>
+<li>Select the top 5 most important features (based on permutation importance)</li>
+<li>Create partial dependence plots for each feature</li>
+<li>Describe the relationship between each feature and predicted salary:
+<ul>
+<li>Is it linear or non-linear?</li>
+<li>Are there threshold effects? (e.g., “After X years, salary increases accelerate”)</li>
+<li>Any surprising patterns?</li>
+</ul></li>
+</ul></li>
+<li><strong>Business Insights:</strong>
+<ul>
+<li>Write a brief summary for the team’s management explaining:
+<ul>
+<li>Which 3 factors most strongly predict player salary</li>
+<li>How each factor influences salary (use PDP insights)</li>
+<li>Any actionable recommendations for salary negotiations</li>
+<li>Caveats: What should they NOT conclude from this analysis?</li>
+</ul></li>
+</ul></li>
+</ol>
+<p><strong>Bonus Challenge:</strong> Compare the random forest’s feature importance to the coefficients from a simple Linear Regression on the same data. What different patterns did each model learn?</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-31-contents" aria-controls="callout-31" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 2: Understanding Credit Default Risk Factors
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-31" class="callout-31-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In Chapter 26, you built random forest classifiers to predict credit card defaults using the Default dataset with features: <code>balance</code>, <code>income</code>, and <code>student_Yes</code>.</p>
+<p><strong>Recall your best model</strong> from Chapter 26 Exercise 2 (likely the tuned random forest).</p>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Extract and Visualize Impurity-Based Importance:</strong>
+<ul>
+<li>Use <code>.feature_importances_</code> from your trained random forest</li>
+<li>Create a horizontal bar chart</li>
+<li>Which feature(s) dominate default predictions?</li>
+</ul></li>
+<li><strong>Calculate Permutation Importance:</strong>
+<ul>
+<li>Use <code>permutation_importance()</code> on your test set</li>
+<li>Use <code>scoring='accuracy'</code> for classification</li>
+<li>Compare both importance measures in a table or side-by-side chart</li>
+<li>Do they agree? Any surprises?</li>
+</ul></li>
+<li><strong>Analyze High-Cardinality Bias:</strong>
+<ul>
+<li>You have two continuous features (<code>balance</code>, <code>income</code>) and one binary feature (<code>student_Yes</code>)</li>
+<li>Does the binary feature rank lower in impurity-based importance despite being potentially predictive?</li>
+<li>How does permutation importance treat it differently?</li>
+<li>What does this tell you about the cardinality trap?</li>
+</ul></li>
+<li><strong>Partial Dependence Analysis:</strong>
+<ul>
+<li>Create PDPs for all three features</li>
+<li>For <code>balance</code>: Describe the threshold effect (at what balance does default risk spike?)</li>
+<li>For <code>income</code>: Is the relationship linear or non-linear? Any counterintuitive patterns?</li>
+<li>For <code>student_Yes</code>: How much does student status increase default probability?</li>
+</ul></li>
+<li><strong>Business Application:</strong>
+<ul>
+<li>Write a one-page memo to the bank’s risk committee explaining:
+<ul>
+<li>The #1 predictor of default and how it behaves</li>
+<li>At what threshold should the bank flag customers for intervention?</li>
+<li>Whether student status matters (and by how much)</li>
+<li>Any surprising findings about income’s role in default prediction</li>
+</ul></li>
+</ul></li>
+<li><strong>Critical Analysis:</strong>
+<ul>
+<li>Does importance equal causation? Can the bank <em>reduce</em> defaults by changing these features?</li>
+<li>Which features are <em>predictive</em> vs.&nbsp;<em>actionable</em>?</li>
+<li>What business actions could the bank take based on these insights?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-32-contents" aria-controls="callout-32" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 3: Market Direction Prediction Analysis (Optional Challenge)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-32" class="callout-32-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In Chapter 26, you built random forests to predict weekly stock market direction using lag features (<code>Lag1</code> through <code>Lag5</code>).</p>
+<p><strong>Recall your models</strong> from Chapter 26 Exercise 3.</p>
+<p><strong>Your Tasks:</strong></p>
+<ol type="1">
+<li><strong>Feature Importance Comparison:</strong>
+<ul>
+<li>Extract impurity-based importance from your best random forest</li>
+<li>Calculate permutation importance on the test set</li>
+<li>Create visualizations comparing both methods</li>
+<li>Do the methods agree on which lag periods matter most?</li>
+</ul></li>
+<li><strong>Correlation and Importance:</strong>
+<ul>
+<li>Calculate correlations between the lag features</li>
+<li>Are lag features highly correlated with each other?</li>
+<li>How does correlation affect importance attribution?</li>
+<li>Does this explain any discrepancies between importance measures?</li>
+</ul></li>
+<li><strong>Partial Dependence Analysis:</strong>
+<ul>
+<li>Create PDPs for the top 3 most important lag features</li>
+<li>What patterns do you observe?</li>
+<li>Are the relationships linear or non-linear?</li>
+<li>Do the patterns make financial sense?</li>
+</ul></li>
+<li><strong>Reality Check:</strong>
+<ul>
+<li>Even if some features show high importance, is the overall model accurate?</li>
+<li>Compare your model’s test accuracy to the baseline (always predicting “Up”)</li>
+<li>What does this tell you about the difference between “important features” and “predictive model”?</li>
+</ul></li>
+<li><strong>Challenge Questions:</strong>
+<ul>
+<li>Why might features show high importance even when the model barely beats the baseline?</li>
+<li>Could the model be finding spurious patterns in the data?</li>
+<li>What does this teach you about the limitations of feature importance?</li>
+<li>How should this inform your decision about deploying this model in production?</li>
+</ul></li>
+<li><strong>Methodological Reflection:</strong>
+<ul>
+<li>Feature importance tells you what the model <em>learned</em>, not whether it learned something <em>useful</em></li>
+<li>What additional analyses would you need before trusting this model?</li>
+<li>How does this exercise demonstrate the importance of validating model performance <em>before</em> interpreting feature importance?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Learning Objectives Revisited
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Through these exercises, you should have practiced:</p>
+<ul>
+<li>Extracting and visualizing both impurity-based and permutation importance</li>
+<li>Identifying discrepancies between importance measures and understanding why they occur</li>
+<li>Creating and interpreting partial dependence plots to understand feature relationships</li>
+<li>Translating statistical patterns into business insights and actionable recommendations</li>
+<li>Recognizing the limitations of feature importance (correlation ≠ causation, importance ≠ model quality)</li>
+<li>Communicating complex model behavior to non-technical stakeholders</li>
+</ul>
+<p>Remember: <strong>Feature importance is most valuable when the model is actually predictive</strong>. Always validate model performance before spending time interpreting what it learned!</p>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./26-random-forests.html" class="pagination-link" aria-label="Random Forests: Ensemble Power and Robustness">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Random Forests: Ensemble Power and Robustness</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./99-anaconda-install.html" class="pagination-link" aria-label="Anaconda Installation">
+        <span class="nav-page-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/27-feature-importance.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
