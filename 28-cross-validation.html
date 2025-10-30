@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>28&nbsp; Cross-validation: Reliable model evaluation – BANA 4080: Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./99-anaconda-install.html" rel="next">
+<link href="./27-feature-importance.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5d254f1e278c2921d96b26102a150bb1.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-530b29c22fe67fc61ace1451aaa50055.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5d254f1e278c2921d96b26102a150bb1.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-54ba87e1857bbaa32a381632a2aab8bf.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<meta name="mermaid-theme" content="neutral">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./28-cross-validation.html">Module 11</a></li><li class="breadcrumb-item"><a href="./28-cross-validation.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">BANA 4080: Data Mining</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./BANA-4080--Data-Mining.epub" title="Download ePub" class="quarto-navigation-tool px-1" aria-label="Download ePub"><i class="bi bi-journal"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 1</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 2</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 3</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 4</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 5</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-data-viz-matplotlib.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Fundamentals of Plotting with Matplotlib</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-data-viz-bokeh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Interactive Data Visualization with Bokeh</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 6</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 7</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20-before-we-build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 8</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./21-correlation-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./22-regression-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 9</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./23-logistic-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Introduction to Logistic Regression for Classification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./24-classification-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 10</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./25-decision-trees.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Decision Trees: Foundations and Interpretability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./26-random-forests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Random Forests: Ensemble Power and Robustness</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./27-feature-importance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 11</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./28-cross-validation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendix</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-test-set-dilemma-what-weve-been-doing" id="toc-the-test-set-dilemma-what-weve-been-doing" class="nav-link active" data-scroll-target="#the-test-set-dilemma-what-weve-been-doing"><span class="header-section-number">28.1</span> The test set dilemma: What we’ve been doing</a>
+  <ul class="collapse">
+  <li><a href="#the-peeking-problem" id="toc-the-peeking-problem" class="nav-link" data-scroll-target="#the-peeking-problem">The peeking problem</a></li>
+  <li><a href="#why-peeking-matters" id="toc-why-peeking-matters" class="nav-link" data-scroll-target="#why-peeking-matters">Why peeking matters</a></li>
+  <li><a href="#a-realistic-scenario" id="toc-a-realistic-scenario" class="nav-link" data-scroll-target="#a-realistic-scenario">A realistic scenario</a></li>
+  <li><a href="#but-we-had-to-make-decisions-somehow" id="toc-but-we-had-to-make-decisions-somehow" class="nav-link" data-scroll-target="#but-we-had-to-make-decisions-somehow">But we had to make decisions somehow</a></li>
+  </ul></li>
+  <li><a href="#the-ideal-solution-a-three-way-split" id="toc-the-ideal-solution-a-three-way-split" class="nav-link" data-scroll-target="#the-ideal-solution-a-three-way-split"><span class="header-section-number">28.2</span> The ideal solution: A three-way split</a>
+  <ul class="collapse">
+  <li><a href="#train-validation-and-test-sets" id="toc-train-validation-and-test-sets" class="nav-link" data-scroll-target="#train-validation-and-test-sets">Train, validation, and test sets</a></li>
+  <li><a href="#the-workflow-in-practice" id="toc-the-workflow-in-practice" class="nav-link" data-scroll-target="#the-workflow-in-practice">The workflow in practice</a></li>
+  <li><a href="#the-catch-data-efficiency" id="toc-the-catch-data-efficiency" class="nav-link" data-scroll-target="#the-catch-data-efficiency">The catch: Data efficiency</a></li>
+  </ul></li>
+  <li><a href="#cross-validation-the-clever-solution" id="toc-cross-validation-the-clever-solution" class="nav-link" data-scroll-target="#cross-validation-the-clever-solution"><span class="header-section-number">28.3</span> Cross-validation: The clever solution</a>
+  <ul class="collapse">
+  <li><a href="#the-big-idea" id="toc-the-big-idea" class="nav-link" data-scroll-target="#the-big-idea">The big idea</a></li>
+  <li><a href="#how-k-fold-cross-validation-works" id="toc-how-k-fold-cross-validation-works" class="nav-link" data-scroll-target="#how-k-fold-cross-validation-works">How k-fold cross-validation works</a></li>
+  <li><a href="#why-this-is-brilliant" id="toc-why-this-is-brilliant" class="nav-link" data-scroll-target="#why-this-is-brilliant">Why this is brilliant</a></li>
+  <li><a href="#comparing-to-the-validation-set-approach" id="toc-comparing-to-the-validation-set-approach" class="nav-link" data-scroll-target="#comparing-to-the-validation-set-approach">Comparing to the validation set approach</a></li>
+  </ul></li>
+  <li><a href="#proper-workflow-what-we-should-have-done" id="toc-proper-workflow-what-we-should-have-done" class="nav-link" data-scroll-target="#proper-workflow-what-we-should-have-done"><span class="header-section-number">28.4</span> Proper workflow: What we should have done</a></li>
+  <li><a href="#implementing-cross-validation-in-scikit-learn" id="toc-implementing-cross-validation-in-scikit-learn" class="nav-link" data-scroll-target="#implementing-cross-validation-in-scikit-learn"><span class="header-section-number">28.5</span> Implementing cross-validation in scikit-learn</a>
+  <ul class="collapse">
+  <li><a href="#basic-usage-cross_val_score" id="toc-basic-usage-cross_val_score" class="nav-link" data-scroll-target="#basic-usage-cross_val_score">Basic usage: <code>cross_val_score()</code></a></li>
+  <li><a href="#choosing-scoring-metrics" id="toc-choosing-scoring-metrics" class="nav-link" data-scroll-target="#choosing-scoring-metrics">Choosing scoring metrics</a></li>
+  <li><a href="#advanced-cross_validate-for-multiple-metrics" id="toc-advanced-cross_validate-for-multiple-metrics" class="nav-link" data-scroll-target="#advanced-cross_validate-for-multiple-metrics">Advanced: <code>cross_validate()</code> for multiple metrics</a></li>
+  <li><a href="#practical-example-comparing-models-with-cv" id="toc-practical-example-comparing-models-with-cv" class="nav-link" data-scroll-target="#practical-example-comparing-models-with-cv">Practical example: Comparing models with CV</a></li>
+  </ul></li>
+  <li><a href="#the-complete-proper-workflow" id="toc-the-complete-proper-workflow" class="nav-link" data-scroll-target="#the-complete-proper-workflow"><span class="header-section-number">28.6</span> The complete proper workflow</a></li>
+  <li><a href="#choosing-the-right-number-of-folds" id="toc-choosing-the-right-number-of-folds" class="nav-link" data-scroll-target="#choosing-the-right-number-of-folds"><span class="header-section-number">28.7</span> Choosing the right number of folds</a>
+  <ul class="collapse">
+  <li><a href="#why-we-didnt-start-with-cross-validation" id="toc-why-we-didnt-start-with-cross-validation" class="nav-link" data-scroll-target="#why-we-didnt-start-with-cross-validation">Why we didn’t start with cross-validation</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">28.8</span> Summary</a></li>
+  <li><a href="#end-of-chapter-exercises" id="toc-end-of-chapter-exercises" class="nav-link" data-scroll-target="#end-of-chapter-exercises"><span class="header-section-number">28.9</span> End of chapter exercises</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/28-cross-validation.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./28-cross-validation.html">Module 11</a></li><li class="breadcrumb-item"><a href="./28-cross-validation.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Let’s start with an uncomfortable truth: <strong>we’ve been breaking a fundamental rule of machine learning</strong> throughout Chapters 25-27. Remember back in Module 8 when you learned the golden rule: “Don’t touch the test set until you’ve selected your final model”? Well, every time you compared different <code>max_depth</code> values, tuned hyperparameters, or selected between models based on test set performance, you were peeking at the test set—and each peek made your test scores less trustworthy.</p>
+<p>This isn’t a criticism of what you’ve learned so far. In fact, understanding the simple train/test split was an essential foundation. But now you’re ready for the professional approach that data scientists use in production: <strong>cross-validation</strong>. This technique solves a critical problem: how do you honestly compare models and tune hyperparameters without contaminating your test set?</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Experiential learning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Imagine you’re studying for an exam. Your professor gives you a practice test to help you prepare. You take it, see which questions you got wrong, study those topics more, and take the practice test again. You repeat this several times, adjusting your studying based on the practice test results.</p>
+<p>Now imagine your professor uses that same practice test as the actual exam. Your score would be artificially inflated—it wouldn’t reflect how well you’d perform on truly new questions. You’ve essentially “overfit” to that specific practice test.</p>
+<p>This is exactly what happens when you repeatedly use test set performance to guide modeling decisions. By the end of this chapter, you’ll learn how cross-validation gives you unlimited “practice tests” while keeping your final exam (test set) pristine and trustworthy.</p>
+</div>
+</div>
+<p>This chapter addresses a crucial gap between textbook theory and real-world practice. You’ll learn why the simple workflows from previous chapters were pedagogically useful but need refinement for production work, and more importantly, you’ll learn the proper workflow that ensures your model performance estimates are honest and reliable.</p>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>Explain why repeatedly evaluating models on the test set leads to <strong>test set contamination</strong> and optimistically biased performance estimates</li>
+<li>Describe how cross-validation solves the validation problem by rotating through different subsets of the training data</li>
+<li>Visualize and explain how k-fold cross-validation works, including how data is split and how models are trained/validated across folds</li>
+<li>Implement cross-validation in scikit-learn using <code>cross_val_score()</code> for single metrics and <code>cross_validate()</code> for multiple metrics</li>
+<li>Compare multiple models using cross-validation scores instead of test set performance</li>
+<li>Choose appropriate values for k (number of folds) based on dataset size and computational constraints</li>
+<li>Interpret cross-validation results, including mean scores and standard deviations across folds</li>
+<li>Understand when and why to use stratified cross-validation for classification problems</li>
+<li>Apply the <strong>five-stage proper workflow</strong>: (1) train/test split, (2) CV for model comparison, (3) select best model, (4) retrain on full training set, (5) test set evaluation ONCE</li>
+<li>Articulate why this workflow produces trustworthy performance estimates that stakeholders can rely on</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Follow along in Colab
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you read through this chapter, we encourage you to follow along using the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/28_cross_validation.ipynb">companion notebook</a> in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.</p>
+<p>👉 Open the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/28_cross_validation.ipynb">Cross-Validation Notebook in Colab</a>.</p>
+</div>
+</div>
+<section id="the-test-set-dilemma-what-weve-been-doing" class="level2" data-number="28.1">
+<h2 data-number="28.1" class="anchored" data-anchor-id="the-test-set-dilemma-what-weve-been-doing"><span class="header-section-number">28.1</span> The test set dilemma: What we’ve been doing</h2>
+<p>Let’s trace back through what you’ve learned and practiced over the past few chapters. In Module 8, you learned the fundamental train/test split workflow:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Example workflow pattern (X, y, and model would need to be defined)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Split data into train and test sets</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Train on training set</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>model.fit(X_train, y_train)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate on test set ONCE at the end</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>test_score <span class="op">=</span> model.score(X_test, y_test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The logic was clear and sensible:</p>
+<ul>
+<li><strong>Training set</strong>: Where your model learns patterns</li>
+<li><strong>Test set</strong>: Completely held-out data to evaluate how well patterns generalize</li>
+<li><strong>Critical rule</strong>: Don’t touch the test set until you’ve made all your modeling decisions</li>
+</ul>
+<p>This test set acts as a proxy for future, unseen data. If your model performs well on the test set, you can be confident it will perform well in production.</p>
+<section id="the-peeking-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-peeking-problem">The peeking problem</h3>
+<p>But then in Chapters 21-27, you started building real models and facing real decisions. And here’s where theory met practice:</p>
+<p><strong>Chapter 25 (Decision Trees)</strong>: You needed to choose a good value for <code>max_depth</code>. So naturally, you tried several options:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">######################################</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Psuedocode: For demonstration only #</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">######################################</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Try shallow tree</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>dt_shallow <span class="op">=</span> DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>dt_shallow.fit(X_train, y_train)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>score_shallow <span class="op">=</span> dt_shallow.score(X_test, y_test)  <span class="co"># ← First peek!</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Try deeper tree</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>dt_deep <span class="op">=</span> DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>dt_deep.fit(X_train, y_train)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>score_deep <span class="op">=</span> dt_deep.score(X_test, y_test)  <span class="co"># ← Second peek!</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare and choose the winner</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> score_deep <span class="op">&gt;</span> score_shallow:</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    best_model <span class="op">=</span> dt_deep  <span class="co"># Chose based on test set performance</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Chapter 26 (Random Forests)</strong>: You wanted to tune hyperparameters, so you evaluated different configurations:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">######################################</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Psuedocode: For demonstration only #</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">######################################</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Try default Random Forest</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>rf_default <span class="op">=</span> RandomForestClassifier()</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>rf_default.fit(X_train, y_train)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>score_default <span class="op">=</span> rf_default.score(X_test, y_test)  <span class="co"># ← Another peek</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Try tuned version</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>rf_tuned <span class="op">=</span> RandomForestClassifier(n_estimators<span class="op">=</span><span class="dv">300</span>, max_depth<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>rf_tuned.fit(X_train, y_train)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>score_tuned <span class="op">=</span> rf_tuned.score(X_test, y_test)  <span class="co"># ← Yet another peek</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Keep the better one</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>best_model <span class="op">=</span> rf_tuned <span class="cf">if</span> score_tuned <span class="op">&gt;</span> score_default <span class="cf">else</span> rf_default</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Each evaluation felt necessary—how else would you make informed decisions?</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The core problem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>But here’s the problem: <strong>every time you used test set performance to make a decision, you implicitly incorporated information from the test set into your model selection process</strong>.</p>
+</div>
+</div>
+</section>
+<section id="why-peeking-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-peeking-matters">Why peeking matters</h3>
+<p>Think about what’s really happening when you repeatedly evaluate on the test set:</p>
+<ol type="1">
+<li>Try model A → test accuracy = 85%</li>
+<li>Try model B → test accuracy = 87%</li>
+<li>Try model C → test accuracy = 86%</li>
+<li><strong>Choose model B because it scored highest on the test set</strong></li>
+<li>Report “test accuracy” = 87%</li>
+</ol>
+<p>But is that 87% an honest estimate of performance on truly new data? No! You selected model B specifically because it happened to perform best on this particular test set. Model B might have just gotten lucky with these specific test observations.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Test set contamination
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Once you’ve used test set performance to make decisions, that test set is “contaminated”—it’s no longer a pure measure of generalization. You’ve essentially tuned your model selection to this specific test set, which is a subtle form of overfitting.</p>
+<p><strong>The consequence</strong>: Your reported test performance is optimistically biased. It will likely be higher than the true performance you’ll see on genuinely new data in production.</p>
+</div>
+</div>
+<p>This is similar to the studying-for-an-exam analogy: if you see the exam questions beforehand and adjust your studying accordingly, your exam score won’t accurately reflect your knowledge—it’ll be inflated by your exposure to those specific questions.</p>
+</section>
+<section id="a-realistic-scenario" class="level3">
+<h3 class="anchored" data-anchor-id="a-realistic-scenario">A realistic scenario</h3>
+<p>Let’s make this concrete with a realistic example that demonstrates exactly how test set contamination happens in practice.</p>
+<p>Imagine you’re building a customer churn prediction model for a subscription-based business. You have 1,000 customers in your dataset, and you want to find the best random forest configuration by trying different combinations of <code>n_estimators</code> and <code>max_depth</code>. This is a completely normal modeling task—you need to explore the hyperparameter space to find what works best.</p>
+<p>The problem is, if you evaluate each of these 20 configurations on your test set to decide which is “best,” you’re peeking at the test set 20 times. By the end of this process, you’ve selected a configuration specifically because it performed well on these particular test observations. Some of that performance is genuine model quality, but some is just random luck—the model happened to align well with the quirks of this specific test set.</p>
+<p>Let’s see this in action:</p>
+<div id="b1bffb43" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Data preparation: Create customer churn dataset</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_classification</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create synthetic customer churn dataset</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> make_classification(</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    n_samples<span class="op">=</span><span class="dv">1000</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    n_features<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    n_informative<span class="op">=</span><span class="dv">8</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    n_redundant<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    n_classes<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    weights<span class="op">=</span>[<span class="fl">0.8</span>, <span class="fl">0.2</span>],  <span class="co"># 20% churn rate</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Train/test split</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="75887b65" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># You're building a customer churn prediction model</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># You try 20 different hyperparameter combinations</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>best_test_score <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>best_config <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> n_estimators <span class="kw">in</span> [<span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">200</span>, <span class="dv">300</span>]:</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> max_depth <span class="kw">in</span> [<span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>, <span class="va">None</span>]:</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        rf <span class="op">=</span> RandomForestClassifier(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            n_estimators<span class="op">=</span>n_estimators,</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            max_depth<span class="op">=</span>max_depth,</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        rf.fit(X_train, y_train)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        test_score <span class="op">=</span> rf.score(X_test, y_test)  <span class="co"># Peeking 20 times!</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> test_score <span class="op">&gt;</span> best_test_score:</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>            best_test_score <span class="op">=</span> test_score</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>            best_config <span class="op">=</span> (n_estimators, max_depth)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best config: </span><span class="sc">{</span>best_config<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test accuracy: </span><span class="sc">{</span>best_test_score<span class="sc">:.3f}</span><span class="ss">"</span>)  <span class="co"># Is this trustworthy?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Best config: (300, 20)
+Test accuracy: 0.910</code></pre>
+</div>
+</div>
+<p><strong>The result</strong>: When you deploy this model in production, you might see something like:</p>
+<ul>
+<li>Test set accuracy (during development): 91%</li>
+<li>Production accuracy (on new customers): 85%</li>
+</ul>
+<p>That 6-percentage-point drop is partly because you overfit to the test set through repeated evaluation. Your test score gave you false confidence.</p>
+</section>
+<section id="but-we-had-to-make-decisions-somehow" class="level3">
+<h3 class="anchored" data-anchor-id="but-we-had-to-make-decisions-somehow">But we had to make decisions somehow</h3>
+<p>This might feel frustrating. You had legitimate questions that needed answers:</p>
+<ul>
+<li>Which <code>max_depth</code> value works best?</li>
+<li>Should I use 100 or 300 trees in my Random Forest?</li>
+<li>Does adding this feature improve performance?</li>
+<li>Which model architecture performs best?</li>
+</ul>
+<p>You couldn’t answer these questions without evaluating somewhere. So what’s the solution?</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Cross-validation to the rescue!
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>This is precisely the dilemma that cross-validation solves.</strong> It gives you a way to answer all these questions—to compare, tune, and select—without ever touching your test set. Let’s see how.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="the-ideal-solution-a-three-way-split" class="level2" data-number="28.2">
+<h2 data-number="28.2" class="anchored" data-anchor-id="the-ideal-solution-a-three-way-split"><span class="header-section-number">28.2</span> The ideal solution: A three-way split</h2>
+<p>Before we get to cross-validation, let’s understand the ideal (but not always practical) solution: splitting your data into three parts instead of two.</p>
+<section id="train-validation-and-test-sets" class="level3">
+<h3 class="anchored" data-anchor-id="train-validation-and-test-sets">Train, validation, and test sets</h3>
+<p>The proper workflow should look like this:</p>
+<pre><code>Full Dataset
+    ↓
+    ├─── Training Set (60%)      ← Build models here
+    ├─── Validation Set (20%)    ← Compare models here
+    └─── Test Set (20%)          ← Final evaluation ONCE</code></pre>
+<p>Each portion has a distinct purpose:</p>
+<ul>
+<li><p><strong>Training set</strong>: This is where your models learn. You fit models using only this data.</p></li>
+<li><p><strong>Validation set</strong>: This is your “practice exam”—you can look at it as many times as you want during development. Use it to:</p>
+<ul>
+<li>Compare different models</li>
+<li>Tune hyperparameters</li>
+<li>Select features</li>
+<li>Make any other modeling decisions</li>
+</ul></li>
+<li><p><strong>Test set</strong>: This remains completely locked away until the very end. You evaluate your final chosen model on it exactly once to get an honest estimate of production performance.</p></li>
+</ul>
+</section>
+<section id="the-workflow-in-practice" class="level3">
+<h3 class="anchored" data-anchor-id="the-workflow-in-practice">The workflow in practice</h3>
+<p>Here’s how the three-way split workflow operates:</p>
+<div class="cell" data-fig-width="8" data-fig-height="6" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A["📊 Complete Dataset&lt;br/&gt;(1000 observations)"] --&gt; B["Split into 3 parts"]
+
+    B --&gt; C["🎯 Training Set&lt;br/&gt;60% (600 obs)&lt;br/&gt;&lt;br/&gt;Purpose: Build models"]
+    B --&gt; D["🔍 Validation Set&lt;br/&gt;20% (200 obs)&lt;br/&gt;&lt;br/&gt;Purpose: Compare &amp; tune"]
+    B --&gt; E["🔒 Test Set&lt;br/&gt;20% (200 obs)&lt;br/&gt;&lt;br/&gt;Purpose: Final evaluation"]
+
+    C --&gt; F["Model Development Phase"]
+
+    F --&gt; G["Try Model 1&lt;br/&gt;Train on Training Set"]
+    F --&gt; H["Try Model 2&lt;br/&gt;Train on Training Set"]
+    F --&gt; I["Try Model 3&lt;br/&gt;Train on Training Set"]
+    F --&gt; J["Try Model 4&lt;br/&gt;Train on Training Set"]
+
+    G --&gt; K["Evaluate on&lt;br/&gt;Validation Set"]
+    D --&gt; K
+    H --&gt; K
+    I --&gt; K
+    J --&gt; K
+
+    K --&gt; L["Select Best Model&lt;br/&gt;based on validation scores"]
+
+    L --&gt; M["Retrain best model&lt;br/&gt;on full Training Set"]
+
+    E --&gt; N["Final Evaluation Phase"]
+    M --&gt; N
+
+    N --&gt; O["🎉 Evaluate ONCE on Test Set&lt;br/&gt;Get trustworthy performance estimate"]
+
+    style A fill:#e1f5fe
+    style C fill:#c8e6c9
+    style D fill:#fff9c4
+    style E fill:#ffccbc
+    style F fill:#f3e5f5
+    style K fill:#fff9c4
+    style L fill:#c8e6c9
+    style O fill:#c8e6c9
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p><strong>Key points illustrated above:</strong></p>
+<ol type="1">
+<li><strong>Training set (60%)</strong>: Used repeatedly to train different model candidates</li>
+<li><strong>Validation set (20%)</strong>: Used repeatedly to compare and select among models—this prevents test set contamination</li>
+<li><strong>Test set (20%)</strong>: Locked away and used exactly once at the end for final, honest evaluation</li>
+</ol>
+<p>This solves the contamination problem perfectly. You can peek at the validation set as many times as you want—try hundreds of models if you like—without compromising the integrity of your test set.</p>
+</section>
+<section id="the-catch-data-efficiency" class="level3">
+<h3 class="anchored" data-anchor-id="the-catch-data-efficiency">The catch: Data efficiency</h3>
+<p>This approach is conceptually perfect but has a practical problem: <strong>it requires splitting your data into three parts, which can leave you with insufficient data for each purpose</strong>.</p>
+<p>Consider a medium-sized dataset with 1,000 observations:</p>
+<pre><code>1,000 total observations
+    ├─── Training: 600 observations
+    ├─── Validation: 200 observations
+    └─── Test: 200 observations</code></pre>
+<p>Now you’re only training on 600 observations when you could have used 800 (if you didn’t need a separate validation set). For many real-world problems, especially with limited data, this sacrifice is significant:</p>
+<ul>
+<li><strong>Fewer training examples</strong> can hurt model performance—you’re not giving your model enough data to learn patterns effectively</li>
+<li><strong>Smaller validation set</strong> might give unreliable estimates—200 observations might not be representative, leading to poor model selection</li>
+<li><strong>Smaller test set</strong> also reduces reliability of your final evaluation</li>
+</ul>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>When data is scarce
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>With small-to-medium datasets (thousands of observations, not millions), the three-way split can be wasteful. You want to use as much data as possible for training while still maintaining honest evaluation.</p>
+<p>This tension—needing validation without sacrificing training data—is what makes cross-validation so valuable.</p>
+</div>
+</div>
+<p>The question becomes: <strong>Is there a way to get the benefits of a validation set without actually reserving a separate portion of data?</strong> The answer is yes, and it’s called cross-validation.</p>
+</section>
+</section>
+<section id="cross-validation-the-clever-solution" class="level2" data-number="28.3">
+<h2 data-number="28.3" class="anchored" data-anchor-id="cross-validation-the-clever-solution"><span class="header-section-number">28.3</span> Cross-validation: The clever solution</h2>
+<p>Cross-validation is one of the most elegant ideas in machine learning. It solves both problems at once: it gives you honest performance estimates (like a validation set) while using your data efficiently (not wasting observations on a separate validation set).</p>
+<section id="the-big-idea" class="level3">
+<h3 class="anchored" data-anchor-id="the-big-idea">The big idea</h3>
+<p>Here’s the key insight: what if, instead of holding out one fixed validation set, we rotate which portion of the training data acts as validation? With cross-validation, you never create a separate validation set. Instead, you:</p>
+<ol type="1">
+<li>Keep your test set completely separate (just like before)</li>
+<li>Within your training set, temporarily designate different portions as “validation” in rotation</li>
+<li>Each observation gets used for both training and validation (just at different times)</li>
+</ol>
+<p>The workflow looks like this:</p>
+<pre><code>Full Dataset
+    ↓
+    ├─── Training Set (80%)    ← Use for BOTH training AND validation via CV
+    └─── Test Set (20%)        ← Keep locked away until the end</code></pre>
+<p>Notice you only split once (train/test), not twice (train/val/test). The magic happens within the training set through a process called <strong>k-fold cross-validation</strong>.</p>
+</section>
+<section id="how-k-fold-cross-validation-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-k-fold-cross-validation-works">How k-fold cross-validation works</h3>
+<p>The term “k-fold” refers to dividing your training data into <strong>k</strong> equal-sized pieces (called “folds”). The letter <strong>k</strong> is simply a number you choose—typically 5 or 10—that determines how many pieces to split your training data into.</p>
+<p>Here’s the brilliant part: instead of setting aside one fixed portion of your training data as a validation set (which you’d never use for training), k-fold cross-validation <strong>rotates</strong> which fold acts as the validation set. Each fold gets a turn being the validation set while the remaining folds are used for training. This means:</p>
+<ul>
+<li>Every observation in your training set gets used for validation exactly once</li>
+<li>Every observation gets used for training in k-1 iterations</li>
+<li>You end up with k different performance estimates that you can average together</li>
+</ul>
+<p>This rotation strategy maximizes data efficiency (you’re using more data for training than with a fixed validation set) while still providing honest performance estimates (each validation fold is held out during its evaluation).</p>
+<p>Let’s walk through a concrete example using <strong>5-fold CV</strong> (k=5), which is the most common choice:</p>
+<div id="26d0b2d3" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="28-cross-validation_files/figure-html/cell-4-output-1.png" width="699" height="470" class="figure-img"></p>
+<figcaption>Visual representation of 5-fold cross-validation showing how each fold takes a turn as the validation set</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>What’s happening in this visualization:</strong></p>
+<ol type="1">
+<li><p><strong>Initial split</strong>: The training set is divided into 5 equal-sized folds (shown across the top)</p></li>
+<li><p><strong>Rotation pattern</strong>: In each of the 5 iterations (rows):</p>
+<ul>
+<li>One fold serves as the <strong>validation set</strong> (amber/yellow)</li>
+<li>The remaining four folds serve as the <strong>training set</strong> (green)</li>
+<li>Each iteration produces one validation score</li>
+</ul></li>
+<li><p><strong>Data efficiency</strong>: Notice that every fold is used for training in 4 out of 5 iterations (80% utilization) and for validation in 1 out of 5 iterations</p></li>
+<li><p><strong>Final estimate</strong>: The 5 validation scores are averaged to produce the final cross-validation score—a reliable estimate of model performance</p></li>
+</ol>
+</section>
+<section id="why-this-is-brilliant" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-is-brilliant">Why this is brilliant</h3>
+<p>Cross-validation achieves several goals simultaneously:</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>The magic of CV
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Data efficiency</strong>: Every observation in your training set gets used for training (in 4 out of 5 folds). You’re training on 80% of your training set each time, not just 60%.</p>
+<p><strong>Robust validation</strong>: Every observation also gets used for validation (in 1 out of 5 folds). You’re validating on different portions of data, so your performance estimate is based on the entire training set.</p>
+<p><strong>Multiple evaluations</strong>: You get 5 different performance estimates from 5 different validation splits, then average them. This is much more reliable than a single validation score from a fixed validation set.</p>
+<p><strong>Variance estimates</strong>: The variation across folds tells you how stable your model is. High variation suggests your model’s performance is sensitive to which data it’s trained on.</p>
+<p><strong>Test set remains pristine</strong>: All of this happens within the training set. Your test set is never touched, so it remains a completely honest final evaluation.</p>
+</div>
+</div>
+<p>Let’s make this concrete with an example:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Assume X_train, y_train from your train/test split</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Test set (X_test, y_test) remains untouched</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a model</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>rf <span class="op">=</span> RandomForestClassifier(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform 5-fold cross-validation on training set</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>cv_scores <span class="op">=</span> cross_val_score(rf, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'accuracy'</span>)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Fold scores: </span><span class="sc">{</span>cv_scores<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean CV accuracy: </span><span class="sc">{</span>cv_scores<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Std deviation: </span><span class="sc">{</span>cv_scores<span class="sc">.</span>std()<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Output might look like:</p>
+<pre><code>Fold scores: [0.867 0.883 0.875 0.892 0.858]
+Mean CV accuracy: 0.875
+Std deviation: 0.012</code></pre>
+<p>You’ve now evaluated your model on the training set 5 different ways, getting a robust performance estimate (87.5% ± 1.2%) without ever touching the test set.</p>
+</section>
+<section id="comparing-to-the-validation-set-approach" class="level3">
+<h3 class="anchored" data-anchor-id="comparing-to-the-validation-set-approach">Comparing to the validation set approach</h3>
+<p>Let’s contrast the two approaches side-by-side to see why cross-validation is more efficient:</p>
+<div id="6350cea2" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="28-cross-validation_files/figure-html/cell-5-output-1.png" width="834" height="756" class="figure-img"></p>
+<figcaption>Comparison of three-way split vs.&nbsp;cross-validation approaches, showing data efficiency</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Key differences highlighted:</strong></p>
+<ol type="1">
+<li><strong>Data efficiency</strong>:
+<ul>
+<li>Three-way split uses only <strong>60%</strong> of data for training (400 fewer observations)</li>
+<li>Cross-validation uses <strong>80%</strong> of data for training in each fold (maximizes learning)</li>
+</ul></li>
+<li><strong>Validation robustness</strong>:
+<ul>
+<li>Three-way split relies on a single fixed validation set (200 observations)</li>
+<li>Cross-validation averages across 5 different validation sets (all 800 training observations participate)</li>
+</ul></li>
+<li><strong>Flexibility</strong>:
+<ul>
+<li>Three-way split: Once you set aside 200 observations for validation, you can never use them for training</li>
+<li>Cross-validation: Every observation contributes to both training and validation (just at different times)</li>
+</ul></li>
+</ol>
+<p>The cross-validation approach gives you the best of both worlds: honest performance estimates AND efficient use of your limited data.</p>
+</section>
+</section>
+<section id="proper-workflow-what-we-should-have-done" class="level2" data-number="28.4">
+<h2 data-number="28.4" class="anchored" data-anchor-id="proper-workflow-what-we-should-have-done"><span class="header-section-number">28.4</span> Proper workflow: What we should have done</h2>
+<p>Now that you understand cross-validation, here’s the proper pattern you’ll use going forward when comparing models or tuning hyperparameters:</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>The proper workflow template
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><strong>Create train/test split</strong> and lock the test set away</li>
+<li><strong>Compare models</strong> using cross-validation on training set ONLY</li>
+<li><strong>Select best model</strong> based on CV scores (not test scores!)</li>
+<li><strong>Retrain</strong> best model on all training data</li>
+<li><strong>Evaluate</strong> on test set EXACTLY ONCE</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">######################################</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Psuedocode: For demonstration only #</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">######################################</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split, cross_val_score</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Split and lock test set</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Compare models using CV on training set</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>model1 <span class="op">=</span> SomeModel(params1)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>model2 <span class="op">=</span> SomeModel(params2)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>cv_scores1 <span class="op">=</span> cross_val_score(model1, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>cv_scores2 <span class="op">=</span> cross_val_score(model2, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: Select best based on CV</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>best_model <span class="op">=</span> model1 <span class="cf">if</span> cv_scores1.mean() <span class="op">&gt;</span> cv_scores2.mean() <span class="cf">else</span> model2</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 4: Retrain on all training data</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>best_model.fit(X_train, y_train)</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 5: Evaluate on test set ONCE</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>final_test_score <span class="op">=</span> best_model.score(X_test, y_test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key point</strong>: All model comparisons and hyperparameter tuning use CV on the training set. The test set is only touched once at the very end, making the final test score a trustworthy estimate of production performance.</p>
+</div>
+</div>
+</section>
+<section id="implementing-cross-validation-in-scikit-learn" class="level2" data-number="28.5">
+<h2 data-number="28.5" class="anchored" data-anchor-id="implementing-cross-validation-in-scikit-learn"><span class="header-section-number">28.5</span> Implementing cross-validation in scikit-learn</h2>
+<p>Now that you understand the conceptual foundation, let’s dive into the practical details of implementing cross-validation using scikit-learn. The library provides several functions and options to fit different needs.</p>
+<p>For the examples in this section, we’ll use the Default dataset from ISLP, that we’ve seen in previous chapters:</p>
+<div id="d786948a" class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ISLP <span class="im">import</span> load_data</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the Default dataset</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>Default <span class="op">=</span> load_data(<span class="st">'Default'</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare features and target</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> pd.get_dummies(Default[[<span class="st">'balance'</span>, <span class="st">'income'</span>, <span class="st">'student'</span>]], drop_first<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> (Default[<span class="st">'default'</span>] <span class="op">==</span> <span class="st">'Yes'</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Create train/test split (lock away test set)</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Training set: </span><span class="sc">{</span><span class="bu">len</span>(X_train)<span class="sc">}</span><span class="ss"> observations"</span>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test set: </span><span class="sc">{</span><span class="bu">len</span>(X_test)<span class="sc">}</span><span class="ss"> observations"</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Default rate: </span><span class="sc">{</span>y_train<span class="sc">.</span>mean()<span class="sc">:.1%}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Training set: 8000 observations
+Test set: 2000 observations
+Default rate: 3.3%</code></pre>
+</div>
+</div>
+<section id="basic-usage-cross_val_score" class="level3">
+<h3 class="anchored" data-anchor-id="basic-usage-cross_val_score">Basic usage: <code>cross_val_score()</code></h3>
+<p>The simplest and most common function is <code>cross_val_score()</code>, which performs k-fold CV and returns the scores from each fold:</p>
+<div id="a588e788" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Create your model</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> RandomForestClassifier(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Perform 5-fold cross-validation</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>cv_scores <span class="op">=</span> cross_val_score(</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    estimator<span class="op">=</span>model,        <span class="co"># Your model</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    X<span class="op">=</span>X_train,             <span class="co"># Training features</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    y<span class="op">=</span>y_train,             <span class="co"># Training labels</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">=</span><span class="dv">5</span>,                  <span class="co"># Number of folds</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    scoring<span class="op">=</span><span class="st">'accuracy'</span>     <span class="co"># Metric to compute</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Fold scores: </span><span class="sc">{</span>cv_scores<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean: </span><span class="sc">{</span>cv_scores<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Std Dev: </span><span class="sc">{</span>cv_scores<span class="sc">.</span>std()<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Fold scores: [0.966875 0.970625 0.9675   0.973125 0.970625]
+Mean: 0.970
+Std Dev: 0.002</code></pre>
+</div>
+</div>
+<p>Each value represents the accuracy on one validation fold. The mean gives you the overall estimate, and the standard deviation tells you how variable the performance is across folds.</p>
+</section>
+<section id="choosing-scoring-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="choosing-scoring-metrics">Choosing scoring metrics</h3>
+<p>The <code>scoring</code> parameter determines what metric to compute. The appropriate choice depends on your problem type.</p>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>You can find all the available scoring metrics here: <a href="https://scikit-learn.org/stable/modules/model_evaluation.html#string-name-scorers">https://scikit-learn.org/stable/modules/model_evaluation.html#string-name-scorers</a></p>
+</div>
+</div>
+</div>
+<p><strong>For classification</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Accuracy (default for classifiers)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'accuracy'</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># F1 score (good for imbalanced classes)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'f1'</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ROC AUC (measures ranking quality)</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'roc_auc'</span>)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Precision and recall</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'precision'</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'recall'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>For regression</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R² score (default for regressors)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'r2'</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Negative mean squared error</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'neg_mean_squared_error'</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Negative mean absolute error</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'neg_mean_absolute_error'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Why “negative” for error metrics?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Scikit-learn’s CV functions are designed to maximize scores. Since lower errors are better, scikit-learn returns negative errors so that “higher is better” remains consistent. Just remember:</p>
+<ul>
+<li><code>neg_mean_squared_error = -5.2</code> means MSE is actually 5.2</li>
+<li>More negative is worse (larger error)</li>
+<li>Less negative is better (smaller error)</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="advanced-cross_validate-for-multiple-metrics" class="level3">
+<h3 class="anchored" data-anchor-id="advanced-cross_validate-for-multiple-metrics">Advanced: <code>cross_validate()</code> for multiple metrics</h3>
+<p>If you want to compute multiple metrics at once, or get more detailed information, use <code>cross_validate()</code>:</p>
+<div id="1bf58a9e" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_validate</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate multiple metrics simultaneously</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>cv_results <span class="op">=</span> cross_validate(</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    model, X_train, y_train,</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    scoring<span class="op">=</span>[<span class="st">'accuracy'</span>, <span class="st">'f1'</span>, <span class="st">'roc_auc'</span>],  <span class="co"># Multiple metrics</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    return_train_score<span class="op">=</span><span class="va">True</span>                  <span class="co"># Also get training scores</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Results is a dictionary with arrays for each metric</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CV accuracy: </span><span class="sc">{</span>cv_results[<span class="st">'test_accuracy'</span>]<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CV F1: </span><span class="sc">{</span>cv_results[<span class="st">'test_f1'</span>]<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"CV ROC AUC: </span><span class="sc">{</span>cv_results[<span class="st">'test_roc_auc'</span>]<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Training accuracy: </span><span class="sc">{</span>cv_results[<span class="st">'train_accuracy'</span>]<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>CV accuracy: 0.970
+CV F1: 0.418
+CV ROC AUC: 0.887
+
+Training accuracy: 1.000</code></pre>
+</div>
+</div>
+<p>This is useful for:</p>
+<ul>
+<li>Comparing multiple metrics at once</li>
+<li>Detecting overfitting (comparing train vs.&nbsp;test scores)</li>
+<li>Analyzing fit time and score time across folds</li>
+</ul>
+</section>
+<section id="practical-example-comparing-models-with-cv" class="level3">
+<h3 class="anchored" data-anchor-id="practical-example-comparing-models-with-cv">Practical example: Comparing models with CV</h3>
+<p>Now let’s put everything together in a realistic scenario: you have multiple candidate models and need to determine which one performs best. This is one of the most common use cases for cross-validation in practice.</p>
+<p>In this example, we’ll compare three different classification algorithms—<strong>Logistic Regression</strong>, <strong>Decision Tree</strong>, and <strong>Random Forest</strong>—to see which handles our data best. Rather than evaluating each on the test set (which would contaminate it), we’ll use 5-fold cross-validation on the training set to get honest performance estimates.</p>
+<div id="2c5b4d41" class="cell" data-execution_count="8">
+<details class="code-fold">
+<summary>Data preparation: Create customer churn dataset</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_classification</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Create synthetic data with non-linear patterns</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> make_classification(</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    n_samples<span class="op">=</span><span class="dv">1000</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    n_features<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    n_informative<span class="op">=</span><span class="dv">8</span>,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    n_redundant<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    n_clusters_per_class<span class="op">=</span><span class="dv">3</span>,  <span class="co"># Creates non-linear decision boundaries</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    flip_y<span class="op">=</span><span class="fl">0.1</span>,  <span class="co"># Adds some noise</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    class_sep<span class="op">=</span><span class="fl">0.5</span>,  <span class="co"># Moderate class separation</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Add polynomial interactions to create non-linear relationships</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="co"># This will favor tree-based models over linear models</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>X_poly <span class="op">=</span> np.column_stack([</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>    X,</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>    X[:, <span class="dv">0</span>] <span class="op">*</span> X[:, <span class="dv">1</span>],  <span class="co"># Interaction term</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>    X[:, <span class="dv">2</span>] <span class="op">**</span> <span class="dv">2</span>,        <span class="co"># Squared term</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>    X[:, <span class="dv">3</span>] <span class="op">*</span> X[:, <span class="dv">4</span>]    <span class="co"># Another interaction</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Train/test split (lock away test set)</span></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>    X_poly, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Training set: </span><span class="sc">{</span><span class="bu">len</span>(X_train)<span class="sc">}</span><span class="ss"> observations"</span>)</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test set: </span><span class="sc">{</span><span class="bu">len</span>(X_test)<span class="sc">}</span><span class="ss"> observations (locked away)"</span>)</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Features: </span><span class="sc">{</span>X_train<span class="sc">.</span>shape[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Training set: 800 observations
+Test set: 200 observations (locked away)
+Features: 13</code></pre>
+</div>
+</div>
+<p>Now we’ll compare our candidate models using cross-validation. Notice how we <strong>never touch the test set</strong> during this comparison phase:</p>
+<div id="0f48ad4f" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeClassifier</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Define models to compare</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>models <span class="op">=</span> {</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Logistic Regression'</span>: LogisticRegression(max_iter<span class="op">=</span><span class="dv">1000</span>, random_state<span class="op">=</span><span class="dv">42</span>),</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Decision Tree'</span>: DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">10</span>, random_state<span class="op">=</span><span class="dv">42</span>),</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Random Forest'</span>: RandomForestClassifier(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate each with 5-fold CV</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Model Comparison (5-fold CV on training set):"</span>)</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span><span class="op">*</span><span class="dv">70</span>)</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, model <span class="kw">in</span> models.items():</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute CV scores</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    cv_scores <span class="op">=</span> cross_val_score(</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>        model, X_train, y_train,</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>        cv<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>        scoring<span class="op">=</span><span class="st">'roc_auc'</span>  <span class="co"># Using ROC AUC for this example</span></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>    mean_score <span class="op">=</span> cv_scores.mean()</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    std_score <span class="op">=</span> cv_scores.std()</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">:25s}</span><span class="ss"> </span><span class="sc">{</span>mean_score<span class="sc">:.4f}</span><span class="ss"> (±</span><span class="sc">{</span>std_score<span class="sc">:.4f}</span><span class="ss">)"</span>)</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span><span class="op">*</span><span class="dv">70</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Model Comparison (5-fold CV on training set):
+======================================================================
+Logistic Regression       0.6451 (±0.0453)
+Decision Tree             0.6277 (±0.0758)
+Random Forest             0.7760 (±0.0494)
+======================================================================</code></pre>
+</div>
+</div>
+<p>We can see that the random forest model significantlyl outperforms the logistic regression and decision tree models.</p>
+<p><strong>Key observations from this example:</strong></p>
+<ul>
+<li>We evaluated 3 models using cross-validation, getting reliable performance estimates</li>
+<li>The test set was never touched during model comparison</li>
+<li>Random Forest appears to be the best performer (highest mean ROC AUC)</li>
+<li>The standard deviations are small, indicating consistent performance across folds</li>
+<li>Based on these CV results, we’d select Random Forest as our final model</li>
+</ul>
+<p>This pattern—define models, evaluate with CV, compare results—is the foundation of professional model development.</p>
+</section>
+</section>
+<section id="the-complete-proper-workflow" class="level2" data-number="28.6">
+<h2 data-number="28.6" class="anchored" data-anchor-id="the-complete-proper-workflow"><span class="header-section-number">28.6</span> The complete proper workflow</h2>
+<p>Now that you understand cross-validation conceptually and practically, let’s formalize the complete workflow you’ll use for nearly every machine learning project. This five-stage process ensures you get honest performance estimates while using your data efficiently.</p>
+<p><strong>The five stages are:</strong></p>
+<ol type="1">
+<li><strong>Initial Setup</strong>: Split data into train/test and lock away the test set</li>
+<li><strong>Model Development</strong>: Compare models using cross-validation on training set ONLY</li>
+<li><strong>Select Best</strong>: Choose the best model based on CV scores (not test scores!)</li>
+<li><strong>Train Final Model</strong>: Retrain the selected model on ALL training data</li>
+<li><strong>Final Evaluation</strong>: Evaluate on test set EXACTLY ONCE to estimate production performance</li>
+</ol>
+<p>The critical insight is that <strong>all experimentation happens in stages 2-4 using only the training set</strong>. The test set remains untouched until the very end, giving you an unbiased estimate of how your final model will perform on new data.</p>
+<p>Let’s see this workflow in action with a complete example using the breast cancer dataset:</p>
+<div id="48deb454" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> load_breast_cancer</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split, cross_val_score</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeClassifier</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Load data</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> load_breast_cancer()</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> data.data, data.target</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co"># ========== STEP 1: Initial Setup ==========</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"STEP 1: Initial Setup - Split data and lock away test set"</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span><span class="op">*</span><span class="dv">60</span>)</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Training set: </span><span class="sc">{</span><span class="bu">len</span>(X_train)<span class="sc">}</span><span class="ss"> samples"</span>)</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test set: </span><span class="sc">{</span><span class="bu">len</span>(X_test)<span class="sc">}</span><span class="ss"> samples"</span>)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"🔒 Test set locked away</span><span class="ch">\n</span><span class="st">"</span>)</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="co"># ========== STEP 2: Model Development ==========</span></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"STEP 2: Model Development - Compare models using CV"</span>)</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span><span class="op">*</span><span class="dv">60</span>)</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>models <span class="op">=</span> {</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Logistic Regression'</span>: LogisticRegression(max_iter<span class="op">=</span><span class="dv">10000</span>),</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Decision Tree'</span>: DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">10</span>),</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Random Forest'</span>: RandomForestClassifier(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a>cv_results <span class="op">=</span> {}</span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, model <span class="kw">in</span> models.items():</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>    cv_scores <span class="op">=</span> cross_val_score(model, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>    cv_results[name] <span class="op">=</span> {</span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">'mean'</span>: cv_scores.mean(),</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">'std'</span>: cv_scores.std(),</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">'model'</span>: model</span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">:25s}</span><span class="ss"> </span><span class="sc">{</span>cv_scores<span class="sc">.</span>mean()<span class="sc">:.4f}</span><span class="ss"> (±</span><span class="sc">{</span>cv_scores<span class="sc">.</span>std()<span class="sc">:.4f}</span><span class="ss">)"</span>)</span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a><span class="co"># ========== STEP 3: Select Best ==========</span></span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">STEP 3: Select Best - Choose model with highest CV score"</span>)</span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span><span class="op">*</span><span class="dv">60</span>)</span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a>best_name <span class="op">=</span> <span class="bu">max</span>(cv_results, key<span class="op">=</span><span class="kw">lambda</span> k: cv_results[k][<span class="st">'mean'</span>])</span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a>best_model <span class="op">=</span> cv_results[best_name][<span class="st">'model'</span>]</span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Selected model: </span><span class="sc">{</span>best_name<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a><span class="co"># ========== STEP 4: Train Final Model ==========</span></span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">STEP 4: Train Final Model - Retrain on all training data"</span>)</span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span><span class="op">*</span><span class="dv">60</span>)</span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a>best_model.fit(X_train, y_train)</span>
+<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Trained </span><span class="sc">{</span>best_name<span class="sc">}</span><span class="ss"> on </span><span class="sc">{</span><span class="bu">len</span>(X_train)<span class="sc">}</span><span class="ss"> training samples"</span>)</span>
+<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a><span class="co"># ========== STEP 5: Final Evaluation ==========</span></span>
+<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">STEP 5: Final Evaluation - Test set evaluation (ONLY ONCE)"</span>)</span>
+<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span><span class="op">*</span><span class="dv">60</span>)</span>
+<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a>test_score <span class="op">=</span> best_model.score(X_test, y_test)</span>
+<span id="cb25-57"><a href="#cb25-57" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Cross-validation score (training): </span><span class="sc">{</span>cv_results[best_name][<span class="st">'mean'</span>]<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb25-58"><a href="#cb25-58" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test score (held-out data):        </span><span class="sc">{</span>test_score<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb25-59"><a href="#cb25-59" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">🔓 Test set has now been used - project complete!"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>STEP 1: Initial Setup - Split data and lock away test set
+============================================================
+Training set: 455 samples
+Test set: 114 samples
+🔒 Test set locked away
+
+STEP 2: Model Development - Compare models using CV
+============================================================
+Logistic Regression       0.9516 (±0.0112)
+Decision Tree             0.9319 (±0.0128)
+Random Forest             0.9538 (±0.0235)
+
+STEP 3: Select Best - Choose model with highest CV score
+============================================================
+Selected model: Random Forest
+
+STEP 4: Train Final Model - Retrain on all training data
+============================================================
+Trained Random Forest on 455 training samples
+
+STEP 5: Final Evaluation - Test set evaluation (ONLY ONCE)
+============================================================
+Cross-validation score (training): 0.9538
+Test score (held-out data):        0.9561
+
+🔓 Test set has now been used - project complete!</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The golden rule
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Test set touches</strong>: Exactly ONE</p>
+<p>If you find yourself evaluating on the test set more than once during model development, stop—you’re contaminating it. Go back to Stage 2 and use cross-validation instead.</p>
+</div>
+</div>
+<p>This five-stage workflow is now your standard approach for any machine learning project. It ensures honest performance estimates, efficient use of data, and trustworthy models.</p>
+</section>
+<section id="choosing-the-right-number-of-folds" class="level2" data-number="28.7">
+<h2 data-number="28.7" class="anchored" data-anchor-id="choosing-the-right-number-of-folds"><span class="header-section-number">28.7</span> Choosing the right number of folds</h2>
+<p>The <code>cv</code> parameter controls how many folds to create. The choice involves trade-offs:</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Quick guide to selecting k
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>k=5 (default choice)</strong>: Use this unless you have a specific reason not to. Trains on 80% per fold, good balance of speed and reliability.</li>
+<li><strong>k=10</strong>: Use for smaller datasets (&lt; 5K observations) or when you need maximum reliability. Trains on 90% per fold but takes twice as long as k=5.</li>
+<li><strong>k=3</strong>: Use for very large datasets (&gt; 100K observations) where k=5 is too slow, or for rapid prototyping. Faster but less reliable.</li>
+</ul>
+<p><strong>Bottom line</strong>: When in doubt, use k=5. The important part is using cross-validation at all rather than repeatedly evaluating on the test set!</p>
+</div>
+</div>
+<p>These guidelines apply to most situations, but the specific choice may vary based on your computational resources and time constraints. In practice, you’ll rarely go wrong with k=5.</p>
+<section id="why-we-didnt-start-with-cross-validation" class="level3">
+<h3 class="anchored" data-anchor-id="why-we-didnt-start-with-cross-validation">Why we didn’t start with cross-validation</h3>
+<p>You might wonder: “If CV is the proper approach, why didn’t we learn it in Module 8?”</p>
+<p><strong>The answer</strong>: Educational scaffolding. Learning complex topics works best when you build foundations first:</p>
+<ul>
+<li><strong>Chapter 21</strong>: Learn the core concept—separate data for training and testing</li>
+<li><strong>Chapters 21-27</strong>: Practice building models with simple train/test splits</li>
+<li><strong>Chapter 28</strong> (now): Refine to professional standards with cross-validation</li>
+</ul>
+<p>By starting simple, you could focus on understanding <em>why</em> we separate data before learning <em>how</em> to do it optimally. Now you have the context to understand why CV matters and the experience to use it effectively. This progression was intentional and puts you ahead of many practitioners who still use the simpler (but problematic) approach.</p>
+</section>
+</section>
+<section id="summary" class="level2" data-number="28.8">
+<h2 data-number="28.8" class="anchored" data-anchor-id="summary"><span class="header-section-number">28.8</span> Summary</h2>
+<p>This chapter equipped you with one of the most important skills in professional machine learning: <strong>honest model evaluation through cross-validation</strong>. The fundamental problem we addressed is test set contamination—repeatedly using the test set to compare models or tune hyperparameters leads to optimistically biased performance estimates. Each time you make a modeling decision based on test set performance, you’re implicitly fitting to the test set, making your test scores unreliable predictors of production performance.</p>
+<p>Cross-validation solves this elegantly by creating a validation process entirely within your training set. Instead of setting aside a fixed validation set, k-fold cross-validation rotates through different subsets of the training data, using each fold as a validation set exactly once. This approach provides reliable validation without touching the test set, uses your training data efficiently, and produces robust estimates by averaging performance across multiple folds. In practice, k=5 provides a good balance of speed and reliability for most situations.</p>
+<p>The proper workflow you should follow for every machine learning project consists of five stages: (1) split data into train/test and lock away the test set, (2) compare models using cross-validation on the training set only, (3) select the best model based on CV scores, (4) retrain the selected model on all training data, and (5) evaluate on the test set exactly once. This workflow ensures that all experimentation—model comparison, hyperparameter tuning, and feature selection—happens using cross-validation on the training set, keeping your test set pristine until the final evaluation.</p>
+<p>In scikit-learn, you’ll use <code>cross_val_score()</code> for single metric evaluation and <code>cross_validate()</code> for multiple metrics simultaneously. For classification problems, scikit-learn automatically applies stratified cross-validation to ensure each fold has representative class distributions, which is especially important for imbalanced datasets.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The Golden Rule of Model Evaluation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Test set touches = EXACTLY ONE</strong></p>
+<p>If you evaluate on the test set more than once during model development, you’re contaminating it. All experimentation must happen using cross-validation on the training set. This single principle separates trustworthy machine learning from wishful thinking.</p>
+</div>
+</div>
+<p>Why does this matter? When you tell stakeholders “this model achieves 95% accuracy,” they need to confidently expect production performance to match your test scores. Proper cross-validation prevents costly surprises, maintains your credibility as a data scientist, and ensures models perform as expected when deployed. This is the foundation of trustworthy, production-ready machine learning.</p>
+<p>Now that you know how to properly evaluate models, the next chapter will dive deeper into systematically finding the best hyperparameter configurations through <strong>hyperparameter tuning</strong>—a process that relies heavily on the cross-validation workflow you just mastered.</p>
+</section>
+<section id="end-of-chapter-exercises" class="level2" data-number="28.9">
+<h2 data-number="28.9" class="anchored" data-anchor-id="end-of-chapter-exercises"><span class="header-section-number">28.9</span> End of chapter exercises</h2>
+<p>These exercises build on your previous work from Chapters 25-27, asking you to revisit those models using the proper cross-validation workflow you learned in this chapter.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 1: Fixing the baseball salary predictions
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In Chapter 26 Exercise 1, you built random forest models to predict baseball player salaries using the Hitters dataset. You likely compared different models by evaluating them on the test set—which we now know is problematic.</p>
+<p><strong>Revisit that analysis properly</strong>:</p>
+<p><strong>Part A: Identify the problem</strong></p>
+<ol type="1">
+<li>Review your original code from Chapter 26 Exercise 1</li>
+<li>Count how many times you evaluated models on the test set</li>
+<li>Explain why repeatedly using the test set for model comparison is problematic</li>
+</ol>
+<p><strong>Part B: Implement proper workflow</strong></p>
+<ol type="1">
+<li>Use the same train/test split you used originally (for fair comparison)</li>
+<li>Compare at least 4 different model configurations using 5-fold CV on the training set:
+<ul>
+<li>Decision tree with tuned depth</li>
+<li>Random Forest with default parameters</li>
+<li>Random Forest with tuned <code>n_estimators</code></li>
+<li>Random Forest with tuned <code>max_depth</code> and <code>min_samples_split</code></li>
+</ul></li>
+<li>For each model, report mean CV score and standard deviation</li>
+<li>Select the best model based on CV scores</li>
+<li>Train final model on full training set</li>
+<li>Evaluate on test set ONCE</li>
+</ol>
+<p><strong>Part C: Compare approaches</strong></p>
+<ol type="1">
+<li>Compare the “best” test score from your original Chapter 26 work (where you peeked at test set) to the honest test score from the proper workflow</li>
+<li>Are they different? If so, explain why</li>
+<li>Which estimate would you trust for predicting production performance? Why?</li>
+</ol>
+<p><strong>Part D: Check stability</strong></p>
+<ol type="1">
+<li>Repeat the CV model comparison using k=3 and k=10</li>
+<li>Does the same model win under different k values?</li>
+<li>How much do the CV estimates change?</li>
+<li>What does this tell you about model stability?</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 2: Proper default risk assessment
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In Chapter 26 Exercise 2, you built random forests to predict credit card default using the Default dataset. Now implement the proper evaluation workflow.</p>
+<p><strong>Your tasks</strong>:</p>
+<p><strong>Part A: Clean slate with proper workflow</strong></p>
+<ol type="1">
+<li>Start fresh with the Default dataset</li>
+<li>Create train/test split (80/20, stratified by default status)</li>
+<li>Define 5 different models to compare:
+<ul>
+<li>Logistic Regression (baseline)</li>
+<li>Decision Tree (try two different depths)</li>
+<li>Random Forest (default parameters)</li>
+<li>Random Forest (tuned parameters of your choice)</li>
+</ul></li>
+<li>Use 5-fold stratified CV on training set to evaluate all models</li>
+<li>Report results with mean accuracy, precision, recall, and F1 score for each</li>
+</ol>
+<p><strong>Part B: Selection and evaluation</strong></p>
+<ol type="1">
+<li>Select the best model based on the metric that matters most for credit default prediction (consider: what’s the cost of false positives vs.&nbsp;false negatives?)</li>
+<li>Train final model on full training set</li>
+<li>Evaluate on test set once</li>
+<li>Create a confusion matrix for the test set predictions</li>
+<li>Interpret the results: Is the test performance consistent with CV estimates?</li>
+</ol>
+<p><strong>Part C: Feature importance revisited</strong></p>
+<ol type="1">
+<li>Using your selected model from Part B, calculate feature importance (recall Chapter 27)</li>
+<li>Compare the importance rankings when using CV vs.&nbsp;when training on full training set</li>
+<li>Are they similar? Why or why not?</li>
+</ol>
+<p><strong>Part D: Business communication</strong></p>
+<p>Write a one-page memo to the bank’s risk management team explaining: - Which model you selected and why - The expected accuracy in production (and how you know it’s trustworthy) - Which features drive default predictions - Why your estimates are more reliable than if you’d repeatedly used test set</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 3: The Ames housing challenge
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Apply the complete proper workflow to the Ames housing dataset (regression).</p>
+<p><strong>Your tasks</strong>:</p>
+<p><strong>Part A: Initial setup</strong></p>
+<ol type="1">
+<li>Load the Ames housing data</li>
+<li>Select at least 8 features (mix of continuous and categorical)</li>
+<li>Handle any missing values appropriately</li>
+<li>Create train/test split (80/20)</li>
+</ol>
+<p><strong>Part B: Model comparison with CV</strong></p>
+<ol type="1">
+<li>Compare at least 5 different approaches:
+<ul>
+<li>Linear regression (baseline)</li>
+<li>Decision tree regression (tune depth via CV)</li>
+<li>Random forest (default)</li>
+<li>Random forest (tune n_estimators via CV)</li>
+<li>Random forest (tune multiple hyperparameters)</li>
+</ul></li>
+<li>For each, use 5-fold CV on training set</li>
+<li>Use appropriate regression metrics (R², RMSE)</li>
+<li>Create a visualization comparing models (bar chart or similar)</li>
+</ol>
+<p><strong>Part C: Hyperparameter tuning demonstration</strong></p>
+<ol type="1">
+<li>For random forests, systematically try different values of:
+<ul>
+<li><code>n_estimators</code>: [50, 100, 200, 300]</li>
+<li><code>max_depth</code>: [5, 10, 15, 20, None]</li>
+</ul></li>
+<li>Use CV to evaluate each combination (20 total models)</li>
+<li>Identify the best hyperparameter combination</li>
+<li>Create a heatmap showing CV performance for different hyperparameter combinations</li>
+</ol>
+<p><strong>Part D: Final model evaluation</strong></p>
+<ol type="1">
+<li>Train your selected model on full training set</li>
+<li>Evaluate on test set once</li>
+<li>Compare CV estimate to test performance</li>
+<li>Create a scatter plot of predicted vs.&nbsp;actual prices on test set</li>
+<li>Calculate and interpret residuals</li>
+</ol>
+<p><strong>Part E: Critical analysis</strong></p>
+<ol type="1">
+<li>Try the same hyperparameter tuning, but select based on test set performance (wrong way)</li>
+<li>Compare the test score from this approach to the proper approach</li>
+<li>Is there a difference? Explain what you observe</li>
+<li>Which approach would you trust for production deployment?</li>
+</ol>
+<p><strong>Bonus</strong>: Implement nested cross-validation (outer loop for final estimate, inner loop for hyperparameter tuning) and compare to your single train/test split approach.</p>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./27-feature-importance.html" class="pagination-link" aria-label="Understanding Feature Importance: Peeking Inside the Black Box">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./99-anaconda-install.html" class="pagination-link" aria-label="Anaconda Installation">
+        <span class="nav-page-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/28-cross-validation.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
