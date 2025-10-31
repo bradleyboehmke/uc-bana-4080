@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.9">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>29&nbsp; Hyperparameter Tuning: Finding Optimal Model Configurations – BANA 4080: Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./99-anaconda-install.html" rel="next">
+<link href="./28-cross-validation.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5d254f1e278c2921d96b26102a150bb1.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-530b29c22fe67fc61ace1451aaa50055.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5d254f1e278c2921d96b26102a150bb1.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-54ba87e1857bbaa32a381632a2aab8bf.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./28-cross-validation.html">Module 11</a></li><li class="breadcrumb-item"><a href="./29-hyperparameter-tuning.html"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Hyperparameter Tuning: Finding Optimal Model Configurations</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">BANA 4080: Data Mining</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./BANA-4080--Data-Mining.epub" title="Download ePub" class="quarto-navigation-tool px-1" aria-label="Download ePub"><i class="bi bi-journal"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 1</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 2</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 3</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 4</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 5</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-data-viz-matplotlib.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Fundamentals of Plotting with Matplotlib</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-data-viz-bokeh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Interactive Data Visualization with Bokeh</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 6</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 7</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20-before-we-build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 8</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./21-correlation-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./22-regression-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 9</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./23-logistic-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Introduction to Logistic Regression for Classification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./24-classification-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 10</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./25-decision-trees.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Decision Trees: Foundations and Interpretability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./26-random-forests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Random Forests: Ensemble Power and Robustness</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./27-feature-importance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 11</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./28-cross-validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./29-hyperparameter-tuning.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Hyperparameter Tuning: Finding Optimal Model Configurations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendix</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-bias-variance-tradeoff" id="toc-the-bias-variance-tradeoff" class="nav-link active" data-scroll-target="#the-bias-variance-tradeoff"><span class="header-section-number">29.1</span> The bias-variance tradeoff</a>
+  <ul class="collapse">
+  <li><a href="#understanding-bias-and-variance" id="toc-understanding-bias-and-variance" class="nav-link" data-scroll-target="#understanding-bias-and-variance">Understanding bias and variance</a></li>
+  <li><a href="#how-hyperparameters-control-the-tradeoff" id="toc-how-hyperparameters-control-the-tradeoff" class="nav-link" data-scroll-target="#how-hyperparameters-control-the-tradeoff">How hyperparameters control the tradeoff</a></li>
+  </ul></li>
+  <li><a href="#k-nearest-neighbors-a-case-study-in-bias-variance" id="toc-k-nearest-neighbors-a-case-study-in-bias-variance" class="nav-link" data-scroll-target="#k-nearest-neighbors-a-case-study-in-bias-variance"><span class="header-section-number">29.2</span> K-Nearest Neighbors: A case study in bias-variance</a>
+  <ul class="collapse">
+  <li><a href="#the-knn-algorithm" id="toc-the-knn-algorithm" class="nav-link" data-scroll-target="#the-knn-algorithm">The KNN algorithm</a></li>
+  <li><a href="#the-role-of-k-in-bias-variance" id="toc-the-role-of-k-in-bias-variance" class="nav-link" data-scroll-target="#the-role-of-k-in-bias-variance">The role of K in bias-variance</a></li>
+  <li><a href="#visualizing-the-effect-of-k" id="toc-visualizing-the-effect-of-k" class="nav-link" data-scroll-target="#visualizing-the-effect-of-k">Visualizing the effect of K</a></li>
+  </ul></li>
+  <li><a href="#grid-search-for-hyperparameter-tuning" id="toc-grid-search-for-hyperparameter-tuning" class="nav-link" data-scroll-target="#grid-search-for-hyperparameter-tuning"><span class="header-section-number">29.3</span> Grid search for hyperparameter tuning</a>
+  <ul class="collapse">
+  <li><a href="#the-grid-search-approach" id="toc-the-grid-search-approach" class="nav-link" data-scroll-target="#the-grid-search-approach">The grid search approach</a></li>
+  <li><a href="#implementing-grid-search-with-scikit-learn" id="toc-implementing-grid-search-with-scikit-learn" class="nav-link" data-scroll-target="#implementing-grid-search-with-scikit-learn">Implementing grid search with scikit-learn</a></li>
+  </ul></li>
+  <li><a href="#tuning-decision-trees-and-random-forests" id="toc-tuning-decision-trees-and-random-forests" class="nav-link" data-scroll-target="#tuning-decision-trees-and-random-forests"><span class="header-section-number">29.4</span> Tuning decision trees and random forests</a>
+  <ul class="collapse">
+  <li><a href="#key-hyperparameters-for-decision-trees" id="toc-key-hyperparameters-for-decision-trees" class="nav-link" data-scroll-target="#key-hyperparameters-for-decision-trees">Key hyperparameters for decision trees</a></li>
+  <li><a href="#key-hyperparameters-for-random-forests" id="toc-key-hyperparameters-for-random-forests" class="nav-link" data-scroll-target="#key-hyperparameters-for-random-forests">Key hyperparameters for random forests</a></li>
+  <li><a href="#comparing-tuned-models-with-grid-search" id="toc-comparing-tuned-models-with-grid-search" class="nav-link" data-scroll-target="#comparing-tuned-models-with-grid-search">Comparing tuned models with grid search</a></li>
+  </ul></li>
+  <li><a href="#beyond-grid-search" id="toc-beyond-grid-search" class="nav-link" data-scroll-target="#beyond-grid-search"><span class="header-section-number">29.5</span> Beyond grid search</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">29.6</span> Summary</a></li>
+  <li><a href="#end-of-chapter-exercises" id="toc-end-of-chapter-exercises" class="nav-link" data-scroll-target="#end-of-chapter-exercises"><span class="header-section-number">29.7</span> End of chapter exercises</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/29-hyperparameter-tuning.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./28-cross-validation.html">Module 11</a></li><li class="breadcrumb-item"><a href="./29-hyperparameter-tuning.html"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Hyperparameter Tuning: Finding Optimal Model Configurations</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Hyperparameter Tuning: Finding Optimal Model Configurations</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>In the previous chapter, you mastered cross-validation—the proper way to evaluate and compare models without contaminating your test set. You learned the five-stage workflow that keeps your test set pristine while using cross-validation to guide all modeling decisions. Now we tackle a question that naturally follows: <strong>How do you systematically find the best configuration for your chosen model?</strong></p>
+<div class="callout callout-style-simple callout-important">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Throughout Chapters 25-27, you’ve been making choices about model hyperparameters—setting <code>max_depth</code> for decision trees, choosing <code>n_estimators</code> for random forests, deciding on <code>min_samples_split</code> values. But how did you know which values to try? Were you just guessing? And more importantly, how can you be confident you’ve found the best settings?</p>
+</div>
+</div>
+</div>
+<p>This chapter introduces <strong>hyperparameter tuning</strong>: the systematic process of finding optimal model configurations. You’ll start by understanding the <strong>bias-variance tradeoff</strong>—the fundamental principle that explains why different hyperparameter values produce different results. Using K-Nearest Neighbors as an intuitive case study, you’ll see how a single hyperparameter can dramatically shift a model from underfitting to overfitting. Then you’ll learn how to automate the search for optimal hyperparameters using <strong>grid search</strong>, which systematically explores combinations of hyperparameter values through cross-validation. You’ll apply these techniques to decision trees and random forests, and explore more advanced optimization methods like random search and Bayesian optimization. Throughout, you’ll see how hyperparameter tuning integrates seamlessly into the proper cross-validation workflow you learned in Chapter 28.</p>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>Explain the bias-variance tradeoff and identify symptoms of underfitting vs.&nbsp;overfitting</li>
+<li>Understand how hyperparameters control model complexity and generalization</li>
+<li>Analyze how a single hyperparameter (K in KNN) affects the bias-variance tradeoff</li>
+<li>Implement grid search with <code>GridSearchCV</code> to systematically find optimal hyperparameters</li>
+<li>Tune decision trees and random forests across multiple hyperparameters simultaneously</li>
+<li>Compare grid search, random search, and Bayesian optimization approaches</li>
+<li>Integrate hyperparameter tuning into the proper cross-validation workflow</li>
+<li>Apply the complete 5-stage workflow: split, tune, compare, train, and evaluate</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Follow along in Colab
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you read through this chapter, we encourage you to follow along using the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/29_hyperparameter_tuning.ipynb">companion notebook</a> in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.</p>
+<p>👉 Open the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/29_hyperparameter_tuning.ipynb">Hyperparameter Tuning Notebook in Colab</a>.</p>
+</div>
+</div>
+<section id="the-bias-variance-tradeoff" class="level2" data-number="29.1">
+<h2 data-number="29.1" class="anchored" data-anchor-id="the-bias-variance-tradeoff"><span class="header-section-number">29.1</span> The bias-variance tradeoff</h2>
+<p>Before diving into tuning techniques, you need to understand <strong>why</strong> different hyperparameter values produce different results. The key concept is the <strong>bias-variance tradeoff</strong>—a fundamental principle that explains the types of errors machine learning models make.</p>
+<section id="understanding-bias-and-variance" class="level3">
+<h3 class="anchored" data-anchor-id="understanding-bias-and-variance">Understanding bias and variance</h3>
+<p>Every model’s prediction error can be decomposed into three components: <strong>bias</strong>, <strong>variance</strong>, and <strong>irreducible error</strong> (noise in the data that no model can eliminate). Understanding bias and variance helps you diagnose what’s wrong with a model and how to fix it.</p>
+<p><strong>Bias</strong> measures how far off a model’s average predictions are from the true values. High bias means the model is <strong>systematically wrong</strong>—it’s making consistent errors because it’s too simple to capture the underlying patterns. This is called <strong>underfitting</strong>.</p>
+<p>Think of a student who only memorizes basic formulas but doesn’t understand the concepts. When facing new problems, they consistently get wrong answers because their approach is too simplistic. That’s high bias.</p>
+<p><strong>Variance</strong> measures how much a model’s predictions would change if you trained it on different samples of data. High variance means the model is <strong>overly sensitive</strong> to the specific training data—it’s capturing noise and random fluctuations rather than the true signal. This is called <strong>overfitting</strong>.</p>
+<p>Think of a student who memorizes every single example problem from class, including all the specific numbers and edge cases. They do great on familiar problems but struggle with anything slightly different because they’ve memorized patterns rather than learned principles. That’s high variance.</p>
+<p>Here’s a visual way to think about it using a regression example:</p>
+<div id="a1057f78" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="29-hyperparameter-tuning_files/figure-html/cell-2-output-1.png" width="1142" height="374" class="figure-img"></p>
+<figcaption>Bias-variance tradeoff illustrated with model fits to noisy sine wave data</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Understanding each model:</strong></p>
+<p><strong>Left plot - High Bias (Underfitting):</strong> The linear regression model (Bias model - red line) is too simple to capture the true underlying pattern (green dashed line). It gets the general upward direction right but systematically misses the curved shape. This is <strong>bias</strong>—the model is consistently wrong because it lacks the flexibility to fit the true pattern. No matter how much data you give it, a straight line can’t capture a curve.</p>
+<p><strong>Middle plot - Balanced (Good Fit):</strong> The random forest model (Just right model - blue line) closely follows the true pattern without obsessing over every data point. It captures the underlying trend while acknowledging that some variation is just noise. This is the ideal balance—the model has enough flexibility to capture the real pattern but doesn’t overreact to random fluctuations. This is achieved through the ensemble averaging of multiple decision trees.</p>
+<p><strong>Right plot - High Variance (Overfitting):</strong> The deep decision tree (Variance model - orange line) with no depth limit passes very close to every single training point, creating wild swings between them. It’s fitting the <strong>noise</strong> rather than the <strong>signal</strong>. If you collected new data from the same process, this model’s predictions would change dramatically—that’s high <strong>variance</strong>. The tree is so deep and flexible it memorizes the training data rather than learning the general pattern.</p>
+<p><strong>The irreducible error:</strong> Notice that even in the middle plot (good fit), the model doesn’t pass through every data point perfectly. The scatter around the true pattern (green line) represents <strong>irreducible error</strong>—noise that’s inherent in the data and can’t be eliminated by any model, no matter how sophisticated.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Bias-Variance Tradeoff
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>tradeoff</strong> comes because as you make a model more complex to reduce bias, you typically increase variance. Conversely, simplifying a model to reduce variance often increases bias. The goal is to find the sweet spot that minimizes total error.</p>
+</div>
+</div>
+</section>
+<section id="how-hyperparameters-control-the-tradeoff" class="level3">
+<h3 class="anchored" data-anchor-id="how-hyperparameters-control-the-tradeoff">How hyperparameters control the tradeoff</h3>
+<p><strong>Hyperparameters</strong> are the settings you choose before training that control how the model learns. They’re called “hyper” parameters because they’re parameters <em>about</em> the learning process itself, not parameters the model learns from data (like coefficients in linear regression or splits in a decision tree).</p>
+<p>Different hyperparameter values push models toward different points on the bias-variance spectrum. Let’s see concrete examples from models you know:</p>
+<p><strong>Decision Trees:</strong></p>
+<ul>
+<li><code>max_depth=2</code> (shallow): High bias, low variance → Underfits</li>
+<li><code>max_depth=20</code> (deep): Low bias, high variance → Overfits</li>
+<li><code>max_depth=5</code> (moderate): Balanced → Just right</li>
+</ul>
+<p><strong>Random Forests:</strong></p>
+<ul>
+<li><code>n_estimators=5</code> (few trees): Higher variance, less stable</li>
+<li><code>n_estimators=500</code> (many trees): Lower variance, more stable</li>
+<li><code>max_features='sqrt'</code> vs <code>max_features='log2'</code>: Controls tree diversity and variance</li>
+</ul>
+<p>The art of hyperparameter tuning is systematically exploring these settings to find configurations that minimize total error on unseen data.</p>
+</section>
+</section>
+<section id="k-nearest-neighbors-a-case-study-in-bias-variance" class="level2" data-number="29.2">
+<h2 data-number="29.2" class="anchored" data-anchor-id="k-nearest-neighbors-a-case-study-in-bias-variance"><span class="header-section-number">29.2</span> K-Nearest Neighbors: A case study in bias-variance</h2>
+<p>Before jumping into complex tuning procedures, let’s build intuition using one of the simplest machine learning algorithms: <strong>K-Nearest Neighbors (KNN)</strong>. KNN has a single, easy-to-understand hyperparameter that dramatically affects the bias-variance tradeoff, making it perfect for learning these concepts.</p>
+<section id="the-knn-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="the-knn-algorithm">The KNN algorithm</h3>
+<p>K-Nearest Neighbors (KNN) is one of the simplest machine learning algorithms, yet it’s surprisingly effective. Unlike other models that learn patterns and create mathematical equations during training, KNN takes a different approach: it simply memorizes all the training examples and uses them directly when making predictions. When you ask KNN to predict the target value for a new data point, it looks through the training data to find the K examples that are most similar to the new point. “Similarity” here means closeness in terms of the feature values—for example, if you’re predicting house prices based on square footage and number of bedrooms, KNN finds the K houses in the training data that have the most similar square footage and bedroom counts. To measure this closeness, KNN calculates the straight-line distance between points in the feature space (statisticians call this Euclidean distance, but you can think of it as the “as the crow flies” distance). Once KNN identifies these K nearest neighbors, it looks at their target values and simply averages them together—this average becomes the prediction for the new data point. The beauty and simplicity of KNN is that it assumes similar inputs should have similar outputs, which is often a reasonable assumption in real-world data.</p>
+<p>Let’s use the same sine wave data from our bias-variance example to see how K affects KNN regression:</p>
+</section>
+<section id="the-role-of-k-in-bias-variance" class="level3">
+<h3 class="anchored" data-anchor-id="the-role-of-k-in-bias-variance">The role of K in bias-variance</h3>
+<p>The hyperparameter <strong>K</strong> (number of neighbors to consider) controls the bias-variance tradeoff:</p>
+<p><strong>Small K (e.g., K=1 or K=2):</strong></p>
+<ul>
+<li><strong>High variance</strong>: Very sensitive to individual training points, including noise</li>
+<li><strong>Low bias</strong>: Can capture complex patterns in the data</li>
+<li><strong>Risk</strong>: Overfitting—memorizing noise in the training data</li>
+</ul>
+<p><strong>Large K (e.g., K=50):</strong></p>
+<ul>
+<li><strong>Low variance</strong>: Predictions are stable, averaging over many neighbors</li>
+<li><strong>High bias</strong>: Overly smooth predictions that may miss important patterns</li>
+<li><strong>Risk</strong>: Underfitting—too simple to capture true complexity</li>
+</ul>
+<p><strong>Moderate K (e.g., K=5-15):</strong></p>
+<ul>
+<li><strong>Balanced</strong>: Sweet spot between capturing patterns and avoiding noise</li>
+</ul>
+<p>Let’s train KNN regressors with different K values and see how they perform:</p>
+<div id="86b00618" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Sine wave data creation</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.neighbors <span class="im">import</span> KNeighborsRegressor</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate the same sine wave data from bias-variance section</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">100</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>y_true <span class="op">=</span> np.sin(X) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> X  <span class="co"># True underlying pattern</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> y_true <span class="op">+</span> np.random.normal(<span class="dv">0</span>, <span class="fl">0.4</span>, <span class="dv">100</span>)  <span class="co"># Add noise</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Reshape for sklearn</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>X_reshaped <span class="op">=</span> X.reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="451a1927" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Try different K values</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>k_values <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">25</span>, <span class="dv">50</span>, <span class="dv">75</span>]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"K-Nearest Neighbors Regressor: Effect of K on Performance"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">65</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> k_values:</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    knn <span class="op">=</span> KNeighborsRegressor(n_neighbors<span class="op">=</span>k)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Use cross-validation to evaluate (negative MSE)</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    cv_scores <span class="op">=</span> cross_val_score(knn, X_reshaped, y, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'neg_mean_squared_error'</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Also check training score to see overfitting</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    knn.fit(X_reshaped, y)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    train_score <span class="op">=</span> knn.score(X_reshaped, y)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"K=</span><span class="sc">{</span>k<span class="sc">:2d}</span><span class="ss">  |  Train R²: </span><span class="sc">{</span>train_score<span class="sc">:.3f}</span><span class="ss">  |  CV MSE: </span><span class="sc">{</span><span class="op">-</span>cv_scores<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss"> (±</span><span class="sc">{</span>cv_scores<span class="sc">.</span>std()<span class="sc">:.3f}</span><span class="ss">)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>K-Nearest Neighbors Regressor: Effect of K on Performance
+=================================================================
+K= 1  |  Train R²: 1.000  |  CV MSE: 0.747 (±0.729)
+K= 2  |  Train R²: 0.975  |  CV MSE: 0.549 (±0.428)
+K= 5  |  Train R²: 0.958  |  CV MSE: 0.444 (±0.266)
+K=10  |  Train R²: 0.949  |  CV MSE: 0.489 (±0.244)
+K=25  |  Train R²: 0.930  |  CV MSE: 0.731 (±0.355)
+K=50  |  Train R²: 0.810  |  CV MSE: 2.077 (±1.694)
+K=75  |  Train R²: 0.464  |  CV MSE: 3.543 (±1.898)</code></pre>
+</div>
+</div>
+<p>Notice the pattern:</p>
+<ul>
+<li><strong>K=1</strong>: Very high training R² but higher CV error → Overfitting to noise</li>
+<li><strong>Larger K</strong>: Training R² decreases, CV error may improve then worsen</li>
+<li><strong>Gap between train and CV</strong>: Indicates overfitting (high variance)</li>
+</ul>
+<div class="callout callout-style-simple callout-important">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The goal is to find the optimal <strong>K</strong> value where the CV error is minimized, which should also be the point where the gap between the training error and the CV error is minimized. For this example, <strong>K=5</strong> appears to be the optimal hyperparameter malue that balances our bias-variance tradeoff space.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="visualizing-the-effect-of-k" class="level3">
+<h3 class="anchored" data-anchor-id="visualizing-the-effect-of-k">Visualizing the effect of K</h3>
+<p>Let’s visualize how different K values affect predictions on our sine wave data. We’ll show three cases: high bias (K=75), balanced (K=7), and high variance (K=1):</p>
+<div id="f3b2ed11" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Visualization code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create fine grid for smooth predictions</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>X_plot <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">10</span>, <span class="dv">300</span>).reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Three models with different K values</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. High bias (K=75): Over-smoothed</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>knn_bias <span class="op">=</span> KNeighborsRegressor(n_neighbors<span class="op">=</span><span class="dv">75</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>knn_bias.fit(X_reshaped, y)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>y_bias <span class="op">=</span> knn_bias.predict(X_plot)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Balanced (K=5): Captures pattern well</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>knn_balanced <span class="op">=</span> KNeighborsRegressor(n_neighbors<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>knn_balanced.fit(X_reshaped, y)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>y_balanced <span class="op">=</span> knn_balanced.predict(X_plot)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. High variance (K=1): Memorizes training points</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>knn_variance <span class="op">=</span> KNeighborsRegressor(n_neighbors<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>knn_variance.fit(X_reshaped, y)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>y_variance <span class="op">=</span> knn_variance.predict(X_plot)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Create three subplots</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">4</span>))</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot 1: High bias (K=50)</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].scatter(X, y, alpha<span class="op">=</span><span class="fl">0.4</span>, s<span class="op">=</span><span class="dv">20</span>, color<span class="op">=</span><span class="st">'gray'</span>, label<span class="op">=</span><span class="st">'Training data'</span>)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(X_plot, y_bias, color<span class="op">=</span><span class="st">'red'</span>, linewidth<span class="op">=</span><span class="fl">2.5</span>, label<span class="op">=</span><span class="st">'Bias model'</span>)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_xlabel(<span class="st">'X'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">'y'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">'High Bias (K=75)'</span>, fontsize<span class="op">=</span><span class="dv">12</span>, fontweight<span class="op">=</span><span class="st">'bold'</span>)</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend(fontsize<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot 2: Balanced (K=5)</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].scatter(X, y, alpha<span class="op">=</span><span class="fl">0.4</span>, s<span class="op">=</span><span class="dv">20</span>, color<span class="op">=</span><span class="st">'gray'</span>, label<span class="op">=</span><span class="st">'Training data'</span>)</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(X_plot, y_balanced, color<span class="op">=</span><span class="st">'green'</span>, linewidth<span class="op">=</span><span class="fl">2.5</span>, label<span class="op">=</span><span class="st">'Just right model'</span>)</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xlabel(<span class="st">'X'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">'y'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">'Balanced (K=5)'</span>, fontsize<span class="op">=</span><span class="dv">12</span>, fontweight<span class="op">=</span><span class="st">'bold'</span>)</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend(fontsize<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot 3: High variance (K=1)</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].scatter(X, y, alpha<span class="op">=</span><span class="fl">0.4</span>, s<span class="op">=</span><span class="dv">20</span>, color<span class="op">=</span><span class="st">'gray'</span>, label<span class="op">=</span><span class="st">'Training data'</span>)</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].plot(X_plot, y_variance, color<span class="op">=</span><span class="st">'blue'</span>, linewidth<span class="op">=</span><span class="fl">2.5</span>, label<span class="op">=</span><span class="st">'Variance model'</span>)</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_xlabel(<span class="st">'X'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_ylabel(<span class="st">'y'</span>, fontsize<span class="op">=</span><span class="dv">11</span>)</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].set_title(<span class="st">'High Variance (K=1)'</span>, fontsize<span class="op">=</span><span class="dv">12</span>, fontweight<span class="op">=</span><span class="st">'bold'</span>)</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].legend(fontsize<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="29-hyperparameter-tuning_files/figure-html/cell-5-output-1.png" width="1141" height="373" class="figure-img"></p>
+<figcaption>KNN regression with different K values showing bias-variance tradeoff</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Observations:</strong></p>
+<ul>
+<li><strong>K=75 (Bias model)</strong>: The prediction curve is overly smooth, averaging over too many neighbors. This is very evident at the tails of the prediction line. It misses the sine wave pattern entirely—the model is too simple (underfitting).</li>
+<li><strong>K=5 (Just right model)</strong>: Captures the underlying sine wave pattern well without being overly sensitive to individual noisy points. This represents good generalization.</li>
+<li><strong>K=1 (Variance model)</strong>: The prediction passes through every training point exactly, including the noise. The curve is extremely jagged and would generalize poorly to new data (overfitting).</li>
+</ul>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>This visualization makes the bias-variance tradeoff tangible: as K increases, we trade model flexibility (variance) for simplicity (bias). The goal of hyperparameter tuning is to find the K value that balances these two sources of error.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="grid-search-for-hyperparameter-tuning" class="level2" data-number="29.3">
+<h2 data-number="29.3" class="anchored" data-anchor-id="grid-search-for-hyperparameter-tuning"><span class="header-section-number">29.3</span> Grid search for hyperparameter tuning</h2>
+<p>Now that you understand how hyperparameters affect model performance, the question becomes: <strong>How do you systematically find the best values?</strong> You <em>could</em> manually try different values, evaluate each with cross-validation, and pick the winner. But this is tedious, error-prone, and doesn’t scale. Enter <strong>grid search</strong>: an automated, systematic approach to hyperparameter tuning.</p>
+<section id="the-grid-search-approach" class="level3">
+<h3 class="anchored" data-anchor-id="the-grid-search-approach">The grid search approach</h3>
+<p>Grid search works like this:</p>
+<ol type="1">
+<li><strong>Define a grid</strong> of hyperparameter values to try (e.g., K = [1, 3, 5, 10, 15, 20])</li>
+<li><strong>For each combination</strong> in the grid:
+<ul>
+<li>Train the model with those hyperparameters</li>
+<li>Evaluate using cross-validation on the training set</li>
+</ul></li>
+<li><strong>Select the best</strong> hyperparameter combination based on CV scores</li>
+<li><strong>Retrain</strong> the final model using all training data with the best hyperparameters</li>
+<li><strong>Evaluate once</strong> on the test set</li>
+</ol>
+<p>The beauty of grid search is that it automates steps 2-3, integrating seamlessly with the cross-validation workflow from Chapter 28.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Grid Search + Cross-Validation = Proper Tuning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Grid search MUST be combined with cross-validation. If you evaluate hyperparameters on the test set, you’re contaminating it. The proper workflow is:</p>
+<ol type="1">
+<li><strong>Train/test split</strong> → Lock away test set</li>
+<li><strong>Grid search with CV</strong> → Find best hyperparameters using training set only</li>
+<li><strong>Train final model</strong> → Use best hyperparameters on all training data</li>
+<li><strong>Evaluate once</strong> → Test set performance</li>
+</ol>
+<p>This is exactly the 5-stage workflow from Chapter 28, with grid search happening in stage 2.</p>
+</div>
+</div>
+</section>
+<section id="implementing-grid-search-with-scikit-learn" class="level3">
+<h3 class="anchored" data-anchor-id="implementing-grid-search-with-scikit-learn">Implementing grid search with scikit-learn</h3>
+<p>Scikit-learn provides <code>GridSearchCV</code> which handles all the complexity for you. Let’s see it in action with KNN on our sine wave data. First, we’ll create a train/test split:</p>
+<div id="28f79304" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create train/test split from our sine wave data</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    X_reshaped, y, test_size<span class="op">=</span><span class="fl">0.3</span>, random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Training set: </span><span class="sc">{</span><span class="bu">len</span>(X_train)<span class="sc">}</span><span class="ss"> samples"</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Test set: </span><span class="sc">{</span><span class="bu">len</span>(X_test)<span class="sc">}</span><span class="ss"> samples"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Training set: 70 samples
+Test set: 30 samples</code></pre>
+</div>
+</div>
+<p>Now let’s use grid search to find the optimal K value:</p>
+<div id="0375cdd7" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> GridSearchCV</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Define the parameter grid</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>param_grid <span class="op">=</span> {</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'n_neighbors'</span>: [<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">50</span>]</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Create a GridSearchCV object</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>knn <span class="op">=</span> KNeighborsRegressor()</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>grid_search <span class="op">=</span> GridSearchCV(</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    estimator<span class="op">=</span>knn,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    param_grid<span class="op">=</span>param_grid,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">=</span><span class="dv">5</span>,                               <span class="co"># 5-fold cross-validation</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    scoring<span class="op">=</span><span class="st">'neg_mean_squared_error'</span>,   <span class="co"># Metric to optimize (MSE for regression)</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    return_train_score<span class="op">=</span><span class="va">True</span>,            <span class="co"># Also return training scores</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">1</span>                           <span class="co"># Show progress</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: Fit the grid search (this tries all combinations)</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>grid_search.fit(X_train, y_train)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 4: View results</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Best parameters: </span><span class="sc">{</span>grid_search<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best CV score (MSE): </span><span class="sc">{</span>grid_search<span class="sc">.</span>best_score_<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Best model (already retrained on all training data):"</span>)</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(grid_search.best_estimator_)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Fitting 5 folds for each of 9 candidates, totalling 45 fits
+
+Best parameters: {'n_neighbors': 7}
+Best CV score (MSE): -0.176
+
+Best model (already retrained on all training data):
+KNeighborsRegressor(n_neighbors=7)</code></pre>
+</div>
+</div>
+<p>Let’s examine the results more closely:</p>
+<div id="afeba844" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert results to DataFrame for easier viewing</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>results_df <span class="op">=</span> pd.DataFrame(grid_search.cv_results_)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Select relevant columns</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>results_summary <span class="op">=</span> results_df[[</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'param_n_neighbors'</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'mean_train_score'</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'mean_test_score'</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'std_test_score'</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>]].copy()</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>results_summary.columns <span class="op">=</span> [<span class="st">'K'</span>, <span class="st">'Train Score'</span>, <span class="st">'CV Score'</span>, <span class="st">'CV Std'</span>]</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>results_summary <span class="op">=</span> results_summary.sort_values(<span class="st">'K'</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Grid Search Results Summary:"</span>)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(results_summary.to_string(index<span class="op">=</span><span class="va">False</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Grid Search Results Summary:
+ K  Train Score  CV Score   CV Std
+ 1     0.000000 -0.318961 0.057746
+ 3    -0.111991 -0.198662 0.048533
+ 5    -0.137419 -0.181505 0.063209
+ 7    -0.151094 -0.176261 0.061741
+10    -0.185900 -0.205077 0.087549
+15    -0.225490 -0.250732 0.096721
+20    -0.291092 -0.328092 0.148552
+30    -0.603248 -0.659089 0.366735
+50    -1.994196 -2.094198 0.540174</code></pre>
+</div>
+</div>
+<p><strong>Key insights:</strong></p>
+<ul>
+<li>Grid search evaluated all 9 values of K using 5-fold CV ( <span class="math inline">\(9 \times 5 = 45\)</span> total model fits!)</li>
+<li><code>best_params_</code> gives you the optimal K value</li>
+<li><code>best_estimator_</code> is the final model, already retrained on all training data</li>
+<li>The gap between training and CV scores shows overfitting (high variance) for small K</li>
+</ul>
+</section>
+</section>
+<section id="tuning-decision-trees-and-random-forests" class="level2" data-number="29.4">
+<h2 data-number="29.4" class="anchored" data-anchor-id="tuning-decision-trees-and-random-forests"><span class="header-section-number">29.4</span> Tuning decision trees and random forests</h2>
+<p>Now let’s apply grid search to the tree-based models you learned in Chapters 25-26. These models have multiple hyperparameters, creating a multi-dimensional search space.</p>
+<section id="key-hyperparameters-for-decision-trees" class="level3">
+<h3 class="anchored" data-anchor-id="key-hyperparameters-for-decision-trees">Key hyperparameters for decision trees</h3>
+<p>Decision trees have several hyperparameters that control complexity:</p>
+<p><strong><code>max_depth</code></strong>: Maximum depth of the tree</p>
+<ul>
+<li>Low values → High bias (underfitting)</li>
+<li>High values → High variance (overfitting)</li>
+<li>Default: None (unlimited)</li>
+</ul>
+<p><strong><code>min_samples_split</code></strong>: Minimum samples required to split a node</p>
+<ul>
+<li>High values → Simpler trees (higher bias)</li>
+<li>Low values → More complex trees (higher variance)</li>
+<li>Default: 2</li>
+</ul>
+<p><strong><code>min_samples_leaf</code></strong>: Minimum samples required in a leaf node</p>
+<ul>
+<li>High values → Smoother predictions (higher bias)</li>
+<li>Low values → More granular predictions (higher variance)</li>
+<li>Default: 1</li>
+</ul>
+<p><strong><code>max_features</code></strong>: Number of features to consider for each split</p>
+<ul>
+<li>Lower values → More randomness, less overfitting</li>
+<li>Higher values → Less randomness, potential overfitting</li>
+<li>Default: All features</li>
+</ul>
+<p>Let’s tune a decision tree on a classification task using the Default dataset from ISLP:</p>
+<div id="4e6b4910" class="cell" data-execution_count="8">
+<details class="code-fold">
+<summary>Default data prep</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> ISLP <span class="im">import</span> load_data</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeClassifier</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load and prepare data</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>Default <span class="op">=</span> load_data(<span class="st">'Default'</span>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> pd.get_dummies(Default[[<span class="st">'balance'</span>, <span class="st">'income'</span>, <span class="st">'student'</span>]], drop_first<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> (Default[<span class="st">'default'</span>] <span class="op">==</span> <span class="st">'Yes'</span>).astype(<span class="bu">int</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Train/test split</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Now let’s set up a grid search for decision tree hyperparameters:</p>
+<div id="70472c52" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define parameter grid</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>param_grid_tree <span class="op">=</span> {</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'max_depth'</span>: [<span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>, <span class="va">None</span>],</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'min_samples_split'</span>: [<span class="dv">2</span>, <span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">50</span>],</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'min_samples_leaf'</span>: [<span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">20</span>]</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create GridSearchCV</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>tree <span class="op">=</span> DecisionTreeClassifier(random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>grid_search_tree <span class="op">=</span> GridSearchCV(</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    estimator<span class="op">=</span>tree,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    param_grid<span class="op">=</span>param_grid_tree,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    scoring<span class="op">=</span><span class="st">'roc_auc'</span>,  <span class="co"># Better metric for imbalanced data</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    n_jobs<span class="op">=-</span><span class="dv">1</span>  <span class="co"># Use all CPU cores</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit grid search</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Searching for best decision tree hyperparameters..."</span>)</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>grid_search_tree.fit(X_train, y_train)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Best parameters: </span><span class="sc">{</span>grid_search_tree<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best CV ROC AUC: </span><span class="sc">{</span>grid_search_tree<span class="sc">.</span>best_score_<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Searching for best decision tree hyperparameters...
+Fitting 5 folds for each of 112 candidates, totalling 560 fits
+
+Best parameters: {'max_depth': 5, 'min_samples_leaf': 1, 'min_samples_split': 50}
+Best CV ROC AUC: 0.9375</code></pre>
+</div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>500+ models!
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This grid searches 7 × 4 × 4 = 112 hyperparameter combinations, each evaluated with 5-fold CV, resulting in 560 model fits! Grid search can be computationally expensive.</p>
+</div>
+</div>
+</section>
+<section id="key-hyperparameters-for-random-forests" class="level3">
+<h3 class="anchored" data-anchor-id="key-hyperparameters-for-random-forests">Key hyperparameters for random forests</h3>
+<p>Random forests inherit decision tree hyperparameters plus additional ones:</p>
+<p><strong><code>n_estimators</code></strong>: Number of trees in the forest</p>
+<ul>
+<li>More trees → More stable predictions (lower variance)</li>
+<li>Diminishing returns after a point</li>
+<li>Computational cost increases linearly</li>
+<li>Recommended: Start with 100-500</li>
+</ul>
+<p><strong><code>max_depth</code></strong>: Maximum depth of each tree</p>
+<ul>
+<li>Same as decision trees</li>
+<li>Random forests can handle deeper trees than single trees due to averaging</li>
+</ul>
+<p><strong><code>max_features</code></strong>: Number of features to consider for each split</p>
+<ul>
+<li>‘sqrt’: √(total features) → Default for classification, good balance</li>
+<li>‘log2’: log₂(total features) → More randomness, less correlation between trees</li>
+<li>None: All features → Less randomness, more correlation</li>
+</ul>
+<p><strong><code>min_samples_split</code></strong> and <strong><code>min_samples_leaf</code></strong>: Same as decision trees</p>
+<p>Let’s tune a random forest:</p>
+<div id="9478db6e" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Define parameter grid (smaller to save computation time)</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>param_grid_rf <span class="op">=</span> {</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'n_estimators'</span>: [<span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">200</span>],</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'max_depth'</span>: [<span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="va">None</span>],</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'max_features'</span>: [<span class="st">'sqrt'</span>, <span class="st">'log2'</span>],</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'min_samples_split'</span>: [<span class="dv">2</span>, <span class="dv">10</span>, <span class="dv">20</span>]</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create GridSearchCV</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>rf <span class="op">=</span> RandomForestClassifier(random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>grid_search_rf <span class="op">=</span> GridSearchCV(</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    estimator<span class="op">=</span>rf,</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    param_grid<span class="op">=</span>param_grid_rf,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    scoring<span class="op">=</span><span class="st">'roc_auc'</span>,</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    n_jobs<span class="op">=-</span><span class="dv">1</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit grid search</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Searching for best random forest hyperparameters..."</span>)</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>grid_search_rf.fit(X_train, y_train)</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Best parameters: </span><span class="sc">{</span>grid_search_rf<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best CV ROC AUC: </span><span class="sc">{</span>grid_search_rf<span class="sc">.</span>best_score_<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Searching for best random forest hyperparameters...
+Fitting 5 folds for each of 72 candidates, totalling 360 fits
+
+Best parameters: {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_split': 2, 'n_estimators': 200}
+Best CV ROC AUC: 0.9343</code></pre>
+</div>
+</div>
+</section>
+<section id="comparing-tuned-models-with-grid-search" class="level3">
+<h3 class="anchored" data-anchor-id="comparing-tuned-models-with-grid-search">Comparing tuned models with grid search</h3>
+<p>Let’s put it all together and compare our best tuned decision tree vs.&nbsp;the best tuned random forest:</p>
+<div id="5a69b78c" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1-3: Already done above (grid search with CV)</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 4: Train final models on all training data (already done by GridSearchCV)</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>best_tree <span class="op">=</span> grid_search_tree.best_estimator_</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>best_rf <span class="op">=</span> grid_search_rf.best_estimator_</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 5: Evaluate on test set ONCE</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> roc_auc_score</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>tree_test_score <span class="op">=</span> roc_auc_score(y_test, best_tree.predict_proba(X_test)[:, <span class="dv">1</span>])</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>rf_test_score <span class="op">=</span> roc_auc_score(y_test, best_rf.predict_proba(X_test)[:, <span class="dv">1</span>])</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Final Model Comparison:"</span>)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">60</span>)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Decision Tree:"</span>)</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  Best params: </span><span class="sc">{</span>grid_search_tree<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  CV ROC AUC:  </span><span class="sc">{</span>grid_search_tree<span class="sc">.</span>best_score_<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  Test ROC AUC: </span><span class="sc">{</span>tree_test_score<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Random Forest:"</span>)</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  Best params: </span><span class="sc">{</span>grid_search_rf<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  CV ROC AUC:  </span><span class="sc">{</span>grid_search_rf<span class="sc">.</span>best_score_<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"  Test ROC AUC: </span><span class="sc">{</span>rf_test_score<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">60</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Final Model Comparison:
+============================================================
+Decision Tree:
+  Best params: {'max_depth': 5, 'min_samples_leaf': 1, 'min_samples_split': 50}
+  CV ROC AUC:  0.9375
+  Test ROC AUC: 0.9437
+
+Random Forest:
+  Best params: {'max_depth': 5, 'max_features': 'sqrt', 'min_samples_split': 2, 'n_estimators': 200}
+  CV ROC AUC:  0.9343
+  Test ROC AUC: 0.9411
+============================================================</code></pre>
+</div>
+</div>
+<p><strong>Key observations:</strong></p>
+<ul>
+<li>Both models’ test scores are close to their CV scores → Good sign, no contamination</li>
+<li>Random forest typically achieves higher scores due to ensemble averaging</li>
+<li>The hyperparameter tuning process is identical regardless of model type</li>
+</ul>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>The Complete Workflow with Hyperparameter Tuning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><strong>Split data</strong> → Train/test, lock away test set</li>
+<li><strong>Define models and parameter grids</strong> → Set up GridSearchCV</li>
+<li><strong>Grid search with CV</strong> → Find best hyperparameters (training set only!)</li>
+<li><strong>Compare models</strong> → Use CV scores from grid search</li>
+<li><strong>Train final model</strong> → Best model with best hyperparameters (automatic in GridSearchCV)</li>
+<li><strong>Evaluate once</strong> → Test set performance</li>
+</ol>
+<p>This extends the 5-stage workflow from Chapter 28 by adding grid search in stage 2-3.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="beyond-grid-search" class="level2" data-number="29.5">
+<h2 data-number="29.5" class="anchored" data-anchor-id="beyond-grid-search"><span class="header-section-number">29.5</span> Beyond grid search</h2>
+<p>While grid search is systematic and thorough, it has limitations:</p>
+<ul>
+<li><strong>Computationally expensive</strong> for large grids (exponential growth with parameters)</li>
+<li><strong>Inefficient sampling</strong> (tries all combinations even in unpromising regions)</li>
+<li><strong>Curse of dimensionality</strong> (grid points become sparse in high dimensions)</li>
+</ul>
+<p>Several alternatives address these issues. Two popular ones include:</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Random search
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>Random search</strong> randomly samples from the hyperparameter space rather than trying all combinations <span class="citation" data-cites="bergstra12a">(<a href="references.html#ref-bergstra12a" role="doc-biblioref">Bergstra and Bengio 2012</a>)</span>.</p>
+<p><strong>Advantages:</strong></p>
+<ul>
+<li>More efficient for large hyperparameter spaces</li>
+<li>Can try more diverse values in the same computational budget</li>
+<li>Often finds good hyperparameters faster than grid search</li>
+<li>Better for continuous hyperparameters</li>
+</ul>
+<p><strong>When to use:</strong></p>
+<ul>
+<li>Many hyperparameters to tune (&gt;3-4)</li>
+<li>Limited computational budget</li>
+<li>Early exploration phase</li>
+</ul>
+<p>Here’s a quick example where we are searching across over <strong><em>2 million</em></strong> hyperparameter combinations! This would take hours if not days to train on even with GPUs. However, here we use <code>RandomizedSearchCV()</code> with <code>n_iter=50</code>, which will perform 50 random combinations instead of grid search’s exhaustive approach. This can be much faster when you need to search across many hyperparameters with diverse value ranges.</p>
+<div id="d5317a16" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> RandomizedSearchCV</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> randint, uniform</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define distributions instead of fixed values</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>param_distributions_rf <span class="op">=</span> {</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'n_estimators'</span>: randint(<span class="dv">50</span>, <span class="dv">300</span>),           <span class="co"># Random integers from 50-300</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'max_depth'</span>: [<span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>, <span class="va">None</span>],         <span class="co"># Can still use lists</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'max_features'</span>: [<span class="st">'sqrt'</span>, <span class="st">'log2'</span>],</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'min_samples_split'</span>: randint(<span class="dv">2</span>, <span class="dv">50</span>),        <span class="co"># Random integers from 2-50</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'min_samples_leaf'</span>: randint(<span class="dv">1</span>, <span class="dv">20</span>)          <span class="co"># Random integers from 1-20</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co"># RandomizedSearchCV</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>random_search <span class="op">=</span> RandomizedSearchCV(</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    estimator<span class="op">=</span>RandomForestClassifier(random_state<span class="op">=</span><span class="dv">42</span>),</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    param_distributions<span class="op">=</span>param_distributions_rf,</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    n_iter<span class="op">=</span><span class="dv">50</span>,  <span class="co"># Number of random samples to try</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    cv<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    scoring<span class="op">=</span><span class="st">'roc_auc'</span>,</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    n_jobs<span class="op">=-</span><span class="dv">1</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Random search: trying 50 random hyperparameter combinations..."</span>)</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>random_search.fit(X_train, y_train)</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Best parameters: </span><span class="sc">{</span>random_search<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best CV ROC AUC: </span><span class="sc">{</span>random_search<span class="sc">.</span>best_score_<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Random search: trying 50 random hyperparameter combinations...
+Fitting 5 folds for each of 50 candidates, totalling 250 fits
+
+Best parameters: {'max_depth': 5, 'max_features': 'log2', 'min_samples_leaf': 14, 'min_samples_split': 10, 'n_estimators': 139}
+Best CV ROC AUC: 0.9368</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Bayesian optimization approaches
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>More advanced methods use <strong>Bayesian optimization</strong> or other “smart” search strategies <span class="citation" data-cites="bergstra2011algorithms">(<a href="references.html#ref-bergstra2011algorithms" role="doc-biblioref">Bergstra et al. 2011</a>)</span>:</p>
+<p><strong>How they work:</strong></p>
+<ol type="1">
+<li>Try a few random hyperparameter combinations</li>
+<li>Build a probabilistic model of the objective function (performance vs.&nbsp;hyperparameters)</li>
+<li>Use this model to suggest promising hyperparameters to try next</li>
+<li>Update model with new results</li>
+<li>Repeat until budget exhausted</li>
+</ol>
+<p><strong>Popular libraries:</strong></p>
+<ul>
+<li><strong>Optuna</strong>: Modern, user-friendly, integrates well with scikit-learn</li>
+<li><strong>Hyperopt</strong>: Established library with Tree-structured Parzen Estimators (TPE)</li>
+<li><strong>scikit-optimize</strong>: Bayesian optimization integrated with scikit-learn API</li>
+</ul>
+<p><strong>When to use:</strong></p>
+<ul>
+<li>Very expensive model training (deep learning, large datasets)</li>
+<li>Many hyperparameters with complex interactions</li>
+<li>You need the absolute best performance</li>
+<li>You have time to learn a new library</li>
+</ul>
+<p><strong>Example with <a href="https://optuna.readthedocs.io/en/stable/tutorial/index.html">Optuna</a></strong>: Here, we only perform 20 iterations but it is not uncommon to perform hundreds if not thousands of iterations for models with complex hyperparameter search space.</p>
+<div id="c95d9e79" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> optuna</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> objective(trial):</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Optuna suggests hyperparameters</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> {</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">'n_estimators'</span>: trial.suggest_int(<span class="st">'n_estimators'</span>, <span class="dv">50</span>, <span class="dv">300</span>),</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">'max_depth'</span>: trial.suggest_int(<span class="st">'max_depth'</span>, <span class="dv">3</span>, <span class="dv">20</span>),</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">'min_samples_split'</span>: trial.suggest_int(<span class="st">'min_samples_split'</span>, <span class="dv">2</span>, <span class="dv">50</span>),</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Train and evaluate</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    rf <span class="op">=</span> RandomForestClassifier(<span class="op">**</span>params, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    score <span class="op">=</span> cross_val_score(rf, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'roc_auc'</span>).mean()</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> score</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Run optimization</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>study <span class="op">=</span> optuna.create_study(direction<span class="op">=</span><span class="st">'maximize'</span>)</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>study.optimize(objective, n_trials<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best params: </span><span class="sc">{</span>study<span class="sc">.</span>best_params<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Best score: </span><span class="sc">{</span>study<span class="sc">.</span>best_value<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>[I 2025-10-31 00:42:22,133] A new study created in memory with name: no-name-5d2ff0ca-6ded-4ff3-8ae1-91a9ec2637bb
+[I 2025-10-31 00:42:24,681] Trial 0 finished with value: 0.9237689775321171 and parameters: {'n_estimators': 92, 'max_depth': 18, 'min_samples_split': 19}. Best is trial 0 with value: 0.9237689775321171.
+[I 2025-10-31 00:42:28,306] Trial 1 finished with value: 0.9331744736598908 and parameters: {'n_estimators': 188, 'max_depth': 5, 'min_samples_split': 40}. Best is trial 1 with value: 0.9331744736598908.
+[I 2025-10-31 00:42:32,346] Trial 2 finished with value: 0.9313325536895942 and parameters: {'n_estimators': 149, 'max_depth': 16, 'min_samples_split': 46}. Best is trial 1 with value: 0.9331744736598908.
+[I 2025-10-31 00:42:34,718] Trial 3 finished with value: 0.9282514860045502 and parameters: {'n_estimators': 88, 'max_depth': 12, 'min_samples_split': 43}. Best is trial 1 with value: 0.9331744736598908.
+[I 2025-10-31 00:42:40,848] Trial 4 finished with value: 0.9383844072728278 and parameters: {'n_estimators': 262, 'max_depth': 7, 'min_samples_split': 30}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:42:45,821] Trial 5 finished with value: 0.929333764597515 and parameters: {'n_estimators': 183, 'max_depth': 16, 'min_samples_split': 41}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:42:48,513] Trial 6 finished with value: 0.9171114549179457 and parameters: {'n_estimators': 96, 'max_depth': 17, 'min_samples_split': 4}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:42:54,893] Trial 7 finished with value: 0.9279531233013995 and parameters: {'n_estimators': 232, 'max_depth': 20, 'min_samples_split': 23}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:42:59,887] Trial 8 finished with value: 0.9242940342546142 and parameters: {'n_estimators': 181, 'max_depth': 20, 'min_samples_split': 22}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:04,797] Trial 9 finished with value: 0.9229356720982385 and parameters: {'n_estimators': 293, 'max_depth': 4, 'min_samples_split': 32}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:12,163] Trial 10 finished with value: 0.9357925812819256 and parameters: {'n_estimators': 295, 'max_depth': 8, 'min_samples_split': 10}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:19,616] Trial 11 finished with value: 0.9355570605336929 and parameters: {'n_estimators': 299, 'max_depth': 8, 'min_samples_split': 10}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:26,066] Trial 12 finished with value: 0.9339207353808782 and parameters: {'n_estimators': 250, 'max_depth': 9, 'min_samples_split': 31}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:32,240] Trial 13 finished with value: 0.9361225527509791 and parameters: {'n_estimators': 248, 'max_depth': 8, 'min_samples_split': 13}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:38,752] Trial 14 finished with value: 0.9345934182615935 and parameters: {'n_estimators': 240, 'max_depth': 12, 'min_samples_split': 16}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:44,309] Trial 15 finished with value: 0.9358962438045906 and parameters: {'n_estimators': 258, 'max_depth': 6, 'min_samples_split': 30}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:50,291] Trial 16 finished with value: 0.930938402649151 and parameters: {'n_estimators': 226, 'max_depth': 10, 'min_samples_split': 15}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:52,389] Trial 17 finished with value: 0.9100621115697797 and parameters: {'n_estimators': 146, 'max_depth': 3, 'min_samples_split': 36}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:43:59,617] Trial 18 finished with value: 0.9335015806174056 and parameters: {'n_estimators': 268, 'max_depth': 14, 'min_samples_split': 50}. Best is trial 4 with value: 0.9383844072728278.
+[I 2025-10-31 00:44:04,211] Trial 19 finished with value: 0.936766095069791 and parameters: {'n_estimators': 213, 'max_depth': 6, 'min_samples_split': 3}. Best is trial 4 with value: 0.9383844072728278.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Best params: {'n_estimators': 262, 'max_depth': 7, 'min_samples_split': 30}
+Best score: 0.9383844072728278</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Grid Search vs.&nbsp;Random Search vs.&nbsp;Bayesian Optimization
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Use Grid Search when:</strong></p>
+<ul>
+<li>Small number of hyperparameters (≤3)</li>
+<li>Discrete hyperparameter values</li>
+<li>You want to be thorough and systematic</li>
+<li>Computational cost is manageable</li>
+</ul>
+<p><strong>Use Random Search when:</strong></p>
+<ul>
+<li>Many hyperparameters (&gt;3) with many value options</li>
+<li>Want to explore diverse configurations quickly</li>
+<li>Limited computational budget</li>
+<li>Early exploration phase</li>
+</ul>
+<p><strong>Use Bayesian Optimization when:</strong></p>
+<ul>
+<li>Model training is very expensive</li>
+<li>You need maximum performance</li>
+<li>Complex hyperparameter interactions</li>
+<li>You can invest time learning the library</li>
+</ul>
+<p><strong>For this course</strong>: Stick with grid search for most tasks. It’s simple, reliable, and works well for the models and datasets you’ll encounter.</p>
+</div>
+</div>
+</section>
+<section id="summary" class="level2" data-number="29.6">
+<h2 data-number="29.6" class="anchored" data-anchor-id="summary"><span class="header-section-number">29.6</span> Summary</h2>
+<p>This chapter equipped you with systematic methods for finding optimal model configurations through hyperparameter tuning.</p>
+<p>The <strong>bias-variance tradeoff</strong> is the fundamental principle underlying hyperparameter tuning. Bias represents systematic error from overly simple models (underfitting), while variance represents sensitivity to training data from overly complex models (overfitting). Hyperparameters like K in KNN, <code>max_depth</code> in decision trees, and <code>n_estimators</code> in random forests control where a model falls on this spectrum—your goal is finding the sweet spot that minimizes total prediction error on new data.</p>
+<p><strong>Grid search</strong> automates hyperparameter tuning by systematically evaluating all combinations of specified hyperparameter values using cross-validation. Scikit-learn’s <code>GridSearchCV</code> handles the entire workflow: it trains models with each combination using k-fold CV on your training set, selects the best configuration, and retrains the final model on all training data. This integrates seamlessly into the 5-stage workflow from Chapter 28, with grid search happening during model development (stages 2-3).</p>
+<p>When tuning <strong>decision trees and random forests</strong>, you typically optimize multiple hyperparameters simultaneously—<code>max_depth</code>, <code>min_samples_split</code>, and <code>min_samples_leaf</code> for trees; plus <code>n_estimators</code> and <code>max_features</code> for forests. Grid search explores all combinations to find the configuration that balances model complexity and generalization. When computational cost becomes prohibitive, <strong>random search</strong> efficiently samples the hyperparameter space, and advanced <strong>Bayesian optimization</strong> methods (like Optuna) can intelligently suggest promising combinations to try next.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The Complete Workflow with Hyperparameter Tuning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Your standard approach for every machine learning project now includes:</p>
+<ol type="1">
+<li><strong>Train/test split</strong> → Lock away test set</li>
+<li><strong>Define models and grids</strong> → Set up GridSearchCV for each candidate model</li>
+<li><strong>Grid search with CV</strong> → Find best hyperparameters using training set only</li>
+<li><strong>Compare models</strong> → Use CV scores to select best model type and configuration</li>
+<li><strong>Final evaluation</strong> → Test set evaluation EXACTLY ONCE</li>
+</ol>
+<p>The test set is touched only once, at the very end, ensuring your performance estimates remain trustworthy.</p>
+</div>
+</div>
+<p>Over the past two chapters, you’ve learned two critical techniques for optimizing model performance: using cross-validation to properly evaluate and compare models (Chapter 28), and tuning hyperparameters to find optimal model configurations (Chapter 29). In the next chapter, you’ll discover a third powerful technique: <strong>feature engineering</strong>—the art of creating, transforming, and selecting features to give your models better information to learn from. While cross-validation and hyperparameter tuning optimize <em>how</em> your model learns, feature engineering optimizes <em>what</em> your model learns from.</p>
+</section>
+<section id="end-of-chapter-exercises" class="level2" data-number="29.7">
+<h2 data-number="29.7" class="anchored" data-anchor-id="end-of-chapter-exercises"><span class="header-section-number">29.7</span> End of chapter exercises</h2>
+<p>These exercises give you hands-on practice with hyperparameter tuning using grid search and cross-validation.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 1: Tuning KNN for regression
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Use the <a href="https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/refs/heads/main/data/ames_clean.csv">Ames housing dataset</a> to predict <code>SalePrice</code> using K-Nearest Neighbors regression.</p>
+<p><strong>Your tasks:</strong></p>
+<ol type="1">
+<li>Load the Ames housing data and select at least 5 numerical features</li>
+<li>Create a train/test split (80/20)</li>
+<li>Use <code>GridSearchCV</code> to tune these KNN hyperparameters:
+<ul>
+<li><code>n_neighbors</code>: [3, 5, 7, 10, 15, 20, 30, 50]</li>
+<li><code>weights</code>: [‘uniform’, ‘distance’]</li>
+<li><code>p</code>: [1, 2] (1 = Manhattan distance, 2 = Euclidean distance)</li>
+</ul></li>
+<li>Use 5-fold CV and optimize for R² score</li>
+<li>Report the best hyperparameters and CV score</li>
+<li>Evaluate the best model on the test set</li>
+<li>Create a visualization showing how <code>n_neighbors</code> affects performance</li>
+</ol>
+<p><strong>Reflection questions:</strong></p>
+<ul>
+<li>How does the <code>weights</code> parameter affect performance?</li>
+<li>What does the <code>p</code> parameter control? Which distance metric worked better?</li>
+<li>Is there a large gap between CV and test performance? What does this indicate?</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-11-contents" aria-controls="callout-11" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 2: Decision tree depth analysis
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-11" class="callout-11-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Systematically analyze how <code>max_depth</code> affects decision tree performance on the Default dataset.</p>
+<p><strong>Your tasks:</strong></p>
+<ol type="1">
+<li>Load the Default dataset and prepare features</li>
+<li>Create train/test split (80/20, stratified)</li>
+<li>For each <code>max_depth</code> in [1, 2, 3, 5, 7, 10, 15, 20, None]:
+<ul>
+<li>Train a decision tree</li>
+<li>Compute training accuracy and 5-fold CV accuracy</li>
+<li>Store results</li>
+</ul></li>
+<li>Create a line plot showing training vs.&nbsp;CV accuracy across depths</li>
+<li>Identify the depth where overfitting begins (gap between train and CV widens)</li>
+<li>Use <code>GridSearchCV</code> to tune multiple hyperparameters simultaneously:
+<ul>
+<li><code>max_depth</code>: [3, 5, 7, 10, 15, None]</li>
+<li><code>min_samples_split</code>: [2, 10, 20, 50]</li>
+<li><code>min_samples_leaf</code>: [1, 5, 10, 20]</li>
+</ul></li>
+<li>Compare the best tuned tree to your depth-only analysis</li>
+</ol>
+<p><strong>Reflection questions:</strong></p>
+<ul>
+<li>At what depth does overfitting become apparent?</li>
+<li>Did tuning multiple hyperparameters improve performance over just tuning depth?</li>
+<li>Which hyperparameter had the largest impact on performance?</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-12-contents" aria-controls="callout-12" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Exercise 3: Random forest comprehensive tuning
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-12" class="callout-12-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Perform comprehensive hyperparameter tuning for a random forest classifier on the Default dataset.</p>
+<p><strong>Your tasks:</strong></p>
+<p><strong>Part A: Grid Search</strong></p>
+<ol type="1">
+<li>Define a parameter grid with:
+<ul>
+<li><code>n_estimators</code>: [50, 100, 200, 300]</li>
+<li><code>max_depth</code>: [5, 10, 15, 20, None]</li>
+<li><code>max_features</code>: [‘sqrt’, ‘log2’]</li>
+<li><code>min_samples_split</code>: [2, 10, 20]</li>
+</ul></li>
+<li>Use <code>GridSearchCV</code> with 5-fold CV and ROC AUC scoring</li>
+<li>Report best parameters and CV score</li>
+<li>Evaluate on test set</li>
+</ol>
+<p><strong>Part B: Random Search</strong></p>
+<ol type="1">
+<li>Define parameter distributions:
+<ul>
+<li><code>n_estimators</code>: uniform distribution from 50 to 500</li>
+<li><code>max_depth</code>: [3, 5, 7, 10, 15, 20, None]</li>
+<li><code>max_features</code>: [‘sqrt’, ‘log2’]</li>
+<li><code>min_samples_split</code>: integers from 2 to 100</li>
+<li><code>min_samples_leaf</code>: integers from 1 to 50</li>
+</ul></li>
+<li>Use <code>RandomizedSearchCV</code> with <code>n_iter=100</code></li>
+<li>Compare results to grid search</li>
+</ol>
+<p><strong>Part C: Analysis</strong></p>
+<ol type="1">
+<li>Create a bar chart comparing:
+<ul>
+<li>Default random forest (no tuning)</li>
+<li>Grid search tuned</li>
+<li>Random search tuned</li>
+</ul></li>
+<li>Show both CV and test scores</li>
+<li>Report computation time for each approach</li>
+</ol>
+<p><strong>Reflection questions:</strong></p>
+<ul>
+<li>Did random search find better hyperparameters than grid search?</li>
+<li>Was random search faster? By how much?</li>
+<li>How much improvement did tuning provide over defaults?</li>
+<li>Would you recommend random search or grid search for this problem?</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-bergstra2011algorithms" class="csl-entry" role="listitem">
+Bergstra, James, Rémi Bardenet, Yoshua Bengio, and Balázs Kégl. 2011. <span>“Algorithms for Hyper-Parameter Optimization.”</span> <em>Advances in Neural Information Processing Systems</em> 24.
+</div>
+<div id="ref-bergstra12a" class="csl-entry" role="listitem">
+Bergstra, James, and Yoshua Bengio. 2012. <span>“Random Search for Hyper-Parameter Optimization.”</span> <em>Journal of Machine Learning Research</em> 13 (10): 281–305. <a href="http://jmlr.org/papers/v13/bergstra12a.html">http://jmlr.org/papers/v13/bergstra12a.html</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./28-cross-validation.html" class="pagination-link" aria-label="Cross-validation: Reliable model evaluation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./99-anaconda-install.html" class="pagination-link" aria-label="Anaconda Installation">
+        <span class="nav-page-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/29-hyperparameter-tuning.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
