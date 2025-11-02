@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="w12_tuesday_files/libs/clipboard/clipboard.min.js"></script>
+<script src="w12_tuesday_files/libs/quarto-html/tabby.min.js"></script>
+<script src="w12_tuesday_files/libs/quarto-html/popper.min.js"></script>
+<script src="w12_tuesday_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="w12_tuesday_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="w12_tuesday_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="w12_tuesday_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="w12_tuesday_files/libs/quarto-contrib/quarto-timer-1.0.0/timer.js"></script>
+<link href="w12_tuesday_files/libs/quarto-contrib/quarto-timer-1.0.0/timer.css" rel="stylesheet"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.8.25">
+
+  <title>Week 12 – The Professional ML Workflow</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="w12_tuesday_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="w12_tuesday_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="w12_tuesday_files/libs/revealjs/dist/theme/quarto-534cd8e3a96973385dffff3f4709048d.css">
+  <link rel="stylesheet" href="styles.css">
+  <link href="w12_tuesday_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="w12_tuesday_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="w12_tuesday_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="w12_tuesday_files/libs/revealjs/plugin/appearance/appearance.css" rel="stylesheet">
+  <link href="w12_tuesday_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <meta name="mermaid-theme" content="neutral">
+  <script src="w12_tuesday_files/libs/quarto-diagram/mermaid.min.js"></script>
+  <script src="w12_tuesday_files/libs/quarto-diagram/mermaid-init.js"></script>
+  <link href="w12_tuesday_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" data-background-image="images/optimize-ml-background.jpg" data-background-opacity="1.0" data-background-size="cover" class="quarto-title-block center">
+  <h1 class="title">Week 12 – The Professional ML Workflow</h1>
+  <p class="subtitle">Cross-Validation, Hyperparameter Tuning, and Feature Engineering</p>
+
+<div class="quarto-title-authors">
+</div>
+
+</section>
+<section id="welcome-to-week-12" class="slide level2">
+<h2>Welcome to Week 12</h2>
+<ul>
+<li><p>Quick overview of today’s plan:</p>
+<ul>
+<li>Why the simple train/test split isn’t enough</li>
+<li>How cross-validation solves the “peeking problem”</li>
+<li>Finding optimal model settings systematically</li>
+<li>Turning raw data into powerful features</li>
+</ul></li>
+</ul>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Important</strong></p>
+</div>
+<div class="callout-content">
+<p>This week is all about trying to optimize model performance!</p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>This week ties together everything students have learned about modeling. We’re moving from “textbook simple” to “production ready.” These three topics (CV, hyperparameter tuning, feature engineering) are what separate beginner data scientists from professionals.</p>
+<p>Key message: The techniques from previous weeks were pedagogically useful, but now we’re learning the proper workflow that ensures honest, reliable model performance.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section>
+<section id="discussion-homework-questions" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Discussion: Homework &amp; Questions</h1>
+
+</section>
+<section id="questions-from-week-11" class="slide level2 smaller">
+<h2>Questions from Week 11?</h2>
+<ul>
+<li>Random Forests and ensemble methods?</li>
+<li>Feature importance interpretation?</li>
+<li>When to use trees vs.&nbsp;other models?</li>
+<li>Anything confusing in the quiz or class lab?</li>
+<li>Time to ask!</li>
+</ul>
+<div class="fragment">
+<div class="columns">
+<div class="column" style="width:70%;">
+<div class="callout callout-none no-icon callout-titled callout-style-simple">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>Activity</strong></p>
+</div>
+<div class="callout-content">
+<p>Converse with your neighbor and identify…</p>
+<ul>
+<li>1 new thing you learned last week that was clear and well explained</li>
+<li>1 thing we covered last week that is still confusing</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:30%;">
+<center>
+<div id="3minWaiting">
+
+</div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minWaiting", 180, "slide");
+    });
+</script>
+</center>
+</div></div>
+<aside class="notes">
+<p>Use this time to surface any lingering questions from Week 11 (Random Forests, gradient boosting).</p>
+<p>After the pair discussion, ask 2-3 students to share: - What concept clicked for them? - What still needs clarification?</p>
+<p>Common confusions from Week 11: - How feature importance is calculated - When to use Random Forest vs.&nbsp;single decision tree - Understanding out-of-bag (OOB) error</p>
+<p>Bridge to today: “Last week you learned powerful tree-based models. This week, we learn how to tune them properly, evaluate them honestly, and prepare data to maximize their effectiveness.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section></section>
+<section>
+<section id="the-problem-weve-been-peeking" class="title-slide slide level1 center" data-background="#43464B">
+<h1>The Problem: We’ve Been Peeking</h1>
+
+</section>
+<section id="the-test-set-contamination-issue" class="slide level2 smaller">
+<h2>The Test Set Contamination Issue</h2>
+<p>Remember the golden rule from Module 8?</p>
+<blockquote>
+<p><em>“Don’t touch the test set until you’ve selected your final model”</em></p>
+</blockquote>
+<div class="fragment">
+<p><strong>But then we did this:</strong></p>
+<ul>
+<li>Tried different <code>max_depth</code> values → evaluated on test set</li>
+<li>Compared models → chose based on test set performance</li>
+<li>Tuned hyperparameters → peeked at test set each time</li>
+<li>Added/removed features → checked test set results</li>
+</ul>
+</div>
+<div class="fragment">
+<div class="callout callout-warning callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>The consequence</strong></p>
+</div>
+<div class="callout-content">
+<p>Test scores become optimistically biased and untrustworthy.</p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>This slide addresses the “uncomfortable truth” from Chapter 28. Students have been unknowingly contaminating their test sets throughout Chapters 25-27.</p>
+<p>Important framing: This isn’t their fault! The simple train/test split was the right pedagogical foundation. Now they’re ready for the professional approach.</p>
+<p><strong>Key analogy from the textbook:</strong> It’s like studying with a practice test, adjusting your studying based on the practice test, taking it again and again, and then having that same test be your final exam. Your score would be artificially inflated.</p>
+<p><strong>Real-world impact:</strong> - Report test accuracy of 91% to stakeholders - Deploy to production - Actual performance: 85% - That 6-point drop erodes trust</p>
+<p><strong>Transition:</strong> “So how do we make decisions about models and tune hyperparameters WITHOUT contaminating our test set? That’s where cross-validation comes in.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="think-pair-share" class="slide level2 smaller">
+<h2>Think-Pair-Share</h2>
+<p><strong>Scenario:</strong> You’re a data scientist at a retail company. You build a customer churn prediction model. During development, you try 10 different model configurations, evaluating each on your test set. You pick the best one (test accuracy: 87%) and present it to management.</p>
+<div class="columns">
+<div class="column" style="width:70%;">
+<p><strong>Discuss with your neighbor:</strong></p>
+<ul>
+<li>Why might the 87% test accuracy be misleading?</li>
+<li>What could happen when you deploy this model to production?</li>
+<li>How would you explain this problem to a non-technical manager?</li>
+</ul>
+</div><div class="column" style="width:30%;">
+<center>
+<div id="4minPeek">
+
+</div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("4minPeek", 240, "slide");
+    });
+</script>
+</center>
+</div></div>
+<p>Then we’ll take a few responses…</p>
+<aside class="notes">
+<p><strong>After timer expires, cold-call 2-3 groups to share.</strong></p>
+<p>Expected student responses: 1. <strong>Why misleading?</strong> - “We optimized for that specific test set, so the score is inflated” 2. <strong>Production impact</strong> - “The real-world accuracy will probably be lower” 3. <strong>Manager explanation</strong> - “We accidentally used our final exam as practice”</p>
+<p><strong>Key points to emphasize:</strong> - Each peek = one opportunity to overfit to test set - The more decisions you make based on test set, the less trustworthy it becomes - This is a subtle, insidious problem - easy to do accidentally</p>
+<p><strong>Transition to solution:</strong> “So we need a way to make all these decisions - comparing models, tuning hyperparameters - WITHOUT ever looking at the test set. That’s exactly what cross-validation solves.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="solution-cross-validation" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Solution: Cross-Validation</h1>
+
+</section>
+<section id="wrong-way-vs.-right-way" class="slide level2 smaller scrollable">
+<h2>Wrong Way vs.&nbsp;Right Way</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>❌ What we’ve been doing:</strong></p>
+<div class="cell" data-reveal="true" data-fig-width="4.5" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class=""><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[Full Dataset] --&gt; B[Train 80%]
+    A --&gt; C[Test 20%]
+    B --&gt; D[Train Model 1]
+    D --&gt; E[Evaluate on Test]
+    C --&gt; E
+    E --&gt; F{Good?}
+    F --&gt;|No| G[Try Model 2]
+    G --&gt; H[Evaluate on Test]
+    C --&gt; H
+    H --&gt; I{Good?}
+    I --&gt;|No| J[Try Model 3]
+    J --&gt; K[Evaluate on Test]
+    C --&gt; K
+    K --&gt;|Yes| L[Report Score]
+
+    style C fill:#ff6b6b
+    style E fill:#ff6b6b
+    style H fill:#ff6b6b
+    style K fill:#ff6b6b
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p><strong>Problem:</strong> Multiple peeks contaminate test set!</p>
+</div><div class="column" style="width:50%;">
+<p><strong>✓ What we should do:</strong></p>
+<div class="cell" data-reveal="true" data-fig-width="4.5" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class=""><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[Full Dataset] --&gt; B[Train 80%]
+    A --&gt; C[Test 20%&lt;br/&gt;LOCKED]
+    B --&gt; D[5-Fold CV&lt;br/&gt;on Training]
+    D --&gt; E[Try Models]
+    D --&gt; F[Tune Params]
+    D --&gt; G[Engineer Features]
+    E &amp; F &amp; G --&gt; H[Select Best]
+    H --&gt; I[Retrain on&lt;br/&gt;Full Training]
+    I --&gt; J[Test ONCE]
+    C --&gt; J
+
+    style C fill:#51cf66
+    style D fill:#51cf66
+    style J fill:#ffd43b
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p><strong>Solution:</strong> Use CV, keep test pristine!</p>
+</div></div>
+<aside class="notes">
+<p><strong>This slide makes the contrast crystal clear.</strong></p>
+<p><strong>Left side (Wrong Way):</strong> - Shows the peeking problem visually - Train model → evaluate on test → not good? → try again - Each arrow to “Evaluate on Test” is another peek - The test set (red) is being used repeatedly - This is what we’ve been doing in Chapters 25-27</p>
+<p><strong>Right side (Right Way):</strong> - Test set is locked away (green - safe) - All experimentation happens with CV on training set - Try different models, tune parameters, engineer features - ALL using cross-validation - Only after ALL decisions are made → test once</p>
+<p><strong>Teaching points:</strong></p>
+<ol type="1">
+<li><strong>Count the peeks:</strong>
+<ul>
+<li>Wrong way: 3 peeks shown (could be many more!)</li>
+<li>Right way: 0 peeks until the very end</li>
+</ul></li>
+<li><strong>Where decisions are made:</strong>
+<ul>
+<li>Wrong way: Decisions based on test set</li>
+<li>Right way: Decisions based on CV scores</li>
+</ul></li>
+<li><strong>Test set purpose:</strong>
+<ul>
+<li>Wrong way: Used as validation set (contaminated)</li>
+<li>Right way: Used only for final honest evaluation</li>
+</ul></li>
+</ol>
+<p><strong>Key message:</strong> “The difference between these approaches is the difference between amateur and professional data science.”</p>
+<p><strong>Common student reaction:</strong> “Wait, we’ve been doing it wrong this whole time?” <strong>Answer:</strong> “Not ‘wrong’ - it was the right pedagogical sequence. Simple first, then proper. Now you know both!”</p>
+<p><strong>Transition:</strong> “Let’s zoom in on the right side - how does cross-validation actually work in practice?”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="how-k-fold-cross-validation-works" class="slide level2 smaller">
+<h2>How K-Fold Cross-Validation Works</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<p><strong>The idea:</strong></p>
+<ul>
+<li>Split <strong>training data</strong> into K equal parts (folds)</li>
+<li>Rotate which fold is used for validation</li>
+<li>Average results across all K iterations</li>
+</ul>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Test set stays completely untouched</li>
+<li>Every training point gets validated once</li>
+<li>More reliable performance estimates</li>
+<li>Can make unlimited decisions without peeking</li>
+</ul>
+</div><div class="column" style="width:55%;">
+<div id="fba08c18" class="cell" data-fig-height="5" data-fig-width="7" data-execution_count="1">
+<div class="cell-output cell-output-display">
+<div>
+<figure>
+<p><img data-src="w12_tuesday_files/figure-revealjs/cell-2-output-1.png" width="677" height="470"></p>
+</figure>
+</div>
+</div>
+</div>
+</div></div>
+<aside class="notes">
+<p><strong>This is the key slide - take time here.</strong></p>
+<p><strong>Walk through the diagram:</strong> 1. First, split data into train (80%) and test (20%) 2. Lock the test set away - don’t touch it! 3. Take the training set and split into K folds (5 shown here) 4. In each iteration, use 1 fold for validation, rest for training 5. After 5 iterations, every point has been validated exactly once 6. Average the 5 validation scores</p>
+<p><strong>Important clarifications:</strong> - K=5 is common, but K=10 is also popular - Each data point is in exactly ONE fold - Each point gets validated ONCE (when its fold is the validation set) - The model is retrained K times (5 times here)</p>
+<p><strong>Why this solves the peeking problem:</strong> - We’re only using training data for all decisions - Test set remains pristine - We get K different validation scores, so we see variance/stability</p>
+<p><strong>Common student question:</strong> “Isn’t this expensive computationally?” <strong>Answer:</strong> “Yes - if K=5, you train 5 models instead of 1. But it’s worth it for honest performance estimates. And computers are fast!”</p>
+<p><strong>Transition:</strong> “Now let’s see how this works in code with sklearn.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="cross-validation-in-scikit-learn" class="slide level2 smaller">
+<h2>Cross-Validation in Scikit-Learn</h2>
+<div id="3ed1e78b" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" data-code-line-numbers="1,10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href=""></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score</span>
+<span id="cb1-2"><a href=""></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeClassifier</span>
+<span id="cb1-3"><a href=""></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-4"><a href=""></a></span>
+<span id="cb1-5"><a href=""></a><span class="co"># Step 1: Split data (test set locked away)</span></span>
+<span id="cb1-6"><a href=""></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb1-7"><a href=""></a></span>
+<span id="cb1-8"><a href=""></a><span class="co"># Step 2: Use CV to evaluate on TRAINING SET ONLY</span></span>
+<span id="cb1-9"><a href=""></a>dt <span class="op">=</span> DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb1-10"><a href=""></a>cv_scores <span class="op">=</span> cross_val_score(dt, X_train, y_train, cv<span class="op">=</span><span class="dv">5</span>, scoring<span class="op">=</span><span class="st">'accuracy'</span>)</span>
+<span id="cb1-11"><a href=""></a></span>
+<span id="cb1-12"><a href=""></a><span class="bu">print</span>(<span class="ss">f"CV Scores: </span><span class="sc">{</span>cv_scores<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-13"><a href=""></a><span class="bu">print</span>(<span class="ss">f"Mean CV Accuracy: </span><span class="sc">{</span>cv_scores<span class="sc">.</span>mean()<span class="sc">:.3f}</span><span class="ss"> (+/- </span><span class="sc">{</span>cv_scores<span class="sc">.</span>std()<span class="sc">:.3f}</span><span class="ss">)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><strong>Output:</strong></p>
+<pre><code>CV Scores: [0.847, 0.853, 0.862, 0.841, 0.858]
+Mean CV Accuracy: 0.852 (+/- 0.008)</code></pre>
+<p><strong>Notice:</strong> We never touched <code>X_test</code> or <code>y_test</code>!</p>
+<aside class="notes">
+<p><strong>Walk through the code step by step:</strong></p>
+<ol type="1">
+<li><strong>Line 1-3:</strong> Import what we need</li>
+<li><strong>Line 5-6:</strong> First, split into train/test. Test set is now locked away.</li>
+<li><strong>Line 8-10:</strong> Create model and run 5-fold CV on TRAINING data only</li>
+<li><strong>Line 12-13:</strong> Print results</li>
+</ol>
+<p><strong>Key points to emphasize:</strong></p>
+<p><strong>The cv_scores array:</strong> - Contains 5 numbers (one per fold) - Shows the validation accuracy for each iteration - Notice they’re similar but not identical (0.841 to 0.862) - This variance tells us about model stability</p>
+<p><strong>The mean and standard deviation:</strong> - Mean (0.852) is our best estimate of true performance - Std (0.008) tells us how consistent the model is - Low std = stable, reliable model - High std = might be sensitive to which data it sees</p>
+<p><strong>What we achieved:</strong> - Made a decision (max_depth=5) without peeking at test set - Got 5 different validation checks instead of 1 - Still have our pristine test set for final evaluation</p>
+<p><strong>Common student question:</strong> “When do we use the test set?” <strong>Answer:</strong> “Only ONCE at the very end after ALL decisions are made. We’ll see the full workflow in a moment.”</p>
+<p><strong>Transition:</strong> “Now that we understand CV, let’s see how to use it for hyperparameter tuning.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="cross-validation-key-takeaway" class="slide level2 smaller">
+<h2>Cross-Validation: Key Takeaway</h2>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>The Golden Rule of Cross-Validation</strong></p>
+</div>
+<div class="callout-content">
+<p><strong>Split your data FIRST, then use cross-validation on the training set for ALL modeling decisions.</strong></p>
+<ul>
+<li>✅ Compare different models</li>
+<li>✅ Tune hyperparameters</li>
+<li>✅ Select features</li>
+<li>✅ Evaluate preprocessing choices</li>
+</ul>
+<p><strong>Your test set should be touched ONCE at the very end.</strong></p>
+</div>
+</div>
+</div>
+<div class="fragment">
+<p><strong>Why this matters:</strong></p>
+<ul>
+<li><strong>Test set contamination</strong> is subtle and easy to do accidentally</li>
+<li>Every peek at the test set makes your performance estimates <strong>less trustworthy</strong></li>
+<li>Cross-validation gives you <strong>unlimited practice exams</strong> while keeping your final exam pristine</li>
+<li>This is the difference between <strong>amateur</strong> and <strong>professional</strong> data science</li>
+</ul>
+<aside class="notes">
+<p><strong>This slide crystallizes the main lesson from the CV section.</strong></p>
+<p><strong>The callout box contains the core message:</strong> - Split first (train/test split is step 1) - Use CV on training set for all decisions - Test set = final evaluation only</p>
+<p><strong>Emphasize the examples:</strong> - “Want to compare Random Forest vs.&nbsp;Gradient Boosting? Use CV!” - “Want to find best max_depth? Use CV!” - “Want to see if feature scaling helps? Use CV!” - “Want to try different imputation strategies? Use CV!”</p>
+<p><strong>All without touching the test set!</strong></p>
+<p><strong>Teaching moment:</strong> “The test set is like your final exam. You only get to take it once. Everything else - all your studying, all your practice tests, all your preparation - that happens with cross-validation on the training set.”</p>
+<p><strong>Common student mistake to reinforce:</strong> ❌ “I’ll try a few models on the test set and pick the best one” ✓ “I’ll try models using CV on training set, pick the best, THEN test once”</p>
+<p><strong>Real-world context:</strong> “In production, you don’t get multiple chances. You deploy a model and see how it performs. That’s why your test set evaluation needs to be honest - it’s your only preview of production performance.”</p>
+<p><strong>Transition:</strong> “Now that we know how to evaluate honestly with CV, let’s use it to find the best hyperparameters for our models.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section></section>
+<section>
+<section id="hyperparameter-tuning" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Hyperparameter Tuning</h1>
+
+</section>
+<section id="the-bias-variance-tradeoff" class="slide level2 smaller">
+<h2>The Bias-Variance Tradeoff</h2>
+<p>Every model makes two types of errors:</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>High Bias (Underfitting)</strong></p>
+<ul>
+<li>Model too simple</li>
+<li>Misses patterns in data</li>
+<li>Consistent errors</li>
+<li>Poor on training AND validation</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>High Variance (Overfitting)</strong></p>
+<ul>
+<li>Model too complex</li>
+<li>Memorizes noise</li>
+<li>Sensitive to specific training data</li>
+<li>Great on training, poor on validation</li>
+</ul>
+</div></div>
+<div class="fragment">
+<p><strong>The sweet spot:</strong> Balance bias and variance for best generalization.</p>
+<p><strong>Hyperparameters control this tradeoff:</strong> <code>max_depth</code>, <code>n_estimators</code>, <code>K</code>, etc.</p>
+<aside class="notes">
+<p><strong>This is a fundamental ML concept - make it concrete.</strong></p>
+<p><strong>Bias-variance framing:</strong> Use the student analogy from Chapter 29:</p>
+<p><strong>High Bias Student:</strong> - Only memorized basic formulas - Doesn’t understand concepts - Gets problems consistently wrong - Too simplistic approach</p>
+<p><strong>High Variance Student:</strong> - Memorized every example problem - Including specific numbers and edge cases - Great on familiar problems - Struggles with anything slightly different - Memorized patterns, not principles</p>
+<p><strong>In ML terms:</strong></p>
+<p><strong>High Bias (Underfitting):</strong> - Linear regression trying to fit non-linear data - K=50 in KNN (averages 50 neighbors - very smooth, misses detail) - Decision tree with max_depth=1 (just one split) - Symptoms: Low training score, low validation score</p>
+<p><strong>High Variance (Overfitting):</strong> - K=1 in KNN (just uses nearest point - memorizes training data) - Decision tree with max_depth=None (grows until perfect fit) - Polynomial regression with degree=20 - Symptoms: High training score, much lower validation score</p>
+<p><strong>The goal:</strong> Find the hyperparameter value that minimizes the GAP between training and validation performance while maximizing validation performance.</p>
+<p><strong>Visual aid:</strong> Draw a U-shaped curve on the board: - X-axis: Model complexity (simple → complex) - Y-axis: Error - Two curves: Training error (decreases) and Validation error (U-shaped) - Sweet spot: Bottom of validation curve</p>
+<p><strong>Transition:</strong> “Let me show you what this looks like visually with a real example.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="visualizing-bias-variance-with-knn" class="slide level2 smaller">
+<h2>Visualizing Bias-Variance with KNN</h2>
+<div id="17341d3c" class="cell" data-fig-height="4" data-fig-width="12" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div>
+<figure>
+<p><img data-src="w12_tuesday_files/figure-revealjs/cell-4-output-1.png" width="1705" height="374"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="callout callout-caution callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Caution</strong></p>
+</div>
+<div class="callout-content">
+<p>More advanced models (i.e.&nbsp;Decision Trees, Random Forests, Gradient Boosted Machines) are more flexible to align with data patterns; however, it is up to us to tune these models to balance the bias-variance tradeoff!</p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p><strong>This visualization makes the bias-variance tradeoff concrete.</strong></p>
+<p><strong>Walk through each panel:</strong></p>
+<p><strong>Left: High Bias (K=75)</strong> - Model averages 75 neighbors - very smooth - Completely misses the curved pattern - Too simple - underfits the data - Red line is nearly straight - Consistent errors (always wrong in the same way)</p>
+<p><strong>Middle: Balanced (K=5)</strong> - Model averages 5 neighbors - just right - Captures the general curve without memorizing noise - Green line follows the pattern nicely - This is what we want!</p>
+<p><strong>Right: High Variance (K=1)</strong> - Model only uses 1 neighbor - exact match - Blue line zigzags through every training point - Memorizes noise instead of learning the pattern - Will perform poorly on new data</p>
+<p><strong>Key teaching points:</strong></p>
+<ol type="1">
+<li><strong>Hyperparameters control complexity:</strong>
+<ul>
+<li>Large K = simpler model (high bias)</li>
+<li>Small K = complex model (high variance)</li>
+<li>Need to find the sweet spot</li>
+</ul></li>
+<li><strong>Training vs.&nbsp;validation performance:</strong>
+<ul>
+<li>K=1: Perfect on training (100% accuracy), poor on validation</li>
+<li>K=75: Poor on training, poor on validation</li>
+<li>K=5: Good on both - balanced</li>
+</ul></li>
+<li><strong>Generalization is the goal:</strong>
+<ul>
+<li>We don’t want to memorize training data</li>
+<li>We want to learn patterns that work on new data</li>
+<li>The balanced model (K=5) will generalize best</li>
+</ul></li>
+</ol>
+<p><strong>Student engagement:</strong> Ask: “Which model would you deploy to production?” Expected answer: “The balanced one (K=5)” Follow-up: “How do we find the right K value systematically? GridSearchCV!”</p>
+<p><strong>Transition:</strong> “So we can see the problem. But how have we been finding these values so far?”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-manual-approach-what-weve-been-doing" class="slide level2 smaller">
+<h2>The Manual Approach (What We’ve Been Doing)</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>In previous chapters, we manually tried different values:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href=""></a><span class="co"># Try max_depth = 5</span></span>
+<span id="cb3-2"><a href=""></a>dt1 <span class="op">=</span> DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb3-3"><a href=""></a>score1 <span class="op">=</span> cross_val_score(dt1, X_train, y_train)</span>
+<span id="cb3-4"><a href=""></a><span class="bu">print</span>(<span class="ss">f"max_depth=5: </span><span class="sc">{</span>score1<span class="sc">.</span>mean()<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-5"><a href=""></a></span>
+<span id="cb3-6"><a href=""></a><span class="co"># Try max_depth = 10</span></span>
+<span id="cb3-7"><a href=""></a>dt2 <span class="op">=</span> DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb3-8"><a href=""></a>score2 <span class="op">=</span> cross_val_score(dt2, X_train, y_train)</span>
+<span id="cb3-9"><a href=""></a><span class="bu">print</span>(<span class="ss">f"max_depth=10: </span><span class="sc">{</span>score2<span class="sc">.</span>mean()<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-10"><a href=""></a></span>
+<span id="cb3-11"><a href=""></a><span class="co"># Try max_depth = 15</span></span>
+<span id="cb3-12"><a href=""></a>dt3 <span class="op">=</span> DecisionTreeClassifier(max_depth<span class="op">=</span><span class="dv">15</span>)</span>
+<span id="cb3-13"><a href=""></a>score3 <span class="op">=</span> cross_val_score(dt3, X_train, y_train)</span>
+<span id="cb3-14"><a href=""></a><span class="bu">print</span>(<span class="ss">f"max_depth=15: </span><span class="sc">{</span>score3<span class="sc">.</span>mean()<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-15"><a href=""></a></span>
+<span id="cb3-16"><a href=""></a><span class="co"># ... keep trying values manually</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div><div class="column" style="width:50%;">
+<p><strong>Problems with this approach:</strong></p>
+<ul>
+<li>⏱️ <strong>Time-consuming</strong> - Repetitive code for each value</li>
+<li>🐛 <strong>Error-prone</strong> - Easy to make copy-paste mistakes</li>
+<li>📊 <strong>Limited exploration</strong> - Only try a few values</li>
+<li>🔄 <strong>Not systematic</strong> - What about combinations of parameters?</li>
+<li>📝 <strong>Hard to track</strong> - Which combination was best?</li>
+</ul>
+<p>. . .</p>
+<div class="callout callout-tip callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>A Better Way Exists!</strong></p>
+</div>
+<div class="callout-content">
+<p>We need an <strong>automated, systematic approach</strong> to search through hyperparameter combinations efficiently.</p>
+</div>
+</div>
+</div>
+</div></div>
+<aside class="notes">
+<p><strong>This slide bridges previous chapters to GridSearchCV.</strong></p>
+<p><strong>Left side - What students have been doing:</strong></p>
+<p><strong>Walk through the code:</strong> - “Remember doing this in Chapters 25-27?” - “You tried max_depth=5, then 10, then 15…” - “Lots of copying and pasting, changing one number each time” - “Tedious and error-prone!”</p>
+<p><strong>Point out the pattern:</strong> - Same code structure repeated 3 times - Only difference is the max_depth value - What if you want to try 10 values? 20 values? - What if you want to tune multiple parameters simultaneously?</p>
+<p><strong>Right side - Problems:</strong></p>
+<p><strong>Go through each problem:</strong></p>
+<ol type="1">
+<li><strong>Time-consuming:</strong>
+<ul>
+<li>“You spend more time writing repetitive code than thinking about the problem”</li>
+<li>“What if you need to try 50 different combinations?”</li>
+</ul></li>
+<li><strong>Error-prone:</strong>
+<ul>
+<li>“Easy to copy-paste and forget to change the variable name”</li>
+<li>“Or forget to change the max_depth value”</li>
+<li>“I’ve done this myself - very frustrating!”</li>
+</ul></li>
+<li><strong>Limited exploration:</strong>
+<ul>
+<li>“Realistically, you only try 3-5 values manually”</li>
+<li>“But the optimal value might be max_depth=12, not 5, 10, or 15!”</li>
+<li>“You’re only sampling a small part of the space”</li>
+</ul></li>
+<li><strong>Not systematic:</strong>
+<ul>
+<li>“What if you want to tune BOTH max_depth AND n_estimators?”</li>
+<li>“That’s 3 × 3 = 9 combinations to try manually”</li>
+<li>“Add min_samples_split? Now it’s 3 × 3 × 3 = 27 combinations!”</li>
+<li>“This gets out of hand quickly”</li>
+</ul></li>
+<li><strong>Hard to track:</strong>
+<ul>
+<li>“Which combination gave the best score?”</li>
+<li>“Did max_depth=10 with n_estimators=100 do better than max_depth=15 with n_estimators=200?”</li>
+<li>“You need to keep notes or save results somehow”</li>
+</ul></li>
+</ol>
+<p><strong>The callout box:</strong> - “There’s a better way - let the computer do the tedious work!” - “That’s what GridSearchCV does”</p>
+<p><strong>Student engagement:</strong> Ask: “How many of you have done something like this and thought ‘there must be a better way’?” Show of hands usually gets good response.</p>
+<p><strong>Transition:</strong> “Let me show you GridSearchCV, which automates all of this and makes hyperparameter tuning systematic, reproducible, and efficient.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="what-is-grid-search" class="slide level2 smaller">
+<h2>What is Grid Search?</h2>
+<p><strong>Grid Search = Systematically trying ALL combinations of hyperparameters</strong></p>
+<div class="fragment">
+<div id="1d870fd6" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-display">
+<div>
+<figure>
+<p><img data-src="w12_tuesday_files/figure-revealjs/cell-5-output-1.png" width="949" height="374"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<div class="callout callout-note no-icon callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<p><strong>🔍 The Grid Search Process</strong></p>
+</div>
+<div class="callout-content">
+<p><strong>For each combination:</strong> Train model → Evaluate with cross-validation → Record score</p>
+<p><strong>After trying all combinations:</strong> Pick the one with the best CV score!</p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p><strong>This slide introduces the grid search concept visually.</strong></p>
+<p><strong>Key teaching points:</strong></p>
+<p><strong>The visual grid:</strong> - Each blue box represents ONE complete hyperparameter configuration - In this example: 4 max_depth values × 3 n_estimators values = 12 total combinations - Grid search will try EVERY single one of these</p>
+<p><strong>The systematic approach:</strong> - Unlike our manual approach where we tried a few values - Grid search is exhaustive - it tries ALL combinations - Nothing gets missed</p>
+<p><strong>The name “Grid Search”:</strong> - It literally comes from this grid visualization - We’re searching through a grid of parameter combinations - In higher dimensions (3+ parameters), it’s harder to visualize but same concept</p>
+<p><strong>The process:</strong> 1. Define the grid (which parameters and which values to try) 2. For each cell in the grid: - Train a model with those parameter values - Evaluate it using cross-validation - Record the CV score 3. After trying everything, select the combination with the best score</p>
+<p><strong>Example walkthrough:</strong> “Look at this grid. We have max_depth on one axis and n_estimators on the other. Each blue box is a unique combination. For example, the top-left box is max_depth=5 and n_estimators=100. Grid search will train and evaluate a model for EACH of these 12 boxes.”</p>
+<p><strong>Why this matters:</strong> - Removes human bias (we might not try certain combinations) - Systematic and reproducible - Can find surprising optimal combinations - But can be computationally expensive (more parameters = more combinations)</p>
+<p><strong>The ‘curse of dimensionality’:</strong> - 2 parameters with 4 values each = 4 × 4 = 16 combinations - 3 parameters with 4 values each = 4 × 4 × 4 = 64 combinations - 4 parameters with 4 values each = 4 × 4 × 4 × 4 = 256 combinations - This is why RandomizedSearchCV exists (for very large grids)</p>
+<p><strong>Engagement question:</strong> “If we added a third parameter, min_samples_split, with 3 possible values, how many total combinations would we have? … That’s right, 12 × 3 = 36 combinations!”</p>
+<p><strong>Transition:</strong> “Now that we understand WHAT grid search does conceptually, let’s see HOW to do it in scikit-learn with GridSearchCV.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="gridsearchcv-automated-hyperparameter-search" class="slide level2 smaller">
+<h2>GridSearchCV: Automated Hyperparameter Search</h2>
+<div id="2f22953e" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href=""></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> GridSearchCV</span>
+<span id="cb4-2"><a href=""></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb4-3"><a href=""></a></span>
+<span id="cb4-4"><a href=""></a><span class="co"># Define parameter grid to search</span></span>
+<span id="cb4-5"><a href=""></a>param_grid <span class="op">=</span> {</span>
+<span id="cb4-6"><a href=""></a>    <span class="st">'n_estimators'</span>: [<span class="dv">100</span>, <span class="dv">200</span>, <span class="dv">300</span>],</span>
+<span id="cb4-7"><a href=""></a>    <span class="st">'max_depth'</span>: [<span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>],</span>
+<span id="cb4-8"><a href=""></a>    <span class="st">'min_samples_split'</span>: [<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>]</span>
+<span id="cb4-9"><a href=""></a>}</span>
+<span id="cb4-10"><a href=""></a></span>
+<span id="cb4-11"><a href=""></a><span class="co"># Create GridSearchCV (uses cross-validation internally!)</span></span>
+<span id="cb4-12"><a href=""></a>grid_search <span class="op">=</span> GridSearchCV(</span>
+<span id="cb4-13"><a href=""></a>    RandomForestClassifier(random_state<span class="op">=</span><span class="dv">42</span>),</span>
+<span id="cb4-14"><a href=""></a>    param_grid,</span>
+<span id="cb4-15"><a href=""></a>    cv<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb4-16"><a href=""></a>    scoring<span class="op">=</span><span class="st">'accuracy'</span>,</span>
+<span id="cb4-17"><a href=""></a>    n_jobs<span class="op">=-</span><span class="dv">1</span>  <span class="co"># Use all CPU cores</span></span>
+<span id="cb4-18"><a href=""></a>)</span>
+<span id="cb4-19"><a href=""></a></span>
+<span id="cb4-20"><a href=""></a><span class="co"># Fit on training data (will try 3 × 4 × 3 = 36 configs, each with 5-fold CV = 180 models!)</span></span>
+<span id="cb4-21"><a href=""></a>grid_search.fit(X_train, y_train)</span>
+<span id="cb4-22"><a href=""></a></span>
+<span id="cb4-23"><a href=""></a><span class="bu">print</span>(<span class="ss">f"Best parameters: </span><span class="sc">{</span>grid_search<span class="sc">.</span>best_params_<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb4-24"><a href=""></a><span class="bu">print</span>(<span class="ss">f"Best CV score: </span><span class="sc">{</span>grid_search<span class="sc">.</span>best_score_<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<aside class="notes">
+<p><strong>This is where the magic happens - systematic hyperparameter search.</strong></p>
+<p><strong>Walk through the code:</strong></p>
+<p><strong>Lines 4-9: Define search space</strong> - We’re trying 3 values for n_estimators - 4 values for max_depth - 3 values for min_samples_split - Total combinations: 3 × 4 × 3 = 36 different configurations</p>
+<p><strong>Lines 12-18: Create GridSearchCV</strong> - Wraps a RandomForestClassifier - Will try all 36 configurations - Each with 5-fold CV - Uses accuracy as the metric - n_jobs=-1 means “use all CPU cores” (runs in parallel)</p>
+<p><strong>Line 21: The computational reality</strong> - 36 configurations × 5 folds = 180 models trained! - Sounds expensive, but computers are fast - Usually takes seconds to minutes, not hours - Worth it for finding optimal settings</p>
+<p><strong>Lines 23-24: Results</strong> - <code>best_params_</code>: The winning hyperparameter combination - <code>best_score_</code>: The CV accuracy of the best configuration</p>
+<p><strong>Key insight:</strong> GridSearchCV uses CV internally, so we NEVER touch the test set during this entire search!</p>
+<p><strong>Common student questions:</strong></p>
+<ol type="1">
+<li><strong>“Do I have to try all combinations?”</strong>
+<ul>
+<li>GridSearchCV: Yes (exhaustive search)</li>
+<li>RandomizedSearchCV: No (random sampling, faster for large grids)</li>
+<li>Bayesian optimization: Smart search based on previous results</li>
+</ul></li>
+<li><strong>“How do I know which parameters to tune?”</strong>
+<ul>
+<li>Read documentation for your model</li>
+<li>Most important usually: complexity parameters (max_depth, n_estimators, etc.)</li>
+<li>Less important: random_state, n_jobs (these don’t affect performance)</li>
+</ul></li>
+<li><strong>“What ranges should I try?”</strong>
+<ul>
+<li>Start broad: [10, 100, 1000]</li>
+<li>Then narrow in: [80, 90, 100, 110, 120]</li>
+<li>Trade-off between thoroughness and computation time</li>
+</ul></li>
+</ol>
+<p><strong>Transition:</strong> “So we can now find optimal hyperparameters. But we still need to prepare our data properly first. That’s feature engineering.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="think-pair-share-spotting-overfitting" class="slide level2 smaller">
+<h2>Think-Pair-Share: Spotting Overfitting</h2>
+<p><strong>Scenario:</strong> You’ve tuned a gradient boosting model and see these results:</p>
+<pre><code>Configuration A:
+  Training Accuracy: 92.3%
+  CV Accuracy: 88.7%
+
+Configuration B:
+  Training Accuracy: 99.8%
+  CV Accuracy: 85.1%</code></pre>
+<div class="columns">
+<div class="column" style="width:70%;">
+<p><strong>Discuss:</strong></p>
+<ul>
+<li>Which configuration is overfitting more?</li>
+<li>Which would you deploy to production?</li>
+<li>What does the gap between training and CV tell you?</li>
+</ul>
+</div><div class="column" style="width:30%;">
+<center>
+<div id="3minOverfit">
+
+</div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minOverfit", 180, "slide");
+    });
+</script>
+</center>
+</div></div>
+<aside class="notes">
+<p><strong>After timer, facilitate discussion:</strong></p>
+<p><strong>Question 1: Which is overfitting more?</strong> - <strong>Configuration B</strong> is clearly overfitting - 99.8% training but only 85.1% CV = massive gap (14.7 points!) - It memorized the training data - Configuration A has smaller gap (3.6 points)</p>
+<p><strong>Question 2: Which to deploy?</strong> - <strong>Configuration A</strong> for sure - Higher CV score (88.7% vs 85.1%) - Smaller gap suggests better generalization - CV score is what matters for production performance</p>
+<p><strong>Question 3: What does the gap tell you?</strong> - <strong>Small gap</strong> (Config A): Model generalizes well - <strong>Large gap</strong> (Config B): Model memorizes training data, won’t generalize - The gap is a direct measure of overfitting severity</p>
+<p><strong>Teaching moment:</strong> Students often think “higher training score = better model”</p>
+<p><strong>Key insight:</strong> High training score is easy (just memorize!). The hard part is generalizing to new data. That’s why we care about CV score and the train/CV gap.</p>
+<p><strong>Real-world parallel:</strong> - Config B = student who memorized practice test (99.8%) but bombs actual exam (85.1%) - Config A = student who understood concepts (92.3%) and does well on actual exam (88.7%)</p>
+<p><strong>Transition:</strong> “Now let’s talk about preparing data properly - feature engineering.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="feature-engineering" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Feature Engineering</h1>
+
+</section>
+<section id="what-is-feature-engineering" class="slide level2 smaller">
+<h2>What is Feature Engineering?</h2>
+<p><strong>The process of creating, transforming, and selecting features to help ML models learn better.</strong></p>
+<div class="fragment">
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Raw data:</strong></p>
+<pre><code>YearBuilt: 1995
+YearRemodel: 2015</code></pre>
+<p><strong>Engineered feature:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href=""></a>RelativeAge <span class="op">=</span> <span class="dv">2025</span> <span class="op">-</span> <span class="bu">max</span>(YearBuilt, YearRemodel)</span>
+<span id="cb7-2"><a href=""></a>            <span class="op">=</span> <span class="dv">2025</span> <span class="op">-</span> <span class="dv">2015</span> <span class="op">=</span> <span class="dv">10</span> years</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>An older home (1995) with recent remodel (2015) has a younger relative age than a newer home (2010) without remodeling!</em></p>
+</div><div class="column" style="width:50%;">
+<p><strong>Raw features:</strong></p>
+<pre><code>GrLivArea: 2000 sq ft
+OverallQual: 8/10</code></pre>
+<p><strong>Engineered interaction:</strong></p>
+<pre><code>Size_x_Quality: 16,000</code></pre>
+<p><em>Captures combined effect!</em></p>
+</div></div>
+</div>
+<div class="fragment">
+<p><br></p>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong><strong>Why it matters</strong></strong></p>
+</div>
+<div class="callout-content">
+<p>Good features often matter more than fancy algorithms!</p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p><strong>Feature engineering is where data science becomes an art.</strong></p>
+<p><strong>The central message:</strong> &gt; “Garbage in, garbage out. Feature engineering is how we turn raw data into high-quality input that models need.”</p>
+<p><strong>Key concepts to emphasize:</strong></p>
+<p><strong>1. Raw data often doesn’t directly represent what we want to learn</strong></p>
+<p>Example: YearBuilt - Raw: 1995 - What matters: How OLD is the house? (Age = current year - year built) - Models learn better from age than year built</p>
+<p><strong>2. Domain knowledge is critical</strong></p>
+<p>Real estate examples: - Total bathrooms = FullBath + 0.5×HalfBath + BsmtFullBath + 0.5×BsmtHalfBath - Square feet per bathroom = GrLivArea / Total bathrooms - Was renovated? = (YearRemodAdd &gt; YearBuilt)</p>
+<p>These features come from understanding what makes houses valuable, not from algorithms.</p>
+<p><strong>3. The 80/20 rule in data science:</strong> Data scientists spend: - 80% of time on data prep and feature engineering - 20% on model selection and tuning</p>
+<p>This isn’t inefficiency - it’s because good features make a BIGGER difference than fancy algorithms!</p>
+<p><strong>Show impact with example:</strong> - Simple linear regression + good features &gt; Neural network + raw features - Feature engineering is the high-leverage activity</p>
+<p><strong>Types of feature engineering (preview):</strong> 1. Encoding categorical variables 2. Scaling numerical features 3. Creating new features (like examples shown) 4. Handling missing data 5. Building pipelines to do this systematically</p>
+<p><strong>Transition:</strong> “Let’s see the most common feature engineering techniques in action.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="four-essential-techniques" class="slide level2 smaller">
+<h2>Four Essential Techniques</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>1. Encoding Categorical Variables</strong></p>
+<ul>
+<li>Dummy encoding: One column per category</li>
+<li>Label encoding: Single numerical column</li>
+<li>Ordinal: Preserve ordering</li>
+</ul>
+<p><strong>2. Scaling Numerical Features</strong></p>
+<ul>
+<li>StandardScaler: Mean=0, Std=1</li>
+<li>MinMaxScaler: Range [0, 1]</li>
+<li>Crucial for distance-based algorithms</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<p><strong>3. Creating New Features</strong></p>
+<ul>
+<li>Polynomial: Square, cube terms</li>
+<li>Interactions: Feature × Feature</li>
+<li>Domain-specific: Age, ratios, etc.</li>
+</ul>
+<p><strong>4. Handling Missing Data</strong></p>
+<ul>
+<li>Imputation: Fill with median/mode</li>
+<li>Missingness indicators</li>
+<li>Know when to drop vs.&nbsp;impute</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p><strong>Brief overview of the four main categories from Chapter 30.</strong></p>
+<p><strong>1. Encoding Categorical Variables</strong></p>
+<p><strong>The problem:</strong> ML algorithms need numbers, not text</p>
+<p><strong>Solutions:</strong> - <strong>Dummy/One-hot:</strong> Create binary columns (0/1) for each category - Example: BldgType → BldgType_SingleFamily, BldgType_Condo, etc. - Use for: Nominal variables (no order) - Watch out: Drop one column for linear regression (dummy variable trap)</p>
+<ul>
+<li><strong>Label encoding:</strong> Assign integers (1, 2, 3, …)
+<ul>
+<li>Example: Neighborhoods → 1, 2, 3, …, 28</li>
+<li>Use for: High-cardinality + tree models</li>
+<li>Never use: With linear models for nominal variables!</li>
+</ul></li>
+<li><strong>Ordinal encoding:</strong> Custom mapping preserving order
+<ul>
+<li>Example: Quality (Poor=1, Fair=2, Good=3, Excellent=4)</li>
+<li>Use for: Variables with natural ordering</li>
+</ul></li>
+</ul>
+<p><strong>2. Scaling Numerical Features</strong></p>
+<p><strong>The problem:</strong> Features on different scales (sq ft: 1000-4000, bedrooms: 1-6)</p>
+<p><strong>When it matters:</strong> - k-NN, SVM: YES (distance-based) - Linear regression with regularization: YES - Decision trees, Random Forests: NO (threshold-based)</p>
+<p><strong>Methods:</strong> - <strong>StandardScaler:</strong> Transforms to mean=0, std=1 (most common) - <strong>MinMaxScaler:</strong> Transforms to range [0, 1]</p>
+<p><strong>3. Creating New Features</strong></p>
+<p><strong>The power move in feature engineering:</strong></p>
+<ul>
+<li><strong>Polynomial features:</strong> Capture non-linear relationships (x², x³)</li>
+<li><strong>Interactions:</strong> Feature A × Feature B (size × quality)</li>
+<li><strong>Domain-specific:</strong> Requires expertise in the problem domain
+<ul>
+<li>Best source: Talk to domain experts!</li>
+<li>They know what really matters</li>
+</ul></li>
+</ul>
+<p><strong>4. Handling Missing Data</strong></p>
+<p><strong>The reality:</strong> Real-world data always has gaps</p>
+<p><strong>Strategies:</strong> - <strong>Imputation:</strong> Fill with median (numerical) or mode (categorical) - <strong>Missingness indicators:</strong> Create binary flag “was_missing” - Important when missingness is informative! - Example: High earners often don’t report income - <strong>Drop data:</strong> Only when &lt; 5% missing and it’s random</p>
+<p><strong>Key decision:</strong> Drop vs.&nbsp;Impute? - &lt; 5% missing + random: Drop - &gt; 5% missing or informative: Impute + indicator</p>
+<p><strong>Transition:</strong> “Let’s see some of these techniques in action with the Ames data.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="hands-on-demo-encoding-scaling" class="slide level2 smaller scrollable">
+<h2>Hands-On Demo: Encoding &amp; Scaling</h2>
+<p><strong>Original Features:</strong></p>
+<div id="7b2ff656" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href=""></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb10-2"><a href=""></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder, StandardScaler</span>
+<span id="cb10-3"><a href=""></a></span>
+<span id="cb10-4"><a href=""></a><span class="co"># Load Ames data</span></span>
+<span id="cb10-5"><a href=""></a>ames <span class="op">=</span> pd.read_csv(<span class="st">'../data/ames_clean.csv'</span>)</span>
+<span id="cb10-6"><a href=""></a></span>
+<span id="cb10-7"><a href=""></a><span class="co"># Look at original features</span></span>
+<span id="cb10-8"><a href=""></a>features_to_eng <span class="op">=</span> [<span class="st">'Neighborhood'</span>, <span class="st">'GrLivArea'</span>, <span class="st">'YearBuilt'</span>, <span class="st">'TotalBsmtSF'</span>]</span>
+<span id="cb10-9"><a href=""></a><span class="bu">print</span>(ames[features_to_eng])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Neighborhood  GrLivArea  YearBuilt  TotalBsmtSF
+0         CollgCr       1710       2003          856
+1         Veenker       1262       1976         1262
+2         CollgCr       1786       2001          920
+3         Crawfor       1717       1915          756
+4         NoRidge       2198       2000         1145
+...           ...        ...        ...          ...
+1455      Gilbert       1647       1999          953
+1456       NWAmes       2073       1978         1542
+1457      Crawfor       2340       1941         1152
+1458        NAmes       1078       1950         1078
+1459      Edwards       1256       1965         1256
+
+[1460 rows x 4 columns]</code></pre>
+</div>
+</div>
+<p><strong>Engineered Features:</strong></p>
+<div id="cad9a9f1" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href=""></a><span class="co"># 1. Encode Neighborhood: 28 categories → integers</span></span>
+<span id="cb12-2"><a href=""></a>le <span class="op">=</span> LabelEncoder()</span>
+<span id="cb12-3"><a href=""></a>ames[<span class="st">'Neighborhood_Encoded'</span>] <span class="op">=</span> le.fit_transform(ames[<span class="st">'Neighborhood'</span>])</span>
+<span id="cb12-4"><a href=""></a></span>
+<span id="cb12-5"><a href=""></a><span class="co"># 2. Scale numerical features: mean=0, std=1</span></span>
+<span id="cb12-6"><a href=""></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb12-7"><a href=""></a>features_to_scale <span class="op">=</span> [<span class="st">'Neighborhood_Encoded'</span>, <span class="st">'GrLivArea'</span>, <span class="st">'YearBuilt'</span>, <span class="st">'TotalBsmtSF'</span>]</span>
+<span id="cb12-8"><a href=""></a>ames[features_to_scale] <span class="op">=</span> scaler.fit_transform(ames[features_to_scale])</span>
+<span id="cb12-9"><a href=""></a></span>
+<span id="cb12-10"><a href=""></a><span class="co"># Look at engineered features</span></span>
+<span id="cb12-11"><a href=""></a><span class="bu">print</span>(ames[features_to_scale])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      Neighborhood_Encoded  GrLivArea  YearBuilt  TotalBsmtSF
+0                -1.206215   0.370333   1.050994    -0.459303
+1                 1.954302  -0.482512   0.156734     0.466465
+2                -1.206215   0.515013   0.984752    -0.313369
+3                -1.039872   0.383659  -1.863632    -0.687324
+4                 0.457215   1.299326   0.951632     0.199680
+...                    ...        ...        ...          ...
+1455             -0.707186   0.250402   0.918511    -0.238122
+1456              0.290872   1.061367   0.222975     1.104925
+1457             -1.039872   1.569647  -1.002492     0.215641
+1458             -0.041814  -0.832788  -0.704406     0.046905
+1459             -0.873529  -0.493934  -0.207594     0.452784
+
+[1460 rows x 4 columns]</code></pre>
+</div>
+</div>
+<aside class="notes">
+<p><strong>This is a live coding demo - type it out!</strong></p>
+<p><strong>Setup:</strong> - Make sure ames_clean.csv is in ../data/ - Import statements first</p>
+<p><strong>Walk through step by step:</strong></p>
+<p><strong>Step 1: Label Encoding (Lines 8-10)</strong></p>
+<p>Before running: - “We have 28 unique neighborhoods - that’s too many for dummy encoding” - “Label encoding creates one column with integers 0-27” - “This works well for tree-based models”</p>
+<p>Run the code:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href=""></a>le <span class="op">=</span> LabelEncoder()</span>
+<span id="cb14-2"><a href=""></a>ames[<span class="st">'Neighborhood_Encoded'</span>] <span class="op">=</span> le.fit_transform(ames[<span class="st">'Neighborhood'</span>])</span>
+<span id="cb14-3"><a href=""></a><span class="bu">print</span>(<span class="ss">f"Encoded 28 neighborhoods into: </span><span class="sc">{</span>ames[<span class="st">'Neighborhood_Encoded'</span>]<span class="sc">.</span>unique()<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Point out: - Went from text labels to integers - Each neighborhood gets a unique number - Compressed 28 potential dummy columns into 1 column</p>
+<p><strong>Warning to students:</strong> “Never use label encoding for nominal variables with LINEAR models! The model will think Neighborhood 27 is ‘bigger than’ Neighborhood 1, which is meaningless.”</p>
+<p><strong>Step 2: Scaling (Lines 12-18)</strong></p>
+<p>Before running: - “These three features are on very different scales” - “GrLivArea ranges from 800-4000” - “YearBuilt ranges from 1900-2010” - “If we use these in KNN, GrLivArea dominates!”</p>
+<p>Run the code:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href=""></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb15-2"><a href=""></a>features_to_scale <span class="op">=</span> [<span class="st">'GrLivArea'</span>, <span class="st">'YearBuilt'</span>, <span class="st">'TotalBsmtSF'</span>]</span>
+<span id="cb15-3"><a href=""></a>ames[features_to_scale] <span class="op">=</span> scaler.fit_transform(ames[features_to_scale])</span>
+<span id="cb15-4"><a href=""></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">After StandardScaler:"</span>)</span>
+<span id="cb15-5"><a href=""></a><span class="bu">print</span>(ames[features_to_scale].describe())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Point out the output: - Mean is now ≈ 0 for each feature (might be 1e-15, basically 0) - Std is now ≈ 1.0 for each feature - All features on same scale now!</p>
+<p><strong>Key teaching points:</strong></p>
+<ol type="1">
+<li><strong>When to scale:</strong>
+<ul>
+<li>“About to use KNN, SVM, or regularized regression? Scale!”</li>
+<li>“Using Random Forest or decision trees? Don’t bother scaling”</li>
+</ul></li>
+<li><strong>Fit vs Transform:</strong>
+<ul>
+<li>“We fit on training data, transform both train and test”</li>
+<li>“This prevents data leakage - we’ll see more on that next”</li>
+</ul></li>
+<li><strong>StandardScaler vs MinMaxScaler:</strong>
+<ul>
+<li>“StandardScaler is default choice (mean=0, std=1)”</li>
+<li>“MinMaxScaler when you need [0, 1] range (like neural nets)”</li>
+</ul></li>
+</ol>
+<p><strong>Common student mistakes to address:</strong></p>
+<p>❌ Scaling before train/test split ✓ Split first, then fit scaler on train only</p>
+<p>❌ Using label encoding for nominal variables with linear models ✓ Use dummy encoding instead</p>
+<p>❌ Scaling when using tree-based models ✓ Trees don’t care about scale - save the computation!</p>
+<p><strong>Transition:</strong> “These techniques are powerful, but there’s a dangerous pitfall: data leakage. Pipelines solve this.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="preventing-data-leakage-with-pipelines" class="slide level2 smaller">
+<h2>Preventing Data Leakage with Pipelines</h2>
+<p><strong>The problem:</strong> If you fit a scaler on the entire dataset (train + test), test set information “leaks” into training.</p>
+<p><strong>The solution:</strong> Pipelines ensure transformations fit on training data only.</p>
+<div id="731da41c" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href=""></a><span class="im">from</span> sklearn.pipeline <span class="im">import</span> Pipeline</span>
+<span id="cb16-2"><a href=""></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb16-3"><a href=""></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestClassifier</span>
+<span id="cb16-4"><a href=""></a></span>
+<span id="cb16-5"><a href=""></a><span class="co"># Create pipeline: scaling → model</span></span>
+<span id="cb16-6"><a href=""></a>pipeline <span class="op">=</span> Pipeline([</span>
+<span id="cb16-7"><a href=""></a>    (<span class="st">'scaler'</span>, StandardScaler()),</span>
+<span id="cb16-8"><a href=""></a>    (<span class="st">'model'</span>, RandomForestClassifier(n_estimators<span class="op">=</span><span class="dv">100</span>))</span>
+<span id="cb16-9"><a href=""></a>])</span>
+<span id="cb16-10"><a href=""></a></span>
+<span id="cb16-11"><a href=""></a><span class="co"># Fit on training data (scaler learns from X_train only!)</span></span>
+<span id="cb16-12"><a href=""></a>pipeline.fit(X_train, y_train)</span>
+<span id="cb16-13"><a href=""></a></span>
+<span id="cb16-14"><a href=""></a><span class="co"># Predict on test data (scaler uses training stats to transform X_test)</span></span>
+<span id="cb16-15"><a href=""></a>predictions <span class="op">=</span> pipeline.predict(X_test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Important</strong></p>
+</div>
+<div class="callout-content">
+<p><strong>Pipelines = reproducible, leak-free workflows!</strong></p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p><strong>This is the most important slide for production ML.</strong></p>
+<p><strong>The Data Leakage Problem:</strong></p>
+<p><strong>Wrong approach (causes leakage):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href=""></a><span class="co"># ❌ WRONG: Fitting scaler on ALL data</span></span>
+<span id="cb17-2"><a href=""></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb17-3"><a href=""></a>X_all_scaled <span class="op">=</span> scaler.fit_transform(X)  <span class="co"># Includes both train and test!</span></span>
+<span id="cb17-4"><a href=""></a></span>
+<span id="cb17-5"><a href=""></a><span class="co"># Now split</span></span>
+<span id="cb17-6"><a href=""></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(X_all_scaled, y)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Why this is wrong:</strong> - Scaler learned mean/std from ENTIRE dataset - Including test set! - Test set information influenced the preprocessing - This is data leakage</p>
+<p><strong>Impact:</strong> - Overly optimistic performance estimates - Model performs worse in production - Stakeholders lose trust</p>
+<p><strong>The Right Approach: Pipelines</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href=""></a><span class="co"># ✓ CORRECT: Pipeline ensures proper fit/transform</span></span>
+<span id="cb18-2"><a href=""></a>pipeline <span class="op">=</span> Pipeline([</span>
+<span id="cb18-3"><a href=""></a>    (<span class="st">'scaler'</span>, StandardScaler()),</span>
+<span id="cb18-4"><a href=""></a>    (<span class="st">'model'</span>, RandomForestClassifier())</span>
+<span id="cb18-5"><a href=""></a>])</span>
+<span id="cb18-6"><a href=""></a></span>
+<span id="cb18-7"><a href=""></a><span class="co"># First split, THEN fit pipeline</span></span>
+<span id="cb18-8"><a href=""></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(X, y)</span>
+<span id="cb18-9"><a href=""></a>pipeline.fit(X_train, y_train)  <span class="co"># Scaler fits on X_train only</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>What happens internally:</strong></p>
+<p>When you call <code>pipeline.fit(X_train, y_train)</code>: 1. Scaler fits on X_train (learns mean, std) 2. Scaler transforms X_train using those stats 3. Model trains on the scaled X_train</p>
+<p>When you call <code>pipeline.predict(X_test)</code>: 1. Scaler transforms X_test using training mean/std (NOT test mean/std!) 2. Model predicts on the scaled X_test</p>
+<p><strong>Key Benefits of Pipelines:</strong></p>
+<ol type="1">
+<li><strong>Prevents data leakage</strong> - Transformations fit on train only</li>
+<li><strong>Less code</strong> - One <code>.fit()</code> call instead of multiple steps</li>
+<li><strong>Easier deployment</strong> - Entire workflow in one object</li>
+<li><strong>Prevents mistakes</strong> - Can’t forget to scale test data</li>
+</ol>
+<p><strong>Real-World Workflow:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href=""></a><span class="co"># Step 1: Split data</span></span>
+<span id="cb19-2"><a href=""></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(X, y)</span>
+<span id="cb19-3"><a href=""></a></span>
+<span id="cb19-4"><a href=""></a><span class="co"># Step 2: Create pipeline</span></span>
+<span id="cb19-5"><a href=""></a>pipeline <span class="op">=</span> Pipeline([</span>
+<span id="cb19-6"><a href=""></a>    (<span class="st">'imputer'</span>, SimpleImputer(strategy<span class="op">=</span><span class="st">'median'</span>)),</span>
+<span id="cb19-7"><a href=""></a>    (<span class="st">'scaler'</span>, StandardScaler()),</span>
+<span id="cb19-8"><a href=""></a>    (<span class="st">'model'</span>, RandomForestClassifier())</span>
+<span id="cb19-9"><a href=""></a>])</span>
+<span id="cb19-10"><a href=""></a></span>
+<span id="cb19-11"><a href=""></a><span class="co"># Step 3: Use GridSearchCV with pipeline</span></span>
+<span id="cb19-12"><a href=""></a>param_grid <span class="op">=</span> {<span class="st">'model__n_estimators'</span>: [<span class="dv">100</span>, <span class="dv">200</span>, <span class="dv">300</span>]}</span>
+<span id="cb19-13"><a href=""></a>grid_search <span class="op">=</span> GridSearchCV(pipeline, param_grid, cv<span class="op">=</span><span class="dv">5</span>)</span>
+<span id="cb19-14"><a href=""></a></span>
+<span id="cb19-15"><a href=""></a><span class="co"># Step 4: Fit on training data</span></span>
+<span id="cb19-16"><a href=""></a>grid_search.fit(X_train, y_train)</span>
+<span id="cb19-17"><a href=""></a></span>
+<span id="cb19-18"><a href=""></a><span class="co"># Step 5: Evaluate on test set ONCE</span></span>
+<span id="cb19-19"><a href=""></a>test_score <span class="op">=</span> grid_search.score(X_test, y_test)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Notice:</strong> - Imputation, scaling, and modeling all in one pipeline - GridSearchCV works with pipelines - Test set only touched ONCE at the end</p>
+<p><strong>Common student questions:</strong></p>
+<ol type="1">
+<li><strong>“Do I always need pipelines?”</strong>
+<ul>
+<li>If you’re doing ANY preprocessing: YES</li>
+<li>Even if just scaling: YES</li>
+<li>Only exception: No preprocessing at all</li>
+</ul></li>
+<li><strong>“Can I put multiple preprocessing steps in a pipeline?”</strong>
+<ul>
+<li>Absolutely! That’s the power of pipelines</li>
+<li>Imputation → Scaling → PCA → Model</li>
+<li>All as one reproducible unit</li>
+</ul></li>
+<li><strong>“How do I tune hyperparameters in a pipeline?”</strong>
+<ul>
+<li>Use double underscore: <code>'model__n_estimators'</code></li>
+<li>Format: <code>'step_name__parameter_name'</code></li>
+</ul></li>
+</ol>
+<p><strong>Transition:</strong> “Now let’s tie everything together - CV + hyperparameter tuning + feature engineering.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="putting-it-all-together" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Putting It All Together</h1>
+
+</section>
+<section id="the-complete-professional-workflow" class="slide level2 smaller scrollable">
+<h2>The Complete Professional Workflow</h2>
+<div class="cell" data-reveal="true" data-fig-width="8" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class=""><p></p>
+<div>
+<pre class="mermaid mermaid-js">flowchart TD
+    A[Full Dataset] --&gt; B[Stage 1:&lt;br/&gt;Train/Test Split]
+    B --&gt; C[Training Set 80%]
+    B --&gt; D[Test Set 20%&lt;br/&gt;🔒 LOCKED]
+
+    C --&gt; E[Stage 2:&lt;br/&gt;Cross-Validation]
+    E --&gt; F[Try different models&lt;br/&gt;Tune hyperparameters&lt;br/&gt;Engineer features]
+    F --&gt; G[Stage 3:&lt;br/&gt;Select Best Approach]
+
+    G --&gt; H[Stage 4:&lt;br/&gt;Retrain on Full&lt;br/&gt;Training Set]
+
+    H --&gt; I[Stage 5:&lt;br/&gt;Evaluate on Test Set&lt;br/&gt;ONCE]
+    D --&gt; I
+    I --&gt; J[Report Final&lt;br/&gt;Performance]
+
+    style D fill:#ff6b6b
+    style E fill:#51cf66
+    style I fill:#ffd43b
+    style J fill:#51cf66
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p><strong>This is the culmination - the proper professional workflow.</strong></p>
+<p><strong>Walk through each stage deliberately:</strong></p>
+<p><strong>Stage 1: Train/Test Split</strong> - “Before doing ANYTHING else, split data” - “Lock test set away - don’t even look at it” - “Everything from now on uses training set only” - Typical: 80/20 or 70/30 split</p>
+<p><strong>Stage 2: Cross-Validation for All Decisions</strong> - “This is where you spend most of your time” - “Try different models, compare them with CV” - “Tune hyperparameters with GridSearchCV (which uses CV)” - “Engineer features, check impact with CV” - “You can make UNLIMITED decisions here” - “Test set stays pristine”</p>
+<p>Examples of decisions in Stage 2: - Should I use Random Forest or Gradient Boosting? - What max_depth works best? - Should I scale my features? - Should I add polynomial features? - How should I handle missing data?</p>
+<p><strong>ALL answered using cross-validation on training set!</strong></p>
+<p><strong>Stage 3: Select Best Approach</strong> - “Based on CV scores, pick your winner” - “Maybe it’s Random Forest with n_estimators=200, max_depth=15” - “Maybe you decided to scale features and add interactions” - “This is your final model configuration”</p>
+<p><strong>Stage 4: Retrain on Full Training Set</strong> - “Up until now, in CV, we trained on 80% of training set (4/5 folds)” - “Now we want to use ALL training data” - “Retrain your best model on the entire training set” - “This gives it maximum data to learn from”</p>
+<p><strong>Stage 5: Final Evaluation on Test Set</strong> - “Now and ONLY now, evaluate on test set” - “This is done ONCE” - “This is your honest, unbiased performance estimate” - “This is what you report to stakeholders”</p>
+<p><strong>Key principle:</strong> Test set is like your final exam - you only get to take it once. All practice and preparation (Stages 2-4) use the training set.</p>
+<p><strong>Common student misconceptions:</strong></p>
+<p>❌ “Can I try a few final models on the test set and pick the best?” ✓ “No! That defeats the purpose. Pick best model using CV, then test ONCE.”</p>
+<p>❌ “My CV score was 85% but test score was 82%. Did I do something wrong?” ✓ “Not necessarily. Some variation is expected. If gap is large (&gt;5%), investigate.”</p>
+<p>❌ “Can I go back and tune more if test score is disappointing?” ✓ “Technically yes, but then you need a NEW test set. Don’t iteratively peek.”</p>
+<p><strong>Real-world context:</strong> “In industry, your ‘test set’ is production. You deploy once and see how it performs. You don’t get to keep redeploying and testing. That’s why this workflow is critical.”</p>
+<p><strong>Example timeline:</strong> - Stage 1: 5 minutes (split data) - Stage 2: Hours to days (try things, tune, engineer) - Stage 3: 5 minutes (pick winner) - Stage 4: Minutes (retrain) - Stage 5: Seconds (evaluate)</p>
+<p><strong>Transition:</strong> “Let’s see what you’ll practice with this in Thursday’s lab.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="looking-ahead" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Looking Ahead</h1>
+
+</section>
+<section id="key-takeaways" class="slide level2">
+<h2>Key Takeaways</h2>
+<ul>
+<li><strong>Cross-validation</strong> prevents test set contamination and gives reliable performance estimates</li>
+<li><strong>Hyperparameter tuning</strong> finds the sweet spot in the bias-variance tradeoff</li>
+<li><strong>Feature engineering</strong> turns raw data into powerful inputs (often matters more than algorithms!)</li>
+<li><strong>Pipelines</strong> ensure reproducible, leak-free workflows</li>
+<li><strong>The 5-stage workflow</strong> is how professionals build trustworthy models</li>
+</ul>
+<aside class="notes">
+<p><strong>Reinforce the big picture:</strong></p>
+<p><strong>1. Cross-Validation</strong> - “This is how you make unlimited decisions without peeking at test set” - “5-fold or 10-fold is standard” - “Built into GridSearchCV” - “Gives you mean AND variance of performance”</p>
+<p><strong>2. Hyperparameter Tuning</strong> - “Every model has knobs to turn” - “GridSearchCV systematically searches combinations” - “Watch for overfitting (big train/validation gap)” - “Balance between training and validation performance”</p>
+<p><strong>3. Feature Engineering</strong> - “Often the highest-leverage activity in ML” - “Domain knowledge is key” - “Four main categories: encoding, scaling, creating, handling missing” - “Talk to experts in the problem domain!”</p>
+<p><strong>4. Pipelines</strong> - “Non-negotiable for production ML” - “Prevents data leakage” - “Makes deployment easier” - “One object, entire workflow”</p>
+<p><strong>5. The Complete Workflow</strong> - “5 stages: Split, CV, Select, Retrain, Test” - “Test set touched ONCE” - “Everything else uses CV on training set” - “This is what separates beginners from professionals”</p>
+<p><strong>Connecting to previous weeks:</strong> - “You’ve learned great models: linear regression, trees, forests” - “This week: How to tune them properly and prepare data right” - “Next week: More advanced topics building on this foundation”</p>
+<p><strong>The meta-lesson:</strong> “Data science isn’t just about knowing algorithms. It’s about having a disciplined workflow that produces trustworthy results. These three techniques form the foundation of professional ML practice.”</p>
+<p><strong>Motivate Thursday lab:</strong> “Reading about this is one thing. Doing it is another. Thursday you’ll practice the full workflow with real data. You’ll see common mistakes and how to avoid them. Come ready to code!”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="connection-to-thursdays-lab" class="slide level2">
+<h2>Connection to Thursday’s Lab</h2>
+<div class="callout callout-tip callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>This Week’s Lab Preview</strong></p>
+</div>
+<div class="callout-content">
+<p>In Thursday’s lab, you’ll get hands-on practice with:</p>
+<ul>
+<li>Implementing the 5-stage workflow from scratch</li>
+<li>Using GridSearchCV to tune a Random Forest</li>
+<li>Building feature engineering pipelines</li>
+<li>Comparing performance with and without proper CV</li>
+<li>Seeing what happens when you peek at the test set (spoiler: bad things!)</li>
+</ul>
+<p>Come prepared to apply today’s concepts!</p>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p><strong>Set expectations for Thursday:</strong></p>
+<p><strong>What students will do:</strong></p>
+<ol type="1">
+<li><strong>Start with the “wrong” way:</strong>
+<ul>
+<li>Split data</li>
+<li>Try different hyperparameters, checking test set each time</li>
+<li>See how test score becomes unreliable</li>
+<li>Experience the peeking problem firsthand</li>
+</ul></li>
+<li><strong>Then do it the right way:</strong>
+<ul>
+<li>Split data</li>
+<li>Use cross-validation for all decisions</li>
+<li>Tune with GridSearchCV</li>
+<li>Evaluate on test set ONCE</li>
+<li>Compare: Which test score is trustworthy?</li>
+</ul></li>
+<li><strong>Feature engineering practice:</strong>
+<ul>
+<li>Encode categorical variables</li>
+<li>Scale numerical features</li>
+<li>Create new features (interactions, polynomials)</li>
+<li>Handle missing data</li>
+<li>Build pipelines to prevent leakage</li>
+</ul></li>
+<li><strong>Full workflow integration:</strong>
+<ul>
+<li>Combine CV + GridSearchCV + Pipelines</li>
+<li>Complete end-to-end ML project</li>
+<li>Report final, honest performance</li>
+</ul></li>
+</ol>
+<p><strong>Lab structure:</strong> - Part 1: Cross-validation basics - Part 2: GridSearchCV hyperparameter tuning - Part 3: Feature engineering and pipelines - Part 4: Complete workflow on a new dataset</p>
+<p><strong>What to bring:</strong> - Laptop with Python environment - Course materials (slides, chapter notes) - Questions from today’s lecture - Willingness to make mistakes and learn!</p>
+<p><strong>Time allocation:</strong> - Expect to spend 2-3 hours - Work in pairs (encouraged) - TAs available for questions</p>
+<p><strong>Common lab challenges to preview:</strong></p>
+<ol type="1">
+<li><strong>Forgetting to split before CV:</strong>
+<ul>
+<li>Students try to CV on full dataset</li>
+<li>Remind: Split first, CV on training set</li>
+</ul></li>
+<li><strong>Pipeline syntax:</strong>
+<ul>
+<li>Double underscore for nested parameters</li>
+<li><code>model__n_estimators</code> not <code>n_estimators</code></li>
+</ul></li>
+<li><strong>Interpreting CV scores:</strong>
+<ul>
+<li>Understanding mean and std</li>
+<li>What’s “good enough” variance?</li>
+</ul></li>
+<li><strong>GridSearchCV taking forever:</strong>
+<ul>
+<li>Remind about computational cost</li>
+<li>Start with coarse grid, then refine</li>
+<li>Use n_jobs=-1 for parallelization</li>
+</ul></li>
+</ol>
+<p><strong>Transition:</strong> “Any questions before we wrap up?”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section></section>
+<section>
+<section id="questions-next-steps" class="title-slide slide level1 center" data-background="#43464B">
+<h1>Questions &amp; Next Steps</h1>
+
+</section>
+<section id="looking-ahead-1" class="slide level2">
+<h2>Looking Ahead</h2>
+<p><strong>Btwn now &amp; Thursday:</strong> Complete reading Chapters 28-30</p>
+<p><strong>Thursday Lab:</strong> Hands-on practice with CV, hyperparameter tuning, and feature engineering</p>
+<p><strong>This weekend:</strong> Week 12 quiz &amp; homework (based on lab)</p>
+<div class="fragment">
+<p><br></p>
+<p><strong>Next Week:</strong> Move into the world of unsupervised ML</p>
+<p><strong>Next next week:</strong> Advanced topics &amp; Final project prep!</p>
+<aside class="notes">
+<p><strong>Homework reminders:</strong></p>
+<p><strong>Readings:</strong> - Chapter 28: Cross-Validation (focus on the 5-stage workflow) - Chapter 29: Hyperparameter Tuning (understand bias-variance tradeoff) - Chapter 30: Feature Engineering (the four main techniques)</p>
+<p><strong>Quiz:</strong> - Covers all three chapters - Due before next Tuesday - Tests conceptual understanding - 10 questions, multiple choice and scenarios</p>
+<p><strong>What to review before Thursday:</strong> 1. How k-fold cross-validation splits data 2. The difference between overfitting and underfitting 3. When to scale features (which algorithms care) 4. Why pipelines prevent data leakage</p>
+<p><strong>Office hours:</strong> - Tuesday/Thursday 2-3pm - Or by appointment - Come with specific questions</p>
+<p><strong>TA sessions:</strong> - Wednesday evenings - Great for lab prep</p>
+<p><strong>Resources:</strong> - Scikit-learn documentation for GridSearchCV - Chapter companion notebooks - Previous lab solutions (for reference)</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="any-final-questions" class="slide level2">
+<h2>Any Final Questions?</h2>
+<ul>
+<li>About today’s concepts?</li>
+<li>About Thursday’s lab?</li>
+<li>About upcoming assignments?</li>
+<li>About rest of the term?</li>
+</ul>
+<aside class="notes">
+<p><strong>Common final questions:</strong></p>
+<p><strong>Q: “Do I need to memorize the GridSearchCV syntax?”</strong> A: “No, but understand what it does. You can always look up syntax. Focus on when and why to use it.”</p>
+<p><strong>Q: “Will the quiz cover all three chapters equally?”</strong> A: “Yes, roughly equal coverage. Some questions integrate concepts (like ‘when to scale AND use CV’).”</p>
+<p><strong>Q: “How long will Thursday’s lab take?”</strong> A: “Plan for 2-3 hours. Some finish faster, some take longer. No rush - learning matters more than speed.”</p>
+<p><strong>Q: “Can I use GridSearchCV on the midterm project?”</strong> A: “Absolutely! In fact, I encourage it. Shows you understand proper workflow.”</p>
+<p><strong>Q: “What if my CV scores are really different across folds?”</strong> A: “High variance in CV scores suggests model instability. Might need more data, simpler model, or different features. We’ll discuss in lab.”</p>
+<p><strong>Q: “Do I always need to use pipelines?”</strong> A: “For any real project: yes. Only exception is exploratory analysis with no preprocessing. When in doubt, use a pipeline.”</p>
+<p><strong>Closing message:</strong> “This week’s topics - CV, hyperparameter tuning, feature engineering - are what separate textbook ML from production ML. Master these, and you’ll be doing professional-quality data science. See you Thursday!”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section class="slide level2">
+
+<center>
+<strong>See you Thursday for hands-on practice!</strong>
+</center>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+<p>BANA 4080</p>
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="w12_tuesday_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="w12_tuesday_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/appearance/appearance.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="w12_tuesday_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="w12_tuesday_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': true,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'appearance': {"hideagain":true,"delay":300,"debug":false,"appearevent":"slidetransitionend","autoappear":false,"autoelements":false,"appearparents":false},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, Appearance, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
