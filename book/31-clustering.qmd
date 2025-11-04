@@ -1,0 +1,2215 @@
+# Unsupervised Learning and Clustering {#sec-clustering}
+
+Think back to all the models you've built so far in this course. Whether predicting house prices with regression, classifying loan defaults with logistic regression, or diagnosing heart disease with decision trees, they all had one thing in common: you always had a target variable—a known outcome you were trying to predict. This is called **supervised learning** because you're essentially supervising the algorithm by showing it examples of "correct answers" during training.
+
+But what if you don't have labels? What if you have customer data but no predetermined segments, or transaction records with no indication of which patterns are normal versus fraudulent? This is where **unsupervised learning** comes in—algorithms that discover hidden structures and patterns in data without being told what to look for.
+
+::: {.callout-tip}
+## Remember These Terms?
+
+The distinction between supervised and unsupervised learning should feel familiar—we first introduced these concepts back in Chapter 19. Since then, we've been focusing exclusively on supervised learning methods: regression, classification, and ensemble techniques. In this chapter and the next, we're shifting our focus to unsupervised learning, exploring how algorithms can discover patterns and structure in data without labeled outcomes to guide them.
+:::
+
+This chapter introduces you to one of the most powerful and widely-used unsupervised learning techniques: **clustering**. You'll learn how clustering algorithms automatically group similar observations together, revealing natural segments in your data that weren't obvious before. We'll focus primarily on **K-Means clustering**—the workhorse algorithm for customer segmentation, market analysis, and exploratory data analysis.
+
+Through a comprehensive case study using real grocery store transaction data, you'll master the complete clustering workflow: engineering behavioral features from raw transactions, selecting the optimal number of clusters (even when the answer is ambiguous), interpreting cluster profiles, and translating statistical findings into actionable marketing strategies. You'll also learn when K-Means works well, when its assumptions break down, and what alternative methods exist for more complex data structures.
+
+::: {.callout-note}
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+
+- Explain the difference between supervised and unsupervised learning and when each is appropriate
+- Understand how the K-Means algorithm groups similar observations through iterative centroid updates
+- Implement K-Means clustering using scikit-learn's `KMeans` class and interpret key attributes
+- Engineer behavioral features from transactional data for customer segmentation
+- Use the elbow method and silhouette scores to select the number of clusters—and understand when results are ambiguous
+- Apply proper feature scaling to ensure all features contribute equally to clustering
+- Handle categorical variables through ordinal and one-hot encoding
+- Interpret cluster profiles by analyzing both behavioral and demographic characteristics
+- Translate statistical clusters into actionable business strategies
+- Recognize K-Means assumptions and when alternative methods (hierarchical, DBSCAN) might be more appropriate
+- Apply the complete clustering workflow to real-world grocery retail data
+:::
+
+::: {.callout-note}
+## Follow along in Colab
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/31_clustering.ipynb) in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here—and experiment with your own ideas.
+
+👉 Open the [Clustering Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/31_clustering.ipynb).
+:::
+
+## Introduction to Unsupervised Learning
+
+### Quick Refresh: What Is Unsupervised Learning?
+
+Throughout this course, you've been building **supervised learning** models—algorithms that learn from labeled training data where the outcome is known. You had house prices to predict, disease diagnoses to classify, and customer defaults to forecast. The "supervision" comes from having these known outcomes guide the learning process.
+
+**Unsupervised learning** flips this paradigm. Instead of predicting a known outcome, unsupervised algorithms explore the data itself to discover hidden patterns, structures, and relationships. There's no target variable, no correct answer to check against—just data waiting to reveal its natural organization.
+
+Consider these contrasting scenarios:
+
+| **Supervised Learning** | **Unsupervised Learning** |
+|---|---|
+| "Given customer features, predict if they'll churn (yes/no)" | "Given customer features, discover natural customer segments" |
+| "Given email content, classify as spam or not spam" | "Given document text, group similar documents together" |
+| "Given patient symptoms, diagnose disease (known conditions)" | "Given patient symptoms, identify patterns that might represent new disease subtypes" |
+| **You have labeled data** | **You have unlabeled data** |
+| **Goal: Predict outcomes** | **Goal: Discover structure** |
+
+### When and Why We Use It
+
+Unsupervised learning shines in several important business contexts where labels are expensive, unavailable, or not yet defined:
+
+**1. Exploratory Data Analysis**: When you first encounter a new dataset, unsupervised methods help you understand its structure before building predictive models. You might discover that your customers naturally fall into 4-5 distinct groups, which could inform feature engineering for subsequent supervised learning.
+
+**2. Discovering Hidden Patterns**: Sometimes the most interesting insights aren't about predicting known outcomes, but about revealing patterns you didn't know existed. Retail companies use clustering to discover unexpected customer segments, healthcare researchers use it to identify disease subtypes, and fraud analysts use it to detect anomalous transaction patterns.
+
+**3. Preprocessing for Supervised Learning**: Unsupervised methods can create features for supervised models. For example, you might cluster customers into segments, then use those cluster labels as categorical features in a churn prediction model.
+
+**4. When Labels Are Expensive**: Labeling data is often costly and time-consuming. Medical diagnoses require expert physicians, customer satisfaction requires surveys, and fraud detection requires investigation. Unsupervised methods can work with the abundant unlabeled data you already have.
+
+**5. Dimension Reduction**: When you have hundreds or thousands of features, unsupervised techniques can compress them into a smaller set while preserving important information (this is beyond the scope of this chapter but we'll touch on it in the next chapter).
+
+::: {.callout-important}
+## The Tradeoff: Insight vs. Prediction
+
+Unsupervised learning trades prediction accuracy for discovery potential:
+
+- **Supervised learning** asks: "Can I accurately predict this outcome?"
+- **Unsupervised learning** asks: "What interesting structure exists in this data?"
+
+Both are valuable, but they serve different purposes. You can't evaluate unsupervised methods using accuracy or RMSE because there's no ground truth to compare against. Instead, you evaluate them based on interpretability, actionability, and how well the discovered patterns align with business goals.
+:::
+
+### Two Main Types of Unsupervised Learning
+
+While unsupervised learning encompasses many techniques, two categories dominate business applications:
+
+**1. Clustering: Grouping Similar Observations**
+
+Clustering algorithms partition data into groups (clusters) where observations within each group are more similar to each other than to observations in other groups. Think of it as automatic categorization:
+
+- **Customer segmentation**: Group customers by purchasing behavior, demographics, or engagement patterns
+- **Market segmentation**: Identify distinct market segments for targeted marketing campaigns
+- **Document organization**: Automatically group similar news articles, research papers, or support tickets
+- **Image compression**: Group similar pixels to reduce image file sizes
+- **Anomaly detection**: Identify observations that don't fit well into any cluster
+
+This chapter focuses primarily on clustering, with emphasis on the K-Means algorithm—the most widely-used clustering method in business applications.
+
+**2. Dimension Reduction: Simplifying Complex Data**
+
+Dimension reduction techniques compress many features into fewer dimensions while preserving as much information as possible:
+
+- **Principal Component Analysis (PCA)**: Find linear combinations of features that capture maximum variance
+- **t-SNE and UMAP**: Create 2D or 3D visualizations of high-dimensional data
+- **Autoencoders**: Neural networks that learn compressed representations
+
+These methods are particularly valuable when you have hundreds of features and need to visualize the data or reduce computational costs. While we won't cover dimension reduction in depth in this chapter, know that it's a powerful complement to clustering.
+
+**Visualizing the Difference: Rows vs. Columns**
+
+To understand the distinction between clustering and dimension reduction, it helps to think about how each operates on your data matrix:
+
+```{python}
+#| echo: false
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import numpy as np
+
+# Create figure with two subplots with more space
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Create a sample data matrix representation
+rows, cols = 8, 5
+cell_size = 1
+
+# Left plot: Clustering (grouping rows/observations)
+ax = axes[0]
+ax.set_xlim(-2.5, cols)
+ax.set_ylim(-1, rows + 1.2)
+ax.set_aspect('equal')
+
+# Color-code clusters (groups of rows)
+cluster_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
+cluster_assignments = [0, 0, 0, 1, 1, 1, 2, 2]  # 3 clusters
+
+# Draw the data matrix with cluster coloring
+for i in range(rows):
+    for j in range(cols):
+        rect = mpatches.Rectangle((j, rows-i-1), 1, 1,
+                                  linewidth=1.5, edgecolor='white',
+                                  facecolor=cluster_colors[cluster_assignments[i]],
+                                  alpha=0.5)
+        ax.add_patch(rect)
+
+# Add thick borders around cluster groups to emphasize grouping
+# Cluster 1 border (rows 0-2)
+border1 = mpatches.Rectangle((0, rows-3), cols, 3,
+                             linewidth=3, edgecolor=cluster_colors[0],
+                             facecolor='none')
+ax.add_patch(border1)
+
+# Cluster 2 border (rows 3-5)
+border2 = mpatches.Rectangle((0, rows-6), cols, 3,
+                             linewidth=3, edgecolor=cluster_colors[1],
+                             facecolor='none')
+ax.add_patch(border2)
+
+# Cluster 3 border (rows 6-7)
+border3 = mpatches.Rectangle((0, rows-8), cols, 2,
+                             linewidth=3, edgecolor=cluster_colors[2],
+                             facecolor='none')
+ax.add_patch(border3)
+
+# Add large bracket-style indicators on the left
+bracket_x = -0.3
+ax.plot([bracket_x, bracket_x], [rows-3, rows], color=cluster_colors[0],
+        linewidth=4, solid_capstyle='round')
+ax.text(-0.7, rows-1.5, 'Cluster 1', fontsize=11, ha='right',
+        color=cluster_colors[0], fontweight='bold')
+
+ax.plot([bracket_x, bracket_x], [rows-6, rows-3], color=cluster_colors[1],
+        linewidth=4, solid_capstyle='round')
+ax.text(-0.7, rows-4.5, 'Cluster 2', fontsize=11, ha='right',
+        color=cluster_colors[1], fontweight='bold')
+
+ax.plot([bracket_x, bracket_x], [rows-8, rows-6], color=cluster_colors[2],
+        linewidth=4, solid_capstyle='round')
+ax.text(-0.7, rows-7, 'Cluster 3', fontsize=11, ha='right',
+        color=cluster_colors[2], fontweight='bold')
+
+# Labels
+ax.text(cols/2, rows+0.8, 'Features (columns)', fontsize=11,
+        ha='center', fontweight='bold')
+ax.text(-1.8, rows/2, 'Observations\n(rows)', fontsize=11,
+        va='center', ha='center', rotation=90, fontweight='bold')
+ax.set_title('Clustering: Group Similar Observations',
+             fontsize=14, fontweight='bold', pad=25)
+
+# Add feature labels
+for j in range(cols):
+    ax.text(j+0.5, -0.3, f'F{j+1}', fontsize=9, ha='center')
+
+ax.axis('off')
+
+# Right plot: Dimension Reduction (selecting/combining columns)
+ax = axes[1]
+ax.set_xlim(-0.5, cols+3)
+ax.set_ylim(-1, rows + 1.2)
+ax.set_aspect('equal')
+
+# Draw the original data matrix with distinct colors
+feature_colors = ['#FFE5E5', '#E5F5FF', '#FFF5E5', '#E5FFE5', '#F5E5FF']
+for i in range(rows):
+    for j in range(cols):
+        rect = mpatches.Rectangle((j, rows-i-1), 1, 1,
+                                  linewidth=1.5, edgecolor='white',
+                                  facecolor=feature_colors[j], alpha=0.6)
+        ax.add_patch(rect)
+
+# Add thick borders around each original column to emphasize features
+for j in range(cols):
+    border = mpatches.Rectangle((j, 0), 1, rows,
+                                linewidth=2.5, edgecolor='gray',
+                                facecolor='none', linestyle='-')
+    ax.add_patch(border)
+
+# Draw arrow showing compression with larger size
+arrow = mpatches.FancyArrowPatch((cols+0.3, rows/2), (cols+0.7, rows/2),
+                                arrowstyle='->', mutation_scale=40,
+                                linewidth=4, color='#2E86AB')
+ax.add_patch(arrow)
+
+# Draw the reduced data matrix (fewer columns) with gradient colors
+reduced_cols = 2
+for i in range(rows):
+    for j in range(reduced_cols):
+        rect = mpatches.Rectangle((cols+1+j, rows-i-1), 1, 1,
+                                  linewidth=1.5, edgecolor='white',
+                                  facecolor='#A8DADC', alpha=0.7)
+        ax.add_patch(rect)
+
+# Add thick border around reduced columns
+reduced_border = mpatches.Rectangle((cols+1, 0), reduced_cols, rows,
+                                   linewidth=3, edgecolor='#2E86AB',
+                                   facecolor='none')
+ax.add_patch(reduced_border)
+
+# Labels
+ax.text(cols/2, rows+0.8, 'Original Features', fontsize=11,
+        ha='center', fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
+        facecolor='white', edgecolor='gray', linewidth=1.5))
+ax.text(cols+1+reduced_cols/2, rows+0.8, 'Reduced\nFeatures', fontsize=11,
+        ha='center', fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
+        facecolor='#A8DADC', edgecolor='#2E86AB', linewidth=2))
+ax.set_title('Dimension Reduction: Compress Features',
+             fontsize=14, fontweight='bold', pad=25)
+
+# Add feature labels with backgrounds
+for j in range(cols):
+    ax.text(j+0.5, -0.25, f'F{j+1}', fontsize=9, ha='center',
+           bbox=dict(boxstyle='round,pad=0.2', facecolor=feature_colors[j],
+           edgecolor='gray', linewidth=1))
+for j in range(reduced_cols):
+    ax.text(cols+1+j+0.5, -0.25, f'PC{j+1}', fontsize=10, ha='center',
+            color='white', fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='#2E86AB',
+            edgecolor='#2E86AB', linewidth=1))
+
+ax.axis('off')
+
+plt.tight_layout()
+plt.show()
+```
+
+**Key Insight:**
+
+- **Clustering** works across **rows** (observations), asking: "Which customers/patients/transactions are similar to each other?"
+- **Dimension reduction** works across **columns** (features), asking: "Which features can we combine or eliminate while preserving information?"
+
+Both techniques help make sense of complex data, but they operate in perpendicular directions!
+
+::: {.callout-note}
+## Knowledge Check: Supervised vs. Unsupervised
+
+For each scenario below, determine whether supervised or unsupervised learning is most appropriate, and explain your reasoning:
+
+- **Scenario A**: A hospital has electronic health records for 10,000 patients, including lab results, vital signs, medications, and diagnoses (disease names). They want to predict which patients are at risk for readmission within 30 days.
+
+- **Scenario B**: A streaming music service has listening history for millions of users (songs played, skip rates, listening duration) but no explicit labels about user preferences. They want to create personalized playlists.
+
+- **Scenario C**: An e-commerce company has millions of customer transactions with product purchases, but they don't have predefined customer segments. They want to understand their customer base better for targeted marketing.
+
+<details>
+<summary>Click to reveal answer</summary>
+
+- **Scenario A: Supervised Learning** - This is a clear supervised learning problem. The hospital has a labeled outcome (readmission within 30 days: yes/no) and wants to predict it for new patients. They would build a classification model using features like lab results and vital signs to predict the readmission target variable.
+
+- **Scenario B: Could be either, but likely unsupervised initially** - While this could involve supervised learning if users explicitly rate songs (creating labels), the scenario describes unlabeled listening data. The music service would likely start with unsupervised methods like clustering to discover user taste profiles, then potentially use those clusters as features in supervised recommendation models. Collaborative filtering (often unsupervised) would help create playlists by finding users with similar listening patterns.
+
+- **Scenario C: Unsupervised Learning (Clustering)** - This is a textbook unsupervised learning problem. There are no predefined labels or segments—the company wants to discover natural customer groupings that emerge from purchasing behavior. Clustering algorithms would reveal segments like "bargain hunters," "brand loyalists," or "occasional shoppers" without being told what to look for. These discovered segments then inform marketing strategies.
+
+</details>
+:::
+
+## Clustering: Finding Hidden Structure in Data
+
+### The Goal of Clustering
+
+At its core, clustering is about organization—taking a messy, unstructured collection of observations and organizing them into meaningful groups. The fundamental principle is simple:
+
+> **Observations within the same cluster should be more similar to each other than to observations in different clusters.**
+
+Think of clustering like organizing a large, unorganized bookstore. You don't have predetermined categories, but you notice that certain books naturally go together—cookbooks share common features, science fiction novels have similarities, and business books cluster around related themes. Clustering algorithms formalize this intuitive process, using mathematical measures of similarity to automatically group observations.
+
+**What makes observations "similar"?** Similarity depends on the features you measure. In customer segmentation, similarity might be based on age, income, and purchase frequency. In document clustering, similarity might be based on word frequencies and topics. The algorithm doesn't "understand" what these features mean—it simply measures how close or far apart observations are in feature space.
+
+### Real-World Examples
+
+Clustering applications span nearly every industry and domain. Let's explore some concrete examples to illustrate the breadth of clustering use cases:
+
+**Customer Segmentation (Marketing & Retail)**
+
+A national retailer has transaction data for 500,000 customers but no formal customer segmentation strategy. Using clustering on features like purchase frequency, average order value, product categories, and recency of last purchase, they discover 5 distinct customer groups:
+
+- **Loyal high-spenders**: Frequent purchases, high order values, wide product range
+- **Bargain hunters**: Only purchase during sales, low order values, long gaps between purchases
+- **New customers**: Recent first purchase, low frequency but engaged with emails
+- **Inactive customers**: Previously active but haven't purchased in 6+ months
+- **Seasonal shoppers**: Predictable purchase patterns around holidays
+
+These discovered segments inform targeted marketing campaigns, personalized offers, and retention strategies—all without requiring manual labeling or pre-defined categories.
+
+**Document Grouping (Information Systems)**
+
+A news organization publishes hundreds of articles daily across diverse topics. Instead of manually tagging every article, they use clustering on article text (converted to numerical features through TF-IDF) to automatically group similar articles. The algorithm discovers clusters corresponding to sports, politics, technology, health, and entertainment—plus some unexpected groupings like "environmental policy" that spans multiple traditional categories.
+
+**Image Compression (Computer Vision)**
+
+Digital images contain millions of pixels, each with red, green, and blue color values. K-Means clustering can group similar colors together—perhaps reducing an image with 16 million possible colors down to just 256 distinct colors. Each pixel is then represented by its nearest cluster center, dramatically reducing file size while maintaining visual quality. This is how GIF images achieve compression.
+
+**Medical Diagnosis Refinement (Healthcare)**
+
+Doctors have long recognized that diseases like diabetes or cancer aren't single conditions but rather collections of related subtypes with different characteristics. Researchers use clustering on patient symptoms, biomarkers, and genetic data to identify these subtypes, revealing that what we call "Type 2 diabetes" might actually be 3-4 distinct conditions requiring different treatments.
+
+**Anomaly Detection (Fraud & Security)**
+
+Credit card companies cluster transaction patterns to identify normal behavior. Transactions that don't fit well into any established cluster—they're far from all cluster centers—are flagged as potentially fraudulent. This unsupervised approach can detect new fraud patterns that weren't seen during supervised model training.
+
+::: {.callout-tip}
+## Common Thread: Discovery
+
+Notice that all these applications share a common theme: **discovering structure that wasn't predetermined**. Clustering doesn't impose categories from outside—it reveals the natural groupings that emerge from the data itself. This makes it particularly valuable for exploratory analysis and for situations where human intuition might miss subtle patterns.
+:::
+
+### Key Terms: Distance, Similarity, and Centroids
+
+Before we dive into specific clustering algorithms, let's establish the foundational concepts that make clustering work.
+
+**Distance and Similarity**
+
+Clustering algorithms need a way to measure how "close" or "far apart" observations are. This is typically done using distance metrics:
+
+**Euclidean Distance** (most common): The straight-line distance between two points in feature space. For two observations with features $[x_1, x_2, ..., x_n]$ and $[y_1, y_2, ..., y_n]$:
+
+$$\text{Euclidean Distance} = \sqrt{(x_1 - y_1)^2 + (x_2 - y_2)^2 + ... + (x_n - y_n)^2}$$
+
+In two dimensions, this is just the Pythagorean theorem. For example, if Customer A has [age=30, income=50000] and Customer B has [age=35, income=60000]:
+
+$$\text{Distance} = \sqrt{(30-35)^2 + (50000-60000)^2} = \sqrt{25 + 100000000} \approx 10000$$
+
+Let's visualize this distance calculation:
+
+```{python}
+#| echo: false
+#| fig-width: 10
+#| fig-height: 5
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+# Customer data
+customer_a = [30, 50000]
+customer_b = [35, 60000]
+
+# Left plot: Unscaled (raw values)
+ax = axes[0]
+ax.scatter(customer_a[0], customer_a[1], s=200, c='#FF6B6B',
+           edgecolors='black', linewidths=2, zorder=5, label='Customer A')
+ax.scatter(customer_b[0], customer_b[1], s=200, c='#4ECDC4',
+           edgecolors='black', linewidths=2, zorder=5, label='Customer B')
+
+# Draw the distance line
+ax.plot([customer_a[0], customer_b[0]], [customer_a[1], customer_b[1]],
+        'k--', linewidth=2, alpha=0.7, zorder=3)
+
+# Draw the right triangle to show Pythagorean theorem
+ax.plot([customer_a[0], customer_b[0]], [customer_a[1], customer_a[1]],
+        'gray', linewidth=1.5, linestyle=':', alpha=0.6)
+ax.plot([customer_b[0], customer_b[0]], [customer_a[1], customer_b[1]],
+        'gray', linewidth=1.5, linestyle=':', alpha=0.6)
+
+# Annotations showing the differences
+age_diff = customer_b[0] - customer_a[0]
+income_diff = customer_b[1] - customer_a[1]
+distance = np.sqrt(age_diff**2 + income_diff**2)
+
+ax.text((customer_a[0] + customer_b[0])/2, customer_a[1] - 2000,
+        f'Age difference:\n{age_diff} years', ha='center', fontsize=10,
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgray', alpha=0.8))
+
+ax.text(customer_b[0] + 1.5, (customer_a[1] + customer_b[1])/2,
+        f'Income difference:\n${income_diff:,}', ha='left', fontsize=10,
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgray', alpha=0.8))
+
+ax.text((customer_a[0] + customer_b[0])/2 - 2, (customer_a[1] + customer_b[1])/2 + 3000,
+        f'Distance ≈ {distance:,.0f}', ha='center', fontsize=11, fontweight='bold',
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.9))
+
+ax.set_xlabel('Age (years)', fontsize=12, fontweight='bold')
+ax.set_ylabel('Income ($)', fontsize=12, fontweight='bold')
+ax.set_title('Problem: Income Dominates the Distance', fontsize=13, fontweight='bold')
+ax.legend(fontsize=10, loc='upper left')
+ax.grid(True, alpha=0.3)
+ax.set_xlim(25, 40)
+ax.set_ylim(45000, 65000)
+
+# Right plot: Show the scale problem with contributions
+ax = axes[1]
+contributions = [age_diff**2, income_diff**2]
+labels = [f'Age²\n({age_diff}² = {age_diff**2:,})',
+          f'Income²\n(${income_diff:,})² = {income_diff**2:,.0f}']
+colors = ['#FF6B6B', '#4ECDC4']
+
+bars = ax.bar(range(2), contributions, color=colors, edgecolor='black', linewidth=2, alpha=0.7)
+
+# Add value labels on bars
+for i, (bar, val) in enumerate(zip(bars, contributions)):
+    height = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2., height,
+            f'{val:,.0f}', ha='center', va='bottom', fontsize=11, fontweight='bold')
+
+ax.set_xticks(range(2))
+ax.set_xticklabels(labels, fontsize=10)
+ax.set_ylabel('Contribution to Distance² (squared units)', fontsize=11, fontweight='bold')
+ax.set_title('Age Contributes Almost Nothing!', fontsize=13, fontweight='bold', color='red')
+ax.grid(True, alpha=0.3, axis='y')
+
+# Add annotation showing the ratio
+ax.text(1, contributions[1] * 0.5,
+        f'Income contributes\n{contributions[1]/contributions[0]:,.0f}x more!',
+        ha='center', fontsize=11, fontweight='bold',
+        bbox=dict(boxstyle='round,pad=0.8', facecolor='yellow',
+                 edgecolor='red', linewidth=2))
+
+plt.tight_layout()
+plt.show()
+```
+
+::: {.callout-important}
+## The need for feature scaling!
+
+Notice how the income difference dominates because income is measured in much larger numbers than age. The squared income difference (100,000,000) is **4 million times** larger than the squared age difference (25)! This means age contributes virtually nothing to the distance calculation, even though both features might be equally important for customer segmentation. This is why **feature scaling** is crucial for clustering—we'll address this later.
+:::
+
+**Other Distance Metrics** exist for specific use cases:
+
+- **Manhattan distance**: Sum of absolute differences (like city block distance)
+- **Cosine similarity**: Measures angle between vectors (useful for text data)
+- **Correlation distance**: Measures pattern similarity regardless of magnitude
+
+For this chapter, we'll focus on Euclidean distance, which K-Means uses by default.
+
+**Centroids**
+
+A **centroid** is the center point of a cluster—the "average" observation for that group. For each feature, the centroid's value is the mean of all observations in the cluster.
+
+If a cluster contains three customers:
+
+- Customer 1: [age=25, income=40000]
+- Customer 2: [age=30, income=50000]
+- Customer 3: [age=35, income=45000]
+
+The centroid would be: [age=30, income=45000]
+
+**Why centroids matter**: K-Means and many other clustering algorithms work by iteratively updating cluster centroids to find the best grouping. Each observation is assigned to its nearest centroid, forming clusters.
+
+**Within-Cluster Sum of Squares (WCSS)**
+
+To measure cluster quality, we calculate how compact each cluster is:
+
+$$\text{WCSS} = \sum_{i=1}^{k} \sum_{x \in C_i} \text{distance}(x, \text{centroid}_i)^2$$
+
+This measures the total squared distance from each point to its cluster centroid. **Lower WCSS means tighter, more compact clusters**, which is generally desirable. We'll use WCSS when determining the optimal number of clusters.
+
+Let's visualize what "compact" vs. "loose" clusters look like and how WCSS captures this:
+
+```{python}
+#| echo: false
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+np.random.seed(42)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 6))
+
+# Create two scenarios: compact clusters vs. loose clusters
+
+# Scenario 1: Compact clusters (low WCSS)
+ax = axes[0]
+cluster1_compact = np.random.normal([2, 2], 0.3, (20, 2))
+cluster2_compact = np.random.normal([5, 5], 0.3, (20, 2))
+centroid1_compact = cluster1_compact.mean(axis=0)
+centroid2_compact = cluster2_compact.mean(axis=0)
+
+# Plot points
+ax.scatter(cluster1_compact[:, 0], cluster1_compact[:, 1],
+          s=80, c='#FF6B6B', alpha=0.6, edgecolors='black', linewidths=1,
+          label='Cluster 1')
+ax.scatter(cluster2_compact[:, 0], cluster2_compact[:, 1],
+          s=80, c='#4ECDC4', alpha=0.6, edgecolors='black', linewidths=1,
+          label='Cluster 2')
+
+# Plot centroids
+ax.scatter(*centroid1_compact, s=150, c='#FF6B6B', marker='X',
+          edgecolors='black', linewidths=3, zorder=5, label='Centroid 1')
+ax.scatter(*centroid2_compact, s=150, c='#4ECDC4', marker='X',
+          edgecolors='black', linewidths=3, zorder=5, label='Centroid 2')
+
+# Draw distance lines from a few points to their centroids
+for i in range(0, 20, 4):  # Show every 4th point to avoid clutter
+    ax.plot([cluster1_compact[i, 0], centroid1_compact[0]],
+           [cluster1_compact[i, 1], centroid1_compact[1]],
+           'gray', linewidth=1, linestyle='--', alpha=0.4, zorder=1)
+    ax.plot([cluster2_compact[i, 0], centroid2_compact[0]],
+           [cluster2_compact[i, 1], centroid2_compact[1]],
+           'gray', linewidth=1, linestyle='--', alpha=0.4, zorder=1)
+
+# Calculate WCSS
+wcss_compact = (np.sum((cluster1_compact - centroid1_compact)**2) +
+                np.sum((cluster2_compact - centroid2_compact)**2))
+
+ax.set_xlabel('Feature 1', fontsize=12, fontweight='bold')
+ax.set_ylabel('Feature 2', fontsize=12, fontweight='bold')
+ax.set_title(f'Compact Clusters (Good)\nWCSS = {wcss_compact:.1f}',
+            fontsize=13, fontweight='bold', color='green')
+ax.legend(loc='upper left', fontsize=9)
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 7)
+ax.set_ylim(0, 7)
+
+# Add text annotation
+ax.text(3.5, 0.5, 'Points are close to centroids ✓',
+       ha='center', fontsize=11, fontweight='bold',
+       bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgreen',
+                edgecolor='green', linewidth=2))
+
+# Scenario 2: Loose clusters (high WCSS)
+ax = axes[1]
+cluster1_loose = np.random.normal([2, 2], 0.9, (20, 2))
+cluster2_loose = np.random.normal([5, 5], 0.9, (20, 2))
+centroid1_loose = cluster1_loose.mean(axis=0)
+centroid2_loose = cluster2_loose.mean(axis=0)
+
+# Plot points
+ax.scatter(cluster1_loose[:, 0], cluster1_loose[:, 1],
+          s=80, c='#FF6B6B', alpha=0.6, edgecolors='black', linewidths=1,
+          label='Cluster 1')
+ax.scatter(cluster2_loose[:, 0], cluster2_loose[:, 1],
+          s=80, c='#4ECDC4', alpha=0.6, edgecolors='black', linewidths=1,
+          label='Cluster 2')
+
+# Plot centroids
+ax.scatter(*centroid1_loose, s=150, c='#FF6B6B', marker='X',
+          edgecolors='black', linewidths=3, zorder=5, label='Centroid 1')
+ax.scatter(*centroid2_loose, s=150, c='#4ECDC4', marker='X',
+          edgecolors='black', linewidths=3, zorder=5, label='Centroid 2')
+
+# Draw distance lines from a few points to their centroids
+for i in range(0, 20, 4):
+    ax.plot([cluster1_loose[i, 0], centroid1_loose[0]],
+           [cluster1_loose[i, 1], centroid1_loose[1]],
+           'gray', linewidth=1, linestyle='--', alpha=0.4, zorder=1)
+    ax.plot([cluster2_loose[i, 0], centroid2_loose[0]],
+           [cluster2_loose[i, 1], centroid2_loose[1]],
+           'gray', linewidth=1, linestyle='--', alpha=0.4, zorder=1)
+
+# Calculate WCSS
+wcss_loose = (np.sum((cluster1_loose - centroid1_loose)**2) +
+              np.sum((cluster2_loose - centroid2_loose)**2))
+
+ax.set_xlabel('Feature 1', fontsize=12, fontweight='bold')
+ax.set_ylabel('Feature 2', fontsize=12, fontweight='bold')
+ax.set_title(f'Loose Clusters (Poor)\nWCSS = {wcss_loose:.1f}',
+            fontsize=13, fontweight='bold', color='red')
+ax.legend(loc='upper left', fontsize=9)
+ax.grid(True, alpha=0.3)
+ax.set_xlim(0, 7)
+ax.set_ylim(0, 7)
+
+# Add text annotation
+ax.text(3.5, 0.5, 'Points are spread out from centroids ✗',
+       ha='center', fontsize=11, fontweight='bold',
+       bbox=dict(boxstyle='round,pad=0.5', facecolor='#FFB3B3',
+                edgecolor='red', linewidth=2))
+
+plt.tight_layout()
+plt.show()
+```
+
+**Key Observation**: The compact clusters (left) have much lower WCSS because points are tightly grouped around their centroids. The loose clusters (right) have higher WCSS because points are more scattered. The dashed gray lines show the distances being squared and summed—longer lines mean larger WCSS.
+
+::: {.callout-note}
+## Visualizing Distance and Centroids
+
+The visualization above shows how clustering algorithms work:
+
+1. Place centroid markers (X symbols) at strategic locations
+2. Assign each point to the nearest centroid (shown by colors)
+3. Calculate distances from points to their centroids (dashed lines)
+4. Move centroids to minimize these distances (minimize WCSS)
+5. Repeat until centroids stop moving
+
+The result is groups of observations clustered around their respective centroids, with observations within each group being more similar to each other than to observations in other groups.
+:::
+
+## The K-Means Algorithm
+
+K-Means is the most widely-used clustering algorithm in business applications, beloved for its simplicity, speed, and effectiveness. Despite its straightforward approach, K-Means powers customer segmentation at major retailers, image compression in software, and countless other real-world applications.
+
+### Step-by-Step Overview
+
+The K-Means algorithm follows an elegant iterative process that's easy to understand and visualize. Let's walk through exactly how it works:
+
+**Step 1: Choose *k* clusters**
+
+Before running the algorithm, you must specify *k*—the number of clusters you want. This is both a strength (you control the granularity) and a challenge (you need to choose wisely). We'll discuss how to select *k* in the next section, but for now, let's say we've chosen *k*=3 clusters.
+
+**Step 2: Initialize *k* centroids**
+
+The algorithm randomly places *k* centroid points in your feature space. These initial placements are random, which means K-Means can produce different results on different runs (we'll address this with `random_state`). Think of these centroids as the initial "guesses" for where cluster centers should be.
+
+**Step 3: Assign points to nearest centroid**
+
+For each observation in your dataset, calculate the distance to each centroid and assign the observation to the closest one. After this step, every observation has been assigned to exactly one cluster.
+
+**Step 4: Update centroids**
+
+For each cluster, calculate the mean (average) of all observations assigned to it. Move the centroid to this new average position. This is why it's called K-"Means"—the centroids represent the mean of their assigned points.
+
+**Step 5: Repeat until convergence**
+
+Go back to Step 3 and repeat the assign-update cycle. With each iteration, observations might switch clusters as centroids move. Eventually, the centroids stop moving (or move only trivially), meaning we've reached **convergence**—a stable solution where assignments no longer change.
+
+**Convergence criteria**: The algorithm stops when either:
+
+- No observations change cluster assignments between iterations
+- Centroids move less than a tiny threshold distance
+- A maximum number of iterations is reached
+
+::: {.callout-important}
+## K-Means Is Not Deterministic
+
+Because K-Means starts with random centroid positions, running it multiple times on the same data can produce different results. Some initializations lead to better final clusters than others. Scikit-learn addresses this by running the algorithm multiple times (default: 10 times) with different random initializations and keeping the best result (lowest WCSS). You can control this with the `n_init` parameter.
+
+Always set `random_state` for reproducibility in your code.
+:::
+
+### Visual Example of Clustering in 2D
+
+Let's see K-Means in action with a simple visual example. We'll create synthetic customer data with two features (age and income) and watch the algorithm discover natural groupings.
+
+```{python}
+#| code-fold: true
+#| code-summary: Synthetic data creation
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Generate three distinct customer groups
+# Group 1: Young, lower income (students/entry-level)
+group1_age = np.random.normal(25, 3, 50)
+group1_income = np.random.normal(35000, 5000, 50)
+
+# Group 2: Middle-aged, moderate income (professionals)
+group2_age = np.random.normal(40, 4, 50)
+group2_income = np.random.normal(65000, 8000, 50)
+
+# Group 3: Older, higher income (executives/established)
+group3_age = np.random.normal(55, 5, 50)
+group3_income = np.random.normal(95000, 12000, 50)
+
+# Combine into single dataset
+age = np.concatenate([group1_age, group2_age, group3_age])
+income = np.concatenate([group1_income, group2_income, group3_income])
+
+# Create DataFrame
+customer_data = pd.DataFrame({
+    'age': age,
+    'income': income
+})
+
+customer_data.head()
+```
+
+Now let's visualize the data before and after clustering:
+
+```{python}
+#| code-fold: true
+#| code-summary: Clustering illustration
+# Fit K-Means with k=3
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+customer_data['cluster'] = kmeans.fit_predict(customer_data[['age', 'income']])
+
+# Get cluster centers
+centers = kmeans.cluster_centers_
+
+# Create side-by-side plots
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+# Left plot: Original data (no clusters visible)
+axes[0].scatter(customer_data['age'], customer_data['income'],
+                alpha=0.6, s=50, color='gray')
+axes[0].set_xlabel('Age (years)', fontsize=12)
+axes[0].set_ylabel('Income ($)', fontsize=12)
+axes[0].set_title('Before Clustering: Unlabeled Customer Data', fontsize=12)
+axes[0].grid(True, alpha=0.3)
+
+# Right plot: After clustering with centroids
+colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
+for i in range(3):
+    cluster_data = customer_data[customer_data['cluster'] == i]
+    axes[1].scatter(cluster_data['age'], cluster_data['income'],
+                   alpha=0.6, s=50, color=colors[i], label=f'Cluster {i+1}')
+
+# Plot centroids
+axes[1].scatter(centers[:, 0], centers[:, 1],
+               marker='X', s=200, c='black', edgecolors='white', linewidths=2,
+               label='Centroids', zorder=5)
+
+axes[1].set_xlabel('Age (years)', fontsize=12)
+axes[1].set_ylabel('Income ($)', fontsize=12)
+axes[1].set_title('After K-Means: Discovered Customer Segments', fontsize=12)
+axes[1].legend(fontsize=10)
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# Print cluster summaries
+print("\nCluster Summaries:")
+for i in range(3):
+    cluster_data = customer_data[customer_data['cluster'] == i]
+    print(f"\nCluster {i+1}:")
+    print(f"  Size: {len(cluster_data)} customers")
+    print(f"  Average age: {cluster_data['age'].mean():.1f} years")
+    print(f"  Average income: ${cluster_data['income'].mean():,.0f}")
+```
+
+The visualization demonstrates K-Means' fundamental behavior: it discovered three natural groupings in customer data that weren't explicitly labeled. The left plot shows the raw data—you can see there are groups, but they're not formally defined. The right plot shows K-Means' solution: three distinct clusters with centroids (marked with X) at each cluster's center.
+
+Notice how the algorithm created three sensible customer segments:
+
+- **Cluster 1**: Younger customers with lower incomes (entry-level workers)
+- **Cluster 2**: Middle-aged customers with moderate incomes (established professionals)
+- **Cluster 3**: Older customers with higher incomes (senior professionals/executives)
+
+These segments emerged purely from the age and income patterns—K-Means identified the natural groupings without being told what to look for.
+
+::: {.callout-tip}
+## Animated Visualization of K-Means
+
+For an excellent animated visualization showing how K-Means iteratively updates centroids and assignments, see [this interactive demo](https://www.naftaliharris.com/blog/visualizing-k-means-clustering/) or [this Stanford visualization](https://stanford.edu/class/engr108/visualizations/kmeans/kmeans.html). Watching the centroids move and clusters form/reform gives great intuition for the algorithm's behavior.
+:::
+
+### Implementing K-Means in scikit-learn
+
+Now that you understand how K-Means works conceptually, let's see how easy it is to apply in Python using scikit-learn. The process follows a familiar pattern if you've used scikit-learn for supervised learning.
+
+**Basic K-Means Workflow:**
+
+```{python}
+#| code-fold: true
+#| code-summary: Create synthetic customer data
+# Create sample customer data
+np.random.seed(42)
+n_customers = 150
+
+customer_data = pd.DataFrame({
+    'customer_id': range(1, n_customers + 1),
+    'age': np.random.randint(20, 70, n_customers),
+    'annual_income': np.random.randint(20000, 120000, n_customers),
+    'purchase_frequency': np.random.randint(1, 50, n_customers)
+})
+```
+
+```{python}
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import pandas as pd
+import numpy as np
+
+# Step 1: Prepare your data (features only, no target variable)
+# Assume we have a DataFrame with customer features
+X = customer_data[['age', 'annual_income', 'purchase_frequency']]
+
+# Step 2: Scale your features (IMPORTANT!)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 3: Create and fit the K-Means model
+kmeans = KMeans(
+    n_clusters=3,        # Number of clusters
+    random_state=42,     # For reproducibility
+    n_init=10            # Number of different initializations (default=10)
+)
+kmeans.fit(X_scaled)
+
+# Step 4: Get cluster assignments
+customer_data['cluster'] = kmeans.predict(X_scaled)
+customer_data.head()
+```
+
+**Key Parameters to Know:**
+
+- **`n_clusters`**: The number of clusters (*k*). You must specify this upfront.
+- **`random_state`**: Sets the random seed for reproducibility. Always use this for consistent results.
+- **`n_init`**: Number of times K-Means runs with different centroid initializations. The best result (lowest WCSS) is kept. Default is 10.
+- **`max_iter`**: Maximum iterations for convergence. Default is 300 (usually more than enough).
+
+**Accessing Results:**
+
+After fitting, the K-Means object contains useful attributes and we can even make predictions on which cluster a new customer aligns to:
+
+```{python}
+# Get cluster centers (centroids)
+centroids = kmeans.cluster_centers_
+print("Cluster centroids shape:", centroids.shape)  # (n_clusters, n_features)
+
+# Get cluster labels for training data
+labels = kmeans.labels_
+print("Cluster assignments:", labels[:10])  # First 10 assignments
+
+# Get WCSS (inertia)
+wcss = kmeans.inertia_
+print(f"Within-Cluster Sum of Squares: {wcss:.2f}")
+
+# Predict cluster for new data
+new_customer = pd.DataFrame([[35, 60000, 12]], columns=['age', 'annual_income', 'purchase_frequency'])
+new_customer_scaled = scaler.transform(new_customer)
+predicted_cluster = kmeans.predict(new_customer_scaled)
+print(f"New customer assigned to cluster: {predicted_cluster[0]}")
+```
+
+::: {.callout-important}
+## Don't Forget Feature Scaling!
+
+Notice that we **always scale features** before applying K-Means. This is critical! Without scaling, features with larger numeric ranges (like income) will dominate the clustering, making other features (like age) virtually irrelevant. We'll explore this in detail in the "Practical Considerations" section.
+:::
+
+
+### Key Assumptions and Limitations
+
+While K-Means is powerful and widely applicable, it makes certain assumptions that don't always hold in real data. Understanding these limitations helps you recognize when K-Means is appropriate and when alternative methods might work better.
+
+::: {.callout-warning collapse="true"}
+## Assumption 1: Clusters are spherical (roughly circular)
+
+
+K-Means works best when clusters form compact, roughly circular groups. Because it uses Euclidean distance and assigns points to the nearest centroid, it naturally creates spherical-shaped clusters.
+
+**Problem**: Real data often forms non-spherical patterns—elongated clusters, crescents, or nested shapes. K-Means will struggle with these.
+
+```{python}
+#| echo: false
+from sklearn.datasets import make_moons
+
+# Generate two interleaving half circles (crescent shapes)
+X_moons, y_true = make_moons(n_samples=300, noise=0.05, random_state=42)
+
+# Try K-Means with k=2
+kmeans_moons = KMeans(n_clusters=2, random_state=42, n_init=10)
+y_kmeans = kmeans_moons.fit_predict(X_moons)
+
+# Visualize
+fig, axes = plt.subplots(1, 2, figsize=(9.5, 4))
+
+# True structure (crescent shapes)
+axes[0].scatter(X_moons[:, 0], X_moons[:, 1], c=y_true, cmap='viridis',
+                alpha=0.6, s=50, edgecolors='black', linewidths=0.5)
+axes[0].set_title('True Structure: Two Crescent Shapes', fontsize=12)
+axes[0].set_xlabel('Feature 1')
+axes[0].set_ylabel('Feature 2')
+axes[0].grid(True, alpha=0.3)
+
+# K-Means result (incorrect clustering)
+axes[1].scatter(X_moons[:, 0], X_moons[:, 1], c=y_kmeans, cmap='viridis',
+                alpha=0.6, s=50, edgecolors='black', linewidths=0.5)
+axes[1].scatter(kmeans_moons.cluster_centers_[:, 0],
+                kmeans_moons.cluster_centers_[:, 1],
+                marker='X', s=200, c='red', edgecolors='white', linewidths=2,
+                label='Centroids', zorder=5)
+axes[1].set_title('K-Means Result: Incorrect Clustering', fontsize=12)
+axes[1].set_xlabel('Feature 1')
+axes[1].set_ylabel('Feature 2')
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+**Solution**: Alternative clustering algorithms such as DBSCAN (Density-based Spatial Clustering of Applications with Noise) have been developed to capture non-circular clusters.
+
+:::
+
+::: {.callout-warning collapse="true"}
+## Assumption 2: Clusters are roughly equal in size
+
+K-Means tends to create clusters with similar numbers of observations because each point is assigned to its nearest centroid. This can cause problems when natural groups have very different sizes.
+
+**Problem**: If you have 1,000 typical customers and 50 VIP customers, K-Means might split the typical customers into multiple clusters instead of keeping the small VIP cluster intact.
+
+```{python}
+#| echo: false
+
+np.random.seed(100)
+
+# Create a more dramatic example: large cluster split in space with small cluster in between
+large_cluster_left = np.random.normal([1.5, 2], 0.4, (100, 2))
+large_cluster_right = np.random.normal([5.5, 2], 0.4, (100, 2))
+small_vip_cluster = np.random.normal([3.5, 2], 0.25, (20, 2))
+
+# Combine data
+X_unbalanced = np.vstack([large_cluster_left, large_cluster_right, small_vip_cluster])
+true_labels = np.array([0]*100 + [0]*100 + [1]*20)  # First two are same cluster
+
+# Apply K-Means with k=2
+kmeans_unbalanced = KMeans(n_clusters=2, random_state=42, n_init=10)
+kmeans_labels = kmeans_unbalanced.fit_predict(X_unbalanced)
+
+# Visualize
+fig, axes = plt.subplots(1, 2, figsize=(9.5, 4))
+
+# True structure
+axes[0].scatter(large_cluster_left[:, 0], large_cluster_left[:, 1],
+               s=50, c='#FF6B6B', alpha=0.6, edgecolors='black', linewidths=0.5)
+axes[0].scatter(large_cluster_right[:, 0], large_cluster_right[:, 1],
+               s=50, c='#FF6B6B', alpha=0.6, edgecolors='black', linewidths=0.5,
+               label='Typical Customers (n=200)')
+axes[0].scatter(small_vip_cluster[:, 0], small_vip_cluster[:, 1],
+               s=150, c='gold', alpha=0.9, edgecolors='black', linewidths=2,
+               marker='*', label='VIP Customers (n=20)')
+axes[0].set_xlabel('Annual Spending', fontsize=11)
+axes[0].set_ylabel('Engagement Score', fontsize=11)
+axes[0].set_title('True Structure: One Small VIP Group', fontsize=10, fontweight='bold')
+axes[0].legend(fontsize=8, loc='lower left')
+axes[0].grid(True, alpha=0.3)
+axes[0].set_xlim(0, 7)
+axes[0].set_ylim(0.5, 3.5)
+
+# K-Means result
+colors_kmeans = ['#4ECDC4', '#FF6B6B']
+for i in range(2):
+    mask = kmeans_labels == i
+    axes[1].scatter(X_unbalanced[mask, 0], X_unbalanced[mask, 1],
+                   s=50, c=colors_kmeans[i], alpha=0.6, edgecolors='black',
+                   linewidths=0.5, label=f'Cluster {i+1} (n={sum(mask)})')
+
+axes[1].scatter(kmeans_unbalanced.cluster_centers_[:, 0],
+               kmeans_unbalanced.cluster_centers_[:, 1],
+               marker='X', s=400, c='black', edgecolors='white', linewidths=3,
+               label='Centroids', zorder=5)
+
+# Draw a decision boundary (approximate)
+x_boundary = 3.5
+axes[1].axvline(x=x_boundary, color='red', linestyle='--', linewidth=2,
+               alpha=0.7, label='K-Means Boundary')
+
+axes[1].set_xlabel('Annual Spending', fontsize=11)
+axes[1].set_ylabel('Engagement Score', fontsize=11)
+axes[1].set_title('K-Means Result: Splits by Location, Not Size', fontsize=10,
+                 fontweight='bold', color='red')
+axes[1].legend(fontsize=8, loc='lower left')
+axes[1].grid(True, alpha=0.3)
+axes[1].set_xlim(0, 7)
+axes[1].set_ylim(0.5, 3.5)
+
+# Add annotation
+axes[1].annotate('VIPs split between\nboth clusters!',
+                xy=(3.5, 2), xytext=(3.5, 3.2),
+                ha='center', fontsize=8, fontweight='bold', color='red',
+                bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow',
+                         edgecolor='red', linewidth=2),
+                arrowprops=dict(arrowstyle='->', color='red', lw=2))
+
+plt.tight_layout()
+plt.show()
+```
+
+**Solution**: If you know certain groups should remain intact regardless of size, consider:
+
+- Using DBSCAN, which doesn't assume equal cluster sizes
+- Manually segmenting the VIP group first, then clustering the remainder
+- Using hierarchical clustering with specific linkage criteria
+
+:::
+
+::: {.callout-warning collapse="true"}
+## Assumption 3: Clusters have similar variance (spread)
+
+K-Means assumes clusters are roughly equally "spread out." Clusters with very different densities or sizes can confuse the algorithm.
+
+**Problem**: A tight cluster of 20 observations might get absorbed into a nearby large, diffuse cluster of 200 observations, even if they're conceptually distinct groups.
+
+```{python}
+#| echo: false
+
+np.random.seed(42)
+
+# Create clusters with different variances
+tight_cluster = np.random.normal([2, 2], 0.5, (50, 2))
+loose_cluster = np.random.normal([4.5, 4.5], 1.2, (50, 2))
+
+# Combine data
+X_variance = np.vstack([tight_cluster, loose_cluster])
+true_variance_labels = np.array([0]*50 + [1]*50)
+
+# Apply K-Means
+kmeans_variance = KMeans(n_clusters=2, random_state=42, n_init=10)
+kmeans_variance_labels = kmeans_variance.fit_predict(X_variance)
+
+# Visualize
+fig, axes = plt.subplots(1, 2, figsize=(9.5, 4))
+
+# True structure
+axes[0].scatter(X_variance[true_variance_labels==0, 0],
+               X_variance[true_variance_labels==0, 1],
+               s=60, c='#FF6B6B', alpha=0.7, edgecolors='black', linewidths=0.5,
+               label='Tight Cluster (low variance)')
+axes[0].scatter(X_variance[true_variance_labels==1, 0],
+               X_variance[true_variance_labels==1, 1],
+               s=60, c='#4ECDC4', alpha=0.5, edgecolors='black', linewidths=0.5,
+               label='Loose Cluster (high variance)')
+axes[0].set_xlabel('Feature 1', fontsize=11)
+axes[0].set_ylabel('Feature 2', fontsize=11)
+axes[0].set_title('True Structure: Different Variances', fontsize=12, fontweight='bold')
+axes[0].legend(fontsize=9)
+axes[0].grid(True, alpha=0.3)
+axes[0].set_xlim(0, 7)
+axes[0].set_ylim(0, 7)
+
+# K-Means result
+axes[1].scatter(X_variance[kmeans_variance_labels==0, 0],
+               X_variance[kmeans_variance_labels==0, 1],
+               s=60, c='#FF6B6B', alpha=0.6, edgecolors='black', linewidths=0.5,
+               label=f'Cluster 1 (n={sum(kmeans_variance_labels==0)})')
+axes[1].scatter(X_variance[kmeans_variance_labels==1, 0],
+               X_variance[kmeans_variance_labels==1, 1],
+               s=60, c='#4ECDC4', alpha=0.6, edgecolors='black', linewidths=0.5,
+               label=f'Cluster 2 (n={sum(kmeans_variance_labels==1)})')
+axes[1].scatter(kmeans_variance.cluster_centers_[:, 0],
+               kmeans_variance.cluster_centers_[:, 1],
+               marker='X', s=300, c='black', edgecolors='white', linewidths=2,
+               label='Centroids', zorder=5)
+axes[1].set_xlabel('Feature 1', fontsize=11)
+axes[1].set_ylabel('Feature 2', fontsize=11)
+axes[1].set_title('K-Means Result: Boundary Issues', fontsize=12,
+                 fontweight='bold', color='red')
+axes[1].legend(fontsize=9)
+axes[1].grid(True, alpha=0.3)
+axes[1].set_xlim(0, 7)
+axes[1].set_ylim(0, 7)
+
+plt.tight_layout()
+plt.show()
+```
+
+**Solution**:
+
+- Use **Gaussian Mixture Models (GMM)**, which allow clusters to have different variances
+- Consider **hierarchical clustering** with appropriate linkage methods
+- Standardize features, though this doesn't fully solve variance differences
+
+:::
+
+::: {.callout-warning collapse="true"}
+## Assumption 4: Features are on comparable scales
+
+This is perhaps the most important practical consideration. K-Means uses Euclidean distance, which means features with larger numeric ranges will dominate the clustering.
+
+**Problem**: If you cluster customers using age (20-80) and income (20,000-200,000), income differences will completely dominate age differences because income values are much larger. A 10-year age gap means little compared to a $10,000 income gap, even though both might be equally important for segmentation.
+
+We already visualized this problem earlier in the Euclidean distance section, where we saw that income contributed 4 million times more to the distance calculation than age!
+
+**Solution**: Always scale your features before clustering. We'll cover this in detail in the "Practical Considerations" section, where you'll see the dramatic difference feature scaling makes.
+
+:::
+
+::: {.callout-tip}
+## When to Consider Alternatives to K-Means
+
+If your data violates K-Means assumptions, consider these alternatives:
+
+- **Non-spherical clusters**: Use DBSCAN (density-based clustering) or hierarchical clustering
+- **Varying cluster sizes/densities**: Use DBSCAN or Gaussian Mixture Models
+- **Uncertain number of clusters**: Use hierarchical clustering to explore different *k* values simultaneously
+- **Categorical features**: Use K-Modes or K-Prototypes instead of K-Means
+
+We'll briefly cover these alternatives later in the chapter.
+:::
+
+## Choosing the Right Number of Clusters
+
+One of K-Means' biggest challenges is that you must specify *k* (the number of clusters) before running the algorithm. But how do you know how many clusters exist in your data? Should you segment customers into 3 groups? 5 groups? 10 groups? Unlike supervised learning where you can measure accuracy against known labels, clustering has no ground truth to validate against. This makes selecting *k* both an art and a science, combining quantitative methods with business judgment.
+
+### Why Selecting *k* Is Challenging
+
+The number of clusters you choose fundamentally shapes your results:
+
+- **Too few clusters** (*k* too small): You'll miss important distinctions in your data. For example, clustering customers into just 2 groups might combine high-spending young professionals with high-spending retirees, even though they need different marketing strategies.
+
+- **Too many clusters** (*k* too large): You'll create overly granular segments that are hard to act on. Imagine discovering 25 customer segments—your marketing team can't create 25 different campaigns, and many segments will be too small to matter.
+
+- **No single "correct" answer**: The "best" *k* depends on your goals. A market researcher might want 3-5 interpretable segments, while a recommendation system might use 20+ clusters for fine-grained personalization.
+
+This is fundamentally different from supervised learning, where you can calculate accuracy or RMSE and definitively say Model A is better than Model B. With clustering, "better" depends on your business objectives, interpretability needs, and the tradeoff between detail and actionability.
+
+### The Elbow Method
+
+The **elbow method** is the most popular quantitative approach for selecting *k*. It helps you visualize the tradeoff between cluster count and cluster quality.
+
+**How it works:**
+
+1. Run K-Means for different values of *k* (typically k=1 through k=10 or k=15)
+2. For each *k*, calculate the **Within-Cluster Sum of Squares (WCSS)**—the total squared distance from each point to its cluster centroid
+3. Plot *k* on the x-axis and WCSS on the y-axis
+4. Look for the "elbow"—the point where WCSS stops decreasing rapidly
+
+**Why WCSS decreases with *k***: More clusters means smaller, tighter groups, so WCSS naturally decreases. At the extreme, if *k* equals the number of observations, WCSS is zero (each point is its own cluster). But this overfits completely!
+
+**The elbow point**: Look for where the WCSS curve bends—where adding more clusters gives diminishing returns. This suggests a natural grouping in the data.
+
+Let's demonstrate with our customer data:
+
+```{python}
+# Calculate WCSS for different values of k
+wcss = []
+k_range = range(1, 11)
+
+for k in k_range:
+    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans_temp.fit(customer_data[['age', 'annual_income']])
+    wcss.append(kmeans_temp.inertia_)  # inertia_ is scikit-learn's name for WCSS
+
+# Plot elbow curve
+plt.figure(figsize=(8, 5))
+plt.plot(k_range, wcss, marker='o', linewidth=2, markersize=8)
+plt.xlabel('Number of Clusters (k)', fontsize=12)
+plt.ylabel('Within-Cluster Sum of Squares (WCSS)', fontsize=12)
+plt.title('Elbow Method for Optimal k', fontsize=14)
+plt.grid(True, alpha=0.3)
+plt.xticks(k_range)
+
+# Highlight the elbow at k=3
+plt.axvline(x=3, color='red', linestyle='--', linewidth=2, label='Elbow at k=3')
+plt.legend(fontsize=11)
+
+plt.tight_layout()
+plt.show()
+
+print("WCSS values:")
+for k, wcss_val in zip(k_range, wcss):
+    print(f"  k={k}: WCSS = {wcss_val:,.0f}")
+```
+
+In the elbow plot above, notice how WCSS drops sharply from *k*=1 to *k*=3, then the rate of decrease slows significantly. The "elbow" occurs around *k*=3, suggesting three natural clusters in the data—which aligns with how we generated the data (three distinct customer groups).
+
+**Interpreting the elbow**:
+
+- **Steep drop**: Large improvement in cluster quality
+- **Gradual decrease**: Diminishing returns from additional clusters
+- **Elbow point**: Best balance between cluster count and quality
+
+::: {.callout-note}
+## The Elbow Is Not Always Clear
+
+Real data often produces elbow plots without obvious bends. The curve might decrease smoothly without a distinct elbow, or you might see multiple potential elbow points. In these cases:
+
+- Try complementary methods like silhouette scores (covered next)
+- Consider business constraints (can you realistically act on 8 segments?)
+- Test a few values of *k* and compare the interpretability of results
+- Remember that *k* selection involves judgment, not just optimization
+:::
+
+### Silhouette Scores and Interpretation
+
+While the elbow method focuses on cluster compactness (WCSS), **silhouette scores** measure both compactness *and* separation—how well-separated different clusters are from each other.
+
+**What silhouette scores measure**: For each observation, the silhouette score compares:
+
+- **a**: Average distance to other points in the same cluster (how compact is my cluster?)
+- **b**: Average distance to points in the nearest different cluster (how separated am I from other clusters?)
+
+The silhouette score for an observation is:
+
+$$s = \frac{b - a}{\max(a, b)}$$
+
+**Score interpretation**:
+
+- **s close to +1**: The observation is well-matched to its cluster and far from other clusters (excellent)
+- **s close to 0**: The observation is on the border between clusters (ambiguous)
+- **s close to -1**: The observation might be in the wrong cluster (poor clustering)
+
+The **average silhouette score** across all observations measures overall clustering quality:
+
+- **0.71 - 1.0**: Strong, well-separated clusters
+- **0.51 - 0.70**: Reasonable structure, clusters are somewhat separated
+- **0.26 - 0.50**: Weak structure, clusters overlap considerably
+- **< 0.25**: No substantial structure detected
+
+Let's calculate silhouette scores for different values of *k*:
+
+```{python}
+from sklearn.metrics import silhouette_score
+
+# Calculate silhouette scores for k=2 through k=10
+silhouette_scores = []
+k_range_sil = range(2, 11)  # Need at least 2 clusters for silhouette
+
+for k in k_range_sil:
+    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=10)
+    cluster_labels = kmeans_temp.fit_predict(customer_data[['age', 'annual_income']])
+    silhouette_avg = silhouette_score(customer_data[['age', 'annual_income']], cluster_labels)
+    silhouette_scores.append(silhouette_avg)
+
+# Plot silhouette scores
+plt.figure(figsize=(8, 5))
+plt.plot(k_range_sil, silhouette_scores, marker='o', linewidth=2, markersize=8, color='green')
+plt.xlabel('Number of Clusters (k)', fontsize=12)
+plt.ylabel('Average Silhouette Score', fontsize=12)
+plt.title('Silhouette Analysis for Optimal k', fontsize=14)
+plt.grid(True, alpha=0.3)
+plt.xticks(k_range_sil)
+
+# Highlight the maximum
+max_k = k_range_sil[silhouette_scores.index(max(silhouette_scores))]
+plt.axvline(x=max_k, color='red', linestyle='--', linewidth=2,
+            label=f'Maximum at k={max_k}')
+plt.legend(fontsize=11)
+
+plt.tight_layout()
+plt.show()
+
+print("Silhouette scores:")
+for k, score in zip(k_range_sil, silhouette_scores):
+    print(f"  k={k}: Silhouette = {score:.3f}")
+```
+
+**Interpreting the results:** Interestingly, the silhouette analysis suggests *k*=4 as optimal (highest silhouette score around 0.617), while the elbow method suggested *k*=3. This is actually quite common and highlights an important point: **different methods can suggest different optimal values of *k***.
+
+**Why do the methods disagree?**
+
+- **Elbow method** focuses on minimizing within-cluster variance (WCSS). It identified *k*=3 as the point where adding more clusters provides diminishing returns in compactness.
+
+- **Silhouette method** balances both compactness *and* separation between clusters. It found that *k*=4 creates clusters that are both internally cohesive and well-separated from each other.
+
+- The silhouette scores show that *k*=3, *k*=4, *k*=5, and *k*=6 all have similar scores (between 0.609 and 0.617), suggesting there isn't one definitively "best" choice based purely on statistics.
+
+**So which should you choose?** This is where clustering becomes as much art as science. Both *k*=3 and *k*=4 are defensible choices. You might:
+
+- Choose *k*=3 if you prefer simpler, broader customer segments that are easier for marketing teams to manage
+- Choose *k*=4 if the additional granularity provides more actionable insights
+- Actually fit both models and examine which produces more interpretable, business-relevant segments
+
+**Using elbow + silhouette together**:
+
+1. **Use the elbow method** to identify a range of candidate *k* values (here: *k*=3 to *k*=6)
+2. **Use silhouette scores** to evaluate cluster quality within that range (here: all similar, slight edge to *k*=4)
+3. **Consider business context** to finalize your choice (can your team act on 3 vs 4 segments?)
+4. **Examine actual cluster profiles** for both options to see which tells a clearer story
+
+::: {.callout-tip}
+## Practical Advice for Choosing *k*
+
+1. **Start with domain knowledge**: Do you expect 3 customer types based on business intuition? Start there.
+2. **Use elbow + silhouette** to validate or refine your intuition
+3. **Consider business constraints**: Can you actually create different strategies for 8 segments?
+4. **Try multiple values**: Build models with *k*=3, *k*=4, and *k*=5, then compare interpretability
+5. **Iterate**: Clustering is exploratory—you can refine *k* as you learn more about the data
+
+Remember: The goal isn't to find the "mathematically optimal" *k*, but rather the *k* that produces actionable, interpretable insights for your business problem.
+:::
+
+## Practical Considerations
+
+Before you can successfully apply K-Means to real business data, you need to address several practical challenges that can significantly impact your results. These considerations—feature scaling, random initialization, and handling outliers—are often the difference between clustering that reveals genuine insights and clustering that produces meaningless noise.
+
+### Feature Scaling: A Critical Reminder
+
+::: {.callout-important}
+## Always Scale Before K-Means Clustering
+
+Remember from our earlier discussion on K-Means assumptions: features must be on comparable scales. Since K-Means uses Euclidean distance, features with larger numeric ranges will dominate the clustering, making smaller-scale features virtually irrelevant.
+
+**Standard workflow**:
+
+1. Scale your features using `StandardScaler`
+2. Fit K-Means on the scaled data
+3. Interpret results using the original feature scales
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans.fit(X_scaled)
+```
+:::
+
+### Random Initialization and `random_state`
+
+K-Means starts by randomly placing *k* centroids in your feature space. This randomness means running the algorithm multiple times can produce different results—sometimes significantly different.
+
+**Why this happens**: The initial random placement can lead to different local optima. Imagine two starting configurations:
+
+- **Good initialization**: Random centroids happen to land near the true cluster centers, and the algorithm quickly converges to a sensible solution
+- **Poor initialization**: Random centroids land in awkward positions, and the algorithm gets stuck in a suboptimal configuration
+
+**Scikit-learn's solution**: By default, `KMeans` uses the `k-means++` initialization algorithm, which chooses initial centroids smartly to be far apart from each other. Additionally, it runs the entire K-Means algorithm 10 times (controlled by `n_init=10`) with different random starts and keeps the best result (lowest WCSS).
+
+**For reproducibility**: Always set `random_state` in your code:
+
+```python
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+```
+
+This ensures:
+
+- Your results are reproducible
+- Collaborators can verify your findings
+- Your code produces consistent results in production
+
+::: {.callout-tip}
+## Tuning `n_init` for Better Results
+
+If you have time and computational resources, increasing `n_init` from 10 to 50 or 100 can help find better clusterings, especially with challenging datasets. However, the default of 10 is usually sufficient for most business applications, especially when using k-means++ initialization.
+:::
+
+### Handling Outliers and Non-Spherical Clusters
+
+K-Means is sensitive to outliers and struggles with non-spherical cluster shapes. Understanding these limitations helps you preprocess data appropriately or recognize when alternative algorithms are needed.
+
+**Outlier sensitivity**: Extreme values pull centroids toward them, distorting clusters. A single customer with $10 million income in a dataset of mostly $30k-$100k incomes will skew the high-income cluster centroid.
+
+**Strategies for handling outliers**:
+
+1. **Remove extreme outliers** before clustering (but document this decision)
+2. **Winsorize** features (cap extreme values at percentiles like 1st and 99th)
+3. **Use robust scaling** (e.g., `RobustScaler` instead of `StandardScaler`)
+4. **Consider alternative algorithms** like DBSCAN that are inherently robust to outliers
+
+**Non-spherical clusters**: We saw earlier how K-Means fails on crescent-shaped clusters. Real business data often exhibits:
+
+- **Elongated clusters**: Customer segments that stretch along one dimension
+- **Nested clusters**: Premium customers forming a small cluster within broader markets
+- **Irregularly shaped groups**: Geographic regions, time-series patterns
+
+For such data, consider:
+
+- **Hierarchical clustering**: Builds trees of clusters, handling various shapes
+- **DBSCAN**: Finds dense regions of any shape
+- **Gaussian Mixture Models**: Allows elliptical (elongated) clusters
+
+We'll briefly cover these alternatives later in this chapter.
+
+::: {.callout-warning}
+## Don't Force K-Means on Inappropriate Data
+
+If exploratory visualization reveals clearly non-spherical patterns, crescent shapes, or highly varying cluster densities, K-Means likely isn't the right tool. Forcing it will produce mathematically "optimal" but meaningless results. This is one reason why visualizing your data (at least in 2D projections) before clustering is valuable.
+:::
+
+## Other Clustering Techniques (Overview)
+
+While K-Means is the workhorse of business clustering, alternative algorithms handle situations where K-Means assumptions don't hold. You don't need to master these techniques in this course, but understanding when they're useful will make you a more versatile data scientist.
+
+::: {.callout collapse="true"}
+## Hierarchical Clustering: Building a Tree of Clusters
+
+**Hierarchical clustering** builds a tree-like structure (dendrogram) that shows how observations group at different levels of similarity. Unlike K-Means, you don't need to specify *k* upfront—the tree shows clustering solutions for all possible values of *k*.
+
+**How it works**:
+
+1. **Start**: Each observation is its own cluster
+2. **Repeat**: Find the two most similar clusters and merge them
+3. **End**: Continue until all observations are in one big cluster
+4. **Visualize**: The dendrogram shows the order and distance of merges
+
+**Advantages**:
+
+- Explore multiple values of *k* simultaneously
+- Naturally handles non-spherical shapes better than K-Means
+- Produces a hierarchy that might reflect natural taxonomies (e.g., product categories)
+
+**Disadvantages**:
+
+- Computationally expensive for large datasets (scales poorly beyond ~10,000 observations)
+- Still sensitive to outliers
+- Hard to interpret dendrograms with many observations
+
+**When to use**: When you're uncertain about *k*, have a small-to-moderate dataset, and want to explore hierarchical relationships in your data.
+
+```{python}
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+# Use a subset of customers for clarity
+sample_customers = customer_data.sample(30, random_state=42)
+
+# Scale the data
+scaler = StandardScaler()
+sample_scaled = scaler.fit_transform(sample_customers[['age', 'annual_income']])
+
+# Perform hierarchical clustering
+linkage_matrix = linkage(sample_scaled, method='ward')
+
+# Plot dendrogram
+plt.figure(figsize=(9, 6))
+dendrogram(linkage_matrix,
+           labels=sample_customers.index.tolist(),
+           leaf_font_size=8)
+plt.xlabel('Customer Index', fontsize=12)
+plt.ylabel('Distance (Ward Linkage)', fontsize=12)
+plt.title('Hierarchical Clustering Dendrogram', fontsize=14)
+plt.axhline(y=6, color='red', linestyle='--', linewidth=2, label='Cut at k=3')
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+print("Reading the dendrogram:")
+print("- Each leaf (bottom) represents one customer")
+print("- Branches merge at heights indicating dissimilarity")
+print("- Cutting the tree horizontally (red line) gives k=3 clusters")
+```
+:::
+
+::: {.callout collapse="true"}
+## Density-Based Clustering (DBSCAN)
+
+**DBSCAN** (Density-Based Spatial Clustering of Applications with Noise) finds clusters based on density rather than distance from centroids. It groups together observations that are closely packed, marking sparse regions as outliers.
+
+**How it works**:
+
+1. Define two parameters: `eps` (neighborhood radius) and `min_samples` (minimum points to form a cluster)
+2. For each point, count how many neighbors it has within distance `eps`
+3. Points with enough neighbors become "core points" that form clusters
+4. Points that aren't core points but are near them join those clusters
+5. Points that don't belong to any cluster are marked as outliers (-1)
+
+**Advantages**:
+
+- Handles arbitrary cluster shapes (crescents, elongated, irregular)
+- Automatically identifies outliers/noise
+- No need to specify *k* upfront
+- Robust to outliers
+
+**Disadvantages**:
+
+- Requires tuning `eps` and `min_samples` parameters (can be tricky)
+- Struggles with clusters of varying densities
+- Doesn't work well in high-dimensional spaces (> 10-15 features)
+
+**When to use**: When clusters have irregular shapes, when you suspect outliers, or when cluster counts are unknown and K-Means fails.
+
+```{python}
+from sklearn.cluster import DBSCAN
+
+# Use the crescent-shaped data from earlier
+dbscan = DBSCAN(eps=0.2, min_samples=5)
+dbscan_labels = dbscan.fit_predict(X_moons)
+
+# Plot DBSCAN results
+plt.figure(figsize=(8, 6))
+unique_labels = set(dbscan_labels)
+colors = ['blue', 'green', 'yellow']
+
+for label in unique_labels:
+    if label == -1:
+        # Outliers
+        color = 'yellow'
+        marker = 'x'
+        label_text = 'Outliers'
+    else:
+        color = colors[label % len(colors)]
+        marker = 'o'
+        label_text = f'Cluster {label+1}'
+
+    mask = dbscan_labels == label
+    plt.scatter(X_moons[mask, 0], X_moons[mask, 1],
+               c=color, marker=marker, alpha=0.6, s=60,
+               edgecolors='black', linewidths=0.5,
+               label=label_text)
+
+plt.xlabel('Feature 1', fontsize=12)
+plt.ylabel('Feature 2', fontsize=12)
+plt.title('DBSCAN: Handles Non-Spherical Clusters', fontsize=14)
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+print(f"DBSCAN found {len(set(dbscan_labels) - {-1})} clusters")
+print(f"Number of outliers: {sum(dbscan_labels == -1)}")
+```
+:::
+
+### When to Use Alternatives to K-Means
+
+Here's a decision guide for choosing clustering algorithms:
+
+| **Situation** | **Recommended Algorithm** | **Why** |
+|---|---|---|
+| Spherical, well-separated clusters | K-Means | Fast, interpretable, works well |
+| Non-spherical, irregular shapes | DBSCAN or Hierarchical | Handle arbitrary shapes |
+| Uncertain about *k* | Hierarchical or DBSCAN | Explore multiple *k* or auto-detect |
+| Clusters of varying size/density | DBSCAN or Gaussian Mixture | Not constrained to equal sizes |
+| Outliers present | DBSCAN | Explicitly identifies outliers |
+| Small dataset (< 10k observations) | Hierarchical | Computationally feasible |
+| Large dataset (> 100k observations) | K-Means or Mini-Batch K-Means | Scales efficiently |
+| Need interpretability | K-Means or Hierarchical | Clear centroids or dendrogram |
+
+::: {.callout-tip}
+## Start with K-Means, Then Explore
+
+For most business applications, start with K-Means. It's fast, interpretable, and works well when assumptions hold. If you get poor results or suspect violations of assumptions (visualize your data!), then explore alternatives. Don't overthink algorithm choice until you've validated that K-Means isn't working.
+:::
+
+## Case Study: Complete Journey Customer Segmentation
+
+Let's apply everything we've learned to a real business problem: segmenting grocery store customers using both their purchasing behavior and demographic characteristics. This case study walks through the complete workflow from data preparation to actionable insights using the **Complete Journey** dataset—a rich collection of transaction data from 801 households tracked over one full year at a grocery retailer.
+
+### The Business Problem
+
+A grocery retailer wants to better understand their customer base to personalize marketing campaigns, optimize product placement, and design targeted promotions. They have detailed transaction history and demographic data for hundreds of households but no existing segmentation strategy. The marketing and analytics teams ask:
+
+- What natural customer segments exist based on shopping behavior?
+- How do these segments differ in spending, visit frequency, and discount sensitivity?
+- Do demographic characteristics align with behavioral patterns?
+- Can we create actionable, targeted campaigns for each segment?
+
+We'll use the Complete Journey dataset to discover these segments using K-Means clustering, combining behavioral features from transactions with demographic attributes.
+
+### Loading and Exploring the Data
+
+The Complete Journey dataset includes multiple related tables. For customer segmentation, we'll primarily use transactions (purchase behavior) and demographics (household characteristics):
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+from completejourney_py import get_data
+
+# Load the Complete Journey datasets
+data = get_data()
+transactions = data['transactions']
+demographics = data["demographics"]
+```
+
+```{python}
+transactions.head()
+```
+
+```{python}
+demographics.head()
+```
+
+The transactions table contains detailed purchase records including quantities, sales values, discounts, and timestamps. The demographics table provides household characteristics like age, income, marital status, home ownership, and household composition.
+
+### Feature Engineering and Preprocessing
+
+Our clustering will combine two types of features:
+
+1. **Behavioral features**: Aggregated from transaction data (spending, frequency, basket patterns, discount usage)
+2. **Demographic features**: From the demographics table (age, income, household composition)
+
+Let's start by creating household-level behavioral features. I've collapsed this code since its a bit lengthy but feel free to explore it.  It results in the following dataframe that contains features such as average basket value, number of trips, unique products purchased, etc. for each household. 
+
+```{python}
+#| code-fold: true
+#| code-summary: Feature engineering
+# Step 1: Create behavioral features from transactions
+
+# Convert transaction_timestamp to datetime (suppress warning)
+transactions['transaction_timestamp'] = pd.to_datetime(transactions['transaction_timestamp'], format='mixed')
+
+# Find the last date in the dataset for recency calculations
+max_date = transactions['transaction_timestamp'].max()
+
+# Aggregate transaction data by household
+behavioral_features = transactions.groupby('household_id').agg({
+    # Spending metrics
+    'sales_value': ['sum', 'mean'],  # Total spending and average transaction value
+    'basket_id': 'nunique',  # Number of unique shopping trips
+    'product_id': 'nunique',  # Number of unique products purchased
+
+    # Discount sensitivity
+    'retail_disc': 'sum',  # Total retail discounts used
+    'coupon_disc': 'sum',  # Total coupon discounts used
+
+    # Temporal patterns
+    'transaction_timestamp': ['min', 'max']  # First and last purchase dates
+}).reset_index()
+
+# Flatten column names
+behavioral_features.columns = ['household_id', 'total_spending', 'avg_basket_value',
+                                'num_trips', 'num_unique_products',
+                                'total_retail_disc', 'total_coupon_disc',
+                                'first_purchase', 'last_purchase']
+
+# Create additional engineered features
+behavioral_features['days_active'] = (behavioral_features['last_purchase'] -
+                                      behavioral_features['first_purchase']).dt.days + 1
+behavioral_features['recency_days'] = (max_date - behavioral_features['last_purchase']).dt.days
+behavioral_features['avg_days_between_trips'] = (behavioral_features['days_active'] /
+                                                  behavioral_features['num_trips'])
+
+# Calculate discount usage rates
+behavioral_features['total_discount'] = (behavioral_features['total_retail_disc'] +
+                                         behavioral_features['total_coupon_disc'])
+behavioral_features['discount_rate'] = (behavioral_features['total_discount'] /
+                                        behavioral_features['total_spending'])
+behavioral_features['coupon_usage_rate'] = (behavioral_features['total_coupon_disc'] /
+                                            behavioral_features['total_spending'])
+
+# Drop temporary date columns
+behavioral_features = behavioral_features.drop(['first_purchase', 'last_purchase'], axis=1)
+
+
+# Step 2: Merge behavioral features with demographics
+# The demographics table already has household_id column from completejourney_py
+customer_data = behavioral_features.merge(demographics, on='household_id', how='inner')
+
+# Step 3: Encode demographic features
+# Map column names (completejourney_py may use different names than CSV files)
+col_mapping = {}
+for col in customer_data.columns:
+    lower_col = col.lower()
+    if 'age' in lower_col and 'age_encoded' not in lower_col:
+        col_mapping['age'] = col
+    elif 'income' in lower_col and 'income_encoded' not in lower_col:
+        col_mapping['income'] = col
+    elif 'household_size' in lower_col or 'hh_size' in lower_col:
+        col_mapping['household_size'] = col
+    elif 'marital' in lower_col:
+        col_mapping['marital_status'] = col
+    elif 'homeowner' in lower_col or 'home_owner' in lower_col:
+        col_mapping['homeowner'] = col
+    elif 'kid' in lower_col or 'child' in lower_col:
+        col_mapping['kids'] = col
+
+# Convert age brackets to ordinal numbers
+age_map = {
+    '19-24': 1, '25-34': 2, '35-44': 3, '45-54': 4,
+    '55-64': 5, '65+': 6
+}
+customer_data['age_encoded'] = customer_data[col_mapping.get('age', 'age')].map(age_map)
+
+# Convert income brackets to ordinal numbers
+income_map = {
+    'Under 15K': 1, '15-24K': 2, '25-34K': 3, '35-49K': 4,
+    '50-74K': 5, '75-99K': 6, '100-124K': 7, '125-149K': 8,
+    '150-174K': 9, '175-199K': 10, '200-249K': 11, '250K+': 12
+}
+customer_data['income_encoded'] = customer_data[col_mapping.get('income', 'income')].map(income_map)
+
+# Extract household size
+hh_size_col = col_mapping.get('household_size', 'household_size')
+if customer_data[hh_size_col].dtype == 'object':
+    customer_data['household_size_num'] = customer_data[hh_size_col].str.extract(r'(\d+)').astype(float)
+else:
+    customer_data['household_size_num'] = customer_data[hh_size_col]
+
+# Extract number of kids
+if 'kids' in col_mapping:
+    kids_col = col_mapping['kids']
+    if customer_data[kids_col].dtype == 'object':
+        customer_data['num_kids'] = customer_data[kids_col].replace('None/Unknown', '0')
+        customer_data['num_kids'] = customer_data['num_kids'].str.extract(r'(\d+)').fillna(0).astype(int)
+    else:
+        customer_data['num_kids'] = customer_data[kids_col].fillna(0).astype(int)
+else:
+    customer_data['num_kids'] = 0
+
+# Create binary features
+marital_col = col_mapping.get('marital_status', 'marital_status')
+customer_data['is_married'] = (customer_data[marital_col] == 'Married').astype(int)
+
+homeowner_col = col_mapping.get('homeowner', 'homeowner')
+customer_data['is_homeowner'] = (customer_data[homeowner_col] == 'Homeowner').astype(int)
+
+# Handle missing values - drop rows with missing demographics
+customer_data_clean = customer_data.dropna(subset=['age_encoded', 'income_encoded'])
+
+# Step 4: Select features for clustering
+cluster_features = [
+    # Behavioral features
+    'total_spending',
+    'avg_basket_value',
+    'num_trips',
+    'num_unique_products',
+    'avg_days_between_trips',
+    'recency_days',
+    'discount_rate',
+    'coupon_usage_rate',
+
+    # Demographic features
+    'age_encoded',
+    'income_encoded',
+    'household_size_num',
+    'num_kids',
+    'is_married',
+    'is_homeowner'
+]
+
+X_cluster = customer_data_clean[cluster_features]
+
+X_cluster.head()
+```
+
+### Finding the Optimal Number of Clusters
+
+Let's use both the elbow method and silhouette analysis:
+
+```{python}
+# Scale the features first
+scaler = StandardScaler()
+X_cluster_scaled = scaler.fit_transform(X_cluster)
+
+# Elbow method
+wcss_values = []
+k_range = range(2, 21)
+
+for k in k_range:
+    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=20)
+    kmeans_temp.fit(X_cluster_scaled)
+    wcss_values.append(kmeans_temp.inertia_)
+
+# Silhouette scores
+sil_scores = []
+for k in k_range:
+    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=20)
+    labels_temp = kmeans_temp.fit_predict(X_cluster_scaled)
+    sil_score = silhouette_score(X_cluster_scaled, labels_temp)
+    sil_scores.append(sil_score)
+
+# Plot both methods
+fig, axes = plt.subplots(1, 2, figsize=(9.5, 4))
+
+# Elbow plot
+axes[0].plot(k_range, wcss_values, marker='o', linewidth=2, markersize=8)
+axes[0].set_xlabel('Number of Clusters (k)', fontsize=12)
+axes[0].set_ylabel('WCSS', fontsize=12)
+axes[0].set_title('Elbow Method', fontsize=14)
+axes[0].grid(True, alpha=0.3)
+axes[0].set_xticks(k_range)
+
+# Silhouette plot
+axes[1].plot(k_range, sil_scores, marker='o', linewidth=2,
+             markersize=8, color='green')
+axes[1].set_xlabel('Number of Clusters (k)', fontsize=12)
+axes[1].set_ylabel('Silhouette Score', fontsize=12)
+axes[1].set_title('Silhouette Analysis', fontsize=14)
+axes[1].grid(True, alpha=0.3)
+axes[1].set_xticks(k_range)
+
+plt.tight_layout()
+plt.show()
+
+print("\nResults for different k values:")
+for k, wcss_val, sil_val in zip(k_range, wcss_values, sil_scores):
+    print(f"  k={k}: WCSS={wcss_val:,.0f}, Silhouette={sil_val:.3f}")
+```
+
+**Interpreting the Results: Welcome to Real-World Data!**
+
+Notice something important here: unlike the clean textbook examples you might have seen, there's no obvious "elbow" in the WCSS plot, and the silhouette scores show only modest peaks without a clear winner. The elbow curve decreases gradually without a sharp bend, and silhouette scores hover around 0.12-0.17 with k=2 being highest but subsequent values showing relatively similar performance.
+
+::: {.callout-note}
+## This is Completely Normal for Real Data
+
+What you're seeing is **typical behavior with real-world customer data**:
+
+1. **No clear elbow**: Real customer behavior exists on a spectrum, not in neat, well-separated groups. The gradual WCSS decrease reflects this reality.
+
+2. **Low silhouette scores**: Values around 0.15 indicate overlapping clusters with fuzzy boundaries—exactly what we expect when segmenting human behavior. Customers don't fall into perfectly distinct categories.
+
+3. **Ambiguity in optimal k**: Multiple values of k (3, 4, 5, or 6) could all be "reasonable" choices. This ambiguity reflects the fact that customer segmentation is as much a **business decision** as a statistical one.
+
+**So how do you choose k?**
+
+When the data doesn't give you a clear answer, consider:
+
+- **Business interpretability**: Can you tell a coherent story about 3 segments? 4? 5? Which feels most actionable to your marketing team?
+- **Operational feasibility**: Can your organization realistically create differentiated strategies for k segments? (More isn't always better!)
+- **Stakeholder input**: Domain experts might have intuitions about natural customer groupings
+- **Practical constraints**: Budget, team size, and campaign capabilities might favor simpler segmentations
+
+For this analysis, we'll proceed with **k=4** as a reasonable middle ground that balances granularity with manageability, but k=3 or k=5 would be equally defensible choices.
+:::
+
+Based on this analysis, let's proceed with k=4:
+
+```{python}
+# Fit final K-Means model with k=4
+optimal_k = 4
+kmeans_final = KMeans(n_clusters=optimal_k, random_state=42, n_init=20)
+customer_data_clean['cluster'] = kmeans_final.fit_predict(X_cluster_scaled)
+
+print(f"\nCluster assignments:")
+print(customer_data_clean['cluster'].value_counts().sort_index())
+```
+
+### Interpreting Cluster Profiles
+
+Now comes the most important part: understanding what each cluster represents. We'll examine the average characteristics of each segment:
+
+```{python}
+# Create cluster profiles using original (unscaled) features
+print("\n" + "=" * 80)
+print("CLUSTER PROFILES")
+print("=" * 80)
+
+# Behavioral characteristics by cluster
+behavioral_profiles = customer_data_clean.groupby('cluster').agg({
+    'total_spending': 'mean',
+    'avg_basket_value': 'mean',
+    'num_trips': 'mean',
+    'num_unique_products': 'mean',
+    'avg_days_between_trips': 'mean',
+    'recency_days': 'mean',
+    'discount_rate': 'mean',
+    'coupon_usage_rate': 'mean'
+}).round(2)
+
+behavioral_profiles['count'] = customer_data_clean['cluster'].value_counts().sort_index()
+
+print("\nBehavioral Characteristics:")
+print(behavioral_profiles)
+
+# Demographic characteristics by cluster
+# Build aggregation dict dynamically based on available columns
+demo_agg_dict = {
+    'household_size_num': 'mean',
+    'num_kids': 'mean',
+    'is_married': lambda x: f"{x.mean():.1%}",  # Percentage married
+    'is_homeowner': lambda x: f"{x.mean():.1%}"  # Percentage homeowners
+}
+
+# Add age and income if they exist in the dataframe
+age_col = col_mapping.get('age', None)
+income_col = col_mapping.get('income', None)
+
+if age_col and age_col in customer_data_clean.columns:
+    demo_agg_dict[age_col] = lambda x: x.mode()[0] if len(x.mode()) > 0 else 'Mixed'
+if income_col and income_col in customer_data_clean.columns:
+    demo_agg_dict[income_col] = lambda x: x.mode()[0] if len(x.mode()) > 0 else 'Mixed'
+
+demographic_profiles = customer_data_clean.groupby('cluster').agg(demo_agg_dict).round(1)
+
+print("\nDemographic Characteristics:")
+print(demographic_profiles)
+
+# Add more detailed analysis for each cluster
+print("\n\nDetailed Segment Descriptions:")
+print("=" * 80)
+
+for cluster_id in range(optimal_k):
+    cluster_data = customer_data_clean[customer_data_clean['cluster'] == cluster_id]
+
+    print(f"\nCluster {cluster_id} (n={len(cluster_data)}):")
+    print(f"  Total spending: ${cluster_data['total_spending'].mean():,.0f}")
+    print(f"  Avg basket value: ${cluster_data['avg_basket_value'].mean():.2f}")
+    print(f"  Shopping trips: {cluster_data['num_trips'].mean():.0f}")
+    print(f"  Discount rate: {cluster_data['discount_rate'].mean():.1%}")
+    print(f"  Coupon usage: {cluster_data['coupon_usage_rate'].mean():.1%}")
+
+    # Show age and income if available
+    if age_col and age_col in cluster_data.columns:
+        print(f"  Dominant age: {cluster_data[age_col].mode()[0] if len(cluster_data[age_col].mode()) > 0 else 'Mixed'}")
+    if income_col and income_col in cluster_data.columns:
+        print(f"  Dominant income: {cluster_data[income_col].mode()[0] if len(cluster_data[income_col].mode()) > 0 else 'Mixed'}")
+```
+
+### Visualizing the Segments
+
+Let's create visualizations to help understand the segments:
+
+```{python}
+# Create a 2D visualization showing behavioral patterns
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+# Plot 1: Total Spending vs Number of Trips
+colors_segments = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+for i in range(optimal_k):
+    cluster_data = customer_data_clean[customer_data_clean['cluster'] == i]
+    axes[0].scatter(cluster_data['num_trips'], cluster_data['total_spending'],
+                   alpha=0.6, s=50, color=colors_segments[i],
+                   label=f'Cluster {i}', edgecolors='black', linewidths=0.3)
+
+axes[0].set_xlabel('Number of Shopping Trips', fontsize=12)
+axes[0].set_ylabel('Total Spending ($)', fontsize=12)
+axes[0].set_title('Customer Segments: Spending vs. Frequency', fontsize=14)
+axes[0].legend(loc='best', fontsize=10)
+axes[0].grid(True, alpha=0.3)
+
+# Plot 2: Discount Rate vs Coupon Usage
+for i in range(optimal_k):
+    cluster_data = customer_data_clean[customer_data_clean['cluster'] == i]
+    axes[1].scatter(cluster_data['discount_rate'], cluster_data['coupon_usage_rate'],
+                   alpha=0.6, s=50, color=colors_segments[i],
+                   label=f'Cluster {i}', edgecolors='black', linewidths=0.3)
+
+axes[1].set_xlabel('Discount Rate', fontsize=12)
+axes[1].set_ylabel('Coupon Usage Rate', fontsize=12)
+axes[1].set_title('Customer Segments: Discount Sensitivity', fontsize=14)
+axes[1].legend(loc='best', fontsize=10)
+axes[1].grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+### Actionable Marketing Recommendations
+
+Now we translate statistical clusters into business strategy:
+
+::: {.callout-tip}
+## Marketing Strategy by Segment
+
+Based on the behavioral and demographic profiles discovered in the clustering analysis, here are data-driven marketing recommendations for a grocery retailer. The specific strategies should be customized based on your actual cluster characteristics, but here's a framework based on common grocery shopping patterns:
+
+**High-Value Loyal Shoppers** (Example: High spending, frequent trips, low discount usage)
+
+- **Behavioral profile**: Large total spending, frequent shopping trips, high basket values, minimal reliance on discounts or coupons
+- **Marketing strategy**: VIP loyalty tier with exclusive benefits, personalized recommendations, early access to new products, premium private label emphasis
+- **Promotional approach**: Focus on convenience (online ordering, curbside pickup), quality messaging over price, targeted product bundles based on purchase history
+- **Engagement tactics**: Personal shopper services, recipe ideas featuring premium ingredients, wine/cheese pairing events
+
+**Bargain Hunters** (Example: High discount/coupon usage, price-sensitive)
+
+- **Behavioral profile**: Heavy coupon and discount usage, shops sales aggressively, may have lower basket values but decent frequency
+- **Marketing strategy**: Maximize coupon redemption, highlight weekly specials, emphasize savings opportunities
+- **Promotional approach**: Double coupon days, loyalty program with points-based discounts, digital coupons via app, loss leaders to drive traffic
+- **Engagement tactics**: Weekly circular emails, SMS alerts for flash sales, gamified savings challenges
+
+**Convenience Seekers** (Example: Infrequent large trips, higher basket values)
+
+- **Behavioral profile**: Less frequent shopping trips but larger basket sizes, moderate spending, may shop for longer periods between visits
+- **Marketing strategy**: Stock-up promotions, bulk sizing options, one-stop shopping convenience
+- **Promotional approach**: Family pack discounts, pantry staple bundles, month-end promotions timed with typical shopping cycles
+- **Engagement tactics**: Shopping list app integration, "don't forget" reminder campaigns, meal planning resources
+
+**Light Shoppers** (Example: Low spending, infrequent visits, small baskets)
+
+- **Behavioral profile**: Lower total spending, fewer trips, smaller basket sizes, may be new customers or those supplementing elsewhere
+- **Marketing strategy**: Engagement and frequency-building campaigns, trial incentives for new products
+- **Promotional approach**: Welcome offers, "try me free" campaigns, basket-building incentives ("spend $X, save $Y"), first-time buyer coupons
+- **Engagement tactics**: Category exploration campaigns, meal kit samples, partner with meal delivery apps to capture more wallet share
+
+**Key Insight**: Notice how these recommendations are grounded in **behavioral patterns** (spending, frequency, discount sensitivity) rather than just demographics. While demographic data helps refine messaging and channel selection, purchasing behavior provides the most actionable insights for grocery retail strategy.
+:::
+
+
+## Summary
+
+This chapter introduced you to **unsupervised learning** and **clustering**—discovering hidden patterns in data without labeled outcomes. You learned how **K-Means clustering** works by iteratively assigning observations to the nearest centroid and updating centroids to minimize within-cluster variance. Through a comprehensive case study using the Complete Journey grocery retail dataset, you practiced the complete workflow: engineering behavioral features from transaction data, scaling features, selecting k using elbow and silhouette methods (and handling ambiguous results), interpreting cluster profiles, and translating statistical findings into actionable marketing strategies. You also learned that K-Means makes important assumptions (spherical clusters, similar sizes, comparable scales) and explored alternative methods like hierarchical clustering and DBSCAN for when those assumptions don't hold.
+
+The key insight: **clustering reveals structure by grouping similar observations (rows)**, helping us segment customers, organize documents, or detect patterns. But what if we want to find structure across **features (columns)** instead? In the next chapter, we'll explore **dimension reduction**—unsupervised techniques that compress many features into fewer dimensions while preserving information, enabling visualization of high-dimensional data and feature engineering for supervised models.
+
+## End of Chapter Exercises
+
+These exercises build on Chapter 30's feature engineering skills by applying clustering to discover natural groupings in housing data. You'll progress from basic numeric clustering to incorporating categorical features, mirroring the complete workflow you learned in this chapter.
+
+::: {.callout-tip}
+## Before You Start
+
+Make sure you have:
+
+- The [`ames_clean.csv`](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_clean.csv) dataset loaded into a pandas DataFrame
+- Imported necessary libraries: `pandas`, `numpy`, `matplotlib.pyplot`, `sklearn.cluster.KMeans`, `sklearn.preprocessing.StandardScaler`, `sklearn.metrics.silhouette_score`
+:::
+
+::: {.callout collapse="true"}
+## Exercise 1: Clustering Houses with Numeric Features
+
+**Objective:** Discover natural groupings in the Ames housing market using only numeric features.
+
+**Business Context:** A real estate investment firm wants to segment the Ames housing market to identify distinct property types for their portfolio strategy. They'll start by analyzing properties based purely on their physical characteristics and financial metrics.
+
+**Tasks:**
+
+1. **Load and explore the data:**
+   ```python
+   import pandas as pd
+   import numpy as np
+   import matplotlib.pyplot as plt
+   from sklearn.cluster import KMeans
+   from sklearn.preprocessing import StandardScaler
+   from sklearn.metrics import silhouette_score
+
+   # Load data
+   ames = pd.read_csv('../data/ames_clean.csv')
+
+   # Select numeric features
+   numeric_features = ['GrLivArea', 'YearBuilt', 'TotalBsmtSF', 'GarageArea',
+                      'OverallQual', 'OverallCond', 'LotArea', '1stFlrSF',
+                      '2ndFlrSF', 'FullBath', 'HalfBath', 'BedroomAbvGr']
+
+   # Check for missing values
+   print(ames[numeric_features].isnull().sum())
+   ```
+
+2. **Prepare features for clustering:**
+   - Handle any missing values (drop rows with missing values or impute with median)
+   - Create a feature matrix `X` containing only the numeric features listed above
+   - Scale the features using `StandardScaler()` (fit and transform in one step for now)
+   - **Why is scaling essential for K-Means?** Write a comment explaining.
+
+3. **Find the optimal number of clusters:**
+   - Calculate inertia (within-cluster sum of squares) for k=2 through k=10
+   - Calculate silhouette scores for k=2 through k=10
+   - Create two plots side-by-side: elbow plot (k vs. inertia) and silhouette plot (k vs. silhouette score)
+   - Based on these metrics, what seems like a reasonable number of clusters? Explain your reasoning.
+
+4. **Fit K-Means with your chosen k:**
+   - Fit a K-Means model with `random_state=42` for reproducibility
+   - Add cluster labels to your original DataFrame as a new column called `Cluster`
+
+5. **Profile and interpret your clusters:**
+   - Calculate mean values for each feature by cluster using `.groupby('Cluster').mean()`
+   - Calculate mean `SalePrice` by cluster (even though price wasn't used for clustering!)
+   - For each cluster, describe the "typical" house profile:
+     - What size is it? (GrLivArea, TotalBsmtSF, GarageArea)
+     - How old or new? (YearBuilt)
+     - What quality level? (OverallQual)
+     - What's the typical price range?
+   - Give each cluster a descriptive name (e.g., "Starter Homes," "Luxury Properties," "Mid-Century Ranch Homes")
+
+6. **Visualize your clusters:**
+   - Create a scatter plot with `GrLivArea` on x-axis and `SalePrice` on y-axis
+   - Color points by cluster
+   - Does K-Means successfully separate houses into meaningful groups?
+
+**Hints:**
+
+- Missing values in basement-related features often mean "no basement"—imputing with 0 can be appropriate
+- For the elbow plot, look for the "elbow" where adding more clusters provides diminishing returns
+- Silhouette scores closer to 1 indicate well-separated, compact clusters
+- Real estate often has 3-5 natural market segments (starter homes, mid-range, move-up buyers, luxury)
+- The cluster with highest OverallQual should correlate with highest SalePrice
+
+:::
+
+::: {.callout collapse="true"}
+## Exercise 2: Adding Categorical Features to Clustering
+
+**Objective:** Enhance your clustering by incorporating categorical features through proper encoding.
+
+**Business Context:** The investment firm from Exercise 1 realizes that physical characteristics alone don't capture everything. Location (neighborhood) and property type might reveal different market segments. They want to see if adding these categorical features uncovers new patterns.
+
+**Tasks:**
+
+1. **Select and encode categorical features:**
+   - Start with the numeric features from Exercise 1
+   - Add these categorical features: `Neighborhood`, `BldgType`, `HouseStyle`, `CentralAir`
+   - Encode the categorical features using an appropriate method:
+     - **Option A:** One-hot encoding with `pd.get_dummies()` (recommended for nominal categories)
+     - **Option B:** Ordinal encoding if you can justify a meaningful order
+   - **Combine** your numeric features with your encoded categorical features into a single feature matrix
+
+2. **Scale all features:**
+   - Remember: One-hot encoded features (0s and 1s) should generally still be scaled when combined with continuous features
+   - Apply `StandardScaler()` to your complete feature matrix
+   - How many total features do you have now after encoding and combining?
+
+3. **Repeat the cluster analysis:**
+   - Perform elbow method and silhouette analysis for k=2 through k=10
+   - Compare these plots to your results from Exercise 1:
+     - Did the optimal k change?
+     - Did the silhouette scores improve or worsen?
+   - Choose your optimal k (can be same or different from Exercise 1)
+
+4. **Fit K-Means and profile clusters:**
+   - Fit K-Means with your chosen k
+   - Add cluster labels as `Cluster_WithCategorical` to distinguish from Exercise 1
+   - Create cluster profiles showing:
+     - Average numeric features (GrLivArea, YearBuilt, OverallQual, etc.)
+     - Most common categorical values per cluster (use `.mode()` or counts)
+     - Average SalePrice per cluster
+
+5. **Compare to Exercise 1:**
+   - Create a crosstab: `pd.crosstab(ames['Cluster'], ames['Cluster_WithCategorical'])`
+   - How much do the cluster assignments differ?
+   - Which clustering approach (numeric-only vs. numeric + categorical) gives more interpretable, actionable segments?
+   - Give descriptive names to your new clusters
+
+6. **Visualize the impact of categorical features:**
+   - Create a scatter plot colored by your new clusters
+   - Consider using `GrLivArea` vs `SalePrice` again, or try `OverallQual` vs `SalePrice`
+   - Optionally: Color by cluster and use marker shapes to show `BldgType` or another categorical feature
+   - Can you see how neighborhoods or building types now influence cluster assignments?
+
+**Challenge Tasks:**
+
+- **Neighborhood-specific insights:** For each cluster, identify which neighborhoods are overrepresented. This helps with targeted marketing by location.
+- **Feature importance:** Which features seem to drive cluster separation most? Compare cluster centroids to identify the largest differences.
+- **Alternative encoding:** Try target encoding for `Neighborhood` (encoding it as the mean SalePrice in that neighborhood). Does this improve cluster interpretability? (Warning: This can introduce data leakage if not done carefully in production pipelines!)
+
+**Hints:**
+
+- `pd.get_dummies(ames, columns=['Neighborhood', 'BldgType'])` creates dummy variables for specified columns
+- After one-hot encoding Neighborhood, you might have 20+ new binary features
+- Use `.value_counts()` within each cluster to see which neighborhoods or building types dominate
+- If silhouette scores drop after adding categorical features, it might mean the categories don't define clear boundaries—that's okay and realistic!
+- For interpretation, focus on clusters that are *both* statistically distinct AND business-interpretable
+
+:::
+
+::: {.callout collapse="true"}
+## Exercise 3: Complete Clustering Pipeline (Challenge)
+
+**Objective:** Build a production-ready, reusable clustering pipeline that handles preprocessing automatically.
+
+**Context:** Your real estate firm wants to deploy your clustering analysis as a repeatable workflow they can run monthly as new listings appear. Build a pipeline that ensures consistent preprocessing and clustering.
+
+**Tasks:**
+
+1. **Design your pipeline structure:**
+   - Separate features into numerical and categorical lists
+   - Create a numerical preprocessing pipeline: Imputation (median) → StandardScaler
+   - Create a categorical preprocessing pipeline: Imputation (constant='missing') → OneHotEncoder
+   - Use `ColumnTransformer` to apply the appropriate pipeline to each feature type
+
+2. **Build the complete pipeline:**
+   - Combine your preprocessing with K-Means clustering
+   - Your pipeline should look like:
+     ```python
+     from sklearn.pipeline import Pipeline
+     from sklearn.compose import ColumnTransformer
+     from sklearn.preprocessing import StandardScaler, OneHotEncoder
+     from sklearn.impute import SimpleImputer
+
+     # Define feature lists
+     numeric_features = ['GrLivArea', 'YearBuilt', ...]
+     categorical_features = ['Neighborhood', 'BldgType', ...]
+
+     # Create preprocessing pipelines
+     numeric_transformer = Pipeline(steps=[
+         ('imputer', SimpleImputer(strategy='median')),
+         ('scaler', StandardScaler())
+     ])
+
+     categorical_transformer = Pipeline(steps=[
+         ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
+         ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
+     ])
+
+     # Combine preprocessing
+     preprocessor = ColumnTransformer(
+         transformers=[
+             ('num', numeric_transformer, numeric_features),
+             ('cat', categorical_transformer, categorical_features)
+         ])
+
+     # Complete clustering pipeline
+     clustering_pipeline = Pipeline(steps=[
+         ('preprocessor', preprocessor),
+         ('clusterer', KMeans(n_clusters=YOUR_OPTIMAL_K, random_state=42))
+     ])
+     ```
+
+3. **Fit and predict with your pipeline:**
+   - Fit the pipeline on the Ames data: `clustering_pipeline.fit(X)`
+   - Get cluster labels: `labels = clustering_pipeline.named_steps['clusterer'].labels_`
+   - Add labels to your DataFrame
+
+4. **Validate your pipeline:**
+   - Create a small holdout sample of 10 houses from your data
+   - Use your fitted pipeline to predict clusters for these houses: `clustering_pipeline.predict(X_holdout)`
+   - Verify that preprocessing happens automatically (no manual scaling needed!)
+
+5. **Profile clusters from your pipeline:**
+   - Extract cluster centroids from your fitted K-Means model
+   - Remember: The centroids are in the transformed (scaled, encoded) feature space
+   - Create interpretable profiles by grouping the original data by cluster labels
+   - Compare: Are the results identical to your manual approach from Exercise 2?
+
+**Challenge Extensions:**
+
+- **Custom transformer:** Create a `FunctionTransformer` that engineers new features (like `HouseAge = current_year - YearBuilt`) before preprocessing. Insert it at the start of your pipeline.
+- **Grid search for optimal k:** Use `GridSearchCV` or loop through k values, fitting the pipeline for each, to automate finding optimal k.
+- **Save your pipeline:** Use `joblib` to save your fitted pipeline to disk so it can be loaded and used later without refitting.
+
+**Hints:**
+
+- Pipelines prevent data leakage by ensuring transformations are fit on training data only
+- Access fitted pipeline components with `.named_steps['step_name']`
+- The clusterer's `.labels_` attribute gives cluster assignments for the training data
+- Use `.predict()` on the pipeline for new data (it applies all transformations automatically)
+
+
+:::
