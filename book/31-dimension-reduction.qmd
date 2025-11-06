@@ -1,0 +1,1033 @@
+# Dimension Reduction with PCA {#sec-dimension-reduction}
+
+Imagine you're analyzing customer behavior using 50 different features: purchase frequency across product categories, browsing patterns, demographic information, social media engagement, and more. Each feature captures something about your customers, but do you really need all 50? What if most of the meaningful variation in customer behavior could be captured by just 5-10 carefully constructed combinations of these features?
+
+This is the promise of **dimension reduction**—transforming high-dimensional data into a lower-dimensional representation that preserves the most important information. It's like creating a highlight reel from a full movie: you lose some detail, but you capture the essential story.
+
+In the previous chapter, you explored clustering—one of the two main branches of unsupervised learning. Clustering groups similar observations together. Dimension reduction, the second major branch, focuses on reducing the number of features while preserving as much information as possible. Both techniques discover hidden structure in data without relying on labeled outcomes.
+
+This chapter introduces you to **Principal Component Analysis (PCA)**—the most widely-used dimension reduction technique in data science. You'll learn how PCA transforms correlated features into a smaller set of uncorrelated "principal components" that capture the most important patterns in your data. Through hands-on examples, you'll master when to use PCA, how to interpret its results, and how to integrate it into your machine learning pipelines to improve model performance and computational efficiency.
+
+::: {.callout-note}
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+
+- Explain the difference between dimension reduction and clustering as two types of unsupervised learning
+- Understand why high-dimensional data poses challenges and when dimension reduction helps
+- Describe how PCA finds directions of maximum variance using eigenvectors and eigenvalues
+- Explain the difference between feature extraction (like PCA) and feature selection
+- Execute the complete PCA workflow: standardize data, fit PCA, choose components, examine loadings, and transform data
+- Use scree plots and the elbow method to determine the optimal number of components
+- Interpret component loadings to understand what each principal component represents
+- Apply PCA to real datasets (like breast cancer classification) to reduce dimensionality
+- Compare machine learning models using original features vs. PCA-transformed features
+- Evaluate the tradeoffs between dimensionality reduction and model performance
+- Recognize PCA's limitations and when not to use it
+:::
+
+::: {.callout-note}
+## Follow along in Colab
+
+As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/32_dimension_reduction.ipynb) in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered hereand experiment with your own ideas.
+
+▶ Open the [Dimension Reduction Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/32_dimension_reduction.ipynb).
+:::
+
+## From Clustering to Dimension Reduction
+
+### Quick Recap: Two Main Types of Unsupervised Learning
+
+In the previous chapter, you learned about **clustering**—algorithms that automatically group similar observations together. Clustering answers the question: "Can we organize our observations into meaningful groups?"
+
+Dimension reduction addresses a different question: "Can we represent our data using fewer features while preserving the most important information?"
+
+Both are forms of **unsupervised learning** because they discover patterns in data without relying on labeled outcomes. But they serve different purposes:
+
+| **Clustering** | **Dimension Reduction** |
+|---|---|
+| Groups similar **observations** | Combines correlated **features** |
+| Reduces rows conceptually (creates segments) | Reduces columns (creates new features) |
+| "These customers behave similarly" | "These features capture similar information" |
+| Output: Cluster labels for each observation | Output: Transformed dataset with fewer features |
+| Example: Segment customers into 5 groups | Example: Reduce 50 features to 10 components |
+
+Think of it this way: clustering helps you understand how your observations relate to each other, while dimension reduction helps you understand how your features relate to each other.
+
+::: {.callout-tip}
+## They Work Great Together
+
+Clustering and dimension reduction are often used in sequence! You might first use PCA to reduce 100 features to 10 principal components, then apply K-Means clustering to those 10 components. This approach reduces noise, improves clustering quality, and makes results easier to visualize.
+:::
+
+### Why We Need Dimension Reduction
+
+Modern datasets are getting wider and wider. It's not uncommon to work with datasets that have hundreds or thousands of features. While more information seems better, high-dimensional data creates several practical challenges:
+
+#### The Curse of Dimensionality
+
+As the number of features increases, strange things happen:
+
+**1. Sparse Data Space**: With 2 features, you need relatively few observations to cover the feature space reasonably well. But with 100 features, the data becomes incredibly sparseobservations are far apart from each other in high-dimensional space. This makes it difficult for algorithms to find patterns or make reliable predictions.
+
+Imagine you have 100 observations in a dataset:
+
+- With 2 features, those 100 points can adequately cover a 2D plane
+- With 10 features, they're spread thin across 10-dimensional space
+- With 100 features, they're isolated dots in a vast 100-dimensional void
+
+**2. Computational Cost**: More features mean more calculations. Training time, memory requirements, and prediction time all increase with dimensionality. An algorithm that runs in seconds with 10 features might take hours with 1,000 features.
+
+**3. Overfitting Risk**: More features give your model more opportunities to find spurious patterns that don't generalize. Your model might achieve perfect training accuracy by memorizing noise rather than learning true patterns.
+
+**4. Multicollinearity**: Many real-world features are correlated. If you're predicting house prices, square footage and number of rooms are likely correlated. These redundant features add complexity without adding proportional information.
+
+::: {.callout-important}
+## When Does Dimensionality Become a Problem?
+
+There's no magic number, but watch for these warning signs:
+
+- You have more features than observations (or close to it)
+- Many features are highly correlated with each other
+- Your model trains slowly or runs out of memory
+- Your model performs well on training data but poorly on test data
+- You struggle to interpret which features matter most
+:::
+
+#### Benefits of Dimension Reduction
+
+When applied appropriately, dimension reduction offers several advantages:
+
+**1. Visualization**: We humans can visualize 2D and 3D spaces easily but struggle beyond that. Reducing high-dimensional data to 2-3 dimensions enables powerful exploratory visualizations. You might reduce customer behavior from 50 features to 2 principal components and plot them to reveal natural customer segments.
+
+**2. Noise Reduction**: Real-world data contains measurement errors and irrelevant variation. By focusing on the dimensions that capture the most variance, PCA effectively filters out noise that lives in the minor dimensions.
+
+**3. Improved Model Performance**: Counterintuitively, removing features can sometimes improve model accuracy by reducing overfitting. A model with fewer, more meaningful features may generalize better than one overwhelmed by noisy, redundant features.
+
+**4. Computational Efficiency**: Fewer features mean faster training, faster predictions, and lower memory requirements. This matters especially when deploying models in production or working with very large datasets.
+
+**5. Addressing Multicollinearity**: Some algorithms (like linear regression) struggle when features are highly correlated. PCA creates uncorrelated components, which can stabilize these algorithms and improve their performance.
+
+::: {.callout-tip}
+## The Information-Complexity Tradeoff
+
+Dimension reduction is fundamentally about tradeoffs. You're trading some information (detail) for reduced complexity (simplicity). The art is finding the sweet spot where you retain enough information to solve your problem while gaining meaningful benefits in interpretability, speed, or performance.
+:::
+
+## What Is Dimension Reduction?
+
+### Conceptual Overview
+
+At its core, dimension reduction transforms your data from a high-dimensional space to a lower-dimensional space. Instead of representing each observation using 50 original features, you represent it using 10 new features that capture most of the important variation.
+
+Think of a photograph. A high-resolution image might have millions of pixels (dimensions), but you can compress it to a much smaller file size that still looks nearly identical. The compression algorithm identifies redundancies and preserves the essential visual information while discarding less important details. Dimension reduction does something similar with tabular data.
+
+![Image compression as an analogy for dimension reduction. The original high-resolution image contains millions of pixels (high dimensionality), while the compressed version uses far fewer bytes to represent essentially the same visual information (lower dimensionality). Similarly, PCA reduces many correlated features into fewer principal components while preserving the essential patterns in the data.](images/31-image-compression-analogy.jpg){#fig-compression-analogy}
+
+There are two main philosophical approaches to dimension reduction:
+
+### Feature Selection vs. Feature Extraction
+
+**Feature Selection** chooses a subset of the original features to keep. It's like picking your favorite songs from an albumyou're selecting from what already exists.
+
+- **Approach**: Keep features with highest importance, lowest correlation, or best predictive power
+- **Advantages**: Results are directly interpretable (you're still using the original features)
+- **Disadvantages**: Might discard features that contain useful information
+- **Example**: Using correlation analysis or feature importance scores to select the 10 most relevant features from 50
+
+**Feature Extraction** creates new features by combining the original features mathematically. It's like creating a playlist of mashup songsyou're blending existing content into something new.
+
+- **Approach**: Transform original features into new composite features
+- **Advantages**: Can capture more information than simple feature selection
+- **Disadvantages**: New features are less interpretable (they're mathematical combinations)
+- **Example**: PCA creates new features that are weighted combinations of all original features
+
+This chapter focuses on **feature extraction** through PCA, though both approaches have their place in a data scientist's toolkit.
+
+::: {.callout-note}
+## Why Learn Feature Extraction First?
+
+While feature selection is more intuitive, feature extraction (particularly PCA) is more commonly used in professional practice because it:
+
+1. Captures more information than selecting individual features
+2. Removes redundancy by creating uncorrelated components
+3. Works well as a preprocessing step for many machine learning algorithms
+4. Has become the standard approach in fields like computer vision and genomics
+
+Once you understand PCA, feature selection techniques will feel straightforward by comparison.
+:::
+
+### Real-World Applications
+
+Dimension reduction, particularly PCA, appears across many domains:
+
+**Image Compression and Computer Vision**
+
+- Facial recognition systems use PCA to reduce thousands of pixel values to key "eigenfaces"
+- Image compression algorithms reduce file sizes while preserving visual quality
+- Computer vision systems reduce high-dimensional image data before object detection
+
+**Text Analysis and Natural Language Processing**
+
+- Document analysis uses techniques like Latent Semantic Analysis (related to PCA) to reduce documents from thousands of word counts to meaningful topics
+- Sentiment analysis systems reduce high-dimensional text features before classification
+
+**Genomics and Bioinformatics**
+
+- Gene expression studies might measure 20,000+ genes per patient, but PCA can reduce this to a handful of components capturing the main biological patterns
+- Population genetics uses PCA to visualize genetic relationships between populations
+
+**Finance and Economics**
+
+- Stock market analysis reduces hundreds of stock prices to a few principal factors
+- Economic indices combine multiple economic indicators into composite measures
+- Risk management systems use PCA to identify common risk factors across assets
+
+**Recommendation Systems**
+
+- Netflix and Spotify use matrix factorization (similar to PCA) to reduce user-item matrices
+- These systems identify latent factors like "action movie preference" or "likes indie rock"
+
+**Sensor Data and IoT**
+
+- Industrial systems with hundreds of sensors use PCA to monitor for anomalies
+- Reducing sensor data makes real-time monitoring computationally feasible
+
+::: {.callout-tip}
+## Master PCA, Understand Its Cousins
+
+While this chapter focuses on PCA, the same core concepts apply to related techniques you encountered above like Latent Semantic Analysis (for text), matrix factorization (for recommendation systems), and other dimension reduction methods. Once you understand how PCA finds patterns by combining features and reducing dimensionality, these alternative approaches will make intuitive sense—they're essentially PCA adapted for specific data types or domains. Think of PCA as learning to ride a bicycle; the other techniques are like riding a mountain bike or road bike—the fundamentals transfer directly.
+:::
+
+## Introducing Principal Component Analysis (PCA)
+
+### Intuitive Explanation: Finding New Axes That Capture the Most Variance
+
+Imagine you're at a crowded concert, trying to take a photo of the stage. You could stand directly in front (one perspective), but if you move to the side at an angle, you might get a much better view that captures more of the action. PCA does something similarit rotates your data to find the best "viewing angles" that reveal the most variation.
+
+More precisely, PCA finds new coordinate axes (called **principal components**) such that:
+
+1. The **first principal component** points in the direction where the data varies the most
+2. The **second principal component** points in the direction of the next-most variation, perpendicular to the first
+3. The **third principal component** points in the direction of the next-most variation, perpendicular to both the first and second
+4. And so on...
+
+The beauty of this approach is that the first few principal components often capture most of the variation in your data. If 5 components explain 90% of the variance in your original 50 features, you can use just those 5 components instead of all 50 featureswith minimal information loss.
+
+::: {.callout-tip}
+## The Apartment-Finding Analogy
+
+Imagine you're helping friends find apartments and tracking many features: rent, square footage, distance from downtown, number of rooms, building age, floor number, etc.
+
+You might notice that many features are correlated:
+
+- Larger apartments tend to have more rooms
+- Newer buildings tend to be farther from downtown
+- Higher floors tend to cost more
+
+PCA would identify underlying factors like:
+
+- **Component 1**: "Size and space" (combining square footage, rooms, closet space)
+- **Component 2**: "Location and age" (combining distance, building age, neighborhood)
+- **Component 3**: "Luxury and amenities" (combining floor number, finishes, building features)
+
+Instead of tracking 10 correlated features, you now have 3 uncorrelated components that capture the essential variation in apartments.
+:::
+
+### Visual Intuition: Projecting Data onto a New Coordinate System
+
+Let's build intuition with a simple 2D example. Imagine you have height and weight measurements for 100 people. When you plot this data, you'll see a diagonal cloudtaller people tend to weigh more.
+
+The original axes are "height" and "weight", but PCA finds new axes:
+
+- **PC1** (First Principal Component) points along the main diagonal of the cloud, capturing the combined "size" of a person
+- **PC2** (Second Principal Component) points perpendicular to PC1, capturing whether someone is "heavier for their height" or "lighter for their height"
+
+```{python}
+#| label: fig-pca-2d-intuition
+#| fig-cap: "PCA finds new coordinate axes. Left: Original height/weight data with PC1 (red) pointing along maximum variance and PC2 (orange) perpendicular to it. Right: Same data rotated to align with principal components, making it easy to see that PC1 captures 'overall size' while PC2 captures 'body type'."
+#| echo: false
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+
+# Generate correlated height and weight data
+np.random.seed(42)
+n_samples = 100
+heights = np.random.normal(67, 4, n_samples)  # inches
+weights = 50 + 3 * heights + np.random.normal(0, 10, n_samples)  # lbs
+
+# Combine and standardize
+X = np.column_stack([heights, weights])
+X_centered = X - X.mean(axis=0)
+X_std = X_centered / X_centered.std(axis=0)
+
+# Apply PCA
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_std)
+
+# Get principal component directions
+pc1 = pca.components_[0]
+pc2 = pca.components_[1]
+
+# Create figure with two subplots
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9.5, 4.5))
+
+# LEFT: Original axes with PC directions
+ax1.scatter(X_std[:, 0], X_std[:, 1], alpha=0.6, s=40, color='steelblue', edgecolors='navy', linewidth=0.5)
+ax1.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+ax1.axvline(x=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+
+# Draw principal component arrows
+scale = 2.5
+ax1.arrow(0, 0, pc1[0]*scale, pc1[1]*scale, head_width=0.15, head_length=0.1,
+          fc='red', ec='red', linewidth=3, label='PC1', zorder=5)
+ax1.arrow(0, 0, pc2[0]*scale, pc2[1]*scale, head_width=0.15, head_length=0.1,
+          fc='orange', ec='orange', linewidth=3, label='PC2', zorder=5)
+
+ax1.set_xlabel('Height (standardized)', fontweight='bold')
+ax1.set_ylabel('Weight (standardized)', fontweight='bold')
+ax1.set_title('Original Coordinate System', fontweight='bold')
+ax1.legend()
+ax1.grid(True, alpha=0.3)
+ax1.set_xlim(-3, 3)
+ax1.set_ylim(-3, 3)
+
+# RIGHT: Rotated to PC axes
+ax2.scatter(X_pca[:, 0], X_pca[:, 1], alpha=0.6, s=40, color='forestgreen', edgecolors='darkgreen', linewidth=0.5)
+ax2.axhline(y=0, color='orange', linestyle='--', linewidth=2, alpha=0.7, label='PC2')
+ax2.axvline(x=0, color='red', linestyle='--', linewidth=2, alpha=0.7, label='PC1')
+
+ax2.set_xlabel('PC1 (Overall Size)', fontweight='bold')
+ax2.set_ylabel('PC2 (Stocky ← → Slim)', fontweight='bold')
+ax2.set_title('Principal Component Coordinate System', fontweight='bold')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+ax2.set_xlim(-3, 3)
+ax2.set_ylim(-3, 3)
+
+# Add variance explained
+var_exp = pca.explained_variance_ratio_ * 100
+ax2.text(0.02, 0.98, f'PC1: {var_exp[0]:.1f}% variance\nPC2: {var_exp[1]:.1f}% variance',
+         transform=ax2.transAxes, fontsize=9, verticalalignment='top',
+         bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
+
+plt.tight_layout()
+plt.show()
+```
+
+@fig-pca-2d-intuition illustrates the core idea behind PCA. In the **left panel**, you see the original data plotted using height and weight as axes. The blue points form a diagonal cloud because these variables are correlated—taller people generally weigh more. The red arrow (PC1) points along the direction of maximum variance, capturing the main trend: overall size. The orange arrow (PC2) points perpendicular to PC1, capturing the secondary pattern: whether someone is stocky or slim for their height.
+
+In the **right panel**, we've rotated the same data so that the principal components become our new axes. Notice how the data now aligns with the horizontal axis (PC1)—this is the direction where the data spreads out the most. The vertical spread (PC2) is much smaller. The text box shows that PC1 explains about 85-86% of the variance in the data, while PC2 explains only about 14%. This is the essence of PCA: most of the information is concentrated in the first few components.
+
+Now imagine you only kept PC1 and discarded PC2. You'd lose the ability to distinguish whether someone is stocky versus slim, but you'd preserve the main patternoverall size. This is dimension reduction: trading some detail for simplicity.
+
+In higher dimensions, the same idea applies. With 50 features, PCA finds 50 principal components. But typically, the first 10-20 components capture 80-95% of the variance, so you can safely discard the rest.
+
+### Core Terms: Components, Loadings, Explained Variance
+
+Before we dive into how PCA works, let's define the key terms you'll encounter:
+
+**Principal Components** (PCs): The new features created by PCA. Each component is a linear combination (weighted sum) of the original features. PCs are ordered by importance: PC1 captures the most variance, PC2 captures the second-most, etc.
+
+**Loadings**: The weights that define how original features combine to create each principal component. If PC1 has high loadings on "square footage" and "number of rooms," these features strongly influence that component. Loadings help you interpret what each component represents.
+
+**Explained Variance**: The amount of information (variance) captured by each principal component, usually expressed as a percentage. If PC1 explains 40% of variance and PC2 explains 25%, together they capture 65% of the total variation in your data.
+
+**Cumulative Explained Variance**: The sum of explained variance as you add more components. This tells you how much total information you've retained. For example, "5 components explain 85% of cumulative variance" means those 5 components capture 85% of the information in your original data.
+
+**Eigenvectors and Eigenvalues**: The mathematical machinery behind PCA. Eigenvectors define the direction of each principal component, while eigenvalues indicate the amount of variance along that direction. You don't need to calculate these by hand (scikit-learn does it for you), but they're what makes PCA work mathematically.
+
+::: {.callout-note}
+## Don't Worry About the Math (Yet)
+
+PCA involves linear algebra concepts like eigenvectors and covariance matrices. While understanding the math deepens your intuition, you can effectively apply PCA by understanding the concepts and interpreting the results. Focus first on the "what" and "why," then explore the "how" if you're curious about the mathematical foundations.
+:::
+
+## How PCA Works (Step-by-Step)
+
+Understanding the PCA algorithm helps you apply it more effectively, even though scikit-learn handles the implementation. Let's walk through the five key steps using a simple, concrete example.
+
+We'll use a small dataset of 6 students with 4 features: hours studied per week, practice problems completed, class attendance (%), and average quiz score:
+
+```{python}
+#| code-fold: true
+#| code-summary: Example data generation
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+# Create a simple student study habits dataset
+data = {
+    'Student': ['Alice', 'Bob', 'Carol', 'David', 'Emma', 'Frank'],
+    'Hours_Studied': [10, 5, 8, 12, 6, 9],
+    'Practice_Problems': [50, 20, 40, 60, 25, 45],
+    'Attendance_Pct': [95, 70, 85, 98, 75, 90],
+    'Quiz_Score': [88, 65, 78, 92, 68, 82]
+}
+
+df = pd.DataFrame(data)
+df.head()
+```
+
+This small dataset makes it easy to see what's happening at each step. Notice that the features are correlated—students who study more tend to complete more problems and score higher on quizzes.
+
+### Step 1: Standardize the Data
+
+PCA is sensitive to the scale of your features. If one feature ranges from 0-1000 while another ranges from 0-1, the larger-scale feature will dominate the principal components simply because it has larger valuesnot because it's actually more important.
+
+::: {.callout-note}
+## Recall...
+
+from our feature engineering chapter, **standardization** transforms each feature to have mean=0 and standard deviation=1.
+::: 
+
+Let's standardize our student data:
+
+```{python}
+# Extract features for PCA (exclude student names)
+X = df[['Hours_Studied', 'Practice_Problems', 'Attendance_Pct', 'Quiz_Score']].values
+feature_names = ['Hours_Studied', 'Practice_Problems', 'Attendance_Pct', 'Quiz_Score']
+
+# Standardize the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+
+# Show Standardized data
+pd.DataFrame(
+    np.round(X_scaled[:5], 2),
+    columns=feature_names,
+    index=df['Student'][:5]
+    )
+```
+
+After standardization:
+
+- A value of 0 means "average"
+- A value of 1 means "one standard deviation above average"
+- A value of -2 means "two standard deviations below average"
+
+Notice how Alice's 10 hours studied becomes approximately 0.71 (above average), Bob's 5 hours became -1.41 (more than one standard deviation below average), and David's 12 hours becomes approximately 1.56 (more than one standard deviation above average). This puts all features on a comparable scale before PCA analyzes them.
+
+::: {.callout-important}
+## Always Standardize Before PCA
+
+Unless you have a specific reason not to (rare cases where the original scale matters), you should always standardize features before PCA. This is one of the most common mistakes in applying PCAforgetting to scale your data first.
+
+The exception is when all features are already on the same scale (e.g., all are percentages from 0-100 or all are already standardized).
+:::
+
+### Step 2: Compute the Covariance Matrix
+
+The **covariance matrix** captures how features vary together:
+
+- **Diagonal elements** show how much each feature varies on its own (variance)
+- **Off-diagonal elements** show how pairs of features vary together (covariance)
+- Positive covariance means features tend to increase together
+- Negative covariance means when one increases, the other tends to decrease
+- Near-zero covariance means features vary independently
+
+The covariance matrix is the input for finding principal components. PCA essentially analyzes this matrix to find directions where the data varies most.
+
+You don't typically compute this manually—scikit-learn's PCA does it internally—but let's peek at it for our student data to build intuition:
+
+```{python}
+# Compute covariance matrix (what PCA does behind the scenes)
+cov_matrix = np.cov(X_scaled.T)
+
+print("\nCovariance Matrix (4x4 for our 4 features):")
+print(np.round(cov_matrix, 2))
+
+# Create a labeled version for easier interpretation
+cov_df = pd.DataFrame(cov_matrix,
+                      columns=feature_names,
+                      index=feature_names)
+print("\nLabeled Covariance Matrix:")
+cov_df.round(2)
+```
+
+Notice several important patterns in this matrix:
+
+**Diagonal elements** (all ≈ 1.20): These represent the variance of each feature after standardization. They're all similar, confirming that standardization worked properly.
+
+**Off-diagonal elements** (all ≈ 1.18-1.20): These show the covariances between pairs of features. The consistently high positive values tell us that all four variables are strongly correlated—students who study more hours also tend to complete more practice problems, attend more classes, and score higher on quizzes. This strong correlation is exactly why PCA will be effective: it can capture this shared variation in fewer components.
+
+For example, the covariance between Hours_Studied and Practice_Problems is 1.20, indicating these variables increase together almost perfectly. Similarly, Hours_Studied and Quiz_Score have a covariance of 1.19, showing students who study more tend to score higher.
+
+This high correlation across all features suggests that PC1 will likely capture the majority of variance by representing an "overall academic engagement/performance" dimension.
+
+For a dataset with 50 features, this would produce a 50×50 covariance matrix showing all pairwise relationships.
+
+### Step 3: Find Eigenvectors and Eigenvalues
+
+This is where the magic (and the linear algebra) happens. PCA finds the **eigenvectors** and **eigenvalues** of the covariance matrix:
+
+- **Eigenvectors** define the directions of the principal components (the new axes)
+- **Eigenvalues** indicate how much variance exists along each direction (the importance of each component)
+
+The eigenvector with the largest eigenvalue becomes PC1 (first principal component), the eigenvector with the second-largest eigenvalue becomes PC2, and so on.
+
+To make this concrete, let's revisit our height/weight example and visualize how eigenvectors and eigenvalues work together:
+
+```{python}
+#| label: fig-eigenvector-eigenvalue
+#| fig-cap: "Eigenvectors show the directions of maximum variance (arrows), while eigenvalues determine their length (importance). PC1 (red) has a much larger eigenvalue than PC2 (orange), shown by the dramatically different arrow lengths. This demonstrates that PC1 captures far more variance in the height/weight relationship."
+#| echo: false
+
+# Generate the same height/weight data from earlier
+np.random.seed(42)
+n_samples = 100
+heights = np.random.normal(67, 4, n_samples)  # inches
+weights = 50 + 3 * heights + np.random.normal(0, 10, n_samples)  # lbs
+
+# Standardize
+X_hw = np.column_stack([heights, weights])
+X_hw_centered = X_hw - X_hw.mean(axis=0)
+X_hw_std = X_hw_centered / X_hw_centered.std(axis=0)
+
+# Fit PCA
+pca_hw = PCA(n_components=2)
+pca_hw.fit(X_hw_std)
+
+# Create visualization
+fig, ax = plt.subplots(figsize=(9, 7))
+
+# Plot the data points
+ax.scatter(X_hw_std[:, 0], X_hw_std[:, 1], alpha=0.5, s=50,
+           color='steelblue', edgecolors='navy', linewidth=0.5)
+
+# Plot eigenvectors as arrows, scaled by their eigenvalues
+for i, (eigenvector, eigenvalue) in enumerate(zip(pca_hw.components_, pca_hw.explained_variance_)):
+    color = 'red' if i == 0 else 'orange'
+
+    # Arrow length is proportional to eigenvalue (shows importance)
+    scale = 1.2  # Scale for visibility
+    ax.arrow(0, 0,
+             eigenvector[0] * eigenvalue * scale,
+             eigenvector[1] * eigenvalue * scale,
+             head_width=0.15, head_length=0.12,
+             fc=color, ec=color, linewidth=4,
+             alpha=0.8, length_includes_head=True, zorder=5)
+
+    # Label with eigenvalue - use fixed positions for readability
+    arrow_tip = (eigenvector[0] * eigenvalue * scale, eigenvector[1] * eigenvalue * scale)
+
+    # Set fixed annotation positions for each PC
+    if i == 0:  # PC1
+        annotation_pos = (1.8, -1.3)
+    else:  # PC2
+        annotation_pos = (-0.5, 0.5)
+
+    ax.annotate(f'Eigenvector {i+1}\n(direction)\n\nEigenvalue = {eigenvalue:.2f}\n(importance)',
+                xy=arrow_tip,
+                xytext=annotation_pos,
+                fontsize=10, ha='center',
+                bbox=dict(boxstyle='round,pad=0.5', facecolor=color, alpha=0.2, edgecolor=color, linewidth=2),
+                arrowprops=dict(arrowstyle='->', color=color, lw=2))
+
+# Add legend explaining the concept
+from matplotlib.patches import Rectangle
+legend_elements = [
+    Rectangle((0, 0), 1, 1, fc='red', alpha=0.3, label=f'PC1: eigenvalue={pca_hw.explained_variance_[0]:.2f} (long arrow = high importance)'),
+    Rectangle((0, 0), 1, 1, fc='orange', alpha=0.3, label=f'PC2: eigenvalue={pca_hw.explained_variance_[1]:.2f} (short arrow = low importance)')
+]
+ax.legend(handles=legend_elements, loc='upper left', fontsize=10, framealpha=0.9)
+
+ax.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+ax.axvline(x=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+ax.set_xlabel('Height (standardized)', fontsize=12, fontweight='bold')
+ax.set_ylabel('Weight (standardized)', fontsize=12, fontweight='bold')
+ax.set_title('Eigenvectors (Direction) & Eigenvalues (Magnitude) Explained',
+             fontsize=14, fontweight='bold', pad=15)
+ax.grid(True, alpha=0.3)
+ax.set_xlim(-3, 3)
+ax.set_ylim(-3, 3)
+ax.set_aspect('equal')
+
+plt.tight_layout()
+plt.show()
+```
+
+In this visualization:
+
+- **Eigenvector 1 (red arrow direction)**: Points along the main diagonal where height and weight increase together—this is the direction of maximum variance in the data
+- **Eigenvalue 1 (red arrow length)**: Large value (≈1.71) shown by the long arrow, indicating PC1 captures most of the variance (~86% of total variation)
+- **Eigenvector 2 (orange arrow direction)**: Points perpendicular to PC1, capturing the secondary pattern (stocky vs. slim for a given overall size)
+- **Eigenvalue 2 (orange arrow length)**: Small value (≈0.29) shown by the short arrow, indicating PC2 captures much less variance (~14% of total variation)
+
+The dramatic difference in arrow lengths visually demonstrates why PC1 is far more important than PC2. If we kept only PC1 (the long red arrow) and discarded PC2 (the short orange arrow), we'd retain about 86% of the information while reducing from 2 dimensions to 1.
+
+Fortunately, you don't need to compute eigendecomposition manually. Scikit-learn does this when you call `fit()`:
+
+```{python}
+# Fit PCA on our student data (keep all 4 components initially)
+pca = PCA(n_components=4)
+pca.fit(X_scaled)
+
+# PCA has computed eigenvectors and eigenvalues internally
+```
+
+Let's check out the eigenvector and eigenvalue results.
+
+**Eigenvectors (Feature Weights):**
+
+First, let's get the eigenvectors for the 4 PCs we created:
+
+```{python}
+components_df = pd.DataFrame(
+    pca.components_,
+    columns=feature_names,
+    index=['PC1', 'PC2', 'PC3', 'PC4']
+)
+components_df.round(3)
+```
+
+Look at **PC1** (first row): All weights are approximately equal and positive (≈0.50 for all features). This tells us that PC1 is a balanced combination of all four variables—it represents overall academic engagement. Students who score high on PC1 study more, complete more problems, attend more classes, AND score higher on quizzes. This is the "general performance" dimension.
+
+Now look at **PC2** (second row): The weights have different signs! Hours_Studied (+0.666) and Practice_Problems (+0.250) are positive, while Attendance_Pct (−0.651) and Quiz_Score (−0.264) are negative. This creates a contrast: PC2 captures students who study/practice a lot but don't attend class as much or score as highly. This might represent "independent learners" who study on their own rather than attending lectures.
+
+**PC3** and **PC4** have more complex patterns with mixed signs, but we likely won't use them since they capture very little variance (see eigenvalues below).
+
+**Eigenvalues (Importance):**
+
+Now let's check out the eigenvalues. Recall that eigenvalues represent the ***explained variance.***
+
+```{python}
+print("Raw Eigenvalues")
+print(pca.explained_variance_)
+
+print("\nNicely formatted Eigenvalues:")
+print(f"PC1: {pca.explained_variance_[0]:.3f}")
+print(f"PC2: {pca.explained_variance_[1]:.3f}")
+print(f"PC3: {pca.explained_variance_[2]:.3f}")
+print(f"PC4: {pca.explained_variance_[3]:.3f}")
+```
+
+Notice the dramatic drop: **PC1 has an eigenvalue of 4.770**, while **PC2 is only 0.023**—that's a 200× difference! This means PC1 captures almost all the meaningful variation in student performance. PC3 (0.004) and PC4 (0.002) are even smaller and represent mostly noise.
+
+This pattern tells us we can safely reduce from 4 features down to just 1 or 2 principal components without losing much information.
+
+### Step 4: Choose Principal Components
+
+Not all principal components are equally useful. You need to decide how many to keep. 
+
+::: {.callout-tip}
+We can extract the percent variance explained by each PCA using `pca.explained_variance_ratio_`.
+:::
+
+Let's look at the explained variance to help us decide:
+
+```{python}
+# Look at variance explained by each component
+print("\nVariance Explained by Each PC:")
+for i, var in enumerate(pca.explained_variance_ratio_, 1):
+    print(f"  PC{i}: {var*100:.1f}%")
+
+print(f"\nCumulative Variance Explained:")
+cumsum = np.cumsum(pca.explained_variance_ratio_)
+for i, var in enumerate(cumsum, 1):
+    print(f"  First {i} PC(s): {var*100:.1f}%")
+```
+
+For our student data, you might find that PC1 and PC2 together explain 85-90% of the variance. This means we could reduce from 4 features to 2 principal components while retaining most of the information.
+
+Common approaches for choosing how many components to keep:
+
+**Option 1: Keep components explaining X% of variance** (e.g., 90%)
+
+```{python}
+# Keep enough components to explain 90% of variance
+pca_90 = PCA(n_components=0.90)
+pca_90.fit(X_scaled)
+print(f"\nTo explain 90% of variance, keep {pca_90.n_components_} components")
+```
+
+**Option 2: Keep a specific number of components** (e.g., reduce to 2)
+
+```{python}
+# Keep exactly 2 components for visualization
+pca_2 = PCA(n_components=2)
+pca_2.fit(X_scaled)
+print(f"Keeping 2 components explains {pca_2.explained_variance_ratio_.sum()*100:.1f}% of variance")
+```
+
+**Option 3: Use the "elbow method"** (plot variance explained and look for the elbow)
+
+We'll explore these decision strategies in detail in Section 31.6.
+
+### Step 5: Transform the Data
+
+Finally, project your original data onto the principal components. This creates your new, lower-dimensional representation:
+
+```{python}
+# Transform the original data into principal component space (using 2 components)
+X_pca = pca_2.transform(X_scaled)
+
+print("\nOriginal Data Shape: ", X_scaled.shape, "(6 students × 4 features)")
+print("Transformed Data Shape:", X_pca.shape, "(6 students × 2 components)")
+
+# Show the transformed data for our students
+pca_df = pd.DataFrame(X_pca,
+                      columns=['PC1', 'PC2'],
+                      index=df['Student'])
+print("\nStudent Data in PC Space:")
+print(pca_df.round(2))
+
+# Compare: Alice vs Bob
+print(f"\nAlice's PC1 score: {X_pca[0, 0]:.2f} (overall academic performance)")
+print(f"Bob's PC1 score: {X_pca[1, 0]:.2f} (overall academic performance)")
+print("→ Alice scores much higher on PC1, reflecting stronger overall performance")
+```
+
+The resulting `X_pca` contains your observations represented in the new coordinate system defined by the principal components. Each column is a principal component, and each row is a student. Notice how we've reduced from 4 features down to just 2 components, yet we still capture most of the variance in student performance.
+
+You can now use `X_pca` instead of the original `X` for visualization, clustering, or as input to other machine learning models.
+
+::: {.callout-tip}
+## Fitting vs. Transforming
+
+Just like StandardScaler, PCA follows the fit-transform pattern:
+
+- **fit()**: Learns the principal components from the training data
+- **transform()**: Projects data onto those components
+- **fit_transform()**: Combines both steps for convenience on training data
+
+This pattern becomes important when you use train/test splits. You fit PCA on training data only, then transform both training and test data using the same components (just like you do with StandardScaler).
+:::
+
+
+## Case Study: PCA for Breast Cancer Classification
+
+Now that you understand how PCA works, let's apply it to a real-world problem: using PCA to improve breast cancer classification. The breast cancer dataset contains 30 features computed from cell nucleus measurements. We'll use PCA to reduce these 30 features while retaining the information needed to distinguish malignant from benign tumors.
+
+### Step 1: Load and Standardize the Data
+
+```{python}
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+# Load the breast cancer dataset
+data = load_breast_cancer()
+X = data.data
+y = data.target
+
+# Split into train/test
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+
+# Standardize the features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+print(f"Original training data shape: {X_train_scaled.shape}")
+print(f"Number of features: {X_train_scaled.shape[1]}")
+```
+
+We start with 30 features—too many to visualize easily and potentially redundant.
+
+### Step 2: Fit PCA
+
+```{python}
+# Fit PCA with all components to see the full picture
+pca = PCA()
+pca.fit(X_train_scaled)
+
+print(f"Number of components: {pca.n_components_}")
+```
+
+PCA has now computed all 30 principal components, ordered by how much variance they explain.
+
+### Step 3: Choose Number of Components (Scree Plot & Elbow Method)
+
+How many components should we keep? Let's use a **scree plot** to visualize the explained variance:
+
+```{python}
+#| label: fig-scree-plot
+#| fig-cap: "Scree plot showing explained variance by each principal component. The 'elbow' around PC5-PC7 suggests keeping 5-7 components captures most meaningful variance while discarding noise."
+
+# Create scree plot
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+
+# Left plot: Individual variance explained
+ax1.plot(range(1, len(pca.explained_variance_ratio_) + 1),
+         pca.explained_variance_ratio_, 'bo-', linewidth=2, markersize=8)
+ax1.set_xlabel('Principal Component', fontweight='bold')
+ax1.set_ylabel('Variance Explained', fontweight='bold')
+ax1.set_title('Scree Plot: Variance per Component', fontweight='bold')
+ax1.grid(True, alpha=0.3)
+
+# Right plot: Cumulative variance explained
+cumsum = np.cumsum(pca.explained_variance_ratio_)
+ax2.plot(range(1, len(cumsum) + 1), cumsum, 'ro-', linewidth=2, markersize=8)
+ax2.axhline(y=0.95, color='green', linestyle='--', label='95% threshold')
+ax2.axhline(y=0.90, color='orange', linestyle='--', label='90% threshold')
+ax2.set_xlabel('Number of Components', fontweight='bold')
+ax2.set_ylabel('Cumulative Variance Explained', fontweight='bold')
+ax2.set_title('Cumulative Variance Explained', fontweight='bold')
+ax2.legend()
+ax2.grid(True, alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+
+# Find number of components for 95% variance
+n_components_95 = np.argmax(cumsum >= 0.95) + 1
+print(f"\nComponents needed for 95% variance: {n_components_95}")
+```
+
+The **scree plot** (left) shows individual variance explained by each PC. The **elbow** occurs around PC6-7, where the curve starts to flatten significantly. The **cumulative plot** (right) shows that we reach approximately 95% of variance (green line) with about 7 components instead of all 30.
+
+::: {.callout-tip}
+## The Elbow Method
+
+Look for the "elbow" in the scree plot—the point where adding more components yields diminishing returns. Before the elbow, each component adds substantial information. After the elbow, components mostly capture noise.
+:::
+
+### Step 4: Examine Principal Components
+
+Based on the scree plot, let's keep 7 components (capturing ~95% variance) and examine what they represent:
+
+```{python}
+# Refit with 7 components
+pca_7 = PCA(n_components=7)
+pca_7.fit(X_train_scaled)
+
+# Show variance explained by each component
+print("Variance explained by each component:")
+for i, var in enumerate(pca_7.explained_variance_ratio_, 1):
+    print(f"  PC{i}: {var*100:.1f}%")
+
+# Show loadings for all 7 PCs
+loadings_df = pd.DataFrame(
+    pca_7.components_.T,
+    columns=[f'PC{i}' for i in range(1, 8)],
+    index=data.feature_names
+)
+
+# Display top contributing features for each PC
+print("\nTop 3 features (by absolute loading) for each PC:")
+for pc in loadings_df.columns:
+    top_features = loadings_df[pc].abs().nlargest(3)
+    print(f"\n{pc}:")
+    for feature, loading in top_features.items():
+        actual_loading = loadings_df.loc[feature, pc]
+        print(f"  {feature}: {actual_loading:+.3f}")
+```
+
+The loadings show which original features contribute most to each PC. High absolute values indicate strong influence. Notice how different PCs capture different combinations of features—PC1 might represent overall tumor characteristics, while PC2-7 capture more specific patterns.
+
+::: {.callout-note collapse="true"}
+## Interpreting the Principal Components
+
+Based on the top feature loadings, here's what each PC might represent:
+
+**PC1: Overall Tumor Shape/Geometry** (44.3% variance)
+
+- Dominated by concave points, concavity—features related to tumor boundary irregularity
+- All positive loadings suggest PC1 represents overall severity of shape distortion
+- High PC1 = more irregular, complex tumor boundaries
+
+**PC2: Fractal Complexity** (19.0% variance)
+
+- Focused entirely on fractal dimension measures
+- Captures the complexity/roughness of the tumor boundary at different scales
+- High PC2 = higher fractal complexity (more irregular at fine scales)
+
+**PC3: Texture vs. Smoothness Contrast** (9.4% variance)
+
+- Texture error (+) contrasted with worst smoothness (−)
+- Captures tumors with variable texture but inconsistent smoothness
+- Shows the tradeoff between surface roughness variability and uniformity
+
+**PC4: Texture Characteristics** (6.6% variance)
+
+- All three top features relate to texture measurements
+- Represents the overall texture properties across different aggregations (worst, mean, error)
+- High PC4 = high texture values throughout
+
+**PC5: Smoothness & Shape Balance** (5.4% variance)
+
+- Mean smoothness (+) vs. concavity error (−)
+- Captures the balance between surface smoothness and concavity consistency
+- Interesting contrast: smooth surfaces with variable concavity
+
+**PC6: Symmetry Features** (5.1% variance)
+
+- Dominated by symmetry measurements (worst, error)
+- Contrasts with smoothness error (−)
+- Represents asymmetry patterns in tumor shape
+
+**PC7: Fractal & Concavity Mix** (5.0% variance)
+
+- Fractal dimension (+) vs. concave points error (−)
+- Captures complex relationship between fractal complexity and boundary irregularity
+- More nuanced pattern harder to interpret (typical for later PCs)
+
+**Key Insight:** Notice how PC1 captures the most variance and has the clearest interpretation (overall tumor irregularity), while later PCs capture increasingly specific and nuanced patterns. This is typical in PCA—early components are often more interpretable and represent broad patterns, while later components capture subtle, specific variations.
+:::
+
+
+
+### Step 5: Transform the Data
+
+Now that we've fit PCA and chosen 7 components, let's transform our data:
+
+```{python}
+# Transform both training and test data
+X_train_pca = pca_7.transform(X_train_scaled)
+X_test_pca = pca_7.transform(X_test_scaled)
+
+print(f"Original shape: {X_train_scaled.shape}")
+print(f"Transformed shape: {X_train_pca.shape}")
+print(f"\nDimensionality reduced from 30 to 7 features (77% reduction)")
+```
+
+The transformed data now has only 7 features (the principal components) instead of 30, while retaining ~95% of the original information.
+
+### Step 6: Using PCA Features in Machine Learning
+
+A major benefit of PCA is using the reduced features as input to machine learning models. Let's compare a logistic regression model using all 30 original features versus one using just our 7 principal components:
+
+```{python}
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+# Model with all 30 original features
+model_original = LogisticRegression(max_iter=5000, random_state=42)
+model_original.fit(X_train_scaled, y_train)
+y_pred_original = model_original.predict(X_test_scaled)
+acc_original = accuracy_score(y_test, y_pred_original)
+
+# Model with 7 PCA components
+model_pca = LogisticRegression(max_iter=5000, random_state=42)
+model_pca.fit(X_train_pca, y_train)
+y_pred_pca = model_pca.predict(X_test_pca)
+acc_pca = accuracy_score(y_test, y_pred_pca)
+
+print(f"Accuracy with 30 original features: {acc_original:.3f}")
+print(f"Accuracy with 7 PCA components:    {acc_pca:.3f}")
+print(f"Accuracy difference:                {abs(acc_original - acc_pca):.3f}")
+```
+
+**Why Accept Slightly Lower Accuracy?**
+
+Even if the PCA model has slightly lower accuracy, using 7 components instead of 30 features offers several advantages:
+
+1. **Faster training and prediction** - Fewer features mean less computation, especially important for large datasets or complex models
+2. **Reduced overfitting risk** - Fewer features = simpler model = less likely to memorize noise in training data
+3. **Eliminates multicollinearity** - PCs are uncorrelated by design, avoiding problems when features are highly correlated
+4. **Easier deployment** - Smaller models are easier to deploy, maintain, and explain to stakeholders
+5. **Better generalization** - By removing noise (the 5% of variance we discarded), the model may perform better on new data
+
+In practice, reducing dimensionality from 30 to 7 while maintaining 95%+ of the predictive accuracy is an excellent tradeoff. The slight performance cost is often worth the gains in speed, simplicity, and robustness. And this tradeoff only becomes more obvious as our features grow to 100s if not 1000s of features!
+
+
+
+## Summary
+
+Principal Component Analysis (PCA) is a powerful dimension reduction technique that transforms correlated features into a smaller set of uncorrelated principal components ordered by importance. PCA works by finding eigenvectors (directions of maximum variance) and eigenvalues (magnitude of variance along those directions) from the covariance matrix of standardized data. The key workflow involves: (1) standardizing features, (2) fitting PCA to compute components, (3) using scree plots and the elbow method to choose how many components to keep, (4) examining loadings to interpret what each component represents, (5) transforming data to the lower-dimensional space, and (6) using the transformed features in machine learning models. Through our breast cancer case study, we saw how PCA reduced 30 features to just 7 components while retaining ~95% of the variance.
+
+While PCA offers substantial benefits—faster training, reduced overfitting, elimination of multicollinearity, and simpler models—it comes with important tradeoffs. The transformed features lose interpretability since principal components are mathematical combinations of original features rather than meaningful business concepts. PCA also assumes linear relationships, is sensitive to outliers, and requires careful standardization. Despite these limitations, PCA remains invaluable for high-dimensional data exploration, visualization, and as a preprocessing step for machine learning. The key is understanding when the benefits of dimensionality reduction outweigh the costs of reduced interpretability and potential information loss.
+
+## End of Chapter Exercises
+
+These exercises give you hands-on practice with the complete PCA workflow using the Ames housing dataset. You'll apply everything from this chapter—standardization, component selection, interpretation, and using PCA features in machine learning models.
+
+The `ames_clean.csv` file can be imported from [here](https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/refs/heads/main/data/ames_clean.csv). Key things to remember:
+
+- `SalePrice` is your target variable—don't include it when fitting PCA
+- Some features have missing values—you may need to handle these before PCA
+- After one-hot encoding, you'll have 200+ features—perfect for demonstrating PCA's power!
+- Remember to fit PCA only on training data, then transform both train and test
+
+::: {.callout-note collapse="true"}
+## Exercise 1: PCA with Numeric Features Only
+
+The Ames housing dataset contains many numeric features describing house characteristics. Let's use PCA to reduce these features and predict sale prices.
+
+**Your Tasks:**
+
+1. **Load and Prepare the Data:**
+   - Load `data/ames_clean.csv`
+   - Select only numeric features (excluding `SalePrice`, which is your target)
+   - Hint: Use `df.select_dtypes(include=[np.number])` to get numeric columns
+   - Split into train/test sets (80/20 split)
+   - Standardize the features using `StandardScaler`
+
+2. **Fit PCA and Choose Components:**
+   - Fit PCA with all components on the training data
+   - Create a scree plot showing variance explained by each component
+   - Use the elbow method to determine how many components to keep
+   - What percentage of variance do your chosen components capture?
+   - Refit PCA with your chosen number of components
+
+3. **Interpret Principal Components:**
+   - Examine the loadings for your top 2-3 principal components
+   - For each component, identify the top 5 features (by absolute loading value)
+   - Based on these loadings, give each component a descriptive name
+   - Example: If PC1 loads heavily on `GrLivArea`, `TotalBsmtSF`, `GarageArea`, you might call it "Overall Size"
+
+4. **Build and Compare Models:**
+   - Transform both train and test data using your fitted PCA
+   - Train a linear regression model using the PCA-transformed features
+   - Train another linear regression model using all original numeric features
+   - Compare R² scores on the test set
+   - How much did you reduce dimensionality? Was there a significant performance tradeoff?
+
+5. **Reflection:**
+   - Which approach would you recommend for this problem: original features or PCA features? Why?
+   - Consider: interpretability, model complexity, performance, and ease of deployment
+:::
+
+::: {.callout-note collapse="true"}
+## Exercise 2: PCA with Categorical Features Included
+
+Many important features in the Ames dataset are categorical (like `Neighborhood`, `HouseStyle`, etc.). Let's incorporate these into our PCA analysis.
+
+**Your Tasks:**
+
+1. **Encode Categorical Variables:**
+   - Starting with the same Ames dataset, identify categorical columns
+   - Use one-hot encoding to convert categorical features to numeric
+   - Hint: `pd.get_dummies()` or `OneHotEncoder` from sklearn
+   - Combine with your numeric features
+   - How many total features do you now have after encoding?
+
+2. **Apply the Complete PCA Workflow:**
+   - Standardize all features (both original numeric and encoded categorical)
+   - Fit PCA on the training data
+   - Create a scree plot—how does it compare to Exercise 1?
+   - Choose the number of components using the elbow method
+   - What percentage of variance is captured?
+
+3. **Examine Component Loadings:**
+   - With more features, the loadings might be more complex
+   - Look at the top 10 features (by absolute loading) for PC1 and PC2
+   - Do categorical features appear in the top contributors?
+   - Which neighborhoods or house styles load most heavily on PC1?
+
+4. **Model Comparison:**
+   - Transform train and test data using PCA
+   - Train a linear regression model with PCA features
+   - Compare to:
+     a) Model with only numeric features (from Exercise 1)
+     b) Model with all features (numeric + one-hot encoded categorical)
+   - Which approach gives the best R²?
+   - Which approach has the most features vs. fewest features?
+
+5. **Final Analysis:**
+   - Create a summary table comparing all three approaches:
+     - Number of features
+     - Test R² score
+     - Training time (if noticeably different)
+   - Discuss the tradeoffs: When would PCA be most beneficial for the Ames dataset?
+   - Would you recommend using PCA for this specific problem? Why or why not?
+
+:::
+
