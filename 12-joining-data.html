@@ -819,7 +819,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="prerequisites" class="level2" data-number="12.1">
 <h2 data-number="12.1" class="anchored" data-anchor-id="prerequisites"><span class="header-section-number">12.1</span> Prerequisites</h2>
 <p>Before we dive into real-world data, let’s start by loading the <code>pandas</code> library. This will give us access to the join functions we’ll be using throughout the chapter.</p>
-<div id="637c8833" class="cell" data-execution_count="1">
+<div id="f42f8189" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To build your intuition around joins, we’ll begin with two very simple DataFrames, <code>x</code> and <code>y</code>. In these examples:</p>
@@ -843,7 +843,7 @@ Figure&nbsp;12.1: Two simple DataFrames with a shared key column.
 </figure>
 </div>
 <p>Here’s how we’ll create them in code:</p>
-<div id="1c24e389" class="cell" data-execution_count="2">
+<div id="e129ca68" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> pd.DataFrame({<span class="st">'id'</span>: [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>], <span class="st">'val_x'</span>: [<span class="st">'x1'</span>, <span class="st">'x2'</span>, <span class="st">'x3'</span>]})</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> pd.DataFrame({<span class="st">'id'</span>: [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>], <span class="st">'val_y'</span>: [<span class="st">'y1'</span>, <span class="st">'y2'</span>, <span class="st">'y4'</span>]})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -859,26 +859,29 @@ Figure&nbsp;12.1: Two simple DataFrames with a shared key column.
 <li><strong>coupons</strong>: coupon metadata (UPC code, campaign, etc.)</li>
 <li><strong>coupon_redemptions</strong>: coupon redemptions (household, day, UPC code, campaign)</li>
 </ul>
-<p>This is a Python equivalent of the R package <a href="https://github.com/bradleyboehmke/completejourney">completejourney</a>. The R package has a full guide to get you acquainted with the various data set schemas, which you can read <a href="https://bradleyboehmke.github.io/completejourney/articles/completejourney.html">here</a>.</p>
-<div id="c3d73736" class="cell" data-execution_count="3">
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>You can learn more about this package and its data sets in the <a href="https://cunningjames.github.io/completejourney_py/">completejourney_py documentation</a>.</p>
+</div>
+</div>
+</div>
+<div id="6aee1208" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> completejourney_py <span class="im">import</span> get_data</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># get_data() provides a dictionary of several DataFrames</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>cj_data <span class="op">=</span> get_data()</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>cj_data.keys()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>/opt/hostedtoolcache/Python/3.12.12/x64/lib/python3.12/site-packages/completejourney_py/get_data.py:2: UserWarning:
-
-pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools&lt;81.
-</code></pre>
-</div>
 <div class="cell-output cell-output-display" data-execution_count="3">
 <pre><code>dict_keys(['campaign_descriptions', 'coupons', 'promotions', 'campaigns', 'demographics', 'transactions', 'coupon_redemptions', 'products'])</code></pre>
 </div>
 </div>
-<div id="c524098b" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We can check out the transactions data with the following</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>cj_data[<span class="st">'transactions'</span>].head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="33da3e34" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We can check out the transactions data with the following</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>cj_data[<span class="st">'transactions'</span>].head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="4">
 <div>
 
@@ -987,7 +990,7 @@ pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Take some time to read about the completejourney data set schema <a href="https://bradleyboehmke.github.io/completejourney/articles/completejourney.html#dataset-details">here</a>.</p>
+<p>Take some time to read about the <a href="https://cunningjames.github.io/completejourney_py/user-guide/datasets/">completejourney_py data sets</a>.</p>
 <ol type="1">
 <li>What different data sets are available and what do they represent?</li>
 <li>What are the common variables between each table?</li>
@@ -1020,18 +1023,18 @@ pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/
 </div>
 <p>Together, these keys form a <strong>relation</strong>. In most cases, the relationship is <strong>one-to-many</strong>: one household can have many transactions, but each transaction belongs to only one household. Occasionally, you’ll encounter <strong>one-to-one</strong> relationships, where each row in one table maps to exactly one row in another.</p>
 <p>When data is cleaned appropriately the keys used to match two tables will be commonly named. For example, the variable that can link our <code>x</code> and <code>y</code> data sets is named <code>id</code>:</p>
-<div id="f82912a8" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>x.columns.intersection(y.columns)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="c81ad2f9" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>x.columns.intersection(y.columns)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="5">
 <pre><code>Index(['id'], dtype='object')</code></pre>
 </div>
 </div>
 <p>We can easily see this by looking at the <code>x</code> and <code>y</code> data but when working with larger data sets this becomes more appropriate than just viewing the data. For example, we can easily identify the common columns in the <strong>completejourney_py</strong> <code>transactions</code> and <code>demographics</code> data:</p>
-<div id="3646a517" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>transactions <span class="op">=</span> cj_data[<span class="st">'transactions'</span>]</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>demographics <span class="op">=</span> cj_data[<span class="st">'demographics'</span>]</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>transactions.columns.intersection(demographics.columns)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="7a61423a" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>transactions <span class="op">=</span> cj_data[<span class="st">'transactions'</span>]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>demographics <span class="op">=</span> cj_data[<span class="st">'demographics'</span>]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>transactions.columns.intersection(demographics.columns)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="6">
 <pre><code>Index(['household_id'], dtype='object')</code></pre>
 </div>
@@ -1092,8 +1095,8 @@ Figure&nbsp;12.2: Inner join (<a href="https://r4ds.had.co.nz/relational-data.ht
 </figcaption>
 </figure>
 </div>
-<div id="1cf280e8" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"inner"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="6b1315af" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"inner"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="7">
 <div>
 
@@ -1164,8 +1167,8 @@ Figure&nbsp;12.3: Difference in left join, right join, and outer join procedures
 <section id="left-join" class="level4">
 <h4 class="anchored" data-anchor-id="left-join">Left Join</h4>
 <p>A <strong>left join</strong> keeps all rows from the left DataFrame (<code>x</code>) and adds matching rows from the right DataFrame (<code>y</code>). If no match is found, the result will contain <code>NaN</code> for the missing values.</p>
-<div id="a18cf3d1" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"left"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="c6f70310" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"left"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="8">
 <div>
 
@@ -1208,8 +1211,8 @@ Figure&nbsp;12.3: Difference in left join, right join, and outer join procedures
 <section id="right-join" class="level4">
 <h4 class="anchored" data-anchor-id="right-join">Right Join</h4>
 <p>A <strong>right join</strong> is similar to a left join, but it retains all rows from the right DataFrame (<code>y</code>).</p>
-<div id="1cc7e8d8" class="cell" data-execution_count="9">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"right"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="995b4e8f" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"right"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="9">
 <div>
 
@@ -1262,8 +1265,8 @@ Figure&nbsp;12.3: Difference in left join, right join, and outer join procedures
 <section id="full-outer-join" class="level4">
 <h4 class="anchored" data-anchor-id="full-outer-join">Full Outer Join</h4>
 <p>A <strong>full outer join</strong> retains all rows from both DataFrames. Where there are no matches, it fills in <code>NaN</code> for missing values.</p>
-<div id="40145304" class="cell" data-execution_count="10">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"outer"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="1afa7a1d" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, on<span class="op">=</span><span class="st">"id"</span>, how<span class="op">=</span><span class="st">"outer"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="10">
 <div>
 
@@ -1325,9 +1328,9 @@ Figure&nbsp;12.3: Difference in left join, right join, and outer join procedures
 <h2 data-number="12.4" class="anchored" data-anchor-id="working-with-differently-named-keys"><span class="header-section-number">12.4</span> Working with Differently Named Keys</h2>
 <p>So far, the keys we’ve used to join two DataFrames have had the same name. This was encoded by using <code>on='id'</code>. However, having keys with the same name is not a requirement. But what happens we our common key variable is named differently in each DataFrame?</p>
 <p>For example:</p>
-<div id="79d9a52a" class="cell" data-execution_count="11">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> pd.DataFrame({<span class="st">'id_a'</span>: [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>], <span class="st">'val_a'</span>: [<span class="st">'x1'</span>, <span class="st">'x2'</span>, <span class="st">'x3'</span>]})</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> pd.DataFrame({<span class="st">'id_b'</span>: [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>], <span class="st">'val_b'</span>: [<span class="st">'y1'</span>, <span class="st">'y2'</span>, <span class="st">'y4'</span>]})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="513d3a28" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> pd.DataFrame({<span class="st">'id_a'</span>: [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>], <span class="st">'val_a'</span>: [<span class="st">'x1'</span>, <span class="st">'x2'</span>, <span class="st">'x3'</span>]})</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> pd.DataFrame({<span class="st">'id_b'</span>: [<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">4</span>], <span class="st">'val_b'</span>: [<span class="st">'y1'</span>, <span class="st">'y2'</span>, <span class="st">'y4'</span>]})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>In this case, since our common key variable has different names in each table (<code>id_a</code> in <code>a</code> and <code>id_b</code> in <code>b</code>), our inner join function doesn’t know how to join these two DataFrames and an error results.</p>
 <div class="callout callout-style-simple callout-warning callout-titled">
@@ -1342,8 +1345,8 @@ Figure&nbsp;12.3: Difference in left join, right join, and outer join procedures
 </div>
 <div id="callout-5" class="callout-5-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<div id="c6cc7ce5" class="cell" data-execution_count="12">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>a.merge(b)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="81feafaf" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>a.merge(b)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
 <div class="ansi-escaped-output">
 <pre><span class="ansi-red-fg">---------------------------------------------------------------------------</span>
@@ -1439,8 +1442,8 @@ File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.12.12/x64/lib/pyt
 </div>
 </div>
 <p>When this happens, we can explicitly tell our join function to use unique key names in each DataFrame as a common key with the <code>left_on</code> and <code>right_on</code> arguments:</p>
-<div id="6f28be36" class="cell" data-execution_count="13">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>a.merge(b, left_on<span class="op">=</span><span class="st">"id_a"</span>, right_on<span class="op">=</span><span class="st">"id_b"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="db39b733" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>a.merge(b, left_on<span class="op">=</span><span class="st">"id_a"</span>, right_on<span class="op">=</span><span class="st">"id_b"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="13">
 <div>
 
@@ -1482,13 +1485,13 @@ File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.12.12/x64/lib/pyt
 <p>Let’s apply what we’ve learned to real data from the <code>completejourney_py</code> package.</p>
 <p>Suppose we want to add product details to each transaction. That means we’ll join the <code>transactions</code> and <code>products</code> DataFrames. Because we want to retain all transaction records, even if product details are missing, we’ll use a <strong>left join</strong>.</p>
 <p>First, check the column names:</p>
-<div id="32b86d47" class="cell" data-execution_count="14">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>cj_data <span class="op">=</span> get_data()</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>transactions <span class="op">=</span> cj_data[<span class="st">"transactions"</span>]</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>products <span class="op">=</span> cj_data[<span class="st">"products"</span>]</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'transactions columns: </span><span class="sc">{</span>transactions<span class="sc">.</span>columns<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'products columns: </span><span class="sc">{</span>products<span class="sc">.</span>columns<span class="sc">}</span><span class="ss">'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="7ae67f66" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>cj_data <span class="op">=</span> get_data()</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>transactions <span class="op">=</span> cj_data[<span class="st">"transactions"</span>]</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>products <span class="op">=</span> cj_data[<span class="st">"products"</span>]</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'transactions columns: </span><span class="sc">{</span>transactions<span class="sc">.</span>columns<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'products columns: </span><span class="sc">{</span>products<span class="sc">.</span>columns<span class="sc">}</span><span class="ss">'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>transactions columns: Index(['household_id', 'store_id', 'basket_id', 'product_id', 'quantity',
        'sales_value', 'retail_disc', 'coupon_disc', 'coupon_match_disc',
@@ -1500,13 +1503,13 @@ products columns: Index(['product_id', 'manufacturer_id', 'department', 'brand',
 </div>
 </div>
 <p>And we can find if a common column name exists:</p>
-<div id="3134693b" class="cell" data-execution_count="15">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>transactions.columns.intersection(products.columns)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="90e68999" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>transactions.columns.intersection(products.columns)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="15">
 <pre><code>Index(['product_id'], dtype='object')</code></pre>
 </div>
 </div>
-<p>We see that both DataFrames share the <code>product_id</code> column. This aligns to the <a href="https://bradleyboehmke.github.io/completejourney/articles/completejourney.html#dataset-details">data dictionary</a> so we can trust this is the accurate common key. We can now perform a left join using<code>product_id</code> as the common key.</p>
+<p>We see that both DataFrames share the <code>product_id</code> column. This aligns to the <a href="https://cunningjames.github.io/completejourney_py/user-guide/datasets/">data dictionary</a> so we can trust this is the accurate common key. We can now perform a left join using<code>product_id</code> as the common key.</p>
 <div class="callout callout-style-simple callout-tip">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
@@ -1517,8 +1520,8 @@ products columns: Index(['product_id', 'manufacturer_id', 'department', 'brand',
 </div>
 </div>
 </div>
-<div id="cdca4b65" class="cell" data-execution_count="16">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>transactions.merge(products, on<span class="op">=</span><span class="st">"product_id"</span>, how<span class="op">=</span><span class="st">"left"</span>).head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="ad8a2f51" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>transactions.merge(products, on<span class="op">=</span><span class="st">"product_id"</span>, how<span class="op">=</span><span class="st">"left"</span>).head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="16">
 <div>
 
@@ -1654,15 +1657,15 @@ products columns: Index(['product_id', 'manufacturer_id', 'department', 'brand',
 </div>
 </div>
 <p>This has now added product information to each transaction. Consequently, if we wanted to get the total sales across the meat <code>department</code> but summarized at the <code>product_category</code> level so that we can identify which products generate the greatest sales we could follow this joining procedure with additional skills we learned in previous lessons:</p>
-<div id="c74e20b5" class="cell" data-execution_count="17">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    transactions</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    .merge(products, how<span class="op">=</span><span class="st">'left'</span>, on<span class="op">=</span><span class="st">'product_id'</span>)</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"department == 'MEAT'"</span>)</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">'product_category'</span>, as_index<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    .agg({<span class="st">'sales_value'</span>: <span class="st">'sum'</span>})</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    .sort_values(by<span class="op">=</span><span class="st">'sales_value'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="727a640b" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    transactions</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    .merge(products, how<span class="op">=</span><span class="st">'left'</span>, on<span class="op">=</span><span class="st">'product_id'</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"department == 'MEAT'"</span>)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">'product_category'</span>, as_index<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    .agg({<span class="st">'sales_value'</span>: <span class="st">'sum'</span>})</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    .sort_values(by<span class="op">=</span><span class="st">'sales_value'</span>, ascending<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="17">
 <div>
 
@@ -1788,8 +1791,8 @@ products columns: Index(['product_id', 'manufacturer_id', 'department', 'brand',
 <li><code>'both'</code> — the row had a match in both tables</li>
 </ul>
 <p>This is helpful when you’re trying to understand or debug the result of a join:</p>
-<div id="05223b3e" class="cell" data-execution_count="18">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, how<span class="op">=</span><span class="st">'outer'</span>, indicator<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="5c50fd08" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>x.merge(y, how<span class="op">=</span><span class="st">'outer'</span>, indicator<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="18">
 <div>
 
@@ -1856,20 +1859,20 @@ products columns: Index(['product_id', 'manufacturer_id', 'department', 'brand',
 </div>
 </div>
 <p>You can answer this by performing an outer join between <code>transactions</code> and <code>demographics</code>, then filtering for rows with <code>_merge == 'left_only'</code>:</p>
-<div id="c817e8cd" class="cell" data-execution_count="19">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Total number of transactions</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>transactions.shape</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="ba27b7f1" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Total number of transactions</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>transactions.shape</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="19">
 <pre><code>(1469307, 11)</code></pre>
 </div>
 </div>
-<div id="95cdcb9a" class="cell" data-execution_count="20">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Transactions without matching demographic info</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>(</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    transactions</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    .merge(demographics, how<span class="op">=</span><span class="st">'outer'</span>, indicator<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"_merge == 'left_only'"</span>)</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>).shape</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="1533b8d4" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Transactions without matching demographic info</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>(</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    transactions</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    .merge(demographics, how<span class="op">=</span><span class="st">'outer'</span>, indicator<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    .query(<span class="st">"_merge == 'left_only'"</span>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>).shape</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="20">
 <pre><code>(640457, 19)</code></pre>
 </div>
@@ -1914,7 +1917,7 @@ How many products are in inventory but have <strong>not</strong> appeared in any
 </section>
 <section id="exercise-understanding-shopping-behavior" class="level2" data-number="12.8">
 <h2 data-number="12.8" class="anchored" data-anchor-id="exercise-understanding-shopping-behavior"><span class="header-section-number">12.8</span> Exercise: Understanding Shopping Behavior</h2>
-<p>Use the datasets provided by the <code>completejourney_py</code> package to complete the following exercises. These tasks will help you practice joining tables, filtering data, and computing summary statistics. If you’re unfamiliar with the structure of these datasets, take a few minutes to review the <a href="https://bradleyboehmke.github.io/completejourney/articles/completejourney.html">Complete Journey data dictionary</a> to understand how the tables relate to one another.</p>
+<p>Use the datasets provided by the <code>completejourney_py</code> package to complete the following exercises. These tasks will help you practice joining tables, filtering data, and computing summary statistics. If you’re unfamiliar with the structure of these datasets, take a few minutes to review the <a href="https://cunningjames.github.io/completejourney_py/user-guide/datasets/">completejourney_py data dictionary</a> to understand how the tables relate to one another.</p>
 <div class="callout callout-style-simple callout-none no-icon callout-titled">
 <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
