@@ -23,22 +23,15 @@ Think of this as a guided tour of the machine learning landscape beyond our cour
 
 By the end of this chapter, you will be able to:
 
-- Explain how gradient boosting machines (GBMs) differ from random forests and when each excels
-- Understand the basic architecture of neural networks and how they learn through backpropagation
-- Recognize the relationship between neural networks, deep learning, and generative AI
-- Identify appropriate use cases for advanced ML algorithms vs. classical methods
-- Implement basic gradient boosting models using XGBoost or LightGBM
-- Understand the computational and interpretability tradeoffs of complex models
-- Navigate the landscape of modern ML: when to use classical methods vs. advanced techniques
-- Know where to learn more about each algorithm family
+- **Explain gradient boosting** and how it differs from random forests in building sequential vs. parallel ensembles
+- **Understand neural network fundamentals** including architecture (layers, neurons, activation functions) and learning through backpropagation
+- **Recognize the ML algorithm landscape** from classical methods (linear models, trees, ensembles) to deep learning (CNNs, RNNs, Transformers) and generative AI
+- **Navigate the bias-variance tradeoff** and understand how different algorithms balance underfitting vs. overfitting
+- **Evaluate the interpretability-performance spectrum** and choose appropriate algorithms based on your application's constraints
+- **Identify when to use advanced methods** vs. classical ML based on data type (tabular vs. unstructured), dataset size, and business requirements
+- **Understand foundation models** and how transfer learning has changed the ML workflow for generative AI applications
+- **Know where to continue learning** with curated resources for gradient boosting, neural networks, and advanced ML techniques
 
-::: {.callout-note}
-## Follow along in Colab
-
-As you read through this chapter, we encourage you to follow along using the [companion notebook](https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/33_modern_ml_algorithms.ipynb) in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here and experiment with your own ideas.
-
-👉 Open the [Modern ML Algorithms Notebook in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/33_modern_ml_algorithms.ipynb).
-:::
 
 ## Recapping What You've Learned
 
@@ -604,88 +597,39 @@ The first diagram shows the cycle of forward pass, error calculation, backward p
 2. **Gradual Refinement**: Middle epochs show steady improvement with smaller weight adjustments
 3. **Convergence**: Later epochs show minimal changes as the network approaches optimal weights
 
-### A Simple Neural Network Example
+### Hands-On Neural Network Examples
 
-Let's build a simple neural network for the Iris classification problem (a classic dataset with 3 flower species):
+To see neural networks in action, we've included an interactive tutorial notebook that walks through two complete examples:
 
-::: {.callout-note}
-## Running This Example
-Due to TensorFlow's initialization overhead, this code example is best run in the companion notebook rather than during book rendering. You can find the full working example in the [companion notebook](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/33_modern_ml_algorithms.ipynb).
+1. **Regression with Feed-Forward Neural Networks**: Predicting Boston housing prices using a fully-connected network
+2. **Classification with Convolutional Neural Networks**: Classifying handwritten digits from the MNIST dataset using CNNs
+
+You can run these examples directly in Google Colab, where you'll see how neural networks learn from data, how loss decreases during training, and how different architectures excel at different tasks.
+
+::: {.callout-tip}
+## Interactive Neural Network Tutorial
+
+👉 **[Open the Deep Learning Basics Tutorial in Colab](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/tutorial_deep_learning_basics.ipynb)**
+
+This tutorial covers:
+
+- **Part 1: Regression Example** - Building a feed-forward neural network to predict housing prices from 13 features. You'll see how backpropagation reduces error over many training epochs and compare performance to traditional regression methods.
+
+- **Part 2: CNN Classification Example** - Building a convolutional neural network to recognize handwritten digits. You'll see how CNNs achieve 99%+ accuracy on the classic MNIST dataset and watch the trained network classify morphing digit animations in real-time.
+
+Both examples include complete code that you can run, modify, and experiment with. The notebook demonstrates key concepts like:
+
+- Configuring network architecture (layers, neurons, activation functions)
+- Compiling models with loss functions and optimizers
+- Training with backpropagation and monitoring convergence
+- Evaluating performance on test data
+- Understanding when neural networks outperform classical methods
+
+**Additional Resources**: This tutorial is adapted from MIT's Deep Learning course. For more advanced examples including RNNs for text generation, GANs for image synthesis, and deep reinforcement learning, explore the [MIT Deep Learning repository](https://github.com/lexfridman/mit-deep-learning).
 :::
 
-```{python}
-#| eval: false
-# Configure TensorFlow to suppress warnings and avoid GPU search
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow logging
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # Force CPU usage
 
-import tensorflow as tf
-tf.get_logger().setLevel('ERROR')  # Only show errors
-
-print("TF version:", tf.__version__)
-print("Devices:", tf.config.list_physical_devices())
-```
-
-Now let's build a simple neural network for the Iris classification problem:
-
-```{python}
-#| eval: false
-import pandas as pd
-import numpy as np
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score
-from tensorflow import keras
-from tensorflow.keras import layers
-
-# Load data
-iris = load_iris()
-X = pd.DataFrame(iris.data, columns=iris.feature_names)
-y = iris.target
-
-# Split and scale (neural networks are sensitive to feature scale)
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
-
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-# Build a simple neural network
-model = keras.Sequential([
-    layers.Dense(8, activation='relu', input_shape=(4,)),
-    layers.Dense(8, activation='relu'),
-    layers.Dense(3, activation='softmax')
-])
-
-# Compile the model
-model.compile(
-    loss='sparse_categorical_crossentropy',
-    optimizer='adam',
-    metrics=['accuracy']
-)
-
-# Train the model (suppress output)
-history = model.fit(
-    X_train_scaled, y_train,
-    epochs=50,
-    batch_size=16,
-    validation_split=0.2,
-    verbose=0
-)
-
-# Evaluate
-y_pred = model.predict(X_test_scaled, verbose=0).argmax(axis=1)
-accuracy = accuracy_score(y_test, y_pred)
-
-print(f"Neural Network Accuracy: {accuracy:.4f}")
-print(f"Correct predictions: {(y_pred == y_test).sum()} out of {len(y_test)}")
-```
-
-For this simple dataset, the neural network will perform comparably to logistic regression or a random forest (often around 95-100% accuracy). Neural networks really shine when the relationships are more complex.
+The key takeaway from these examples? Neural networks excel when you have large datasets and complex, non-linear relationships. For the housing regression problem (506 observations, simple tabular data), you'd likely get similar or better results with random forests or gradient boosting. But for image classification (60,000 training images, spatial patterns), CNNs dramatically outperform classical methods. This reinforces the guidance in the callout below about when to choose neural networks versus classical ML.
 
 ::: {.callout-important}
 ## When Neural Networks Excel vs. Classical ML
