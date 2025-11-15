@@ -1,0 +1,2354 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.11">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>33&nbsp; Beyond the Basics: Modern Machine Learning Algorithms – BANA 4080: Data Mining</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./99-anaconda-install.html" rel="next">
+<link href="./32-dimension-reduction.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-a5dfee7ccc7f20503a6465e15a2cff9c.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-a5cc9e99dca6daa9fc4f9db80b98b5ad.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-a5dfee7ccc7f20503a6465e15a2cff9c.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-54ba87e1857bbaa32a381632a2aab8bf.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-45c1b2e5a2b0567ccfb99e4dfc03f650.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<meta name="mermaid-theme" content="neutral">
+<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
+<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
+<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./33-modern-ml-algorithms.html">Module 13</a></li><li class="breadcrumb-item"><a href="./33-modern-ml-algorithms.html"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Beyond the Basics: Modern Machine Learning Algorithms</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">BANA 4080: Data Mining</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./BANA-4080--Data-Mining.epub" title="Download ePub" class="quarto-navigation-tool px-1" aria-label="Download ePub"><i class="bi bi-journal"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 1</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 2</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 3</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./07-importing-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 4</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 5</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./14-data-viz-matplotlib.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Fundamentals of Plotting with Matplotlib</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./15-data-viz-bokeh.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Interactive Data Visualization with Bokeh</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 6</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 7</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./20-before-we-build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 8</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./21-correlation-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./22-regression-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 9</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./23-logistic-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Introduction to Logistic Regression for Classification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./24-classification-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 10</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./25-decision-trees.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Decision Trees: Foundations and Interpretability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./26-random-forests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Random Forests: Ensemble Power and Robustness</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./27-feature-importance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 11</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./28-cross-validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./29-hyperparameter-tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Hyperparameter Tuning: Finding Optimal Model Configurations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./30-feature-engineering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Feature Engineering</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 12</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./31-clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Unsupervised Learning and Clustering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./32-dimension-reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Dimension Reduction with PCA</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true">
+ <span class="menu-text">Module 13</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./33-modern-ml-algorithms.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Beyond the Basics: Modern Machine Learning Algorithms</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendix</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#learning-objectives" id="toc-learning-objectives" class="nav-link active" data-scroll-target="#learning-objectives"><span class="header-section-number">33.1</span> Learning Objectives</a></li>
+  <li><a href="#recapping-what-youve-learned" id="toc-recapping-what-youve-learned" class="nav-link" data-scroll-target="#recapping-what-youve-learned"><span class="header-section-number">33.2</span> Recapping What You’ve Learned</a>
+  <ul class="collapse">
+  <li><a href="#supervised-learning-for-regression" id="toc-supervised-learning-for-regression" class="nav-link" data-scroll-target="#supervised-learning-for-regression">Supervised Learning for Regression</a></li>
+  <li><a href="#supervised-learning-for-classification" id="toc-supervised-learning-for-classification" class="nav-link" data-scroll-target="#supervised-learning-for-classification">Supervised Learning for Classification</a></li>
+  <li><a href="#unsupervised-learning" id="toc-unsupervised-learning" class="nav-link" data-scroll-target="#unsupervised-learning">Unsupervised Learning</a></li>
+  <li><a href="#model-optimization-evaluation" id="toc-model-optimization-evaluation" class="nav-link" data-scroll-target="#model-optimization-evaluation">Model Optimization &amp; Evaluation</a></li>
+  <li><a href="#why-this-foundation-matters" id="toc-why-this-foundation-matters" class="nav-link" data-scroll-target="#why-this-foundation-matters">Why This Foundation Matters</a></li>
+  </ul></li>
+  <li><a href="#gradient-boosting-machines-the-next-level-of-ensemble-learning" id="toc-gradient-boosting-machines-the-next-level-of-ensemble-learning" class="nav-link" data-scroll-target="#gradient-boosting-machines-the-next-level-of-ensemble-learning"><span class="header-section-number">33.3</span> Gradient Boosting Machines: The Next Level of Ensemble Learning</a>
+  <ul class="collapse">
+  <li><a href="#how-gradient-boosting-works" id="toc-how-gradient-boosting-works" class="nav-link" data-scroll-target="#how-gradient-boosting-works">How Gradient Boosting Works</a></li>
+  <li><a href="#popular-gbm-implementations" id="toc-popular-gbm-implementations" class="nav-link" data-scroll-target="#popular-gbm-implementations">Popular GBM Implementations</a></li>
+  <li><a href="#a-quick-xgboost-example" id="toc-a-quick-xgboost-example" class="nav-link" data-scroll-target="#a-quick-xgboost-example">A Quick XGBoost Example</a></li>
+  <li><a href="#key-hyperparameters-for-gbms" id="toc-key-hyperparameters-for-gbms" class="nav-link" data-scroll-target="#key-hyperparameters-for-gbms">Key Hyperparameters for GBMs</a></li>
+  </ul></li>
+  <li><a href="#neural-networks-and-deep-learning-the-foundation-of-modern-ai" id="toc-neural-networks-and-deep-learning-the-foundation-of-modern-ai" class="nav-link" data-scroll-target="#neural-networks-and-deep-learning-the-foundation-of-modern-ai"><span class="header-section-number">33.4</span> Neural Networks and Deep Learning: The Foundation of Modern AI</a>
+  <ul class="collapse">
+  <li><a href="#what-are-neural-networks" id="toc-what-are-neural-networks" class="nav-link" data-scroll-target="#what-are-neural-networks">What Are Neural Networks?</a></li>
+  <li><a href="#architecture-basics-layers-of-transformations" id="toc-architecture-basics-layers-of-transformations" class="nav-link" data-scroll-target="#architecture-basics-layers-of-transformations">Architecture Basics: Layers of Transformations</a></li>
+  <li><a href="#how-neural-networks-learn-backpropagation" id="toc-how-neural-networks-learn-backpropagation" class="nav-link" data-scroll-target="#how-neural-networks-learn-backpropagation">How Neural Networks Learn: Backpropagation</a></li>
+  <li><a href="#a-simple-neural-network-example" id="toc-a-simple-neural-network-example" class="nav-link" data-scroll-target="#a-simple-neural-network-example">A Simple Neural Network Example</a></li>
+  <li><a href="#the-deep-learning-revolution-what-makes-it-possible" id="toc-the-deep-learning-revolution-what-makes-it-possible" class="nav-link" data-scroll-target="#the-deep-learning-revolution-what-makes-it-possible">The Deep Learning Revolution: What Makes It Possible</a></li>
+  <li><a href="#from-neural-networks-to-generative-ai" id="toc-from-neural-networks-to-generative-ai" class="nav-link" data-scroll-target="#from-neural-networks-to-generative-ai">From Neural Networks to Generative AI</a></li>
+  <li><a href="#foundation-models-a-different-approach-to-machine-learning" id="toc-foundation-models-a-different-approach-to-machine-learning" class="nav-link" data-scroll-target="#foundation-models-a-different-approach-to-machine-learning">Foundation Models: A Different Approach to Machine Learning</a></li>
+  </ul></li>
+  <li><a href="#other-advanced-methods-a-quick-tour" id="toc-other-advanced-methods-a-quick-tour" class="nav-link" data-scroll-target="#other-advanced-methods-a-quick-tour"><span class="header-section-number">33.5</span> Other Advanced Methods: A Quick Tour</a></li>
+  <li><a href="#unifying-concepts-the-big-picture" id="toc-unifying-concepts-the-big-picture" class="nav-link" data-scroll-target="#unifying-concepts-the-big-picture"><span class="header-section-number">33.6</span> Unifying Concepts: The Big Picture</a>
+  <ul class="collapse">
+  <li><a href="#the-universal-challenge-balancing-bias-and-variance" id="toc-the-universal-challenge-balancing-bias-and-variance" class="nav-link" data-scroll-target="#the-universal-challenge-balancing-bias-and-variance">The Universal Challenge: Balancing Bias and Variance</a></li>
+  <li><a href="#evaluation-principles-apply-universally" id="toc-evaluation-principles-apply-universally" class="nav-link" data-scroll-target="#evaluation-principles-apply-universally">Evaluation Principles Apply Universally</a></li>
+  <li><a href="#feature-engineering-the-great-equalizer" id="toc-feature-engineering-the-great-equalizer" class="nav-link" data-scroll-target="#feature-engineering-the-great-equalizer">Feature Engineering: The Great Equalizer</a></li>
+  <li><a href="#navigating-the-interpretability-performance-tradeoff" id="toc-navigating-the-interpretability-performance-tradeoff" class="nav-link" data-scroll-target="#navigating-the-interpretability-performance-tradeoff">Navigating the Interpretability-Performance Tradeoff</a></li>
+  </ul></li>
+  <li><a href="#looking-forward-continuing-your-ml-journey" id="toc-looking-forward-continuing-your-ml-journey" class="nav-link" data-scroll-target="#looking-forward-continuing-your-ml-journey"><span class="header-section-number">33.7</span> Looking Forward: Continuing Your ML Journey</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">33.8</span> Exercises</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/33-modern-ml-algorithms.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./33-modern-ml-algorithms.html">Module 13</a></li><li class="breadcrumb-item"><a href="./33-modern-ml-algorithms.html"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Beyond the Basics: Modern Machine Learning Algorithms</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-modern-ml" class="quarto-section-identifier"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Beyond the Basics: Modern Machine Learning Algorithms</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>You’ve come a long way in this course. You started as brand new Python programmers, learning the fundamentals of variables, data structures, and control flow. You then mastered data wrangling with pandas—importing, cleaning, transforming, and aggregating real-world datasets. From there, you progressed into machine learning: linear and logistic regression, powerful ensemble methods like random forests, cross-validation and hyperparameter tuning, and unsupervised learning with clustering and PCA. You’ve built a comprehensive data science toolkit that will serve you well throughout your career.</p>
+<p>But if you’ve been following recent developments in AI (chatbots that write essays, models that generate realistic images, systems that beat world champions at complex games), you might be wondering: how do those fit into what we’ve learned? What’s the relationship between the random forests you’ve been building and the neural networks powering modern AI systems?</p>
+<p>This chapter bridges that gap. We’ll explore <strong>modern machine learning algorithms</strong> that extend beyond the classical methods you’ve mastered. You’ll see how gradient boosting machines push ensemble methods even further, how neural networks create the foundation for deep learning and generative AI, and how these advanced techniques build directly on concepts you already understand.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>A Note on This Chapter’s Purpose
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This chapter is about <strong>exposure, not mastery</strong>. We’re not expecting you to become experts in gradient boosting or neural networks in one reading. Instead, we want you to:</p>
+<ol type="1">
+<li>Understand how modern ML techniques connect to what you’ve learned</li>
+<li>Recognize when these advanced methods might be appropriate</li>
+<li>Know enough to have informed conversations about them</li>
+<li>Feel prepared to dive deeper when your career requires it</li>
+</ol>
+<p>Think of this as a guided tour of the machine learning landscape beyond our course boundaries, a preview of what awaits as you continue your data science journey.</p>
+</div>
+</div>
+<section id="learning-objectives" class="level2" data-number="33.1">
+<h2 data-number="33.1" class="anchored" data-anchor-id="learning-objectives"><span class="header-section-number">33.1</span> Learning Objectives</h2>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>Explain how gradient boosting machines (GBMs) differ from random forests and when each excels</li>
+<li>Understand the basic architecture of neural networks and how they learn through backpropagation</li>
+<li>Recognize the relationship between neural networks, deep learning, and generative AI</li>
+<li>Identify appropriate use cases for advanced ML algorithms vs.&nbsp;classical methods</li>
+<li>Implement basic gradient boosting models using XGBoost or LightGBM</li>
+<li>Understand the computational and interpretability tradeoffs of complex models</li>
+<li>Navigate the landscape of modern ML: when to use classical methods vs.&nbsp;advanced techniques</li>
+<li>Know where to learn more about each algorithm family</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Follow along in Colab
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you read through this chapter, we encourage you to follow along using the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/33_modern_ml_algorithms.ipynb">companion notebook</a> in Google Colab (or another editor of your choice). This interactive notebook lets you run all the code examples covered here and experiment with your own ideas.</p>
+<p>👉 Open the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/33_modern_ml_algorithms.ipynb">Modern ML Algorithms Notebook in Colab</a>.</p>
+</div>
+</div>
+</section>
+<section id="recapping-what-youve-learned" class="level2" data-number="33.2">
+<h2 data-number="33.2" class="anchored" data-anchor-id="recapping-what-youve-learned"><span class="header-section-number">33.2</span> Recapping What You’ve Learned</h2>
+<p>Before we explore new territories, let’s appreciate how far you’ve come. You’ve mastered a comprehensive toolkit of machine learning algorithms:</p>
+<section id="supervised-learning-for-regression" class="level3">
+<h3 class="anchored" data-anchor-id="supervised-learning-for-regression">Supervised Learning for Regression</h3>
+<ul>
+<li><p><strong>Linear Regression</strong>: Your first predictive model, which finds the best linear relationship between features and a continuous target. You learned about coefficients, R-squared, and how to interpret feature importance through regression weights.</p></li>
+<li><p><strong>Decision Trees &amp; Random Forests (Regression)</strong>: Tree-based methods that partition the feature space into regions with similar outcomes. Random forests extend this by building many trees and averaging their predictions, dramatically improving performance and reducing overfitting.</p></li>
+</ul>
+</section>
+<section id="supervised-learning-for-classification" class="level3">
+<h3 class="anchored" data-anchor-id="supervised-learning-for-classification">Supervised Learning for Classification</h3>
+<ul>
+<li><p><strong>Logistic Regression</strong>: Despite its name, this is a classification algorithm that predicts probabilities using the sigmoid function. You learned about log-odds, decision boundaries, and how to evaluate models using ROC curves and confusion matrices.</p></li>
+<li><p><strong>Decision Trees &amp; Random Forests (Classification)</strong>: Tree-based classifiers that split data based on feature thresholds to create pure leaf nodes. Random forests again improve single trees by building diverse ensembles and voting on predictions.</p></li>
+</ul>
+</section>
+<section id="unsupervised-learning" class="level3">
+<h3 class="anchored" data-anchor-id="unsupervised-learning">Unsupervised Learning</h3>
+<ul>
+<li><p><strong>Clustering (K-Means)</strong>: Automatically groups similar observations together without labeled data. You learned about centroids, the elbow method, and how to interpret cluster profiles for business applications.</p></li>
+<li><p><strong>Dimension Reduction (PCA)</strong>: Transforms many correlated features into fewer uncorrelated principal components, preserving the most important variation while reducing complexity.</p></li>
+</ul>
+</section>
+<section id="model-optimization-evaluation" class="level3">
+<h3 class="anchored" data-anchor-id="model-optimization-evaluation">Model Optimization &amp; Evaluation</h3>
+<ul>
+<li><p><strong>Cross-Validation</strong>: Robust methods for estimating model performance using k-fold and stratified splits, ensuring your models generalize to new data.</p></li>
+<li><p><strong>Hyperparameter Tuning</strong>: Systematic approaches (grid search, random search) to find optimal model configurations.</p></li>
+<li><p><strong>Feature Engineering</strong>: Creating new features, handling missing data, encoding categorical variables, and scaling features to improve model performance.</p></li>
+</ul>
+</section>
+<section id="why-this-foundation-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-foundation-matters">Why This Foundation Matters</h3>
+<p>These techniques aren’t just academic exercises. They’re the workhorse algorithms of professional data science:</p>
+<ul>
+<li><strong>Linear and logistic regression</strong> remain first choices when you need interpretability and fast predictions</li>
+<li><strong>Random forests</strong> consistently win Kaggle competitions and power production systems across industries</li>
+<li><strong>Cross-validation and proper evaluation</strong> separate amateur models from professional-grade solutions</li>
+<li><strong>Feature engineering</strong> often matters more than algorithm choice for real-world performance</li>
+</ul>
+<p>The algorithms we’ll explore in this chapter build directly on these foundations. Gradient boosting extends tree-based methods. Neural networks generalize logistic regression’s architecture. Deep learning requires the same cross-validation and evaluation rigor you’ve already learned.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>The 80/20 Rule of Machine Learning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In professional practice, classical methods (linear models, logistic regression, random forests, gradient boosting) solve 80% of business problems. The advanced techniques we’ll discuss in this chapter are powerful, but they’re not always necessary. As you learn about these modern methods, remember that simpler often wins when it comes to interpretability, maintenance, and deployment complexity.</p>
+</div>
+</div>
+<p>Now that we’ve recapped the solid foundation you’ve built, let’s explore what comes next. We’ll start with algorithms that extend what you already know (like taking random forests to the next level with gradient boosting), then venture into neural networks and deep learning, and finally connect these concepts to the generative AI systems making headlines today. Each section builds on your existing knowledge, showing you how modern ML techniques are evolutionary steps rather than completely foreign concepts.</p>
+</section>
+</section>
+<section id="gradient-boosting-machines-the-next-level-of-ensemble-learning" class="level2" data-number="33.3">
+<h2 data-number="33.3" class="anchored" data-anchor-id="gradient-boosting-machines-the-next-level-of-ensemble-learning"><span class="header-section-number">33.3</span> Gradient Boosting Machines: The Next Level of Ensemble Learning</h2>
+<p>You’ve already mastered random forests, which build many trees in parallel and average their predictions. <strong>Gradient boosting machines (GBMs)</strong> take a fundamentally different approach: they build trees <strong>sequentially</strong>, where each new tree tries to correct the mistakes of the previous trees.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Think of it like this:
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Random Forests</strong>: Imagine asking 100 experts a question independently, then averaging their answers. Each expert thinks separately, and diversity comes from giving them slightly different information.</p>
+<p><strong>Gradient Boosting</strong>: Imagine asking one expert, then asking a second expert to focus specifically on cases where the first expert was wrong, then asking a third expert to focus on remaining mistakes, and so on. Each expert specializes in fixing previous errors.</p>
+</div>
+</div>
+<section id="how-gradient-boosting-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-gradient-boosting-works">How Gradient Boosting Works</h3>
+<p>The algorithm follows this sequential process:</p>
+<ol type="1">
+<li><strong>Start with a simple prediction</strong> (often just the mean for regression, or majority class for classification)</li>
+<li><strong>Calculate the errors</strong> (residuals) from this initial prediction</li>
+<li><strong>Build a tree</strong> to predict those errors</li>
+<li><strong>Add this tree’s predictions</strong> to the existing predictions (with a small learning rate to prevent overfitting)</li>
+<li><strong>Repeat steps 2-4</strong> for a specified number of trees (typically 100-1000)</li>
+</ol>
+<p>Each new tree “boosts” the model by focusing on the observations that previous trees struggled with. The “gradient” part comes from using gradient descent to minimize the loss function, similar to how neural networks learn (which we’ll discuss shortly).</p>
+<p>Let’s visualize this process with a simple example:</p>
+<div id="5fb51d85" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="33-modern-ml-algorithms_files/figure-html/cell-2-output-1.png" width="854" height="757" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Mean Absolute Error at each step:
+  Initial (mean):  5.09
+  After Tree 1:    3.56
+  After Tree 2:    2.49
+  After Tree 3:    1.75
+
+Total error reduction: 3.34 (65.7% improvement)</code></pre>
+</div>
+</div>
+<p>The visualization shows how each tree focuses on the remaining errors (shown as red lines between predictions and true values). Notice how the predictions get progressively closer to the true values with each additional tree. This is the essence of boosting: each tree learns from the mistakes of the ensemble so far.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Differences: Random Forests vs.&nbsp;Gradient Boosting
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>Aspect</strong></th>
+<th><strong>Random Forests</strong></th>
+<th><strong>Gradient Boosting</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Tree Building</strong></td>
+<td>Parallel (all at once)</td>
+<td>Sequential (one at a time)</td>
+</tr>
+<tr class="even">
+<td><strong>Learning Focus</strong></td>
+<td>Each tree learns from random subset</td>
+<td>Each tree learns from previous mistakes</td>
+</tr>
+<tr class="odd">
+<td><strong>Tree Depth</strong></td>
+<td>Typically deep trees (fully grown)</td>
+<td>Typically shallow trees (weak learners)</td>
+</tr>
+<tr class="even">
+<td><strong>Prediction</strong></td>
+<td>Average/vote across all trees</td>
+<td>Weighted sum of all trees</td>
+</tr>
+<tr class="odd">
+<td><strong>Training Speed</strong></td>
+<td>Fast (parallelizable)</td>
+<td>Slower (sequential)</td>
+</tr>
+<tr class="even">
+<td><strong>Overfitting Risk</strong></td>
+<td>Lower (averaging reduces variance)</td>
+<td>Higher (needs careful tuning)</td>
+</tr>
+<tr class="odd">
+<td><strong>Performance</strong></td>
+<td>Excellent</td>
+<td>Often slightly better with tuning</td>
+</tr>
+<tr class="even">
+<td><strong>Interpretability</strong></td>
+<td>Moderate (feature importance)</td>
+<td>Moderate (feature importance)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="popular-gbm-implementations" class="level3">
+<h3 class="anchored" data-anchor-id="popular-gbm-implementations">Popular GBM Implementations</h3>
+<p>While the core concept of gradient boosting has existed since the 1990s, recent implementations have made it incredibly powerful and efficient:</p>
+<p><strong><a href="https://xgboost.readthedocs.io/">XGBoost (Extreme Gradient Boosting)</a></strong></p>
+<ul>
+<li>Most popular implementation, winner of many Kaggle competitions</li>
+<li>Highly optimized for speed and memory efficiency</li>
+<li>Includes regularization to prevent overfitting</li>
+<li>Handles missing values automatically</li>
+<li>Great documentation and community support</li>
+<li><a href="https://arxiv.org/abs/1603.02754">Original Paper (Chen &amp; Guestrin, 2016)</a> | <a href="https://github.com/dmlc/xgboost">GitHub</a></li>
+</ul>
+<p><strong><a href="https://lightgbm.readthedocs.io/">LightGBM (Light Gradient Boosting Machine)</a></strong></p>
+<ul>
+<li>Developed by Microsoft, even faster than XGBoost for large datasets</li>
+<li>Uses “histogram-based” algorithm for efficient splitting</li>
+<li>Excellent for datasets with millions of observations</li>
+<li>Lower memory usage than XGBoost</li>
+<li><a href="https://papers.nips.cc/paper/6907-lightgbm-a-highly-efficient-gradient-boosting-decision-tree">Original Paper (Ke et al., 2017)</a> | <a href="https://github.com/microsoft/LightGBM">GitHub</a></li>
+</ul>
+<p><strong><a href="https://catboost.ai/">CatBoost (Categorical Boosting)</a></strong></p>
+<ul>
+<li>Developed by Yandex, handles categorical features natively</li>
+<li>Less hyperparameter tuning required (good defaults)</li>
+<li>Particularly strong with text and categorical data</li>
+<li>Built-in handling of categorical feature combinations</li>
+<li><a href="https://arxiv.org/abs/1706.09516">Original Paper (Prokhorenkova et al., 2018)</a> | <a href="https://github.com/catboost/catboost">GitHub</a></li>
+</ul>
+</section>
+<section id="a-quick-xgboost-example" class="level3">
+<h3 class="anchored" data-anchor-id="a-quick-xgboost-example">A Quick XGBoost Example</h3>
+<p>Let’s see how gradient boosting compares to random forests using the California Housing dataset, a regression problem with 20,000+ observations where XGBoost’s sequential learning really shines:</p>
+<div id="ca0c652d" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> fetch_california_housing</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestRegressor</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> xgboost <span class="im">import</span> XGBRegressor</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error, r2_score</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Load California housing data (20,640 observations)</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>housing <span class="op">=</span> fetch_california_housing()</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> pd.DataFrame(housing.data, columns<span class="op">=</span>housing.feature_names)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> housing.target  <span class="co"># Median house value in $100,000s</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Split data</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Random Forest (default parameters)</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>rf_model <span class="op">=</span> RandomForestRegressor(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>, n_jobs<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>rf_model.fit(X_train, y_train)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>rf_pred <span class="op">=</span> rf_model.predict(X_test)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co"># XGBoost (default parameters)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>xgb_default <span class="op">=</span> XGBRegressor(n_estimators<span class="op">=</span><span class="dv">100</span>, random_state<span class="op">=</span><span class="dv">42</span>, n_jobs<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>xgb_default.fit(X_train, y_train)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>xgb_default_pred <span class="op">=</span> xgb_default.predict(X_test)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co"># XGBoost (tuned parameters - showing its potential)</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>xgb_tuned <span class="op">=</span> XGBRegressor(</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    n_estimators<span class="op">=</span><span class="dv">300</span>,      <span class="co"># More trees</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    learning_rate<span class="op">=</span><span class="fl">0.05</span>,    <span class="co"># Slower learning for better accuracy</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    max_depth<span class="op">=</span><span class="dv">5</span>,           <span class="co"># Moderate tree depth</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    subsample<span class="op">=</span><span class="fl">0.8</span>,         <span class="co"># Row sampling (like RF)</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    colsample_bytree<span class="op">=</span><span class="fl">0.8</span>,  <span class="co"># Column sampling (like RF)</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    n_jobs<span class="op">=-</span><span class="dv">1</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>xgb_tuned.fit(X_train, y_train)</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>xgb_tuned_pred <span class="op">=</span> xgb_tuned.predict(X_test)</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare performance</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Model Comparison (Lower RMSE is better):"</span>)</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">50</span>)</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Random Forest RMSE:  </span><span class="sc">{</span>np<span class="sc">.</span>sqrt(mean_squared_error(y_test, rf_pred))<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Random Forest R²:    </span><span class="sc">{</span>r2_score(y_test, rf_pred)<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"XGBoost (default) RMSE: </span><span class="sc">{</span>np<span class="sc">.</span>sqrt(mean_squared_error(y_test, xgb_default_pred))<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"XGBoost (default) R²:   </span><span class="sc">{</span>r2_score(y_test, xgb_default_pred)<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"XGBoost (tuned) RMSE:   </span><span class="sc">{</span>np<span class="sc">.</span>sqrt(mean_squared_error(y_test, xgb_tuned_pred))<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"XGBoost (tuned) R²:     </span><span class="sc">{</span>r2_score(y_test, xgb_tuned_pred)<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Model Comparison (Lower RMSE is better):
+==================================================
+Random Forest RMSE:  0.5053
+Random Forest R²:    0.8051
+
+XGBoost (default) RMSE: 0.4718
+XGBoost (default) R²:   0.8301
+
+XGBoost (tuned) RMSE:   0.4692
+XGBoost (tuned) R²:     0.8320</code></pre>
+</div>
+</div>
+<p>This example demonstrates two key points:</p>
+<ol type="1">
+<li><strong>Even with default parameters</strong>, XGBoost often matches or slightly outperforms Random Forests</li>
+<li><strong>With proper tuning</strong>, XGBoost can achieve significantly better performance, but this requires understanding its hyperparameters and investing time in optimization</li>
+</ol>
+<p>The improvement might seem modest (a few percentage points in R² or reduction in RMSE), but in real-world applications, these gains can translate to substantial business value. However, this comes at the cost of increased complexity and tuning effort.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>When to Use Gradient Boosting vs.&nbsp;Random Forests
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Use Random Forests when:</strong></p>
+<ul>
+<li>You want a reliable, easy-to-tune model (great defaults)</li>
+<li>You need fast training time</li>
+<li>You’re working with a relatively small number of features</li>
+<li>You want to minimize overfitting risk</li>
+</ul>
+<p><strong>Use Gradient Boosting when:</strong></p>
+<ul>
+<li>You’re willing to invest time in hyperparameter tuning</li>
+<li>You need the absolute best predictive performance</li>
+<li>You’re entering a Kaggle competition or similar challenge</li>
+<li>You have sufficient data to validate proper tuning (avoid overfitting)</li>
+</ul>
+<p><strong>Start with Random Forests</strong>, get a baseline, then experiment with gradient boosting if you need incremental performance gains.</p>
+</div>
+</div>
+</section>
+<section id="key-hyperparameters-for-gbms" class="level3">
+<h3 class="anchored" data-anchor-id="key-hyperparameters-for-gbms">Key Hyperparameters for GBMs</h3>
+<p>If you decide to explore gradient boosting further, these are the most important hyperparameters to understand:</p>
+<ul>
+<li><strong><code>n_estimators</code></strong>: Number of trees to build (typical range: 100-1000)</li>
+<li><strong><code>learning_rate</code></strong> (or <code>eta</code>): How much each tree contributes (typical range: 0.01-0.3, lower is often better)</li>
+<li><strong><code>max_depth</code></strong>: Maximum depth of each tree (typical range: 3-10, shallower than random forests)</li>
+<li><strong><code>subsample</code></strong>: Fraction of observations to use for each tree (typical: 0.8, adds randomness like random forests)</li>
+<li><strong><code>colsample_bytree</code></strong>: Fraction of features to use for each tree (typical: 0.8, also adds randomness)</li>
+</ul>
+<p>The combination of <code>n_estimators</code> and <code>learning_rate</code> is particularly important: more trees with a smaller learning rate often works best, but takes longer to train.</p>
+</section>
+</section>
+<section id="neural-networks-and-deep-learning-the-foundation-of-modern-ai" class="level2" data-number="33.4">
+<h2 data-number="33.4" class="anchored" data-anchor-id="neural-networks-and-deep-learning-the-foundation-of-modern-ai"><span class="header-section-number">33.4</span> Neural Networks and Deep Learning: The Foundation of Modern AI</h2>
+<section id="what-are-neural-networks" class="level3">
+<h3 class="anchored" data-anchor-id="what-are-neural-networks">What Are Neural Networks?</h3>
+<p>If you’ve heard about AI breakthroughs (ChatGPT writing essays, DALL-E generating images, AlphaGo beating world champions), you’ve heard about <strong>neural networks</strong>. Despite the buzz, neural networks are conceptually related to something you already know well: logistic regression.</p>
+<p>Remember logistic regression? You learned that it:</p>
+<ol type="1">
+<li>Takes input features (like age, income, credit score)</li>
+<li>Multiplies each feature by a weight (coefficient)</li>
+<li>Sums these weighted features</li>
+<li>Passes the sum through a sigmoid activation function (the S-shaped logistic function)</li>
+<li>Outputs a probability between 0 and 1</li>
+</ol>
+<p>A neural network does exactly the same thing, but <strong>many times over</strong>, in layers. Instead of one sigmoid transformation, you might have dozens or hundreds of interconnected transformations, allowing the model to learn complex, non-linear patterns.</p>
+</section>
+<section id="architecture-basics-layers-of-transformations" class="level3">
+<h3 class="anchored" data-anchor-id="architecture-basics-layers-of-transformations">Architecture Basics: Layers of Transformations</h3>
+<p>A simple neural network has three types of layers:</p>
+<ol type="1">
+<li><p><strong>Input Layer</strong>: One node for each feature in your dataset (just like the features in logistic regression).</p></li>
+<li><p><strong>Hidden Layers</strong>: One or more layers where the magic happens. Each node in a hidden layer:</p>
+<ul>
+<li>Receives inputs from the previous layer</li>
+<li>Multiplies each input by a weight</li>
+<li>Adds a bias term</li>
+<li>Passes the result through an activation function (like sigmoid, ReLU, or tanh)</li>
+<li>Sends the output to the next layer</li>
+</ul></li>
+<li><p><strong>Output Layer</strong>: Produces the final prediction. For classification, this might use a sigmoid (binary) or softmax (multiclass) activation. For regression, it might use a linear activation.</p></li>
+</ol>
+<p>Here’s a simple visualization:</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'16px'}}}%%
+graph LR
+    subgraph Input["&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Input Layer&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;br/&gt;(3 features)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;"]
+        X1((X1))
+        X2((X2))
+        X3((X3))
+    end
+
+    subgraph Hidden1["&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Hidden Layer 1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;br/&gt;(4 nodes)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;"]
+        H1((H1))
+        H2((H2))
+        H3((H3))
+        H4((H4))
+    end
+
+    subgraph Hidden2["&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Hidden Layer 2&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;br/&gt;(3 nodes)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;"]
+        H5((H5))
+        H6((H6))
+        H7((H7))
+    end
+
+    subgraph Hidden3["&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Hidden Layer 3&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;br/&gt;(3 nodes)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;"]
+        H8((H8))
+        H9((H9))
+        H10((H10))
+    end
+
+    subgraph Output["&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;Output Layer&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;br/&gt;(1 prediction)&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;"]
+        Y((Y))
+    end
+
+    X1 -.-&gt; H1
+    X1 -.-&gt; H2
+    X1 -.-&gt; H3
+    X1 -.-&gt; H4
+
+    X2 -.-&gt; H1
+    X2 -.-&gt; H2
+    X2 -.-&gt; H3
+    X2 -.-&gt; H4
+
+    X3 -.-&gt; H1
+    X3 -.-&gt; H2
+    X3 -.-&gt; H3
+    X3 -.-&gt; H4
+
+    H1 -.-&gt; H5
+    H1 -.-&gt; H6
+    H1 -.-&gt; H7
+    H2 -.-&gt; H5
+    H2 -.-&gt; H6
+    H2 -.-&gt; H7
+    H3 -.-&gt; H5
+    H3 -.-&gt; H6
+    H3 -.-&gt; H7
+    H4 -.-&gt; H5
+    H4 -.-&gt; H6
+    H4 -.-&gt; H7
+
+    H5 -.-&gt; H8
+    H5 -.-&gt; H9
+    H5 -.-&gt; H10
+    H6 -.-&gt; H8
+    H6 -.-&gt; H9
+    H6 -.-&gt; H10
+    H7 -.-&gt; H8
+    H7 -.-&gt; H9
+    H7 -.-&gt; H10
+
+    H8 ==&gt; Y
+    H9 ==&gt; Y
+    H10 ==&gt; Y
+
+    style Input fill:#e1f5ff
+    style Hidden1 fill:#fff4e1
+    style Hidden2 fill:#ffe4e1
+    style Hidden3 fill:#e8e1ff
+    style Output fill:#e8f5e9
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>Each arrow represents a weight (parameter) that the model learns during training. This network has:</p>
+<ul>
+<li>3 × 4 = 12 weights from input to hidden layer 1</li>
+<li>4 × 3 = 12 weights from hidden layer 1 to hidden layer 2</li>
+<li>3 × 3 = 9 weights from hidden layer 2 to hidden layer 3</li>
+<li>3 × 1 = 3 weights from hidden layer 3 to output</li>
+<li>Plus bias terms for each of the 11 nodes (4 + 3 + 3 + 1)</li>
+<li>Total: about 47 learnable parameters</li>
+</ul>
+<p>This might seem like a lot compared to logistic regression’s 4 parameters (3 coefficients + 1 intercept), but it’s tiny compared to modern deep learning models that have millions or billions of parameters. The additional layers allow the network to learn increasingly complex, hierarchical representations of the data.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Why “Deep” Learning?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Deep learning</strong> simply means using neural networks with many hidden layers (typically 10-1000+ layers). More layers allow the network to learn increasingly abstract representations:</p>
+<ul>
+<li><strong>Early layers</strong> might detect edges and textures in images</li>
+<li><strong>Middle layers</strong> might combine edges into shapes and patterns</li>
+<li><strong>Late layers</strong> might recognize high-level concepts like faces or objects</li>
+</ul>
+<p>This hierarchical learning is why deep learning excels at complex tasks like image recognition, natural language processing, and speech recognition.</p>
+</div>
+</div>
+</section>
+<section id="how-neural-networks-learn-backpropagation" class="level3">
+<h3 class="anchored" data-anchor-id="how-neural-networks-learn-backpropagation">How Neural Networks Learn: Backpropagation</h3>
+<p>Neural networks learn through a process called <strong>backpropagation</strong>, which works like this:</p>
+<ol type="1">
+<li><strong>Forward Pass</strong>: Input data flows through the network, producing predictions</li>
+<li><strong>Calculate Loss</strong>: Compare predictions to actual values using a loss function (like mean squared error for regression or cross-entropy for classification)</li>
+<li><strong>Backward Pass</strong>: Calculate how much each weight contributed to the error</li>
+<li><strong>Update Weights</strong>: Adjust weights in the direction that reduces error (using gradient descent)</li>
+<li><strong>Repeat</strong>: Iterate many times (epochs) over the training data</li>
+</ol>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>What’s an Epoch?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>An <strong>epoch</strong> is one complete pass through the entire training dataset. If you have 1,000 training examples and train for 50 epochs, the network will see all 1,000 examples 50 times, updating weights after each small batch of data. More epochs generally lead to better learning (up to a point), but too many can cause overfitting.</p>
+</div>
+</div>
+<p>This is conceptually similar to how we found the best coefficients for linear regression, but applied to potentially millions of parameters across many layers.</p>
+<p>Here’s a visualization of the backpropagation process:</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class="figure"><p></p>
+<div>
+<pre class="mermaid mermaid-js">%%{init: {'theme':'base', 'themeVariables': { 'fontSize':'14px'}}}%%
+graph LR
+    subgraph Step1[" "]
+        A[Input Data] --&gt;|Forward Pass| B[Neural Network]
+        B --&gt; C[Predictions]
+    end
+
+    subgraph Step2[" "]
+        C --&gt;|Compare| D[Actual Values]
+        D --&gt; E[Calculate Loss/Error]
+    end
+
+    subgraph Step3[" "]
+        E --&gt;|Backward Pass&lt;br/&gt;Compute Gradients| F[How much did&lt;br/&gt;each weight&lt;br/&gt;contribute to error?]
+    end
+
+    subgraph Step4[" "]
+        F --&gt;|Update Weights&lt;br/&gt;Gradient Descent| G[Adjust weights to&lt;br/&gt;reduce error]
+    end
+
+    G --&gt;|Repeat for&lt;br/&gt;many epochs| A
+
+    style A fill:#e1f5ff
+    style B fill:#fff4e1
+    style C fill:#ffe4e1
+    style D fill:#e8f5e9
+    style E fill:#ffebcc
+    style F fill:#e8e1ff
+    style G fill:#f0e1ff
+
+    style Step1 fill:#ffffff,stroke:#999,stroke-width:2px
+    style Step2 fill:#ffffff,stroke:#999,stroke-width:2px
+    style Step3 fill:#ffffff,stroke:#999,stroke-width:2px
+    style Step4 fill:#ffffff,stroke:#999,stroke-width:2px
+</pre>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+<p>Let’s also visualize how the loss decreases during training:</p>
+<div id="fd276ce0" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="33-modern-ml-algorithms_files/figure-html/cell-4-output-1.png" width="855" height="470" class="figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Initial Loss: 2.633
+Final Loss: 0.258
+Loss Reduction: 2.375 (90.2% improvement)</code></pre>
+</div>
+</div>
+<p>The first diagram shows the cycle of forward pass, error calculation, backward pass, and weight updates. The next plot demonstrates how backpropagation successfully reduces the loss over many training epochs (iterations through the data). Notice three distinct phases:</p>
+<ol type="1">
+<li><strong>Rapid Learning</strong>: Early epochs show dramatic loss reduction as the network discovers major patterns</li>
+<li><strong>Gradual Refinement</strong>: Middle epochs show steady improvement with smaller weight adjustments</li>
+<li><strong>Convergence</strong>: Later epochs show minimal changes as the network approaches optimal weights</li>
+</ol>
+</section>
+<section id="a-simple-neural-network-example" class="level3">
+<h3 class="anchored" data-anchor-id="a-simple-neural-network-example">A Simple Neural Network Example</h3>
+<p>Let’s build a simple neural network for the Iris classification problem (a classic dataset with 3 flower species):</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Running This Example
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Due to TensorFlow’s initialization overhead, this code example is best run in the companion notebook rather than during book rendering. You can find the full working example in the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/example-notebooks/33_modern_ml_algorithms.ipynb">companion notebook</a>.</p>
+</div>
+</div>
+<div id="ba45143b" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure TensorFlow to suppress warnings and avoid GPU search</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">'TF_CPP_MIN_LOG_LEVEL'</span>] <span class="op">=</span> <span class="st">'3'</span>  <span class="co"># Suppress TensorFlow logging</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">'CUDA_VISIBLE_DEVICES'</span>] <span class="op">=</span> <span class="st">'-1'</span>  <span class="co"># Force CPU usage</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>tf.get_logger().setLevel(<span class="st">'ERROR'</span>)  <span class="co"># Only show errors</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"TF version:"</span>, tf.__version__)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Devices:"</span>, tf.config.list_physical_devices())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Now let’s build a simple neural network for the Iris classification problem:</p>
+<div id="b16d5eb4" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> load_iris</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow <span class="im">import</span> keras</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tensorflow.keras <span class="im">import</span> layers</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Load data</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>iris <span class="op">=</span> load_iris()</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> pd.DataFrame(iris.data, columns<span class="op">=</span>iris.feature_names)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> iris.target</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Split and scale (neural networks are sensitive to feature scale)</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>X_train, X_test, y_train, y_test <span class="op">=</span> train_test_split(</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    X, y, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>y</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>scaler <span class="op">=</span> StandardScaler()</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>X_train_scaled <span class="op">=</span> scaler.fit_transform(X_train)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>X_test_scaled <span class="op">=</span> scaler.transform(X_test)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a simple neural network</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> keras.Sequential([</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    layers.Dense(<span class="dv">8</span>, activation<span class="op">=</span><span class="st">'relu'</span>, input_shape<span class="op">=</span>(<span class="dv">4</span>,)),</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    layers.Dense(<span class="dv">8</span>, activation<span class="op">=</span><span class="st">'relu'</span>),</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    layers.Dense(<span class="dv">3</span>, activation<span class="op">=</span><span class="st">'softmax'</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Compile the model</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>model.<span class="bu">compile</span>(</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    loss<span class="op">=</span><span class="st">'sparse_categorical_crossentropy'</span>,</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    optimizer<span class="op">=</span><span class="st">'adam'</span>,</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    metrics<span class="op">=</span>[<span class="st">'accuracy'</span>]</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Train the model (suppress output)</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> model.fit(</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    X_train_scaled, y_train,</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>    epochs<span class="op">=</span><span class="dv">50</span>,</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    batch_size<span class="op">=</span><span class="dv">16</span>,</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    validation_split<span class="op">=</span><span class="fl">0.2</span>,</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="dv">0</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluate</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>y_pred <span class="op">=</span> model.predict(X_test_scaled, verbose<span class="op">=</span><span class="dv">0</span>).argmax(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>accuracy <span class="op">=</span> accuracy_score(y_test, y_pred)</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Neural Network Accuracy: </span><span class="sc">{</span>accuracy<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Correct predictions: </span><span class="sc">{</span>(y_pred <span class="op">==</span> y_test)<span class="sc">.</span><span class="bu">sum</span>()<span class="sc">}</span><span class="ss"> out of </span><span class="sc">{</span><span class="bu">len</span>(y_test)<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>For this simple dataset, the neural network will perform comparably to logistic regression or a random forest (often around 95-100% accuracy). Neural networks really shine when the relationships are more complex.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>When Neural Networks Excel vs.&nbsp;Classical ML
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Neural Networks Excel When:</strong></p>
+<ul>
+<li>You have <strong>very large datasets</strong> (100,000+ observations)</li>
+<li>You’re working with <strong>unstructured data</strong> (images, text, audio, video)</li>
+<li>The <strong>relationships are highly non-linear</strong> and complex</li>
+<li>You can afford the <strong>computational cost</strong> (GPUs, training time)</li>
+<li>You don’t need model <strong>interpretability</strong></li>
+</ul>
+<p><strong>Classical ML (Random Forests, XGBoost) Excel When:</strong></p>
+<ul>
+<li>You have <strong>structured/tabular data</strong> (typical business datasets)</li>
+<li>You have <strong>smaller to medium datasets</strong> (&lt; 100,000 observations)</li>
+<li>You need <strong>model interpretability</strong> (feature importance, decision rules)</li>
+<li>You want <strong>faster training</strong> and predictions</li>
+<li>You have <strong>limited computational resources</strong></li>
+</ul>
+<p>For most business problems with structured data (customer records, transaction data, sensor data), classical ML methods often outperform neural networks while being easier to interpret and deploy.</p>
+</div>
+</div>
+</section>
+<section id="the-deep-learning-revolution-what-makes-it-possible" class="level3">
+<h3 class="anchored" data-anchor-id="the-deep-learning-revolution-what-makes-it-possible">The Deep Learning Revolution: What Makes It Possible</h3>
+<p>Deep learning has exploded in the last decade due to three key factors:</p>
+<ol type="1">
+<li><p><strong>Big Data</strong>: Companies like Google, Facebook, and Amazon collect billions of labeled examples (images, text, clicks). Deep learning needs lots of data to learn effectively.</p></li>
+<li><p><strong>Computational Power</strong>: GPUs (graphics processing units) can perform the massive matrix multiplications required by neural networks much faster than CPUs. Cloud computing makes this power accessible to everyone.</p></li>
+<li><p><strong>Algorithmic Innovations</strong>: Techniques like dropout (prevents overfitting), batch normalization (stabilizes training), residual connections (enables very deep networks), and <strong>attention mechanisms</strong> (allows models to focus on relevant parts of the input) have made training large networks feasible. Attention, in particular, revolutionized how neural networks handle sequential data by allowing the model to dynamically weigh the importance of different input elements—a breakthrough that powers modern transformers.</p></li>
+</ol>
+</section>
+<section id="from-neural-networks-to-generative-ai" class="level3">
+<h3 class="anchored" data-anchor-id="from-neural-networks-to-generative-ai">From Neural Networks to Generative AI</h3>
+<p>The neural networks we’ve described so far are <strong>discriminative models</strong>. They learn to classify or predict based on input features. For example, given an image, a discriminative model might classify it as “cat” or “dog.” Given customer data, it might predict whether they’ll make a purchase.</p>
+<p>But recent breakthroughs involve a fundamentally different type of neural network: <strong>generative models</strong>. Instead of classifying or predicting, generative models create entirely new content. They can generate realistic images from text descriptions, write coherent essays, compose music, or even generate synthetic data for training other models. This shift from “understanding and classifying” to “creating and generating” represents one of the most exciting frontiers in AI.</p>
+<p>The generative AI revolution has been driven by several innovative architectures, each with different strengths:</p>
+<ul>
+<li><p><strong>Generative Adversarial Networks (GANs)</strong>: Two neural networks compete. One generates fake data (like images), while the other tries to detect fakes. This competition produces incredibly realistic generated images, videos, and more.</p></li>
+<li><p><strong>Transformers</strong>: A neural network architecture (developed by Google in 2017) that revolutionized natural language processing. Transformers power:</p>
+<ul>
+<li><strong>GPT-4</strong> (powers ChatGPT for text generation and multimodal AI)</li>
+<li><strong>Gemini 2.5</strong> (powers Google’s Gemini AI assistant)</li>
+<li><strong>Sonnet 4.5</strong> (powers Claude and Claude Code)</li>
+<li><strong>BERT</strong> (text understanding and search)</li>
+<li><strong>DALL-E</strong> (image generation from text)</li>
+</ul></li>
+<li><p><strong>Diffusion Models</strong>: Generate images by gradually removing noise, producing stunning results (Stable Diffusion, Midjourney).</p></li>
+</ul>
+<p>These models have billions of parameters and are trained on massive datasets (like the entire internet), requiring millions of dollars in computational resources. They represent the cutting edge of AI research and commercial applications.</p>
+</section>
+<section id="foundation-models-a-different-approach-to-machine-learning" class="level3">
+<h3 class="anchored" data-anchor-id="foundation-models-a-different-approach-to-machine-learning">Foundation Models: A Different Approach to Machine Learning</h3>
+<p>The generative AI models described above represent a fundamental shift in how we think about machine learning. These are often called <strong>foundation models</strong>, which are large-scale models pre-trained on vast amounts of data and can be adapted for many different tasks. They’re a different beast compared to the models you’ve been building in this course.</p>
+<p><strong>The Traditional ML Workflow</strong> you’ve learned involves:</p>
+<ol type="1">
+<li>Collecting task-specific data</li>
+<li>Engineering features</li>
+<li>Training a model from scratch</li>
+<li>Evaluating and deploying that specific model</li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div id="fig-traditional-ml-workflow" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-traditional-ml-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-traditional-ml-workflow">flowchart TD
+    A[Collect Task-Specific Data] --&gt; B[Engineer Features]
+    B --&gt; C[Train Model from Scratch]
+    C --&gt; D[Evaluate Performance]
+    D --&gt; E{Good Enough?}
+    E --&gt;|No| B
+    E --&gt;|Yes| F[Deploy Model]
+
+    style A fill:#e1f5dd
+    style B fill:#e1f5dd
+    style C fill:#fff4cc
+    style D fill:#fff4cc
+    style E fill:#ffe6e6
+    style F fill:#d4e6f1
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-traditional-ml-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;33.1: The Traditional ML Workflow: A linear process where you build task-specific models from scratch
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>The Foundation Model Workflow</strong> is fundamentally different:</p>
+<ol type="1">
+<li>A large organization (OpenAI, Google, Anthropic) trains a massive model on enormous datasets (billions of dollars in compute)</li>
+<li>You access this pre-trained model through an API or download it</li>
+<li>You adapt it to your specific task without training from scratch</li>
+<li>You deploy solutions built on top of these models</li>
+</ol>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div id="fig-foundation-model-workflow" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-foundation-model-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-foundation-model-workflow">flowchart TD
+    A[Large Organization Trains Foundation Model] --&gt; B[Massive Datasets + Compute&lt;br/&gt;Billions of $]
+    B --&gt; C[Pre-trained Model Available]
+
+    C --&gt; D[You Access Model]
+    D --&gt; E[API Access]
+    D --&gt; F[Download Model]
+
+    E --&gt; G[Adapt to Your Task]
+    F --&gt; G
+
+    G --&gt; H[Fine-tuning&lt;br/&gt;on your data]
+    G --&gt; I[Prompt Engineering&lt;br/&gt;no training]
+    G --&gt; J[Direct API Usage&lt;br/&gt;no training]
+
+    H --&gt; K[Deploy Solution]
+    I --&gt; K
+    J --&gt; K
+
+    style A fill:#ffcccc
+    style B fill:#ffcccc
+    style C fill:#d4e6f1
+    style D fill:#e1f5dd
+    style E fill:#e1f5dd
+    style F fill:#e1f5dd
+    style G fill:#fff4cc
+    style H fill:#fff4cc
+    style I fill:#fff4cc
+    style J fill:#fff4cc
+    style K fill:#d4e6f1
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-foundation-model-workflow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;33.2: The Foundation Model Workflow: Leverage pre-trained models instead of training from scratch
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>This introduces the concept of <strong>transfer learning</strong>, which means leveraging knowledge from a model trained on one task to solve a different but related task. Instead of training GPT-4 yourself (which would cost millions), you use the already-trained model through ChatGPT’s API. Instead of training an image recognition model from scratch, you might fine-tune a pre-trained vision model on your specific images.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>How You’ll Actually Use Foundation Models
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In professional practice, you typically interact with foundation models in three ways:</p>
+<ol type="1">
+<li><p><strong>Direct API Usage</strong>: Call models like GPT-4, Gemini, or Claude through APIs for tasks like text generation, summarization, or question answering (no training required)</p></li>
+<li><p><strong>Fine-tuning</strong>: Take a pre-trained model and adapt it to your specific domain by training it on your data (requires much less data and compute than training from scratch)</p></li>
+<li><p><strong>Prompt Engineering</strong>: Carefully crafting the input (prompts) to guide the model’s behavior without any training at all</p></li>
+</ol>
+<p>The barrier to entry has shifted from “Can I train a good model?” to “Can I effectively leverage these powerful pre-trained models?”</p>
+</div>
+</div>
+<p>This represents a democratization of AI—you don’t need millions of dollars in compute to build powerful AI applications. You just need to know how to effectively use and adapt these foundation models for your specific needs.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Generative AI: Preview, Not Deep Dive
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>We won’t dive deep into generative AI or foundation models in this course (that would require an entire course by itself). But understanding that these powerful systems are built on the same fundamental neural network principles we’ve discussed helps demystify them. They’re not magic; they’re just very large, very well-trained neural networks with clever architectures. And increasingly, they’re tools you can access and use without training them yourself.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="other-advanced-methods-a-quick-tour" class="level2" data-number="33.5">
+<h2 data-number="33.5" class="anchored" data-anchor-id="other-advanced-methods-a-quick-tour"><span class="header-section-number">33.5</span> Other Advanced Methods: A Quick Tour</h2>
+<p>Beyond gradient boosting and neural networks, several other algorithms are worth knowing about, even if we won’t cover them in depth:</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-13-contents" aria-controls="callout-13" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Support Vector Machines (SVMs)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-13" class="callout-13-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What They Do</strong>: Find the optimal boundary (hyperplane) that separates classes in high-dimensional space, maximizing the margin between classes.</p>
+<p><strong>When They Excel</strong>:</p>
+<ul>
+<li>High-dimensional data (many features relative to observations)</li>
+<li>Text classification</li>
+<li>When you have well-separated classes</li>
+</ul>
+<p><strong>Key Limitation</strong>: Computationally expensive for large datasets; less popular than random forests and gradient boosting in modern practice.</p>
+<p><strong>Implementation</strong>: <a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html">sklearn.svm.SVC</a> (classification) | <a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html">sklearn.svm.SVR</a> (regression)</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-14-contents" aria-controls="callout-14" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>k-Nearest Neighbors (k-NN)
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-14" class="callout-14-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What It Does</strong>: Classifies observations based on the majority class of their k nearest neighbors in feature space. It doesn’t build an explicit model; it just memorizes training data.</p>
+<p><strong>When It Excels</strong>:</p>
+<ul>
+<li>Simple baseline for classification</li>
+<li>When decision boundaries are very irregular</li>
+<li>Recommendation systems (collaborative filtering)</li>
+</ul>
+<p><strong>Key Limitations</strong>:</p>
+<ul>
+<li>Slow predictions (must compare to all training data)</li>
+<li>Struggles with high-dimensional data (curse of dimensionality)</li>
+<li>Very sensitive to feature scaling</li>
+</ul>
+<p><strong>Implementation</strong>: <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html">sklearn.neighbors.KNeighborsClassifier</a> (classification) | <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html">sklearn.neighbors.KNeighborsRegressor</a> (regression)</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-15-contents" aria-controls="callout-15" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Ensemble Stacking
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-15" class="callout-15-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What It Does</strong>: Combines multiple different algorithms (e.g., logistic regression + random forest + XGBoost) by training a meta-model that learns how to weight each base model’s predictions.</p>
+<p><strong>When It Excels</strong>:</p>
+<ul>
+<li>Kaggle competitions (often wins)</li>
+<li>When you need absolute maximum performance</li>
+<li>When different models capture different patterns</li>
+</ul>
+<p><strong>Key Limitations</strong>:</p>
+<ul>
+<li>Complex to implement and maintain</li>
+<li>Risk of overfitting if not done carefully</li>
+<li>Difficult to explain to stakeholders</li>
+</ul>
+<p><strong>Implementation</strong>: <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.StackingClassifier.html">sklearn.ensemble.StackingClassifier</a> (classification) | <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.StackingRegressor.html">sklearn.ensemble.StackingRegressor</a> (regression)</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-16-contents" aria-controls="callout-16" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Naive Bayes
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-16" class="callout-16-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><strong>What It Does</strong>: Probabilistic classifier based on Bayes’ theorem, assuming features are independent (which is often naive, hence the name).</p>
+<p><strong>When It Excels</strong>:</p>
+<ul>
+<li>Text classification (spam detection, sentiment analysis)</li>
+<li>Very fast training and prediction</li>
+<li>Works well with small datasets</li>
+</ul>
+<p><strong>Key Limitations</strong>:</p>
+<ul>
+<li>Independence assumption rarely holds</li>
+<li>Outperformed by modern methods in most cases</li>
+<li>Still useful as a fast baseline</li>
+</ul>
+<p><strong>Implementation</strong>: <a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.GaussianNB.html">sklearn.naive_bayes.GaussianNB</a> (continuous features) | <a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html">sklearn.naive_bayes.MultinomialNB</a> (count data, text)</p>
+</div>
+</div>
+</div>
+</section>
+<section id="unifying-concepts-the-big-picture" class="level2" data-number="33.6">
+<h2 data-number="33.6" class="anchored" data-anchor-id="unifying-concepts-the-big-picture"><span class="header-section-number">33.6</span> Unifying Concepts: The Big Picture</h2>
+<p>Now that you’ve been introduced to a wide landscape of machine learning algorithms—from the linear regression you mastered early on to gradient boosting and neural networks—it’s valuable to step back and recognize the common threads that connect them all. Understanding these unifying principles will help you make smarter decisions about which algorithm to use and when.</p>
+<section id="the-universal-challenge-balancing-bias-and-variance" class="level3">
+<h3 class="anchored" data-anchor-id="the-universal-challenge-balancing-bias-and-variance">The Universal Challenge: Balancing Bias and Variance</h3>
+<p>Every machine learning algorithm, whether simple or complex, must navigate the fundamental tension between <strong>bias</strong> and <strong>variance</strong>. A model with high bias is too simple—it underfits the data by missing important patterns. Think of a linear regression trying to capture a non-linear relationship; it’s just not flexible enough. On the other hand, a model with high variance is too complex—it overfits by memorizing noise in the training data rather than learning generalizable patterns. An unpruned decision tree that perfectly predicts every training example but fails on new data exemplifies this problem.</p>
+<p>What’s fascinating is how different algorithms tackle this tradeoff in fundamentally different ways. Linear models typically suffer from high bias unless you engineer many features, because they can only learn linear relationships. Decision trees go the opposite direction—they have high variance and easily overfit unless constrained through pruning or ensemble methods. Random forests brilliantly reduce variance by averaging predictions across many trees, each trained on different subsets of data. Gradient boosting takes yet another approach: it reduces bias by iteratively building new models that correct the mistakes of previous ones. Neural networks, with their many layers and parameters, can suffer from either problem depending on architecture and training, which is why regularization techniques like dropout are so critical.</p>
+<p>The key insight? There’s no single “best” way to balance bias and variance—different algorithms make different tradeoffs, and the right choice depends on your data, your problem, and your constraints.</p>
+</section>
+<section id="evaluation-principles-apply-universally" class="level3">
+<h3 class="anchored" data-anchor-id="evaluation-principles-apply-universally">Evaluation Principles Apply Universally</h3>
+<p>Regardless of which algorithm you choose, the evaluation fundamentals you learned earlier in this course remain constant. Whether you’re fitting a simple logistic regression or a complex deep neural network, you must always use proper train-test splits to get honest estimates of performance. K-fold cross-validation provides robust estimates across all algorithms, helping you understand whether your model’s performance is stable or depends heavily on which examples happen to be in your test set.</p>
+<p>Choosing the right metric also matters across the board. Accuracy might suffice for balanced classification problems, but RMSE for regression or ROC-AUC for imbalanced classification often tell you more about real-world performance. And regardless of your algorithm’s complexity, you must always watch for the telltale sign of overfitting: training performance that far exceeds test performance. These principles aren’t algorithm-specific—they’re fundamental to all supervised machine learning.</p>
+</section>
+<section id="feature-engineering-the-great-equalizer" class="level3">
+<h3 class="anchored" data-anchor-id="feature-engineering-the-great-equalizer">Feature Engineering: The Great Equalizer</h3>
+<p>Here’s a truth that might surprise you: in real-world applications, investing time in thoughtful feature engineering often improves your model more than switching from random forest to XGBoost or even to neural networks. Creating domain-specific features that capture expert knowledge can unlock patterns that even the most sophisticated algorithms might miss. Properly handling missing data prevents information loss that no algorithm can recover. Ensuring features are properly scaled allows algorithms like neural networks and k-NN to work as designed. And applying dimensionality reduction techniques like PCA can simultaneously improve both speed and performance by removing noisy, redundant features.</p>
+<p>This doesn’t mean algorithm choice is irrelevant—it clearly matters, as we’ve discussed throughout this chapter. But it does mean that a random forest with well-engineered features will almost always outperform a neural network with poorly prepared data. Don’t fall into the trap of thinking the latest, most complex algorithm is always the answer. Often, the biggest performance gains come from understanding your data deeply and crafting features that help your model learn.</p>
+</section>
+<section id="navigating-the-interpretability-performance-tradeoff" class="level3">
+<h3 class="anchored" data-anchor-id="navigating-the-interpretability-performance-tradeoff">Navigating the Interpretability-Performance Tradeoff</h3>
+<p>As models become more powerful, they often become less interpretable. This creates a practical tension you’ll face in many real-world projects. Linear regression and logistic regression are highly interpretable—you can directly explain how each feature influences predictions through coefficients. Decision trees are also relatively interpretable through their branching logic. But as you move toward random forests, XGBoost, and especially neural networks, interpretability decreases while predictive performance typically increases.</p>
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div id="fig-interpretability-performance-tradeoff" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-interpretability-performance-tradeoff-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div>
+<pre class="mermaid mermaid-js" data-label="fig-interpretability-performance-tradeoff">graph LR
+    A["Linear/Logistic&lt;br/&gt;Regression"] --&gt; B["Decision&lt;br/&gt;Tree"]
+    B --&gt; C["Random&lt;br/&gt;Forest"]
+    C --&gt; D["Gradient&lt;br/&gt;Boosting"]
+    D --&gt; E["Neural&lt;br/&gt;Networks"]
+    E --&gt; F["Deep Learning&lt;br/&gt;Ensembles"]
+
+    A -.-&gt;|"HIGH Interpretability"| A
+    F -.-&gt;|"HIGH Performance"| F
+
+    style A fill:#90EE90,stroke:#333,stroke-width:2px
+    style B fill:#B8E6B8,stroke:#333,stroke-width:2px
+    style C fill:#FFE6CC,stroke:#333,stroke-width:2px
+    style D fill:#FFD699,stroke:#333,stroke-width:2px
+    style E fill:#FFB366,stroke:#333,stroke-width:2px
+    style F fill:#FF9933,stroke:#333,stroke-width:2px
+</pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-interpretability-performance-tradeoff-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;33.3: The Interpretability-Performance Spectrum: As models become more complex, they typically gain performance but lose interpretability
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The question isn’t which side of this spectrum is “better”—it depends entirely on your context. When you need to explain decisions to regulators, customers, or domain experts who must validate your model’s logic, interpretability is paramount. In high-stakes domains like healthcare and finance where the cost of errors is very high, understanding <em>why</em> your model makes predictions isn’t just nice to have—it’s often legally required or ethically essential.</p>
+<p>Conversely, when prediction accuracy is your primary objective and you can treat the model as a black box, complex methods make sense. If you have enough data to thoroughly validate performance through rigorous cross-validation and holdout testing, the loss of interpretability may be an acceptable tradeoff for better predictions. Many recommender systems, fraud detection systems, and search ranking algorithms fall into this category—users care about accurate results, not necessarily about understanding every decision.</p>
+<p>The good news is that tools like SHAP and LIME (which you’ll encounter if you continue in machine learning) can help explain complex models’ predictions, partially bridging this gap. But some degree of tradeoff remains, and being thoughtful about where your application falls on this spectrum should influence your algorithm choice.</p>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>A Practical Framework: When to Use What
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>While the “right” algorithm depends on your specific situation, here’s a practical framework to guide your initial choices:</p>
+<p><strong>Start with the nature of your data.</strong> If you have structured, tabular data (rows and columns with features like age, income, purchase history), start with random forests or XGBoost—they consistently perform well and rarely require extensive tuning. Neural networks are rarely the best choice for tabular data despite their power in other domains.</p>
+<p>For unstructured data, deep learning becomes the go-to approach. Images call for Convolutional Neural Networks (CNNs), text benefits from Transformers like BERT or GPT (or simpler RNNs/LSTMs for smaller applications), time series can leverage LSTMs or GRUs (though classical methods like ARIMA remain competitive), and audio or video require specialized deep learning architectures.</p>
+<p><strong>Within the structured data world, several factors should guide you.</strong> If interpretability is crucial—perhaps you need regulatory approval or stakeholder buy-in—start with linear regression, logistic regression, or a single decision tree. With small datasets (under 10,000 rows), random forests tend to be more robust and less prone to overfitting. When you have larger datasets and the time to tune hyperparameters carefully, XGBoost often delivers the best performance. And if you’re working with truly massive datasets (millions of rows), LightGBM offers speed advantages over XGBoost while maintaining competitive accuracy.</p>
+<p>Remember, this framework provides starting points, not rigid rules. Always experiment with multiple approaches and let cross-validation guide your final choice. The best algorithm for your specific problem is the one that performs best on <em>your</em> data, validated through proper testing.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="looking-forward-continuing-your-ml-journey" class="level2" data-number="33.7">
+<h2 data-number="33.7" class="anchored" data-anchor-id="looking-forward-continuing-your-ml-journey"><span class="header-section-number">33.7</span> Looking Forward: Continuing Your ML Journey</h2>
+<p>You’ve now been introduced to the major families of machine learning algorithms that professionals use to solve real-world problems. From classical supervised learning methods like linear regression, logistic regression, decision trees, and random forests—which you’ve practiced extensively—to advanced ensemble methods like gradient boosting (XGBoost, LightGBM, CatBoost), you understand the core of modern predictive modeling. You’ve also glimpsed the world of neural networks and deep learning, including feedforward networks, CNNs, RNNs, and the Transformers that power today’s generative AI. And through clustering and PCA, you’ve explored unsupervised learning techniques for finding hidden patterns in data.</p>
+<p>This knowledge represents a comprehensive foundation in machine learning. But it’s exactly that—a foundation. Each topic we’ve introduced in this chapter could fill entire courses or books. The next chapter will provide you with a detailed roadmap for where to go from here, including specific learning paths tailored to different interests, curated resources to deepen your expertise, and career directions you might pursue based on what excites you most about machine learning.</p>
+<div class="callout callout-style-simple callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Key Takeaways
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you move forward in your machine learning journey, keep these essential insights in mind:</p>
+<p><strong>Gradient boosting methods</strong> like XGBoost and LightGBM often provide the best performance on structured, tabular data—especially after careful hyperparameter tuning. If you’re working with business data in rows and columns, these should be in your toolkit.</p>
+<p><strong>Neural networks and deep learning</strong> truly shine with unstructured data like images, text, and audio, as well as with very large datasets. However, they often don’t outperform gradient boosting on typical tabular business data, despite their popularity and power in other domains.</p>
+<p><strong>Classical methods</strong> like random forests and logistic regression remain remarkably powerful and should always be your starting point. They’re easier to interpret, faster to train, and often perform nearly as well as more complex methods while requiring less tuning and computational resources.</p>
+<p>Here’s a truth that bears repeating: <strong>algorithm choice matters less than you might think</strong>. Proper feature engineering, rigorous cross-validation, and thoughtful hyperparameter tuning typically improve performance more than switching from one algorithm to another. Focus on these fundamentals before chasing the latest algorithm.</p>
+<p><strong>Generative AI</strong> systems like ChatGPT and DALL-E represent the frontier of deep learning, built on massive neural networks with billions of parameters. They demonstrate what’s possible with sufficient scale, but they also build on the same fundamental principles you’ve learned in this course.</p>
+<p>Finally, always <strong>start simple and add complexity only when needed</strong>. The best model isn’t the most sophisticated one—it’s the simplest one that achieves your performance requirements while meeting your constraints for interpretability, speed, and maintainability. Occam’s Razor applies to machine learning too.</p>
+</div>
+</div>
+</section>
+<section id="exercises" class="level2" data-number="33.8">
+<h2 data-number="33.8" class="anchored" data-anchor-id="exercises"><span class="header-section-number">33.8</span> Exercises</h2>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Reflection Questions
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>These questions will help you synthesize what you’ve learned and think critically about algorithm choice:</p>
+<ol type="1">
+<li><p><strong>Compare and Contrast</strong>: How is gradient boosting fundamentally different from random forests in how it builds its ensemble? Consider their training processes, how they combine individual models, and the types of errors each addresses. When might you choose one over the other in a real-world scenario?</p></li>
+<li><p><strong>Neural Network Intuition</strong>: Explain how a neural network relates to logistic regression. What does adding hidden layers enable the model to do that logistic regression cannot? Think about decision boundaries, feature interactions, and representational capacity.</p></li>
+<li><p><strong>Practical Tradeoffs</strong>: Why don’t we use deep learning for every problem? What are the practical constraints—computational, data-related, and organizational—that make classical ML methods often preferable for business applications? Consider training time, interpretability needs, dataset sizes, and deployment complexity.</p></li>
+<li><p><strong>Generative AI Connection</strong>: How do the neural network principles discussed in this chapter relate to generative AI systems like ChatGPT? What additional components or training approaches make generation possible? Think about the fundamental difference between prediction and generation tasks.</p></li>
+</ol>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>For the Curious: Going Deeper
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you’re excited to dive deeper into these advanced methods, here’s where to start your journey. Don’t feel pressured to pursue all of these—pick the path that aligns with your interests and goals.</p>
+<p><strong>For Gradient Boosting Mastery</strong>: The XGBoost documentation and tutorials (https://xgboost.readthedocs.io/) provide excellent hands-on resources, while Corey Wade’s “Hands-On Gradient Boosting with XGBoost and Scikit-learn” offers comprehensive coverage with practical examples.</p>
+<p><strong>For Neural Networks and Deep Learning</strong>: Fast.ai’s Practical Deep Learning for Coders (https://course.fast.ai/) takes a top-down, code-first approach that gets you building quickly. If you prefer more theoretical grounding, Andrew Ng’s Deep Learning Specialization on Coursera provides systematic coverage of fundamentals. François Chollet’s “Deep Learning with Python” (written by the creator of Keras) bridges theory and practice beautifully.</p>
+<p><strong>For Generative AI Exploration</strong>: Start with OpenAI’s GPT documentation and API (https://platform.openai.com/docs/) to understand how to use these models. David Foster’s “Generative Deep Learning” covers the theory behind generative models. The Hugging Face Transformers library and documentation (https://huggingface.co/docs/transformers/) will help you implement state-of-the-art models.</p>
+<p><strong>For Practical Application and Community Learning</strong>: Kaggle competitions (https://www.kaggle.com/competitions) let you apply your skills to real problems and learn from others’ solutions—there’s no better way to improve than seeing how top practitioners approach problems. Google’s Machine Learning Crash Course (https://developers.google.com/machine-learning/crash-course) offers another solid, free resource for reinforcing fundamentals.</p>
+</div>
+</div>
+<p>You’ve built a strong foundation in machine learning fundamentals. The algorithms discussed in this chapter represent the next level—techniques that build directly on what you’ve learned and extend your capabilities to handle increasingly complex problems. They’re not magic, and they’re not fundamentally different from what you already know. They’re natural extensions of the principles you’ve mastered: learning patterns from data, balancing bias and variance, and validating performance rigorously.</p>
+<p>In the next chapter, we’ll chart a detailed course for your continued learning journey beyond this course, helping you navigate the vast landscape of machine learning specializations, career paths, and resources available to you.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./32-dimension-reduction.html" class="pagination-link" aria-label="Dimension Reduction with PCA">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Dimension Reduction with PCA</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./99-anaconda-install.html" class="pagination-link" aria-label="Anaconda Installation">
+        <span class="nav-page-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/33-modern-ml-algorithms.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
