@@ -18,21 +18,22 @@ By the end of the course, students will be able to:
 
 ---
 
-## Weekly Topics
+## Content Overview
 
-| Week | Tuesday (Lecture)                                       | Thursday (Lab/Activities)                                  |
-|------|----------------------------------------------------------|-------------------------------------------------------------|
-| 1    | Course Intro + Python Fundamentals                       | Python Basics: Variables, Data Types, Basic Operators       |
-| 2    | Reproducible Workflows & Data Importing                  | Jupyter, Data structures, Pandas, Importing CSVs            |
-| 3    | Data Wrangling & Manipulation (Pandas)                   | Filtering, Aggregating, Merging DataFrames                  |
-| 4    | Working with Dates, Strings, & Relational Data           | Date-time, Text Columns, SQL Joins in Pandas                |
-| 5    | Data Visualization (Matplotlib & Seaborn)                | Exploratory Data Analysis with Visuals                      |
-| 6    | Writing Efficient Python Code                            | Control Flow, Functions, List Comprehensions                |
-| 7    | **Midterm Project Kickoff**                              | **Midterm Project Work Session**                            |
-| 8    | Intro to Machine Learning & Key Considerations           | Train/Test Split, Features & Labels, Model Building Process |
-| 9    | Correlation & Linear Regression                           | Building & Evaluating Regression Models                     |
-| 10   | Logistic Regression & Classification                     | Classification Models & Evaluation Metrics                  |
-| 11   | Tree-Based Models & Feature Importance                   | Decision Trees, Random Forests, Model Interpretation        |
-| 12   | Model Optimization & Validation                          | Feature Engineering, Cross-Validation, Hyperparameter Tuning |
-| 13   | Unsupervised Learning & Advanced Topics                  | Clustering, Dimensionality Reduction, Deep Learning Overview |
-| 14   | **Final Project Kickoff**                                | Course Wrap-Up + Feedback                                   |
+This book is broken into **13 modules**, each aligned with a week of instruction in the BANA 4080 course. Every module introduces key concepts or techniques in data science, combining concise explanations with interactive, hands-on code examples. Whether you're reading independently or following along with the course, the modular structure makes it easy to work through the content at your own pace, week by week.
+
+| **Module & Topics**                             | **Summary of Concepts Covered**                                            |
+|-------------------------------------------------|-----------------------------------------------------------------------------|
+| 1. Fundamentals I                               | Course overview, coding environment setup, Python basics                   |
+| 2. Fundamentals II                              | Using Jupyter notebooks, data structures, Python libraries                 |
+| 3. Pandas & Data Wrangling I                    | Importing data, DataFrame fundamentals, subsetting, cleaning, filtering     |
+| 4. Pandas & Data Wrangling II                   | Working with datetime, text data, aggregating, merging, and joining data   |
+| 5. Data Visualization                           | Creating plots using matplotlib and seaborn, exploratory data analysis     |
+| 6. Writing Efficient Python Code                | Control flow, defining functions, loops, list comprehensions               |
+| 7. Introduction to Machine Learning             | Overview of ML, features/labels, train/test split, key considerations      |
+| 8. Linear Regression & Correlation             | Correlation analysis, simple & multiple linear regression, model evaluation |
+| 9. Logistic Regression & Classification        | Binary classification, logistic regression, classification metrics         |
+| 10. Tree-Based Models & Feature Importance      | Decision trees, random forests, ensemble methods, model interpretability   |
+| 11. Model Optimization & Validation             | Feature engineering, cross-validation, hyperparameter tuning, best practices |
+| 12. Unsupervised Learning                       | Clustering (K-Means), dimensionality reduction (PCA), pattern discovery     |
+| 13. Modern ML & Your Learning Roadmap           | Gradient boosting, neural networks, deep learning, career paths, next steps |
