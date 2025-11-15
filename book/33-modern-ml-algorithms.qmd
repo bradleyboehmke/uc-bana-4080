@@ -717,7 +717,7 @@ Deep learning has exploded in the last decade due to three key factors:
 
 2. **Computational Power**: GPUs (graphics processing units) can perform the massive matrix multiplications required by neural networks much faster than CPUs. Cloud computing makes this power accessible to everyone.
 
-3. **Algorithmic Innovations**: Techniques like dropout (prevents overfitting), batch normalization (stabilizes training), residual connections (enables very deep networks), and **attention mechanisms** (allows models to focus on relevant parts of the input) have made training large networks feasible. Attention, in particular, revolutionized how neural networks handle sequential data by allowing the model to dynamically weigh the importance of different input elements—a breakthrough that powers modern transformers.
+3. **Algorithmic Innovations**: Techniques like dropout (prevents overfitting), batch normalization (stabilizes training), residual connections (enables very deep networks), and **attention mechanisms** (allows models to focus on relevant parts of the input) have made training large networks feasible. Attention, in particular, revolutionized how neural networks handle sequential data by allowing the model to dynamically weigh the importance of different input elements. This breakthrough powers modern transformers.
 
 ### From Neural Networks to Generative AI
 
@@ -923,52 +923,103 @@ Now that you've been introduced to a wide landscape of machine learning algorith
 
 ### The Universal Challenge: Balancing Bias and Variance
 
-Every machine learning algorithm, whether simple or complex, must navigate the fundamental tension between **bias** and **variance**. A model with high bias is too simple—it underfits the data by missing important patterns. Think of a linear regression trying to capture a non-linear relationship; it's just not flexible enough. On the other hand, a model with high variance is too complex—it overfits by memorizing noise in the training data rather than learning generalizable patterns. An unpruned decision tree that perfectly predicts every training example but fails on new data exemplifies this problem.
+Every machine learning algorithm, whether simple or complex, must navigate the fundamental tension between **bias** and **variance**. A model with high bias is too simple. It underfits the data by missing important patterns. Think of a linear regression trying to capture a non-linear relationship; it's just not flexible enough. On the other hand, a model with high variance is too complex. It overfits by memorizing noise in the training data rather than learning generalizable patterns. An unpruned decision tree that perfectly predicts every training example but fails on new data exemplifies this problem.
 
-What's fascinating is how different algorithms tackle this tradeoff in fundamentally different ways. Linear models typically suffer from high bias unless you engineer many features, because they can only learn linear relationships. Decision trees go the opposite direction—they have high variance and easily overfit unless constrained through pruning or ensemble methods. Random forests brilliantly reduce variance by averaging predictions across many trees, each trained on different subsets of data. Gradient boosting takes yet another approach: it reduces bias by iteratively building new models that correct the mistakes of previous ones. Neural networks, with their many layers and parameters, can suffer from either problem depending on architecture and training, which is why regularization techniques like dropout are so critical.
+What's fascinating is how different algorithms tackle this tradeoff in fundamentally different ways. Linear models typically suffer from high bias unless you engineer many features, because they can only learn linear relationships. Decision trees go the opposite direction. They have high variance and easily overfit unless constrained through pruning or ensemble methods. Random forests brilliantly reduce variance by averaging predictions across many trees, each trained on different subsets of data. Gradient boosting takes yet another approach: it reduces bias by iteratively building new models that correct the mistakes of previous ones. Neural networks, with their many layers and parameters, can suffer from either problem depending on architecture and training, which is why regularization techniques like dropout are so critical.
 
-The key insight? There's no single "best" way to balance bias and variance—different algorithms make different tradeoffs, and the right choice depends on your data, your problem, and your constraints.
+::: {.callout-note}
+## Key Insight
+
+There's no single "best" way to balance bias and variance. Different algorithms make different tradeoffs, and the right choice depends on your data, your problem, and your constraints.
+:::
 
 ### Evaluation Principles Apply Universally
 
 Regardless of which algorithm you choose, the evaluation fundamentals you learned earlier in this course remain constant. Whether you're fitting a simple logistic regression or a complex deep neural network, you must always use proper train-test splits to get honest estimates of performance. K-fold cross-validation provides robust estimates across all algorithms, helping you understand whether your model's performance is stable or depends heavily on which examples happen to be in your test set.
 
-Choosing the right metric also matters across the board. Accuracy might suffice for balanced classification problems, but RMSE for regression or ROC-AUC for imbalanced classification often tell you more about real-world performance. And regardless of your algorithm's complexity, you must always watch for the telltale sign of overfitting: training performance that far exceeds test performance. These principles aren't algorithm-specific—they're fundamental to all supervised machine learning.
+Choosing the right metric also matters across the board. Accuracy might suffice for balanced classification problems, but RMSE for regression or ROC-AUC for imbalanced classification often tell you more about real-world performance. And regardless of your algorithm's complexity, you must always watch for the telltale sign of overfitting: training performance that far exceeds test performance. These principles aren't algorithm-specific. They're fundamental to all supervised machine learning.
 
 ### Feature Engineering: The Great Equalizer
 
 Here's a truth that might surprise you: in real-world applications, investing time in thoughtful feature engineering often improves your model more than switching from random forest to XGBoost or even to neural networks. Creating domain-specific features that capture expert knowledge can unlock patterns that even the most sophisticated algorithms might miss. Properly handling missing data prevents information loss that no algorithm can recover. Ensuring features are properly scaled allows algorithms like neural networks and k-NN to work as designed. And applying dimensionality reduction techniques like PCA can simultaneously improve both speed and performance by removing noisy, redundant features.
 
-This doesn't mean algorithm choice is irrelevant—it clearly matters, as we've discussed throughout this chapter. But it does mean that a random forest with well-engineered features will almost always outperform a neural network with poorly prepared data. Don't fall into the trap of thinking the latest, most complex algorithm is always the answer. Often, the biggest performance gains come from understanding your data deeply and crafting features that help your model learn.
+This doesn't mean algorithm choice is irrelevant. It clearly matters, as we've discussed throughout this chapter. But it does mean that a random forest with well-engineered features will almost always outperform a neural network with poorly prepared data. Don't fall into the trap of thinking the latest, most complex algorithm is always the answer. Often, the biggest performance gains come from understanding your data deeply and crafting features that help your model learn.
 
 ### Navigating the Interpretability-Performance Tradeoff
 
-As models become more powerful, they often become less interpretable. This creates a practical tension you'll face in many real-world projects. Linear regression and logistic regression are highly interpretable—you can directly explain how each feature influences predictions through coefficients. Decision trees are also relatively interpretable through their branching logic. But as you move toward random forests, XGBoost, and especially neural networks, interpretability decreases while predictive performance typically increases.
+As models become more powerful, they often become less interpretable. This creates a practical tension you'll face in many real-world projects. Linear regression and logistic regression are highly interpretable. You can directly explain how each feature influences predictions through coefficients. Decision trees are also relatively interpretable through their branching logic. But as you move toward random forests, XGBoost, and especially neural networks, interpretability decreases while predictive performance typically increases.
 
-```{mermaid}
-%%| label: fig-interpretability-performance-tradeoff
-%%| fig-cap: "The Interpretability-Performance Spectrum: As models become more complex, they typically gain performance but lose interpretability"
-graph LR
-    A["Linear/Logistic<br/>Regression"] --> B["Decision<br/>Tree"]
-    B --> C["Random<br/>Forest"]
-    C --> D["Gradient<br/>Boosting"]
-    D --> E["Neural<br/>Networks"]
-    E --> F["Deep Learning<br/>Ensembles"]
+```{python}
+#| echo: false
+#| label: fig-interpretability-performance-tradeoff
+#| fig-cap: "The Interpretability-Performance Spectrum: As models become more complex, they typically gain performance but lose interpretability"
 
-    A -.->|"HIGH Interpretability"| A
-    F -.->|"HIGH Performance"| F
+import matplotlib.pyplot as plt
+import numpy as np
 
-    style A fill:#90EE90,stroke:#333,stroke-width:2px
-    style B fill:#B8E6B8,stroke:#333,stroke-width:2px
-    style C fill:#FFE6CC,stroke:#333,stroke-width:2px
-    style D fill:#FFD699,stroke:#333,stroke-width:2px
-    style E fill:#FFB366,stroke:#333,stroke-width:2px
-    style F fill:#FF9933,stroke:#333,stroke-width:2px
+# Define algorithms with performance and interpretability scores (0-10 scale)
+# Swapped: now (name, performance, interpretability)
+algorithms = [
+    ("Linear/Logistic\nRegression", 5.5, 9.5),
+    ("Decision\nTree", 6.0, 8.5),
+    ("Random\nForest", 8.0, 5.5),
+    ("Gradient\nBoosting", 8.5, 4.5),
+    ("Neural\nNetworks", 9.0, 3.0),
+    ("Deep Learning\nEnsembles", 9.5, 2.0)
+]
+
+# Extract data
+names = [a[0] for a in algorithms]
+performance = [a[1] for a in algorithms]
+interpretability = [a[2] for a in algorithms]
+
+# Create color gradient from green to orange
+colors = ['#90EE90', '#B8E6B8', '#FFE6CC', '#FFD699', '#FFB366', '#FF9933']
+
+# Create figure
+fig, ax = plt.subplots(figsize=(10, 7))
+
+# Plot points with larger size
+for i, (name, perf, interp) in enumerate(algorithms):
+    ax.scatter(perf, interp, s=1800, c=colors[i], edgecolors='black',
+               linewidth=2, zorder=3, alpha=0.8)
+    ax.annotate(name, (perf, interp), ha='center', va='center',
+                fontsize=10, fontweight='bold', zorder=4)
+
+# Draw connecting line
+ax.plot(performance, interpretability, 'k--', alpha=0.3, linewidth=1.5, zorder=1)
+
+# Add diagonal reference line
+ax.plot([4, 10], [10, 0], 'r:', alpha=0.2, linewidth=2, label='Ideal (both high)')
+
+# Annotate regions
+ax.text(8.25, 1.25, 'Lower Interpretability\nHigh Performance',
+        fontsize=11, ha='center', style='italic',
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightcoral', alpha=0.3))
+
+ax.text(5.0, 7.5, 'High Interpretability\nLower Performance',
+        fontsize=11, ha='center', style='italic',
+        bbox=dict(boxstyle='round,pad=0.5', facecolor='lightgreen', alpha=0.3))
+
+# Labels and styling (swapped)
+ax.set_xlabel('Predictive Performance', fontsize=13, fontweight='bold')
+ax.set_ylabel('Interpretability', fontsize=13, fontweight='bold')
+ax.set_title('The Interpretability-Performance Tradeoff', fontsize=15, fontweight='bold', pad=20)
+
+# Set limits and grid
+ax.set_xlim(4, 10.5)
+ax.set_ylim(0, 10.5)
+ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+ax.set_axisbelow(True)
+
+
+plt.tight_layout()
+plt.show()
 ```
 
-The question isn't which side of this spectrum is "better"—it depends entirely on your context. When you need to explain decisions to regulators, customers, or domain experts who must validate your model's logic, interpretability is paramount. In high-stakes domains like healthcare and finance where the cost of errors is very high, understanding *why* your model makes predictions isn't just nice to have—it's often legally required or ethically essential.
+The question isn't which side of this spectrum is "better". It depends entirely on your context. When you need to explain decisions to regulators, customers, or domain experts who must validate your model's logic, interpretability is paramount. In high-stakes domains like healthcare and finance where the cost of errors is very high, understanding *why* your model makes predictions isn't just nice to have. It's often legally required or ethically essential.
 
-Conversely, when prediction accuracy is your primary objective and you can treat the model as a black box, complex methods make sense. If you have enough data to thoroughly validate performance through rigorous cross-validation and holdout testing, the loss of interpretability may be an acceptable tradeoff for better predictions. Many recommender systems, fraud detection systems, and search ranking algorithms fall into this category—users care about accurate results, not necessarily about understanding every decision.
+Conversely, when prediction accuracy is your primary objective and you can treat the model as a black box, complex methods make sense. If you have enough data to thoroughly validate performance through rigorous cross-validation and holdout testing, the loss of interpretability may be an acceptable tradeoff for better predictions. Many recommender systems, fraud detection systems, and search ranking algorithms fall into this category. Users care about accurate results, not necessarily about understanding every decision.
 
 The good news is that tools like SHAP and LIME (which you'll encounter if you continue in machine learning) can help explain complex models' predictions, partially bridging this gap. But some degree of tradeoff remains, and being thoughtful about where your application falls on this spectrum should influence your algorithm choice.
 
@@ -977,11 +1028,11 @@ The good news is that tools like SHAP and LIME (which you'll encounter if you co
 
 While the "right" algorithm depends on your specific situation, here's a practical framework to guide your initial choices:
 
-**Start with the nature of your data.** If you have structured, tabular data (rows and columns with features like age, income, purchase history), start with random forests or XGBoost—they consistently perform well and rarely require extensive tuning. Neural networks are rarely the best choice for tabular data despite their power in other domains.
+**Start with the nature of your data.** If you have structured, tabular data (rows and columns with features like age, income, purchase history), start with random forests or XGBoost. They consistently perform well and rarely require extensive tuning. Neural networks are rarely the best choice for tabular data despite their power in other domains.
 
 For unstructured data, deep learning becomes the go-to approach. Images call for Convolutional Neural Networks (CNNs), text benefits from Transformers like BERT or GPT (or simpler RNNs/LSTMs for smaller applications), time series can leverage LSTMs or GRUs (though classical methods like ARIMA remain competitive), and audio or video require specialized deep learning architectures.
 
-**Within the structured data world, several factors should guide you.** If interpretability is crucial—perhaps you need regulatory approval or stakeholder buy-in—start with linear regression, logistic regression, or a single decision tree. With small datasets (under 10,000 rows), random forests tend to be more robust and less prone to overfitting. When you have larger datasets and the time to tune hyperparameters carefully, XGBoost often delivers the best performance. And if you're working with truly massive datasets (millions of rows), LightGBM offers speed advantages over XGBoost while maintaining competitive accuracy.
+**Within the structured data world, several factors should guide you.** If interpretability is crucial (perhaps you need regulatory approval or stakeholder buy-in), start with linear regression, logistic regression, or a single decision tree. With small datasets (under 10,000 rows), random forests tend to be more robust and less prone to overfitting. When you have larger datasets and the time to tune hyperparameters carefully, XGBoost often delivers the best performance. And if you're working with truly massive datasets (millions of rows), LightGBM offers speed advantages over XGBoost while maintaining competitive accuracy.
 
 Remember, this framework provides starting points, not rigid rules. Always experiment with multiple approaches and let cross-validation guide your final choice. The best algorithm for your specific problem is the one that performs best on *your* data, validated through proper testing.
 :::
@@ -990,14 +1041,14 @@ Remember, this framework provides starting points, not rigid rules. Always exper
 
 You've now been introduced to the major families of machine learning algorithms that professionals use to solve real-world problems. From classical supervised learning methods like linear regression, logistic regression, decision trees, and random forests—which you've practiced extensively—to advanced ensemble methods like gradient boosting (XGBoost, LightGBM, CatBoost), you understand the core of modern predictive modeling. You've also glimpsed the world of neural networks and deep learning, including feedforward networks, CNNs, RNNs, and the Transformers that power today's generative AI. And through clustering and PCA, you've explored unsupervised learning techniques for finding hidden patterns in data.
 
-This knowledge represents a comprehensive foundation in machine learning. But it's exactly that—a foundation. Each topic we've introduced in this chapter could fill entire courses or books. The next chapter will provide you with a detailed roadmap for where to go from here, including specific learning paths tailored to different interests, curated resources to deepen your expertise, and career directions you might pursue based on what excites you most about machine learning.
+This knowledge represents a comprehensive foundation in machine learning. But it's exactly that: a foundation. Each topic we've introduced in this chapter could fill entire courses or books. The next chapter will provide you with a detailed roadmap for where to go from here, including specific learning paths tailored to different interests, curated resources to deepen your expertise, and career directions you might pursue based on what excites you most about machine learning.
 
 ::: {.callout-important}
 ## Key Takeaways
 
 As you move forward in your machine learning journey, keep these essential insights in mind:
 
-**Gradient boosting methods** like XGBoost and LightGBM often provide the best performance on structured, tabular data—especially after careful hyperparameter tuning. If you're working with business data in rows and columns, these should be in your toolkit.
+**Gradient boosting methods** like XGBoost and LightGBM often provide the best performance on structured, tabular data, especially after careful hyperparameter tuning. If you're working with business data in rows and columns, these should be in your toolkit.
 
 **Neural networks and deep learning** truly shine with unstructured data like images, text, and audio, as well as with very large datasets. However, they often don't outperform gradient boosting on typical tabular business data, despite their popularity and power in other domains.
 
@@ -1007,12 +1058,12 @@ Here's a truth that bears repeating: **algorithm choice matters less than you mi
 
 **Generative AI** systems like ChatGPT and DALL-E represent the frontier of deep learning, built on massive neural networks with billions of parameters. They demonstrate what's possible with sufficient scale, but they also build on the same fundamental principles you've learned in this course.
 
-Finally, always **start simple and add complexity only when needed**. The best model isn't the most sophisticated one—it's the simplest one that achieves your performance requirements while meeting your constraints for interpretability, speed, and maintainability. Occam's Razor applies to machine learning too.
+Finally, always **start simple and add complexity only when needed**. The best model isn't the most sophisticated one. It's the simplest one that achieves your performance requirements while meeting your constraints for interpretability, speed, and maintainability. Occam's Razor applies to machine learning too.
 :::
 
 ## Exercises
 
-::: {.callout-note}
+::: {.callout-note collapse="true"}
 ## Reflection Questions
 
 These questions will help you synthesize what you've learned and think critically about algorithm choice:
@@ -1021,15 +1072,15 @@ These questions will help you synthesize what you've learned and think criticall
 
 2. **Neural Network Intuition**: Explain how a neural network relates to logistic regression. What does adding hidden layers enable the model to do that logistic regression cannot? Think about decision boundaries, feature interactions, and representational capacity.
 
-3. **Practical Tradeoffs**: Why don't we use deep learning for every problem? What are the practical constraints—computational, data-related, and organizational—that make classical ML methods often preferable for business applications? Consider training time, interpretability needs, dataset sizes, and deployment complexity.
+3. **Practical Tradeoffs**: Why don't we use deep learning for every problem? What are the practical constraints (computational, data-related, and organizational) that make classical ML methods often preferable for business applications? Consider training time, interpretability needs, dataset sizes, and deployment complexity.
 
 4. **Generative AI Connection**: How do the neural network principles discussed in this chapter relate to generative AI systems like ChatGPT? What additional components or training approaches make generation possible? Think about the fundamental difference between prediction and generation tasks.
 :::
 
-::: {.callout-tip}
+::: {.callout-tip collapse="true"}
 ## For the Curious: Going Deeper
 
-If you're excited to dive deeper into these advanced methods, here's where to start your journey. Don't feel pressured to pursue all of these—pick the path that aligns with your interests and goals.
+If you're excited to dive deeper into these advanced methods, here's where to start your journey. Don't feel pressured to pursue all of these. Pick the path that aligns with your interests and goals.
 
 **For Gradient Boosting Mastery**: The XGBoost documentation and tutorials (https://xgboost.readthedocs.io/) provide excellent hands-on resources, while Corey Wade's "Hands-On Gradient Boosting with XGBoost and Scikit-learn" offers comprehensive coverage with practical examples.
 
@@ -1037,7 +1088,7 @@ If you're excited to dive deeper into these advanced methods, here's where to st
 
 **For Generative AI Exploration**: Start with OpenAI's GPT documentation and API (https://platform.openai.com/docs/) to understand how to use these models. David Foster's "Generative Deep Learning" covers the theory behind generative models. The Hugging Face Transformers library and documentation (https://huggingface.co/docs/transformers/) will help you implement state-of-the-art models.
 
-**For Practical Application and Community Learning**: Kaggle competitions (https://www.kaggle.com/competitions) let you apply your skills to real problems and learn from others' solutions—there's no better way to improve than seeing how top practitioners approach problems. Google's Machine Learning Crash Course (https://developers.google.com/machine-learning/crash-course) offers another solid, free resource for reinforcing fundamentals.
+**For Practical Application and Community Learning**: Kaggle competitions (https://www.kaggle.com/competitions) let you apply your skills to real problems and learn from others' solutions. There's no better way to improve than seeing how top practitioners approach problems. Google's Machine Learning Crash Course (https://developers.google.com/machine-learning/crash-course) offers another solid, free resource for reinforcing fundamentals.
 :::
 
 You've built a strong foundation in machine learning fundamentals. The algorithms discussed in this chapter represent the next level—techniques that build directly on what you've learned and extend your capabilities to handle increasingly complex problems. They're not magic, and they're not fundamentally different from what you already know. They're natural extensions of the principles you've mastered: learning patterns from data, balancing bias and variance, and validating performance rigorously.
