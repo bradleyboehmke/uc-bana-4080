@@ -200,8 +200,18 @@
   <script type="text/javascript">
   window.PlotlyConfig = {MathJaxConfig: 'local'};
   if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}
+  if (typeof require !== 'undefined') {
+  require.undef("plotly");
+  requirejs.config({
+      paths: {
+          'plotly': ['https://cdn.plot.ly/plotly-2.35.2.min']
+      }
+  });
+  require(['plotly'], function(Plotly) {
+      window._Plotly = Plotly;
+  });
+  }
   </script>
-  <script type="module">import "https://cdn.plot.ly/plotly-3.2.0.min"</script>
 
 </head>
 <body class="quarto-light">
@@ -227,6 +237,26 @@
 <li>Hands-on demonstrations with real data</li>
 </ul></li>
 </ul>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: Today marks a major shift from supervised to unsupervised learning. We’re moving from prediction tasks to discovery and pattern recognition.</p>
+<p><strong>Key Points to Emphasize</strong>:</p>
+<ul>
+<li>This is the last major topic before the final project</li>
+<li>Unsupervised learning is used extensively in industry for customer segmentation, feature engineering, and data exploration</li>
+<li>Both methods we’ll cover today (clustering and PCA) are practical tools they’ll likely use in their careers</li>
+<li>The concepts build on everything they’ve learned (standardization, train/test splits, model evaluation)</li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section>
 <section id="discussion-homework-questions" class="title-slide slide level1 center" data-background="#43464B">
@@ -273,6 +303,31 @@
 </script>
 </center>
 </div></div>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: Check understanding from Week 12 and create a bridge to unsupervised learning.</p>
+<p><strong>Activity Management</strong>:</p>
+<ul>
+<li>Give students the full 3 minutes to discuss</li>
+<li>Common topics from Week 12 that might come up:
+<ul>
+<li>Feature importance interpretation in Random Forests</li>
+<li>When to use bagging vs.&nbsp;boosting</li>
+<li>Hyperparameter tuning with GridSearchCV vs.&nbsp;RandomizedSearchCV</li>
+<li>Cross-validation strategies</li>
+</ul></li>
+</ul>
+<p><strong>Transition to Today</strong>: After hearing from 2-3 groups, mention: “The ensemble methods we learned last week work with labeled data. Today we’ll explore what to do when you DON’T have labels—that’s unsupervised learning.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </div>
 </section></section>
 <section>
@@ -312,7 +367,19 @@
 </ul>
 </div></div>
 <aside class="notes">
-<p>Emphasize that this is a major shift in thinking. We’re no longer trying to predict something—we’re trying to understand the natural structure in our data.</p>
+<p><strong>Main Takeaway</strong>: Unsupervised learning is fundamentally different from everything we’ve done so far—we discover patterns instead of predicting outcomes.</p>
+<p><strong>Key Teaching Points</strong>:</p>
+<ul>
+<li><strong>The Big Shift</strong>: Up until now, every model had a target variable (y). Now there’s NO target—just features (X)</li>
+<li><strong>Success metrics change</strong>: We can’t measure accuracy or RMSE anymore. Success = interpretability + business value</li>
+<li><strong>Real-world context</strong>: Often you collect data but don’t know what patterns exist yet. Unsupervised learning helps you explore and understand your data</li>
+<li><strong>Examples to mention</strong>:
+<ul>
+<li>Supervised: “Predict which customers will churn” (you need historical churn labels)</li>
+<li>Unsupervised: “Find natural customer segments” (no predetermined groups needed)</li>
+</ul></li>
+<li><strong>Common student question</strong>: “How do we know if we’re right?” Answer: “We validate with domain experts and measure business impact, not statistical accuracy”</li>
+</ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -351,6 +418,35 @@
 </center>
 </div></div>
 <p>Then we’ll take a few responses…</p>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: Unsupervised learning is valuable when you have data but no predetermined labels or categories.</p>
+<p><strong>Example Answers to Listen For</strong>:</p>
+<ol type="1">
+<li><strong>Retailer example (given)</strong>: Millions of transactions, want to discover customer segments for targeted marketing</li>
+<li><strong>Healthcare</strong>: Patient records with symptoms/treatments, discover patient subtypes that respond differently to treatments</li>
+<li><strong>E-commerce</strong>: Product catalog, group similar products for recommendations (no one manually labeled “similar products”)</li>
+<li><strong>Social media</strong>: User behavior data, find communities or interest groups</li>
+<li><strong>Manufacturing</strong>: Sensor data from machines, detect anomaly patterns (don’t know failure modes ahead of time)</li>
+<li><strong>Document organization</strong>: Thousands of documents, automatically organize into topics</li>
+</ol>
+<p><strong>What Makes These Unsupervised?</strong>:</p>
+<ul>
+<li>No pre-existing labels for “customer type” or “patient subtype”</li>
+<li>You’re discovering the structure, not predicting a known outcome</li>
+<li>Value comes from finding patterns you didn’t know existed</li>
+</ul>
+<p><strong>Transition</strong>: “Great examples! Notice how in each case, we have rich data but no labels. That’s when unsupervised learning shines.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="two-main-types-of-unsupervised-learning" class="slide level2 smaller">
 <h2>Two Main Types of Unsupervised Learning</h2>
@@ -396,7 +492,25 @@
 </div>
 </div>
 <aside class="notes">
-<p>Today we’ll focus on K-Means clustering (most common clustering method) and PCA (most common dimension reduction method). These are the workhorses of unsupervised learning in business.</p>
+<p><strong>Main Takeaway</strong>: There are two fundamentally different types of unsupervised learning—clustering works on ROWS, dimension reduction works on COLUMNS.</p>
+<p><strong>Critical Distinction</strong> (emphasize heavily):</p>
+<ul>
+<li><strong>Clustering</strong>: “Which customers are similar to each other?” → Groups rows</li>
+<li><strong>Dimension Reduction</strong>: “Which features capture similar information?” → Combines columns</li>
+<li>This is a common point of confusion—make sure students understand the difference!</li>
+</ul>
+<p><strong>Today’s Focus</strong>:</p>
+<ul>
+<li>K-Means clustering: Most widely used clustering algorithm in business</li>
+<li>PCA: Most common dimension reduction technique</li>
+<li>These are the “workhorses”—students will see them constantly in industry</li>
+</ul>
+<p><strong>Diagram Interpretation</strong>:</p>
+<ul>
+<li>Point out the other methods listed (Hierarchical, DBSCAN, t-SNE, Autoencoders) to show there’s a whole ecosystem</li>
+<li>But K-Means and PCA are the foundations that everyone should know</li>
+<li>The other methods build on or extend these core ideas</li>
+</ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -412,7 +526,7 @@
 </section>
 <section id="clustering-groups-rows-observations" class="slide level2 smaller scrollable">
 <h2>Clustering: Groups ROWS (observations)</h2>
-<div id="c68131a4" class="cell" data-execution_count="1">
+<div id="2422fc1f" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -435,10 +549,38 @@
 </div>
 </div>
 </div>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: Clustering operates on ROWS—it finds groups of similar observations.</p>
+<p><strong>Visual Walkthrough</strong>:</p>
+<ul>
+<li>Point to the matrix visualization showing 8 rows (customers) and 18 features</li>
+<li>Notice how entire ROWS are color-coded together (Premium = red, Regular = teal, Inactive = blue)</li>
+<li>Each row represents one customer across all their features</li>
+<li>The algorithm looked across all 18 features to determine “these 3 customers are similar”</li>
+</ul>
+<p><strong>Emphasize</strong>:</p>
+<ul>
+<li>The number of rows stays the same (8 customers → still 8 customers)</li>
+<li>We’re just adding a new piece of information: cluster membership</li>
+<li>Each customer now has a label: Premium, Regular, or Inactive</li>
+<li>This labeling happened automatically based on patterns in the features</li>
+</ul>
+<p><strong>Real-World Application</strong>: “If this were a real retailer, you might find that Premium customers all have high spending, frequent visits, and low discount usage. The algorithm discovered this pattern without being told what makes a customer ‘premium.’”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="dimension-reduction-combines-columns-features" class="slide level2 smaller scrollable">
 <h2>Dimension Reduction: Combines COLUMNS (features)</h2>
-<div id="2096a079" class="cell" data-execution_count="2">
+<div id="744a6ec2" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -461,6 +603,35 @@
 </div>
 </div>
 </div>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: Dimension reduction operates on COLUMNS—it combines correlated features into composite components.</p>
+<p><strong>Visual Walkthrough</strong>:</p>
+<ul>
+<li>Original matrix: 8 rows × 5 features (Sq Ft, Bedrooms, Bathrooms, Location Score, School Rating)</li>
+<li>Notice the color coding: Red features (Sq Ft, Bedrooms, Bathrooms) → PC1 “Overall Size”</li>
+<li>Teal features (Location Score, School Rating) → PC2 “Location Quality”</li>
+<li>After PCA: 8 rows × 2 components (60% fewer features!)</li>
+</ul>
+<p><strong>Key Contrast with Clustering</strong>:</p>
+<ul>
+<li><strong>Clustering changed</strong>: ROWS (which customers are grouped together)</li>
+<li><strong>PCA changes</strong>: COLUMNS (which features are combined)</li>
+<li><strong>Clustering output</strong>: Same features + cluster label</li>
+<li><strong>PCA output</strong>: New features (principal components)</li>
+</ul>
+<p><strong>House Example Explanation</strong>: “Sq Ft, bedrooms, and bathrooms are all highly correlated—big houses have more of everything. Instead of storing all three, we can create ONE composite measure called ‘Overall Size’ (PC1) that captures most of that information. Similarly, location score and school rating both relate to neighborhood quality, so we combine them into PC2.”</p>
+<p><strong>Emphasize</strong>: We went from 5 features to 2 components while keeping the same 8 houses!</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section></section>
 <section>
 <section id="clustering-finding-natural-groups" class="title-slide slide level1 center" data-background="#43464B">
@@ -522,7 +693,7 @@
 <section id="how-k-means-works-the-algorithm" class="slide level2 smaller scrollable">
 <h2>How K-Means Works: The Algorithm</h2>
 <p><strong>K-Means</strong> is an iterative algorithm that finds clusters by repeatedly assigning points and updating centers:</p>
-<div id="62a105cc" class="cell" data-execution_count="3">
+<div id="6736d4e9" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -573,7 +744,41 @@
 </div></div>
 <p>Then we’ll take a few responses…</p>
 <aside class="notes">
-<p>Answer: A and C are clustering (no labels, finding groups). B and D are supervised learning (predicting specific outcomes).</p>
+<p><strong>Main Takeaway</strong>: Learn to distinguish clustering problems from supervised learning problems.</p>
+<p><strong>Correct Answers</strong>:</p>
+<ul>
+<li><strong>A (Customer purchase history → marketing campaigns)</strong>: CLUSTERING
+<ul>
+<li>Why: No predetermined segments exist</li>
+<li>Goal: Discover natural customer groups based on behavior</li>
+<li>Then create targeted campaigns for each discovered segment</li>
+</ul></li>
+<li><strong>B (Predict customer churn)</strong>: SUPERVISED LEARNING
+<ul>
+<li>Why: You need historical data with churn labels (churned = yes/no)</li>
+<li>Goal: Predict a specific outcome (will this customer churn?)</li>
+<li>This requires a target variable</li>
+</ul></li>
+<li><strong>C (Organize 10,000 products into groups)</strong>: CLUSTERING
+<ul>
+<li>Why: No predetermined product categories given</li>
+<li>Goal: Find natural groupings based on purchase patterns, attributes, etc.</li>
+<li>Similar products should end up in same cluster</li>
+</ul></li>
+<li><strong>D (Predict house prices)</strong>: SUPERVISED LEARNING
+<ul>
+<li>Why: You have historical house prices (target variable)</li>
+<li>Goal: Predict a specific numeric outcome (price)</li>
+<li>Classic regression problem</li>
+</ul></li>
+</ul>
+<p><strong>Teaching Strategy</strong>:</p>
+<ul>
+<li>Have students vote (raise hands for clustering vs.&nbsp;supervised for each)</li>
+<li>Ask “What’s the key difference?” → Presence/absence of a target variable</li>
+<li>Emphasize: If you’re PREDICTING something specific → supervised; if you’re DISCOVERING patterns → unsupervised</li>
+</ul>
+<p><strong>Common Student Confusion</strong>: “Can’t we use clustering for A and then predict churn later?” → YES! That’s actually a great workflow: cluster first to find segments, THEN build supervised models for each segment. But the clustering step itself is unsupervised.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -589,8 +794,8 @@
 <section id="hands-on-demo-k-means-in-action" class="slide level2 smaller">
 <h2>Hands-On Demo: K-Means in Action</h2>
 <p>Let’s see K-Means clustering with a simple customer dataset:</p>
-<div id="a77a43e9" class="cell" data-execution_count="4">
-<div class="cell-output cell-output-display" data-execution_count="207">
+<div id="e39d3d2c" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-display" data-execution_count="4">
 <div>
 <style scoped="">
     .dataframe tbody tr th:only-of-type {
@@ -680,7 +885,7 @@
 </section>
 <section id="demo-fitting-k-means" class="slide level2 smaller">
 <h2>Demo: Fitting K-Means</h2>
-<div id="2e91da35" class="cell" data-execution_count="5">
+<div id="09ba8992" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href=""></a><span class="co"># Standardize features (important for K-Means!)</span></span>
 <span id="cb1-2"><a href=""></a>scaler <span class="op">=</span> StandardScaler()</span>
 <span id="cb1-3"><a href=""></a>customers_scaled <span class="op">=</span> scaler.fit_transform(customers)</span>
@@ -689,7 +894,7 @@
 <span id="cb1-6"><a href=""></a>kmeans <span class="op">=</span> KMeans(n_clusters<span class="op">=</span><span class="dv">3</span>, random_state<span class="op">=</span><span class="dv">42</span>, n_init<span class="op">=</span><span class="dv">10</span>)</span>
 <span id="cb1-7"><a href=""></a>customers[<span class="st">'cluster'</span>] <span class="op">=</span> kmeans.fit_predict(customers_scaled)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="fcd7ee3f" class="cell" data-execution_count="6">
+<div id="6495c2df" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -736,7 +941,33 @@
 <p><strong>Silhouette score balances cluster tightness with separation</strong></p>
 </div></div>
 <aside class="notes">
-<p>Emphasize that there’s often no “correct” answer—it depends on business needs. Sometimes 3 segments are actionable, sometimes you need 5.</p>
+<p><strong>Main Takeaway</strong>: K-Means requires you to choose K upfront, but we have two complementary methods to help make this decision.</p>
+<p><strong>Elbow Method - Deep Explanation</strong>:</p>
+<ul>
+<li><strong>What is inertia?</strong> Sum of squared distances from each point to its cluster center</li>
+<li><strong>Why does it decrease?</strong> More clusters = points closer to their centers on average</li>
+<li><strong>The “elbow”</strong>: The point where adding more clusters gives diminishing returns</li>
+<li><strong>How to spot it</strong>: Look for the “bend” where the curve starts flattening out</li>
+<li><strong>Limitation</strong>: Sometimes there’s no clear elbow (we’ll see this with real data!)</li>
+</ul>
+<p><strong>Silhouette Score - Deep Explanation</strong>:</p>
+<ul>
+<li><strong>What it measures</strong>: For each point, how similar is it to its own cluster vs.&nbsp;the nearest other cluster?</li>
+<li><strong>Score = +1</strong>: Perfect! Point is very close to its cluster center and far from others</li>
+<li><strong>Score = 0</strong>: Point is on the boundary between two clusters (could go either way)</li>
+<li><strong>Score = -1</strong>: Wrong cluster! Point is closer to a different cluster</li>
+<li><strong>Overall score</strong>: Average across all points</li>
+<li><strong>Good scores</strong>: 0.5-0.7 for well-separated clusters; 0.2-0.4 is acceptable for messy real-world data</li>
+</ul>
+<p><strong>Key Teaching Point</strong>:</p>
+<p>“These are GUIDES, not rules. The best K depends on:</p>
+<ol type="1">
+<li>Statistical fit (elbow &amp; silhouette)</li>
+<li>Business needs (can marketing handle 5 segments or only 3?)</li>
+<li>Interpretability (can you clearly describe each cluster?)</li>
+<li>Actionability (can you do something different for each segment?)”</li>
+</ol>
+<p><strong>Common Question</strong>: “Which metric should I trust more?” → Use BOTH together. If they agree, great! If they disagree, try a few values of K and see which produces the most interpretable segments.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -751,7 +982,7 @@
 </section>
 <section id="demo-finding-the-right-k" class="slide level2 smaller">
 <h2>Demo: Finding the Right K</h2>
-<div id="3f9d1577" class="cell columns column-output-location" data-fig-height="8" data-fig-width="6" data-execution_count="7">
+<div id="1f7d6670" class="cell columns column-output-location" data-fig-height="8" data-fig-width="6" data-execution_count="7">
 <div class="column">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href=""></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> silhouette_score</span>
 <span id="cb2-2"><a href=""></a></span>
@@ -854,7 +1085,45 @@
 </div></div>
 <p>Then we’ll take a few responses…</p>
 <aside class="notes">
-<p>The elbow is around K=3 (biggest drop). But business constraints matter! If the team can only manage 3 segments, that’s your answer regardless of statistics.</p>
+<p><strong>Main Takeaway</strong>: Practice interpreting elbow plots and balancing statistical vs.&nbsp;business considerations.</p>
+<p><strong>Question-by-Question Analysis</strong>:</p>
+<p><strong>1. Where is the “elbow” in this data?</strong></p>
+<ul>
+<li>Look for the biggest drop in inertia:
+<ul>
+<li>K=2 to K=3: Drop of 3,000 (10,000 → 7,000) — <strong>HUGE drop (30%)</strong></li>
+<li>K=3 to K=4: Drop of 1,800 (7,000 → 5,200) — Still significant (26%)</li>
+<li>K=4 to K=5: Drop of 400 (5,200 → 4,800) — <strong>Flattening out (8%)</strong></li>
+<li>K=5 to K=6: Drop of 200 (4,800 → 4,600) — Very small (4%)</li>
+</ul></li>
+<li><strong>The elbow is around K=3 or K=4</strong> (where the curve starts to flatten)</li>
+</ul>
+<p><strong>2. What K would you recommend? Why?</strong></p>
+<ul>
+<li><strong>Statistical answer</strong>: K=3 or K=4
+<ul>
+<li>K=3 gives you the biggest “bang for your buck” (biggest drop before flattening)</li>
+<li>K=4 still shows meaningful improvement</li>
+<li>K=5+ shows diminishing returns</li>
+</ul></li>
+<li><strong>Practical answer</strong>: “It depends on what the segments mean”
+<ul>
+<li>Need to actually look at the cluster profiles</li>
+<li>Are they interpretable? Actionable?</li>
+</ul></li>
+</ul>
+<p><strong>3. What if marketing says they can only handle 3 segments?</strong></p>
+<ul>
+<li><strong>Critical teaching moment</strong>: Business constraints trump statistical optimization!</li>
+<li>Even if K=4 is statistically “better,” K=3 is the right answer if:
+<ul>
+<li>Marketing team doesn’t have resources for 4 campaigns</li>
+<li>Leadership can’t remember/act on 4 different strategies</li>
+<li>The cost of managing 4 segments exceeds the benefit</li>
+</ul></li>
+<li><strong>Real-world insight</strong>: “In industry, you’ll often have to choose a ‘good enough’ solution that’s actually implementable over a ‘perfect’ solution that won’t be used.”</li>
+</ul>
+<p><strong>Broader Lesson</strong>: “Data science isn’t just about finding the optimal statistical answer. It’s about finding the BEST answer given real-world constraints: resources, time, budget, organizational complexity, and stakeholder understanding.”</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -894,16 +1163,67 @@
 </div>
 </div>
 </div>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: Prepare students for the reality that real-world clustering often doesn’t have clear, obvious solutions.</p>
+<p><strong>Critical Mindset Shift</strong>:</p>
+<ul>
+<li><strong>So far</strong>: Toy examples with clean, well-separated clusters
+<ul>
+<li>Synthetic customer data with 3 obvious segments</li>
+<li>Perfect elbow at K=3</li>
+<li>High silhouette scores (0.5-0.7)</li>
+<li>Clear interpretation</li>
+</ul></li>
+<li><strong>Reality</strong>: Real business data is messy
+<ul>
+<li>Customers exist on a SPECTRUM, not in neat boxes</li>
+<li>No clear elbow (gradual decline)</li>
+<li>Low silhouette scores (0.15-0.20)</li>
+<li>Overlapping patterns</li>
+</ul></li>
+</ul>
+<p><strong>Why This Matters</strong>:</p>
+<ul>
+<li><strong>Student expectation</strong>: “I’ll run K-Means and get obvious segments with high scores”</li>
+<li><strong>Reality</strong>: “I’ll get ambiguous results that require judgment and domain expertise”</li>
+<li><strong>Goal of this section</strong>: Set realistic expectations so students don’t get discouraged</li>
+</ul>
+<p><strong>Upcoming Real-World Dataset</strong>:</p>
+<ul>
+<li><strong>Complete Journey</strong>: Actual grocery store transaction data</li>
+<li><strong>801 households</strong>: Real people with messy, inconsistent behavior</li>
+<li><strong>14 features</strong>: Mix of behavioral (spending, frequency) and demographic (age, income)</li>
+<li><strong>Result</strong>: No clear “winner” for K, low silhouette scores across the board</li>
+</ul>
+<p><strong>Teaching Strategy</strong>:</p>
+<ol type="1">
+<li>Show the messy results AFTER showing clean examples</li>
+<li>Emphasize: “This doesn’t mean you did something wrong!”</li>
+<li>Explain: “Real customer behavior is complex and doesn’t fit into neat boxes”</li>
+<li>Reassure: “Low silhouette scores (0.15-0.20) are NORMAL and ACCEPTABLE for behavioral data”</li>
+</ol>
+<p><strong>Key Message to Students</strong>: “When you get ‘messy’ results in your own projects, don’t panic! This is what real data science looks like. The skill is in interpreting ambiguous results, combining statistical metrics with business context, and making defensible decisions even when there’s no clear ‘right answer.’”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="real-data-customer-features" class="slide level2 smaller scrollable">
 <h2>Real Data: Customer Features</h2>
-<div id="2b8898ce" class="cell" data-execution_count="8">
+<div id="e1842dbe" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-stdout">
 <pre><code>Real customer data shape: (801, 14)
 
 First few customers:</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="211">
+<div class="cell-output cell-output-display" data-execution_count="8">
 <div>
 <style scoped="">
     .dataframe tbody tr th:only-of-type {
@@ -1133,7 +1453,7 @@ First few customers:</code></pre>
 <section id="real-data-elbow-silhouette-analysis" class="slide level2 smaller scrollable">
 <h2>Real Data: Elbow &amp; Silhouette Analysis</h2>
 <p>Let’s apply the same methods we used before:</p>
-<div id="ad057cd2" class="cell" data-execution_count="9">
+<div id="4fb34343" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -1392,6 +1712,57 @@ Results for different K values:
 </center>
 </div></div>
 <p>Then we’ll take a few responses…</p>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: Recognize the problems caused by having too many features and understand the trade-offs of dimension reduction.</p>
+<p><strong>Question Analysis</strong>:</p>
+<p><strong>1. Which problems suggest you have too many features?</strong></p>
+<ul>
+<li><strong>Correlated features</strong>: Yes! Multicollinearity causes unstable models
+<ul>
+<li>If sq ft and bedrooms are correlated, they provide redundant information</li>
+<li>Models can’t distinguish their individual effects</li>
+<li>Feature weights become unreliable</li>
+</ul></li>
+<li><strong>Long training time (30 minutes)</strong>: Yes! More features = more computation
+<ul>
+<li>100 features vs.&nbsp;10 features = 10× more parameters to estimate</li>
+<li>Exponentially slower for some algorithms</li>
+</ul></li>
+<li><strong>Test accuracy worse than training</strong>: Yes! Classic sign of overfitting
+<ul>
+<li>With 100 features and limited data, model memorizes noise</li>
+<li>High-dimensional spaces are sparse (curse of dimensionality)</li>
+<li>Model can’t generalize to new data</li>
+</ul></li>
+</ul>
+<p><strong>2. What might you gain by reducing from 100 to 10 features?</strong></p>
+<ul>
+<li><strong>Faster training</strong>: 10-100× speedup depending on algorithm</li>
+<li><strong>Better generalization</strong>: Less overfitting, better test performance</li>
+<li><strong>Simpler models</strong>: Easier to understand, explain, and deploy</li>
+<li><strong>Visualization</strong>: Can actually plot and explore the data</li>
+<li><strong>Less multicollinearity</strong>: Components are uncorrelated by design</li>
+<li><strong>Noise reduction</strong>: Minor components often represent measurement noise</li>
+</ul>
+<p><strong>3. What might you lose?</strong></p>
+<ul>
+<li><strong>Some information</strong>: PCA with 10 components might capture 90% of variance, but you lose 10%</li>
+<li><strong>Interpretability</strong>: Original features (“sq ft”) are intuitive; PC1 is a weighted combination that’s harder to explain</li>
+<li><strong>Specific details</strong>: Rare patterns captured by minor components are lost</li>
+<li><strong>Reversibility</strong>: You can’t perfectly reconstruct the original 100 features from 10 components</li>
+</ul>
+<p><strong>Key Teaching Insight</strong>: “PCA is always a trade-off. You’re betting that the information you LOSE (10-20% of variance, usually noise) is worth the benefits you GAIN (speed, simplicity, generalization). In practice, this trade-off is almost always favorable for high-dimensional data.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="what-is-dimension-reduction" class="slide level2 smaller scrollable">
 <h2>What is Dimension Reduction?</h2>
@@ -1528,12 +1899,11 @@ Results for different K values:
 <h2>Visualizing PCA in 3D: House Features</h2>
 <p>Let’s see how PCA works with 3 house features: square feet, bedrooms, and bathrooms.</p>
 <p><strong>Rotate the plot to see how PC1 aligns with the direction of maximum spread!</strong></p>
-<div id="3fc47630" class="cell" data-execution_count="10">
+<div id="f23111c4" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display">
-<div>            <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script><script type="text/javascript">if (window.MathJax && window.MathJax.Hub && window.MathJax.Hub.Config) {window.MathJax.Hub.Config({SVG: {font: "STIX-Web"}});}</script>                <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
-        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.2.0.min.js" integrity="sha256-iZ2u/oU2wf/vDbl/ChcX93WgbBRSBvUO6N413hDz7xM=" crossorigin="anonymous"></script>                <div id="c4c9ded2-6590-4e5e-907e-7ace3f2f96c8" class="plotly-graph-div" style="height:600px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("c4c9ded2-6590-4e5e-907e-7ace3f2f96c8")) {                    Plotly.newPlot(                        "c4c9ded2-6590-4e5e-907e-7ace3f2f96c8",                        [{"hovertemplate":"Sq Ft (std): %{x:.2f}\u003cbr\u003eBedrooms (std): %{y:.2f}\u003cbr\u003eBathrooms (std): %{z:.2f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"lightblue","line":{"color":"navy","width":0.5},"opacity":0.7,"size":5},"mode":"markers","name":"Houses","x":{"dtype":"f8","bdata":"J9j2gY9E5T82K\u002fzMZICjv1JzG3lDneo\u002fKL3C+HbO\u002fD9RfnJyV3XCvwQ+4gi\u002fdMK\u002fgqZn6CLN\u002fT9ycJGt29ruP83Euldq5dm\u002fYSWUqDDk5j9HeLoQmXfZv5rM2O2Eodm\u002fMkznXRB+2D97h+NC\u002fQQAwDM1jacmtPy\u002fcuO7+iE84L+WQLKjVRjwv\u002fUVvwm1nN0\u002fETu1f4J67L\u002f+gOFeGiv3v+BdgbNcyvs\u002foKGD7I9Fwb9AUBHYl0bIP7U5MTmDY\u002fe\u002f7HHpcp8z378bN5czNmzOP9I8XGGcivK\u002fxtJE9nP74D8csmkI0ZfhvwXnclbwm8q\u002fnSCEg3+h4b+yyJL4dFEBQMbsv8O0mLk\u002fXrz2JsXj8L8W3fTmPGfwP6jdJe87x\u002fO\u002fQZt7pu4l1j9wlFotIW4AwJ8BlWfOrfW\u002fFnjjck9M1T8cW\u002fAgPdTtP2eNAh4VftM\u002fUL0AZoO\u002fir9z5yNlLPHLv47p+oVDV\u002fi\u002fwkHTa4LQ5b92n6EtNkXZv9Au+I2NjvQ\u002fUoJD2D+x3z99Y\u002f6h9GD9v9ksE6IPT94\u002fanSdjUDr079CxUOuYkvkv1mF7qrIVuk\u002fQfp0MiQY9D+GmByeH1TyP4XTFz25Cuq\u002fTCP4UDgXzb+bIu9zPNHeP8tDybPFHPM\u002fAZpmBkqV2r9GFJKCjy23v2gCFY8twPG\u002fla78lo5X87\u002f8y\u002fOH0jnwP\u002fv0JGds2vk\u002fm4Mq1PQJoj\u002fvOgxTo5vzP4CupEX4e+A\u002f+fbQohIr47+1p7xLynngPwWjMhZ9Ev0\u002fAhbgPUdFsz9ipS6JGIv9PxflhegnRgbAcG4scFNk8D9ITBnHaArLPypTnDwnpcu\u002fNH2B5le1yz\u002fK+2tcXK0AwO969F4yaMC\u002fBDL\u002fCvZS4D9Y0y1j3gH8P6hZO1opWt2\u002f7raU0S\u002f06L+lpLRawC7cvzZ5428mDPI\u002fDsdJCq+j3j\u002fGi49GfirevwspzBWh2uU\u002fmlJMfyV2zD92f\u002fehfv3yP84G\u002fQU4L+W\u002fyevbdUS0z790OZ11pGrUvzIf3QU9E\u002fi\u002fsLrD6AhU3D9Cw2ccQNjZPwi38qN43r4\u002fBIT9MBKFwr8="},"y":{"dtype":"f8","bdata":"I2eeb7vHWj\u002fHva4QZPXNvxb0EmucgOQ\u002f3HRGwSny9T+q62Pu5UrMvxXq4WMVfZ8\u002f+KxYPhwIBUDmyUQUTPjvP\u002f6DpldCTtK\u002feKrmfta65D9Q787N7vrzv0C2Uy1cJdq\u002f8N\u002f1HWS82D8f6Uco5Bnrv\u002fbWRH93QP2\u002fm18S2Ipm178u0Cc85ubvv7pqfRsNYrW\u002fpX4VcpMS1784GejAXC3xv9okB9asKABAPmIOsKNy4b\u002fx1nJk5YjpP24TusZOXgDAOlHWiXkWzL+59WqoNx\u002fzPxcNXuvaH\u002fm\u002fLZ+JN9sG0D9HDVpfRMffvwYNn+fc1du\u002fZlPzjd+4879lt5IADeQAQFTbAXWvu9i\u002f\u002fXJb028x6r9Xfn0Xo0PiPw3Mt3AHb+C\u002f8a5jIi4bmb8wYRO8YxgBwINGalWIme6\u002fKJXCer9Lzr9AtMzFlbvvP2JpNGsjues\u002f1VjUdTWh579AW58qtbvBvwlHQSDS0PW\u002fPzRBBEh91L9mWHjpFCbuv9PBEZ97kuQ\u002fUdQG47Zs5j8bOucVvGr6v3fFLtxc4+E\u002fa3ATvoz\u002fw7807yhVApztv0+uGFbsdus\u002fEzRvhyhW9T\u002f6em2u2+foP5b54CTY6qE\u002fhPmGa1Xbkr+iOVc0e06zv1ffM25r+vY\u002fqLIeIo0L679A4oEmjTPQPwJlrbAdGOK\u002ft1eSWPWv+L8WHPSGa2D2Pw3JPW9kwPs\u002fOK1io+z42D9HneVXpiUAQDzOtDYgNtg\u002f7Zf2B3mS7b8OzOYAMFi3P5IB\u002f9EsG\u002fY\u002fwrn1jkUdnT8sx7RDGs7+P9aOBVIpmwTA8PZwjQmR9T\u002f6pI6e85XJP\u002fJMfahjcds\u002frvDdAlXOtD8ePgSHA\u002fvpv8nG7IBMjMI\u002fbwfkVIvcuT9Uplc6k0LzP+99II03d86\u002fw2sRHV+a67+Xk8t0XQS+vzsADmi6pPQ\u002feeEqNVbh2j8SYMaY5\u002fPqvwXiC23Pkpm\u002f17kHNaZweD\u002fCteoUwUj4P11pYV8VuuG\u002fZX4CZNO56b9kTLnFG9bOv4M+OSNQqvS\u002fTFLJZ\u002fWDmD\u002fs04UD7bTcPxM31rgT9MA\u002fZFo7QvQT5b8="},"z":{"dtype":"f8","bdata":"a5G74O1m5T8lUEw54o3DP4eGiGMHR\u002fE\u002f2vfIkHkn\u002fj9SKKnTqBflvxE\u002f1lPpsN+\u002fG8mcilnH+z9yORIC6VXvPxMUugBbIsa\u002f9AN8IjUdAEAyDz1ZV7\u002fCvyQtWcxJrK8\u002fUWArpsHq5D8rNh9FA3v3v3uaGObpb\u002fq\u002f+CbGTCWRxb8FKY5DhYzyv64wh8a4vNE\u002fqzYsXjCL7r\u002f0ZtT0WGjzv+3Vv4q+aAJA2Tpa3rSu6r9xTarqMgvZP4pl\u002f74Ws\u002f2\u002frIhWATOK47\u002flnnUUfp7iP+Ricl+fO++\u002fVjc8gnR1lT8akN2Jyh7ovy1c4JxEsKs\u002fJtOPSPBU6L+cuwaewhH+P7wxf1SgtbM\u002fGBqEsL1+8r\u002ffNM\u002fmLDb6Pz6WL3tvheq\u002fCDS0wqU1378VP9i\u002f7fH6v5G6WFCslva\u002fSUtbDFJc4j97nU0M2cfdP9YG7r22Qcg\u002f\u002frhK0vSWwz8f4Quk9ly9P7vpucSrCvy\u002fK58CTP4h5795UkcqHRThv5UgsBSDDeo\u002fDRRpzUnQ8D+HNALVxLX2v4gxERqCbLi\u002fBVb5Um6arD\u002fKKmNhl8zNP5dhHxtXcPA\u002fzzLuATrj3T8EjKU+MVHoP9TPGDQ5Xc6\u002fSMZBCZCt3r+oFZ\u002fBm37hPxpLP22MU\u002fQ\u002fCgNF58IF578\u002fxGaJvWO\u002fv5D3BSATVQHAjM5hp4bI9r+ciSymCornP377iQK+4es\u002fImjZaH2l4z+TTFDYzGDePyH8lOo+bs8\u002feZ2extu13r+9RwqNY0ruP5dcX6I9D+8\u002f3wajo7NB3j8UJymfBo34Pz7cIsBK4AXAtFYTZ\u002fIr8D+TaJ88ryvNPzALyj+Jgdu\u002fLem3tdmQxz8P0d0hX8X+v99BZLnM\u002fba\u002fpa75eY7e5D8SR\u002fyb4VMAQDxb1LCC5eu\u002fbLf8nrs\u002fvT9IZRuXQPbxv3WC4TMgz+s\u002fN5cthagk4z+xjD2U\u002fj7Uv+b\u002fJYSxZtQ\u002fJZBetzHhtT+\u002fTzPUqFPpP4cLzqtppOm\u002fkNvyJ258tT+ArCetLXLEv4QDQsi6yvi\u002fjo8FTRLi5T9BoR0xkYvbP6ixpBdwV9g\u002fGSbIkgSztj8="},"type":"scatter3d"},{"hovertemplate":"PC1: 92.5% variance\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"rgb(255, 107, 107)","width":8},"mode":"lines","name":"PC1 (92.5% var)","x":[0,1.7662896177898082],"y":[0,1.7110677685029807],"z":[0,1.718274738706872],"type":"scatter3d"},{"colorscale":[[0,"rgb(255, 107, 107)"],[1,"rgb(255, 107, 107)"]],"hoverinfo":"skip","name":"PC1 direction","showlegend":false,"showscale":false,"u":[0.35325792355796165],"v":[0.34221355370059614],"w":[0.3436549477413744],"x":[1.7662896177898082],"y":[1.7110677685029807],"z":[1.718274738706872],"type":"cone"},{"hovertemplate":"PC2: 5.6% variance\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"rgb(78, 205, 196)","width":8},"mode":"lines","name":"PC2 (5.6% var)","x":[0,-0.13239086565695762],"y":[0,2.190647764792686],"z":[0,-2.045369166996366],"type":"scatter3d"},{"colorscale":[[0,"rgb(78, 205, 196)"],[1,"rgb(78, 205, 196)"]],"hoverinfo":"skip","name":"PC2 direction","showlegend":false,"showscale":false,"u":[-0.026478173131391527],"v":[0.43812955295853717],"w":[-0.4090738333992732],"x":[-0.13239086565695762],"y":[2.190647764792686],"z":[-2.045369166996366],"type":"cone"},{"hovertemplate":"PC3: 2.0% variance\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"rgb(69, 183, 209)","width":8},"mode":"lines","name":"PC3 (2.0% var)","x":[0,2.4212999906617387],"y":[0,-1.1284101480397286],"z":[0,-1.3652827154191998],"type":"scatter3d"},{"colorscale":[[0,"rgb(69, 183, 209)"],[1,"rgb(69, 183, 209)"]],"hoverinfo":"skip","name":"PC3 direction","showlegend":false,"showscale":false,"u":[0.48425999813234777],"v":[-0.22568202960794573],"w":[-0.27305654308384],"x":[2.4212999906617387],"y":[-1.1284101480397286],"z":[-1.3652827154191998],"type":"cone"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermap":[{"type":"scattermap","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"title":{"font":{"size":16},"text":"\u003cb\u003eInteractive 3D PCA Visualization\u003c\u002fb\u003e\u003cbr\u003e\u003csub\u003eRotate to see principal component directions!\u003c\u002fsub\u003e"},"scene":{"camera":{"eye":{"x":1.5,"y":1.5,"z":1.2}},"xaxis":{"title":{"text":"Square Feet (standardized)"}},"yaxis":{"title":{"text":"Bedrooms (standardized)"}},"zaxis":{"title":{"text":"Bathrooms (standardized)"}},"aspectmode":"cube"},"margin":{"l":0,"r":0,"t":60,"b":0},"legend":{"yanchor":"top","y":0.99,"xanchor":"left","x":0.01,"bgcolor":"rgba(255, 255, 255, 0.8)"},"height":600},                        {"responsive": true}                    ).then(function(){
+<div>                            <div id="56e6a35a-8b5a-43c9-a1ea-f6f3d822a3e6" class="plotly-graph-div" style="height:600px; width:100%;"></div>            <script type="text/javascript">                require(["plotly"], function(Plotly) {                    window.PLOTLYENV=window.PLOTLYENV || {};                                    if (document.getElementById("56e6a35a-8b5a-43c9-a1ea-f6f3d822a3e6")) {                    Plotly.newPlot(                        "56e6a35a-8b5a-43c9-a1ea-f6f3d822a3e6",                        [{"hovertemplate":"Sq Ft (std): %{x:.2f}\u003cbr\u003eBedrooms (std): %{y:.2f}\u003cbr\u003eBathrooms (std): %{z:.2f}\u003cextra\u003e\u003c\u002fextra\u003e","marker":{"color":"lightblue","line":{"color":"navy","width":0.5},"opacity":0.7,"size":5},"mode":"markers","name":"Houses","x":[0.6646192110408763,-0.03808894159563751,0.8316972127318911,1.8004064290251538,-0.144205981142465,-0.14418781217362675,1.8625821188274192,0.964216078758467,-0.4046274048551595,0.7153552334358829,-0.39792467721588703,-0.4004833529208526,0.38269433183922097,-2.002436182564393,-1.7939821763023474,-0.5073404214045765,-1.0059410471331254,0.46268964721488653,-0.8899548048301275,-1.448023195866028,1.736904812996606,-0.1349353699545306,0.18965433168580326,-1.4617950662683203,-0.48752580854286864,0.23767735976292034,-1.1588405421387518,0.5306949434221557,-0.5497822918237634,-0.20788387509474418,-0.5509641235994597,2.16477388570737,0.09998636035008976,-1.055607940866842,1.0252045652139876,-1.2361411420550699,0.34606519945230124,-2.05377421791723,-1.354933170907408,0.33278261394105024,0.9321580546701145,0.3045704644266238,-0.013060595083600163,-0.21829752863396443,-1.5213046296690638,-0.6817028146706934,-0.394849342882018,1.2848029657060813,0.49519344443800606,-1.836170800006783,0.47357550456645253,-0.31123365239711254,-0.6342023280723554,0.7918437326917839,1.255893895242153,1.1455379654157993,-0.8138090317939805,-0.227271117721353,0.4815207607430609,1.194524481096084,-0.41536188721730133,-0.09053894937285731,-1.109418448366478,-1.208876218598481,1.0141167936933462,1.615826037318867,0.03523221101682524,1.225497555165642,0.5151330337734663,-0.5990079097752804,0.5148669699894898,1.8170138232327997,0.07527585278156582,1.8464589461021537,-2.784255806528232,1.024493635347337,0.2112551662599762,-0.21597757777694798,0.21647166018645125,-2.0846488209203686,-0.12817983280634546,0.5101270880491602,1.7504562257938314,-0.4586280232591897,-0.7798079579713126,-0.44035347803089514,1.1279663439414214,0.4787404633017197,-0.4713435830182643,0.6829381395084807,0.22235554424027698,1.1868883444621736,-0.6620140187225958,-0.2476888251765941,-0.319008936746193,-1.5046968678524988,0.442629077252529,0.4038238789935812,0.12058214190139094,-0.14468600647072105],"y":[0.001634533923129352,-0.23405123533801328,0.6406995860376152,1.371621851903277,-0.22103571071769795,0.03075059339651361,2.628960120278517,0.9990597148774298,-0.2860265594445649,0.6478073576484595,-1.2487628974331137,-0.40853027750458537,0.38649847913575197,-0.846910551713595,-1.8282389613572696,-0.3656336889339344,-0.9969359564697748,-0.08352739258900047,-0.3605087865925987,-1.0735747847953245,2.019860908597008,-0.545244068011989,0.7979609453093116,-2.046048691323839,-0.2194358752282229,1.1951214388676432,-1.5702771371878208,0.25041847632972997,-0.49653729736038027,-0.4349281560827908,-1.2326350731793467,2.1113529248022354,-0.3864554064415888,-0.8185347679205673,0.570756479148211,-0.5135533525011639,-0.024517746781312636,-2.1369089787878224,-0.9562417667641089,-0.23668664449830001,0.991648565604585,0.866349896797413,-0.738428812156395,-0.13854088383842544,-1.3634816417656472,-0.3201465646314467,-0.9421486434901112,0.6428812128852378,0.700770800982932,-1.651058278617376,0.5590042400782939,-0.15623626023341627,-0.925294081046991,0.8582669908113959,1.3335347452550692,0.778302994421977,0.03499484491520659,-0.018414816558782757,-0.07541627910470663,1.4361376099386314,-0.8451600710300982,0.2531464458511756,-0.5654438448647456,-1.5429585895376314,1.3985400458930193,1.734470781837959,0.39019313769923114,2.0183836810062163,0.37830357878121723,-0.9241299777538622,0.09118938467035795,1.381634540841422,0.028431975222184887,1.925318016507343,-2.575762406153312,1.347909500603631,0.19988866083193796,0.4287957330136144,0.08127337760919559,-0.8118913304369391,0.1449065808788446,0.10102148840453905,1.2037536887168203,-0.23801321402514428,-0.8625941817984927,-0.11725410558172054,1.2902168335567825,0.42000346367014846,-0.8422735198864777,-0.024974099188485272,0.0059668056933177204,1.5177622620643523,-0.5539652693653739,-0.80393380673554,-0.2409090724418973,-1.2915803314134855,0.023940882167453645,0.44854283660907757,0.1324486401103334,-0.658685807570532],"z":[0.6688146008787447,0.1527674464965695,1.0798410308856619,1.88463741833356,-0.6591381200789874,-0.49517281710812805,1.7361693777607516,0.9792370834782516,-0.17292344604007379,2.0142615026566038,-0.1464642701849868,0.061861330218187655,0.6536567922112316,-1.4675324153971683,-1.6523226726655185,-0.168491995322533,-1.1593067778472357,0.2771436632872434,-0.9544908370314337,-1.2129754604015348,2.301144680003509,-0.8338264792272084,0.39130852619674444,-1.8562228642316279,-0.6106200243123303,0.5818472289656397,-0.9760281433292133,0.0209558681954641,-0.7537586872754247,0.05407919325823971,-0.7603684823248826,1.8793359921362258,0.07699014723693315,-1.1559426207692294,1.6382264152519423,-0.828788509938654,-0.4876493836789568,-1.6840646261152348,-1.4117854250468194,0.5737695924129663,0.46532274438364823,0.1895054271117746,0.1530443217101904,0.11469975953139454,-1.7526052174203943,-0.7228995785307907,-0.5337053132776212,0.8141494182646222,1.0508516334386997,-1.4193771668099389,-0.09540570389180492,0.05586571467271643,0.23280613188975102,1.0274268207050221,0.46699381054422145,0.7599111770217637,-0.2372199539546488,-0.47934342292783017,0.546705129782528,1.270397593256979,-0.7194532887443483,-0.1226156673863139,-2.1665403844662663,-1.4239565409051549,0.73560078101973,0.8713064241018029,0.6139514015042133,0.4746582138479393,0.2455519338054453,-0.4798497619289815,0.9465806727114267,0.9706104441965121,0.47276011448057703,1.5344301430909058,-2.7345175753248716,1.010729220045886,0.22789564571468598,-0.4297812579099398,0.1841079842850574,-1.9231864283474953,-0.08981017614519925,0.652167547448205,2.0409576593746204,-0.8717664197637087,0.1142537367965965,-1.122620191823744,0.8690339101122634,0.5982248879560988,-0.3163448760662489,0.3187679090988226,0.08546744086066889,0.7914623398341901,-0.8013199191631067,0.08392990565594816,-0.15973444895584876,-1.5494945356915375,0.683846617157984,0.4303935031553188,0.38033678349418176,0.08866909583607487],"type":"scatter3d"},{"hovertemplate":"PC1: 92.5% variance\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"rgb(255, 107, 107)","width":8},"mode":"lines","name":"PC1 (92.5% var)","x":[0,1.7662896177898082],"y":[0,1.7110677685029807],"z":[0,1.718274738706872],"type":"scatter3d"},{"colorscale":[[0,"rgb(255, 107, 107)"],[1,"rgb(255, 107, 107)"]],"hoverinfo":"skip","name":"PC1 direction","showlegend":false,"showscale":false,"u":[0.35325792355796165],"v":[0.34221355370059614],"w":[0.3436549477413744],"x":[1.7662896177898082],"y":[1.7110677685029807],"z":[1.718274738706872],"type":"cone"},{"hovertemplate":"PC2: 5.6% variance\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"rgb(78, 205, 196)","width":8},"mode":"lines","name":"PC2 (5.6% var)","x":[0,-0.13239086565695762],"y":[0,2.190647764792686],"z":[0,-2.045369166996366],"type":"scatter3d"},{"colorscale":[[0,"rgb(78, 205, 196)"],[1,"rgb(78, 205, 196)"]],"hoverinfo":"skip","name":"PC2 direction","showlegend":false,"showscale":false,"u":[-0.026478173131391527],"v":[0.43812955295853717],"w":[-0.4090738333992732],"x":[-0.13239086565695762],"y":[2.190647764792686],"z":[-2.045369166996366],"type":"cone"},{"hovertemplate":"PC3: 2.0% variance\u003cextra\u003e\u003c\u002fextra\u003e","line":{"color":"rgb(69, 183, 209)","width":8},"mode":"lines","name":"PC3 (2.0% var)","x":[0,2.4212999906617387],"y":[0,-1.1284101480397286],"z":[0,-1.3652827154191998],"type":"scatter3d"},{"colorscale":[[0,"rgb(69, 183, 209)"],[1,"rgb(69, 183, 209)"]],"hoverinfo":"skip","name":"PC3 direction","showlegend":false,"showscale":false,"u":[0.48425999813234777],"v":[-0.22568202960794573],"w":[-0.27305654308384],"x":[2.4212999906617387],"y":[-1.1284101480397286],"z":[-1.3652827154191998],"type":"cone"}],                        {"template":{"data":{"histogram2dcontour":[{"type":"histogram2dcontour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"choropleth":[{"type":"choropleth","colorbar":{"outlinewidth":0,"ticks":""}}],"histogram2d":[{"type":"histogram2d","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmap":[{"type":"heatmap","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"heatmapgl":[{"type":"heatmapgl","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"contourcarpet":[{"type":"contourcarpet","colorbar":{"outlinewidth":0,"ticks":""}}],"contour":[{"type":"contour","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"surface":[{"type":"surface","colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]}],"mesh3d":[{"type":"mesh3d","colorbar":{"outlinewidth":0,"ticks":""}}],"scatter":[{"fillpattern":{"fillmode":"overlay","size":10,"solidity":0.2},"type":"scatter"}],"parcoords":[{"type":"parcoords","line":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolargl":[{"type":"scatterpolargl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"bar":[{"error_x":{"color":"#2a3f5f"},"error_y":{"color":"#2a3f5f"},"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"scattergeo":[{"type":"scattergeo","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterpolar":[{"type":"scatterpolar","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"scattergl":[{"type":"scattergl","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatter3d":[{"type":"scatter3d","line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattermapbox":[{"type":"scattermapbox","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scatterternary":[{"type":"scatterternary","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"scattercarpet":[{"type":"scattercarpet","marker":{"colorbar":{"outlinewidth":0,"ticks":""}}}],"carpet":[{"aaxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"baxis":{"endlinecolor":"#2a3f5f","gridcolor":"white","linecolor":"white","minorgridcolor":"white","startlinecolor":"#2a3f5f"},"type":"carpet"}],"table":[{"cells":{"fill":{"color":"#EBF0F8"},"line":{"color":"white"}},"header":{"fill":{"color":"#C8D4E3"},"line":{"color":"white"}},"type":"table"}],"barpolar":[{"marker":{"line":{"color":"#E5ECF6","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"pie":[{"automargin":true,"type":"pie"}]},"layout":{"autotypenumbers":"strict","colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#2a3f5f"},"hovermode":"closest","hoverlabel":{"align":"left"},"paper_bgcolor":"white","plot_bgcolor":"#E5ECF6","polar":{"bgcolor":"#E5ECF6","angularaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"radialaxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"ternary":{"bgcolor":"#E5ECF6","aaxis":{"gridcolor":"white","linecolor":"white","ticks":""},"baxis":{"gridcolor":"white","linecolor":"white","ticks":""},"caxis":{"gridcolor":"white","linecolor":"white","ticks":""}},"coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]]},"xaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"yaxis":{"gridcolor":"white","linecolor":"white","ticks":"","title":{"standoff":15},"zerolinecolor":"white","automargin":true,"zerolinewidth":2},"scene":{"xaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"yaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2},"zaxis":{"backgroundcolor":"#E5ECF6","gridcolor":"white","linecolor":"white","showbackground":true,"ticks":"","zerolinecolor":"white","gridwidth":2}},"shapedefaults":{"line":{"color":"#2a3f5f"}},"annotationdefaults":{"arrowcolor":"#2a3f5f","arrowhead":0,"arrowwidth":1},"geo":{"bgcolor":"white","landcolor":"#E5ECF6","subunitcolor":"white","showland":true,"showlakes":true,"lakecolor":"white"},"title":{"x":0.05},"mapbox":{"style":"light"},"margin":{"b":0,"l":0,"r":0,"t":30}}},"title":{"font":{"size":16},"text":"\u003cb\u003eInteractive 3D PCA Visualization\u003c\u002fb\u003e\u003cbr\u003e\u003csub\u003eRotate to see principal component directions!\u003c\u002fsub\u003e"},"scene":{"camera":{"eye":{"x":1.5,"y":1.5,"z":1.2}},"xaxis":{"title":{"text":"Square Feet (standardized)"}},"yaxis":{"title":{"text":"Bedrooms (standardized)"}},"zaxis":{"title":{"text":"Bathrooms (standardized)"}},"aspectmode":"cube"},"margin":{"l":0,"r":0,"t":60,"b":0},"legend":{"yanchor":"top","y":0.99,"xanchor":"left","x":0.01,"bgcolor":"rgba(255, 255, 255, 0.8)"},"height":600},                        {"responsive": true}                    ).then(function(){
                             
-var gd = document.getElementById('c4c9ded2-6590-4e5e-907e-7ace3f2f96c8');
+var gd = document.getElementById('56e6a35a-8b5a-43c9-a1ea-f6f3d822a3e6');
 var x = new MutationObserver(function (mutations, observer) {{
         var display = window.getComputedStyle(gd).display;
         if (!display || display === 'none') {{
@@ -1555,7 +1925,7 @@ if (outputEl) {{
     x.observe(outputEl, {childList: true});
 }}
 
-                        })                };            </script>        </div>
+                        })                };                });            </script>        </div>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
@@ -1569,10 +1939,36 @@ PC1 captures most variance because sq ft, bedrooms, and bathrooms are all correl
 </div>
 <aside class="notes">
 <p><strong>Interpreting the Principal Components:</strong></p>
-<p><strong>PC1 (Red arrow - ~80-85% of variance):</strong> - Points in the direction where houses vary the MOST - Represents “Overall House Size” - a composite measure combining all three features - High PC1 score = large house with many bedrooms and bathrooms - Low PC1 score = small house with few bedrooms and bathrooms - This makes sense because sq ft, bedrooms, and bathrooms are all highly correlated - they increase together - Notice how PC1 points diagonally through the data cloud in the direction of maximum spread</p>
-<p><strong>PC2 (Teal arrow - ~10-15% of variance):</strong> - Perpendicular to PC1, captures the next-most variation - Might represent “Layout efficiency” or deviations from the typical size relationship - Example: A house with more bedrooms than expected for its square footage (positive PC2) vs.&nbsp;fewer bedrooms (negative PC2) - This captures residual variation NOT explained by overall size</p>
-<p><strong>PC3 (Blue arrow - ~5-10% of variance):</strong> - Perpendicular to both PC1 and PC2 - Captures very small remaining variations - Might represent specific bathroom/bedroom trade-offs - Often this component is mostly noise and could be dropped</p>
-<p><strong>Teaching points:</strong> - Rotate the plot to show students how PC1 aligns with the “longest” dimension of the data cloud - Show how PC2 and PC3 are at right angles to PC1 (orthogonal/uncorrelated) - Emphasize that PC1 alone captures 80%+ of the variation, so we could reduce from 3 features to 1 component with minimal information loss - Ask: “If we only kept PC1, what information would we lose?” (Answer: The ability to distinguish houses with unusual bedroom/bathroom configurations for their size)</p>
+<p><strong>PC1 (Red arrow - ~80-85% of variance):</strong></p>
+<ul>
+<li>Points in the direction where houses vary the MOST</li>
+<li>Represents “Overall House Size” - a composite measure combining all three features</li>
+<li>High PC1 score = large house with many bedrooms and bathrooms</li>
+<li>Low PC1 score = small house with few bedrooms and bathrooms</li>
+<li>This makes sense because sq ft, bedrooms, and bathrooms are all highly correlated - they increase together</li>
+<li>Notice how PC1 points diagonally through the data cloud in the direction of maximum spread</li>
+</ul>
+<p><strong>PC2 (Teal arrow - ~10-15% of variance):</strong></p>
+<ul>
+<li>Perpendicular to PC1, captures the next-most variation</li>
+<li>Might represent “Layout efficiency” or deviations from the typical size relationship</li>
+<li>Example: A house with more bedrooms than expected for its square footage (positive PC2) vs.&nbsp;fewer bedrooms (negative PC2)</li>
+<li>This captures residual variation NOT explained by overall size</li>
+</ul>
+<p><strong>PC3 (Blue arrow - ~5-10% of variance):</strong></p>
+<ul>
+<li>Perpendicular to both PC1 and PC2</li>
+<li>Captures very small remaining variations</li>
+<li>Might represent specific bathroom/bedroom trade-offs</li>
+<li>Often this component is mostly noise and could be dropped</li>
+</ul>
+<p><strong>Teaching points:</strong></p>
+<ul>
+<li>Rotate the plot to show students how PC1 aligns with the “longest” dimension of the data cloud</li>
+<li>Show how PC2 and PC3 are at right angles to PC1 (orthogonal/uncorrelated)</li>
+<li>Emphasize that PC1 alone captures 80%+ of the variation, so we could reduce from 3 features to 1 component with minimal information loss</li>
+<li>Ask: “If we only kept PC1, what information would we lose?” (Answer: The ability to distinguish houses with unusual bedroom/bathroom configurations for their size)</li>
+</ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -1623,12 +2019,73 @@ PC1 captures most variance because sq ft, bedrooms, and bathrooms are all correl
 <p><em>Captures 15% of variance</em></p>
 </div></div>
 <p><strong>Result</strong>: Instead of tracking 10 correlated features, you have 3 uncorrelated components capturing 90% of information!</p>
+<aside class="notes">
+<p><strong>Main Takeaway</strong>: PCA discovers underlying “themes” or “factors” that explain why multiple features are correlated.</p>
+<p><strong>Analogy Walkthrough</strong>:</p>
+<p><strong>The Setup</strong>:</p>
+<ul>
+<li>Imagine you’re tracking 10 apartment features for every listing</li>
+<li>Many features are correlated (not independent):
+<ul>
+<li>Big apartments → more bedrooms, bathrooms, closets</li>
+<li>New buildings → farther from city center, higher rent</li>
+<li>High floors → better views, premium pricing</li>
+</ul></li>
+</ul>
+<p><strong>What PCA Discovers</strong>:</p>
+<p><strong>PC1: “Size &amp; Space” (50% of variance)</strong></p>
+<ul>
+<li>This component captures the SHARED PATTERN in: sq footage, bedrooms, bathrooms, closet space</li>
+<li><strong>Why are these correlated?</strong> They all increase together as apartments get larger</li>
+<li><strong>What PC1 represents</strong>: A single “size score” that summarizes all size-related features</li>
+<li><strong>Example</strong>: Apartment A (PC1 = 2.5) vs.&nbsp;Apartment B (PC1 = -1.2)
+<ul>
+<li>A is large on ALL size dimensions</li>
+<li>B is small on ALL size dimensions</li>
+<li>One number tells the whole story!</li>
+</ul></li>
+</ul>
+<p><strong>PC2: “Location &amp; Age” (25% of variance)</strong></p>
+<ul>
+<li>Captures: distance to downtown, building age, neighborhood rating</li>
+<li><strong>Why correlated?</strong> Older buildings tend to be downtown in better-established neighborhoods</li>
+<li><strong>What PC2 represents</strong>: Urban vs.&nbsp;suburban character</li>
+<li><strong>High PC2</strong>: Downtown, older, established neighborhood</li>
+<li><strong>Low PC2</strong>: Suburban, newer, developing area</li>
+</ul>
+<p><strong>PC3: “Luxury &amp; Amenities” (15% of variance)</strong></p>
+<ul>
+<li>Captures: floor number, finishes, gym/pool access</li>
+<li><strong>Why correlated?</strong> Luxury features tend to come together in premium buildings</li>
+<li><strong>What PC3 represents</strong>: Luxury tier</li>
+<li><strong>High PC3</strong>: High-floor unit with premium finishes and amenities</li>
+<li><strong>Low PC3</strong>: Basic unit with standard features</li>
+</ul>
+<p><strong>The Power of PCA</strong>:</p>
+<ul>
+<li><strong>Original</strong>: 10 features to track and compare</li>
+<li><strong>After PCA</strong>: 3 components capture 90% of variation</li>
+<li><strong>Benefit</strong>: Much easier to compare apartments, make decisions, and find similar listings</li>
+<li><strong>The key</strong>: PCA found these patterns automatically—didn’t need domain expertise to group “size features” together</li>
+</ul>
+<p><strong>Teaching Point</strong>: “PCA isn’t doing magic—it’s just finding correlations and grouping correlated features together. Humans could have done this manually, but PCA does it mathematically and optimally.”</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="step-1-the-original-data" class="slide level2 smaller">
 <h2>Step 1: The Original Data</h2>
 <p>Let’s apply PCA to a medical dataset with <strong>569 patients</strong> and <strong>30 features</strong> measuring tumor characteristics:</p>
-<div id="19d21ff2" class="cell" data-execution_count="11">
-<div class="cell-output cell-output-display" data-execution_count="214">
+<div id="991699fb" class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display" data-execution_count="11">
 <div>
 <style scoped="">
     .dataframe tbody tr th:only-of-type {
@@ -1959,7 +2416,7 @@ PC1 captures most variance because sq ft, bedrooms, and bathrooms are all correl
 </section>
 <section id="step-2-standardize-and-apply-pca" class="slide level2 smaller scrollable">
 <h2>Step 2: Standardize and Apply PCA</h2>
-<div id="5bf9de4f" class="cell" data-execution_count="12">
+<div id="dfe72661" class="cell" data-execution_count="12">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1-7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href=""></a><span class="co"># Step 1: Standardize (critical for PCA!)</span></span>
 <span id="cb6-2"><a href=""></a>scaler <span class="op">=</span> StandardScaler()</span>
 <span id="cb6-3"><a href=""></a>X_scaled <span class="op">=</span> scaler.fit_transform(X)</span>
@@ -1980,7 +2437,7 @@ PCA-transformed data: (569, 30)
 
 First few patients in PC space:</code></pre>
 </div>
-<div class="cell-output cell-output-display" data-execution_count="215">
+<div class="cell-output cell-output-display" data-execution_count="12">
 <div>
 <style scoped="">
     .dataframe tbody tr th:only-of-type {
@@ -2070,7 +2527,7 @@ First few patients in PC space:</code></pre>
 </section>
 <section id="step-3-how-many-components-should-we-keep" class="slide level2 smaller">
 <h2>Step 3: How Many Components Should We Keep?</h2>
-<div id="4670855b" class="cell columns column-output-location" data-execution_count="13">
+<div id="ef3316ce" class="cell columns column-output-location" data-execution_count="13">
 <div class="column">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8" data-code-line-numbers="4-5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href=""></a><span class="co"># Create scree plot</span></span>
 <span id="cb8-2"><a href=""></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">1</span>, figsize<span class="op">=</span>(<span class="dv">6</span>, <span class="dv">6</span>))</span>
@@ -2171,7 +2628,55 @@ First few patients in PC space:</code></pre>
 </div></div>
 <p>Then we’ll take a few responses…</p>
 <aside class="notes">
-<p>Answer: PC1-4 capture 75%, PC1-5 capture 81%. Good tradeoff depends on use case. Trading simplicity for some information loss.</p>
+<p><strong>Main Takeaway</strong>: Practice reading scree plots and making informed decisions about how many components to retain.</p>
+<p><strong>Question Analysis</strong>:</p>
+<p><strong>1. How many components would you keep? Why?</strong></p>
+<p>Let’s calculate cumulative variance for each option:</p>
+<ul>
+<li><strong>PC1 only</strong>: 35% variance — Too little information!</li>
+<li><strong>PC1-2</strong>: 35% + 20% = 55% variance — Still losing half the information</li>
+<li><strong>PC1-3</strong>: 55% + 12% = 67% variance — Getting better, but below typical threshold</li>
+<li><strong>PC1-4</strong>: 67% + 8% = <strong>75% variance</strong> — Good threshold, retained 3/4 of information</li>
+<li><strong>PC1-5</strong>: 75% + 6% = <strong>81% variance</strong> — Even better, common threshold</li>
+<li><strong>PC1-6+</strong>: 81% + 19% = 100% variance — Keeping 45 components for last 19%? Diminishing returns!</li>
+</ul>
+<p><strong>Recommended answer</strong>: <strong>Keep PC1-5 (81% variance)</strong></p>
+<ul>
+<li><strong>Common rule of thumb</strong>: Aim for 80-90% cumulative variance</li>
+<li><strong>PC1-4 (75%)</strong>: Also defensible if simplicity is paramount</li>
+<li><strong>PC1-10</strong>: Might be justified if you really need that extra precision</li>
+</ul>
+<p><strong>2. If you keep just PC1 and PC2, what percentage do you retain?</strong></p>
+<ul>
+<li><strong>Answer</strong>: 35% + 20% = <strong>55% of variance</strong></li>
+<li><strong>Is this enough?</strong>
+<ul>
+<li>For visualization: Yes! Often we reduce to 2-3 components just to plot</li>
+<li>For modeling: Probably not—you’re losing 45% of information</li>
+<li>For exploration: Maybe—depends if those 2 components capture the main patterns</li>
+</ul></li>
+</ul>
+<p><strong>3. What are you trading off when you reduce from 50 to 5 features?</strong></p>
+<ul>
+<li><strong>Gain</strong>: 90% reduction in features (50 → 5)</li>
+<li><strong>Lose</strong>: 19% of variance (81% retained, 19% lost)</li>
+<li><strong>The trade-off</strong>:
+<ul>
+<li>That 19% you’re losing is spread across 45 components (PC6-50)</li>
+<li>Each of those captures &lt; 0.5% of variance on average</li>
+<li>Likely represents noise, measurement error, or very subtle patterns</li>
+<li>The first 5 components capture the “signal,” the rest is mostly “noise”</li>
+</ul></li>
+</ul>
+<p><strong>Key Teaching Points</strong>:</p>
+<ul>
+<li>“There’s no universal ‘right’ answer—it depends on your goals”</li>
+<li>“For modeling: usually keep components up to 80-90% variance”</li>
+<li>“For visualization: often just keep 2-3 components”</li>
+<li>“Look for the ‘elbow’ in scree plot—where adding more components gives diminishing returns”</li>
+<li>“In this example, PC6+ each add &lt; 1% variance—probably not worth the complexity”</li>
+</ul>
+<p><strong>Real-World Context</strong>: “Imagine you’re building a recommendation system. You might reduce 10,000 product features to 50 components (99% variance) for speed, or reduce to 10 components (95% variance) if you need real-time predictions. The choice depends on your business requirements!”</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -2188,7 +2693,7 @@ First few patients in PC space:</code></pre>
 <h2>What Do Principal Components Mean?</h2>
 <p><strong>Principal components are weighted combinations of original features.</strong></p>
 <p>Let’s look at what contributes to PC1 in our breast cancer data:</p>
-<div id="b2f2ff70" class="cell" data-execution_count="14">
+<div id="c8069e29" class="cell" data-execution_count="14">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href=""></a><span class="co"># Refit with more components to examine</span></span>
 <span id="cb9-2"><a href=""></a>pca_7 <span class="op">=</span> PCA(n_components<span class="op">=</span><span class="dv">7</span>)</span>
 <span id="cb9-3"><a href=""></a>pca_7.fit(X_scaled)</span>
@@ -2218,7 +2723,50 @@ concave points_worst 0.250886
 </div>
 <p><strong>Interpretation</strong>: PC1 loads heavily on features related to tumor size, texture, and shape irregularity. It represents <strong>“overall tumor severity”</strong>—high PC1 means larger, more irregular tumors.</p>
 <aside class="notes">
-<p>This is how you interpret principal components: look at which original features have the highest loadings (positive or negative). Group them conceptually.</p>
+<p><strong>Main Takeaway</strong>: Principal components are interpretable by examining which original features contribute most strongly (highest loadings).</p>
+<p><strong>What are “loadings”?</strong></p>
+<ul>
+<li><strong>Loadings</strong> = weights that show how much each original feature contributes to a principal component</li>
+<li><strong>High absolute loading</strong> = that feature strongly influences this component</li>
+<li><strong>Positive loading</strong> = feature increases with the component</li>
+<li><strong>Negative loading</strong> = feature decreases with the component</li>
+<li><strong>Near-zero loading</strong> = feature doesn’t contribute much to this component</li>
+</ul>
+<p><strong>How to Interpret PC1 in Breast Cancer Data</strong>:</p>
+<p>Looking at the top features from the code output, we’ll see:</p>
+<ol type="1">
+<li><strong>radius_worst</strong> (high loading): Largest radius measurement</li>
+<li><strong>perimeter_worst</strong> (high loading): Largest perimeter</li>
+<li><strong>area_worst</strong> (high loading): Largest area</li>
+<li><strong>concave points_worst</strong> (high loading): Most severe concavity</li>
+<li><strong>radius_mean</strong> (high loading): Average radius</li>
+<li><strong>perimeter_mean</strong> (high loading): Average perimeter</li>
+</ol>
+<p><strong>What does this tell us?</strong></p>
+<ul>
+<li>PC1 is dominated by SIZE and IRREGULARITY measurements</li>
+<li>All the “worst” measurements (most extreme values) load heavily</li>
+<li><strong>Interpretation</strong>: PC1 represents “Overall Tumor Severity”
+<ul>
+<li>High PC1 score → Large tumor with irregular features → Likely malignant</li>
+<li>Low PC1 score → Small tumor with regular features → Likely benign</li>
+</ul></li>
+</ul>
+<p><strong>Teaching Strategy</strong>:</p>
+<ol type="1">
+<li>Show the loadings table from the code output</li>
+<li>Ask: “What do these top features have in common?” → All relate to size/shape</li>
+<li>Explain: “PC1 is a weighted average of these features—a single score summarizing tumor severity”</li>
+<li>Contrast with original features: “Instead of looking at 30 separate measurements, PC1 gives you ONE number that captures the most important pattern”</li>
+</ol>
+<p><strong>Why This Matters</strong>:</p>
+<ul>
+<li>PCA creates new features, but they’re NOT random or meaningless</li>
+<li>Each component has an interpretation based on its loadings</li>
+<li>Good practice: Always examine loadings to understand what your components represent</li>
+<li>You can name components based on their interpretation (e.g., “Tumor Severity Score”)</li>
+</ul>
+<p><strong>Common Student Question</strong>: “Are all loadings equally important?” → No! Focus on the highest absolute loadings—those features dominate that component. Small loadings (&lt; 0.1) contribute very little.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -2234,7 +2782,7 @@ concave points_worst 0.250886
 <section id="demo-visualizing-high-dimensional-data-with-pca" class="slide level2 smaller">
 <h2>Demo: Visualizing High-Dimensional Data with PCA</h2>
 <p>One powerful use of PCA: reducing to 2D for visualization!</p>
-<div id="beebb78e" class="cell" data-execution_count="15">
+<div id="306b652f" class="cell" data-execution_count="15">
 <div class="cell-output cell-output-stdout">
 <pre><code>Reduced from 30 features to 2 components
 Retained 63.2% of variance</code></pre>
@@ -2292,7 +2840,7 @@ Retained 63.2% of variance</code></pre>
 </section>
 <section id="model-comparison-original-vs.-pca-features" class="slide level2 smaller scrollable">
 <h2>Model Comparison: Original vs.&nbsp;PCA Features</h2>
-<div id="9c283d92" class="cell" data-execution_count="16">
+<div id="1eb6e600" class="cell" data-execution_count="16">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href=""></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
 <span id="cb12-2"><a href=""></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
 <span id="cb12-3"><a href=""></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score, precision_score, recall_score, f1_score</span>
@@ -2312,7 +2860,7 @@ Retained 63.2% of variance</code></pre>
 <pre><code>Original training data shape: (398, 30)</code></pre>
 </div>
 </div>
-<div id="bf92a651" class="cell" data-execution_count="17">
+<div id="ed164049" class="cell" data-execution_count="17">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href=""></a><span class="co"># Model 1: All 30 original features</span></span>
 <span id="cb14-2"><a href=""></a>model_original <span class="op">=</span> LogisticRegression(max_iter<span class="op">=</span><span class="dv">5000</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
 <span id="cb14-3"><a href=""></a>model_original.fit(X_train_scaled, y_train)</span>
@@ -2538,7 +3086,89 @@ Reduced features by 77% with minimal performance loss across all metrics!</code>
 </div>
 </div>
 <aside class="notes">
-<p>Help students build intuition for which tool fits which problem. Often you use both in sequence!</p>
+<p><strong>Main Takeaway</strong>: Learn to choose the right unsupervised learning method based on your goal.</p>
+<p><strong>Decision Framework</strong>:</p>
+<p><strong>Start Here</strong>: “I have unlabeled data” → Now what?</p>
+<p><strong>Goal 1: Find groups in my data (Use Clustering)</strong></p>
+<ul>
+<li><p><strong>When to use</strong>:</p>
+<ul>
+<li>“I want to discover customer segments”</li>
+<li>“I need to organize products into categories”</li>
+<li>“I want to identify market segments”</li>
+<li>“I’m looking for patterns in customer behavior”</li>
+</ul></li>
+<li><p><strong>Key question</strong>: “Which observations are similar to each other?”</p></li>
+<li><p><strong>Output</strong>: Cluster labels for each observation</p></li>
+<li><p><strong>Example use cases</strong>:</p>
+<ul>
+<li>Customer segmentation for targeted marketing</li>
+<li>Product recommendation (group similar products)</li>
+<li>Anomaly detection (points that don’t fit any cluster)</li>
+<li>Document organization (group similar articles)</li>
+</ul></li>
+</ul>
+<p><strong>Goal 2: Reduce number of features (Use Dimension Reduction / PCA)</strong></p>
+<ul>
+<li><p><strong>When to use</strong>:</p>
+<ul>
+<li>“I have 100+ features and want to simplify”</li>
+<li>“My features are highly correlated”</li>
+<li>“Training takes too long”</li>
+<li>“I want to visualize high-dimensional data”</li>
+<li>“I’m worried about overfitting”</li>
+</ul></li>
+<li><p><strong>Key question</strong>: “Which features capture similar information?”</p></li>
+<li><p><strong>Output</strong>: New set of uncorrelated principal components</p></li>
+<li><p><strong>Example use cases</strong>:</p>
+<ul>
+<li>Feature engineering before supervised learning</li>
+<li>Data visualization (reduce to 2-3 components for plotting)</li>
+<li>Noise reduction (keep components, discard noise)</li>
+<li>Compression for faster computation</li>
+</ul></li>
+</ul>
+<p><strong>Goal 3: Both! (Use PCA then Clustering)</strong></p>
+<ul>
+<li><p><strong>When to use</strong>:</p>
+<ul>
+<li>“I have many correlated features AND want to find segments”</li>
+<li>“Clustering on 100 features is computationally expensive”</li>
+<li>“I want to remove noise before clustering”</li>
+</ul></li>
+<li><p><strong>Workflow</strong>:</p>
+<ol type="1">
+<li>Apply PCA to reduce 100 features → 20 components (faster, less noisy)</li>
+<li>Apply K-Means to those 20 components (find customer segments)</li>
+<li>Use segments as features for supervised learning (predict churn for each segment)</li>
+</ol></li>
+<li><p><strong>Example use cases</strong>:</p>
+<ul>
+<li>Customer segmentation with behavioral + demographic data</li>
+<li>Image clustering (reduce pixel features with PCA, then cluster)</li>
+<li>Gene expression analysis (reduce 20,000 genes → 50 components → cluster patients)</li>
+</ul></li>
+</ul>
+<p><strong>Decision-Making Questions</strong>:</p>
+<ol type="1">
+<li>“What’s your PRIMARY goal?”
+<ul>
+<li>Discover groups → Clustering</li>
+<li>Simplify features → PCA</li>
+<li>Both → PCA first, then Clustering</li>
+</ul></li>
+<li>“Do you have too many features?”
+<ul>
+<li>Yes → Consider PCA first</li>
+<li>No → Go straight to clustering if you want groups</li>
+</ul></li>
+<li>“Are your features highly correlated?”
+<ul>
+<li>Yes → PCA will help a lot</li>
+<li>No → Maybe feature selection instead of PCA</li>
+</ul></li>
+</ol>
+<p><strong>Real-World Insight</strong>: “In practice, the combo approach (PCA → Clustering → Supervised Learning) is very common. It’s like a data science pipeline: reduce complexity, discover patterns, then predict outcomes.”</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
