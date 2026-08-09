@@ -455,16 +455,13 @@ run `bash render-slides.sh`, then deploy `./docs` to `gh-pages` via
 `peaceiris/actions-gh-pages@v4`. This replaces the current
 `quarto-actions/publish` step that pushes only `book/`.
 
-### 9e. Stop tracking slide build output
+### 9e. Slide build output — already done in Phase 5
 
-Once slides publish to `docs/slides/` and are self-contained, untrack them:
-
-```
-git rm -r --cached slides/*.html slides/*_files
-```
-
-and drop the temporary exemption comment in `.gitignore` (add `slides/*.html`
-and `slides/*_files/` to the Quarto build output section).
+Phase 5 added `self-contained: true` to every deck, which inlines all assets and
+pushes each rendered deck to roughly 10MB. That made committing them untenable, so
+`slides/*.html` and `*_files/` were untracked and gitignored during Phase 5 rather
+than here. Nothing to do in this step beyond confirming `render-slides.sh`
+regenerates them into `docs/slides/`.
 
 ---
 
