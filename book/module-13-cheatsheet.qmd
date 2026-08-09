@@ -1,0 +1,134 @@
+---
+title: "Module 13 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 31–32"
+---
+
+A quick-reference summary of the essential ideas from Module 13. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## Supervised vs. Unsupervised {.unnumbered}
+
+> **Unsupervised learning** has no target variable. Nobody tells the algorithm what the right answer is, so there is no accuracy score — evaluation depends on whether the result is useful and interpretable.
+
+| | Clustering | Dimension reduction |
+|--|-----------|---------------------|
+| Question | Which observations belong together? | Which features can be combined? |
+| Operates on | Rows | Columns |
+| Output | A cluster label per row | New constructed features |
+| Method here | K-Means | PCA |
+
+---
+
+## [K-Means Clustering](31-clustering.html) {.unnumbered}
+
+> **K-Means** partitions observations into *k* groups by repeatedly assigning each point to its nearest centroid and then recomputing each centroid as the mean of its members, until assignments stop changing.
+
+```python
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+X_scaled = StandardScaler().fit_transform(X)     # scaling is mandatory here
+
+km = KMeans(n_clusters=4, n_init=10, random_state=123)
+labels = km.fit_predict(X_scaled)
+
+km.cluster_centers_    # centroid coordinates (in scaled units)
+km.inertia_            # within-cluster sum of squares
+km.labels_             # cluster assignment per row
+```
+
+| Parameter | Meaning |
+|-----------|---------|
+| `n_clusters` | *k*, the number of groups — you must choose it |
+| `n_init` | Random restarts; keeps a bad initialization from winning |
+| `random_state` | Reproducibility |
+
+::: {.callout-warning}
+K-Means measures **distance**, so unscaled features let large-magnitude columns dominate. Always scale first, or income in dollars will drown out visit counts.
+:::
+
+---
+
+## Choosing *k* {.unnumbered}
+
+```python
+import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_score
+
+inertias, silhouettes = [], []
+ks = range(2, 11)
+
+for k in ks:
+    km = KMeans(n_clusters=k, n_init=10, random_state=123).fit(X_scaled)
+    inertias.append(km.inertia_)
+    silhouettes.append(silhouette_score(X_scaled, km.labels_))
+
+plt.plot(ks, inertias, marker='o')   # elbow plot
+```
+
+| Method | Reading it |
+|--------|-----------|
+| **Elbow** | Plot inertia against *k*; look for the bend where gains flatten |
+| **Silhouette** | Ranges −1 to 1; higher means tighter, better-separated clusters |
+
+Both are heuristics. When they disagree or the elbow is smooth, the data may not have natural clusters — say so rather than forcing a number.
+
+**Profiling clusters** is the step that makes the result useful:
+
+```python
+df['cluster'] = labels
+df.groupby('cluster').agg(['mean', 'count'])
+```
+
+---
+
+## [Dimension Reduction with PCA](32-dimension-reduction.html) {.unnumbered}
+
+> **PCA** finds new axes — principal components — that are linear combinations of the original features, ordered so the first captures the most variance. It is **feature extraction**: the components are constructed, not selected from the originals.
+
+```python
+from sklearn.decomposition import PCA
+
+X_scaled = StandardScaler().fit_transform(X)     # required — PCA follows variance
+
+pca = PCA(n_components=0.90)     # keep enough components for 90% of variance
+X_pca = pca.fit_transform(X_scaled)
+
+pca.explained_variance_ratio_            # variance share per component
+pca.explained_variance_ratio_.cumsum()   # running total
+pca.components_                          # loadings: components x original features
+```
+
+**Scree plot — how many components to keep:**
+
+```python
+plt.plot(range(1, len(pca.explained_variance_ratio_) + 1),
+         pca.explained_variance_ratio_, marker='o')
+```
+
+**Reading loadings:** each component's loadings show which original features it weights most heavily. That is how you name a component — a first component loading on income, spend, and basket size is a "spending power" axis.
+
+```python
+pd.DataFrame(pca.components_[:3].T, index=X.columns,
+             columns=['PC1', 'PC2', 'PC3'])
+```
+
+| Extraction (PCA) | Selection |
+|------------------|-----------|
+| Builds new combined features | Keeps a subset of original features |
+| Components are hard to explain | Retains original meaning |
+| Uses information from all columns | Discards columns entirely |
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Fix |
+|---------|-----|
+| Running K-Means or PCA on unscaled data | `StandardScaler()` first — both are variance/distance driven |
+| Treating cluster numbers as meaningful | Labels are arbitrary; cluster 0 is not "first" or "best" |
+| Forcing *k* when no elbow appears | Report that the structure is ambiguous |
+| Interpreting components without loadings | A component means nothing until you read what loads on it |
+| Keeping components to hit a variance target blindly | Balance variance retained against interpretability |
+| Expecting an accuracy score | There is no ground truth; judge by usefulness |

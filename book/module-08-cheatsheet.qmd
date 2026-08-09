@@ -1,0 +1,119 @@
+---
+title: "Module 8 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 19–20"
+---
+
+A quick-reference summary of the essential ideas from Module 8. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [The ML Vocabulary](19-intro-ml-ai.html) {.unnumbered}
+
+> **Artificial Intelligence (AI)** is the broad goal of making machines perform tasks that require human-like intelligence. **Machine Learning (ML)** is the subset of AI where systems learn patterns from data rather than following hand-written rules. **Data mining** is the practice of discovering patterns in data — it overlaps heavily with ML but emphasizes discovery over prediction.
+
+| Term | What it means | Example |
+|------|---------------|---------|
+| **Supervised learning** | Learn from labeled examples to predict a known target | Predicting house price from square footage |
+| **Unsupervised learning** | Find structure with no target variable | Segmenting customers into groups |
+| **Reinforcement learning** | Learn by trial and error against a reward signal | Game playing, robotics |
+| **Generative AI** | Produce new content resembling training data | LLMs, image generation |
+
+**Supervised learning splits into two problem types:**
+
+| Type | Target variable | Example question |
+|------|-----------------|------------------|
+| **Regression** | Continuous number | How much will this customer spend? |
+| **Classification** | Category | Will this customer churn — yes or no? |
+
+---
+
+## Core Terminology {.unnumbered}
+
+| Term | Definition |
+|------|-----------|
+| **Feature** (predictor, `X`) | An input variable used to make a prediction |
+| **Label** (target, `y`) | The thing you are trying to predict |
+| **Observation** | One row — one example the model learns from |
+| **Model** | The learned mapping from features to label |
+| **Training** | The process of fitting a model to data |
+| **Generalization** | How well the model performs on data it has never seen |
+
+---
+
+## [Framing the Problem](20-before-we-build.html) {.unnumbered}
+
+> Before writing any code, establish what you are predicting, why it matters, and how you will know if the model is good enough.
+
+**A pre-modeling checklist:**
+
+1. **What is the business question?** State it in one sentence, without jargon.
+2. **What is the target variable?** If you cannot name a column, it is not yet an ML problem.
+3. **Is it regression or classification?** This determines everything downstream.
+4. **What does success look like?** Define the metric *and* the threshold before you model.
+5. **Do you have the data?** Features must be available at prediction time, not just historically.
+6. **What is the cost of being wrong?** False positives and false negatives rarely cost the same.
+
+::: {.callout-tip}
+Distinguish **model performance metrics** (R², accuracy) from **business performance metrics** (revenue retained, hours saved). A model can win on the first and lose on the second.
+:::
+
+---
+
+## The Train/Test Split {.unnumbered}
+
+> Evaluating a model on the data it learned from tells you how well it memorized, not how well it predicts. Hold out a portion of the data before training and never touch it until the end.
+
+```python
+from sklearn.model_selection import train_test_split
+
+X = df[['feature_1', 'feature_2']]   # features (2-D)
+y = df['target']                      # label (1-D)
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,       # 20% held out
+    random_state=123     # reproducible split
+)
+```
+
+| Parameter | Purpose |
+|-----------|---------|
+| `test_size` | Fraction held out (0.2–0.3 is typical) |
+| `random_state` | Fixes the shuffle so results reproduce |
+| `stratify=y` | Preserves class balance — use for classification |
+
+---
+
+## Data Leakage {.unnumbered}
+
+> **Data leakage** is when information that would not be available at prediction time sneaks into training. It produces models that look excellent in development and fail in production.
+
+| Leak | Why it breaks | Fix |
+|------|---------------|-----|
+| Scaling before splitting | Test set statistics influence training | Split first, then fit the scaler on training data only |
+| A feature caused by the target | `days_until_cancellation` predicts churn perfectly | Drop features that only exist after the outcome |
+| Repeatedly tuning on the test set | The test set stops being unseen | Use cross-validation for tuning (Module 12) |
+| Random splits on time series | Future data leaks into the past | Split chronologically |
+
+---
+
+## Ethical Considerations {.unnumbered}
+
+| Concern | Question to ask |
+|---------|-----------------|
+| **Fairness** | Does the model perform equally well across demographic groups? |
+| **Privacy** | Should these features be used, even if legally available? |
+| **Interpretability** | Can you explain a decision to the person it affects? |
+| **Accountability** | Who is responsible when the model is wrong? |
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Fix |
+|---------|-----|
+| Passing a 1-D Series as `X` | Use double brackets: `df[['col']]` keeps it 2-D |
+| Forgetting `random_state` | Results change every run and cannot be compared |
+| Evaluating on training data | Always report metrics on the held-out test set |
+| Choosing a metric after seeing results | Define success before modeling |
+| Treating a modeling task as ML when rules would do | If a simple rule works, use the rule |

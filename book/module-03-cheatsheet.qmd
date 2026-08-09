@@ -1,0 +1,229 @@
+---
+title: "Module 3 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 7–9"
+---
+
+A quick-reference summary of the essential ideas from Module 3. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [Reading Tabular Data](07-importing-data.html#importing-delimited-files-with-read_csv) {.unnumbered}
+
+Pandas provides `read_*()` functions that import data directly into a DataFrame.
+
+```python
+import pandas as pd
+
+# From a URL
+df = pd.read_csv('https://example.com/data.csv')
+
+# From a local file (relative path)
+df = pd.read_csv('../data/my_file.csv')
+
+# From an Excel workbook
+df = pd.read_excel('../data/my_file.xlsx', sheet_name='Sheet1')
+```
+
+| Format | Function |
+|--------|----------|
+| CSV / TSV | `pd.read_csv()` |
+| Excel `.xlsx` | `pd.read_excel()` |
+| JSON | `pd.read_json()` |
+| Pickle | `pd.read_pickle()` |
+| SQL database | `pd.read_sql()` |
+
+---
+
+## [File Paths](07-importing-data.html#file-paths) {.unnumbered}
+
+> An **absolute path** gives the full location from the filesystem root. A **relative path** gives the location relative to your current working directory.
+
+```python
+# Absolute — works from anywhere
+df = pd.read_csv('/Users/jane/project/data/file.csv')
+
+# Relative — works when your project layout matches
+df = pd.read_csv('data/file.csv')       # data/ is inside current dir
+df = pd.read_csv('../data/file.csv')    # go up one level, then into data/
+
+# Check where you are
+import os
+os.getcwd()
+```
+
+::: {.callout-tip}
+Use relative paths — they work on any machine when you share a project folder. Use `..` to navigate up one directory level.
+:::
+
+---
+
+## [Inspecting a DataFrame](07-importing-data.html#inspecting-your-dataframe) {.unnumbered}
+
+Always run these after loading data to understand its shape, types, and completeness before analysis.
+
+| Task | Code | Notes |
+|------|------|-------|
+| Dimensions | `df.shape` | Returns `(rows, cols)` |
+| First N rows | `df.head(N)` | Default N = 5 |
+| Last N rows | `df.tail(N)` | Default N = 5 |
+| Column names | `df.columns` | Returns an Index object |
+| Data types | `df.dtypes` | One dtype per column |
+| Types + null counts | `df.info()` | Prints a full summary |
+| Numeric statistics | `df.describe()` | Count, mean, std, quartiles |
+
+---
+
+## [Attributes vs Methods](07-importing-data.html#attributes-methods) {.unnumbered}
+
+> An **attribute** is a stored property — read with dot notation, no parentheses. A **method** is a function attached to an object — always requires parentheses.
+
+| Attributes (no `()`) | Methods (with `()`) |
+|----------------------|---------------------|
+| `df.shape` | `df.head()` |
+| `df.columns` | `df.tail(3)` |
+| `df.dtypes` | `df.info()` |
+| `df.index` | `df.describe()` |
+
+::: {.callout-tip}
+**Memory trick:** Methods = Actions = Parentheses. If it *does* something, it needs `()`.
+:::
+
+---
+
+## [DataFrames and Series](08-dataframes.html#series-the-building-blocks-of-dataframes) {.unnumbered}
+
+> A **DataFrame** is a 2-dimensional labeled table (like a spreadsheet). A **Series** is a 1-dimensional labeled array — essentially a single column of a DataFrame.
+
+```python
+# Single brackets → Series (1D)
+col = df['price']
+type(col)       # pandas.core.series.Series
+col.shape       # (n,)
+
+# Double brackets → DataFrame (2D)
+col_df = df[['price']]
+type(col_df)    # pandas.core.frame.DataFrame
+col_df.shape    # (n, 1)
+
+# Multiple columns → DataFrame
+subset = df[['price', 'quantity', 'category']]
+```
+
+::: {.callout-tip}
+Use `[[double brackets]]` when you need to keep DataFrame methods available for the next operation.
+:::
+
+---
+
+## [DataFrame Indexes](08-dataframes.html#indexing-in-dataframes) {.unnumbered}
+
+> The **index** is the row-label system of a DataFrame or Series. By default it is a `RangeIndex` (0, 1, 2, …), but any column with unique values can be promoted to the index for faster label-based lookups.
+
+```python
+# View the current index
+df.index                         # RangeIndex(start=0, stop=N, step=1)
+
+# Set a column as the index
+df = df.set_index('product_id')
+
+# Look up a row by label with .loc
+df.loc['P001']
+
+# Reset back to integer index (moves old index back to a column)
+df = df.reset_index()
+```
+
+::: {.callout-warning}
+Pandas allows duplicate index values, but this causes ambiguous `.loc[]` lookups. Always use a column with unique values as your index.
+:::
+
+---
+
+## [Selecting Columns](09-subsetting.html#subsetting-variables) {.unnumbered}
+
+Column selection is called **selecting** — analogous to `SELECT` in SQL.
+
+```python
+# One column → Series
+prices = df['sales_value']
+
+# One column → DataFrame (keeps 2D structure)
+prices_df = df[['sales_value']]
+
+# Multiple columns → DataFrame
+subset = df[['household_id', 'product_id', 'sales_value']]
+```
+
+---
+
+## [Filtering Rows](09-subsetting.html#filtering-rows) {.unnumbered}
+
+Row filtering uses a **boolean condition** — a True/False value for every row. Rows where the condition is `True` are kept.
+
+```python
+# Build a condition
+high_value = df['sales_value'] > 10
+
+# Apply with .loc (preferred)
+df.loc[high_value]
+
+# Inline form
+df.loc[df['sales_value'] > 10]
+
+# Combine conditions — use & (AND) and | (OR)
+df.loc[(df['sales_value'] > 10) & (df['week'] == 1)]
+df.loc[(df['state'] == 'OH') | (df['state'] == 'KY')]
+```
+
+::: {.callout-warning}
+Use `&` and `|` — never `and` / `or` — when combining pandas conditions. Wrap each condition in parentheses.
+:::
+
+---
+
+## [Combining Select + Filter with .loc\[\]](09-subsetting.html#selecting-variables-and-filtering-rows) {.unnumbered}
+
+> `.loc[rows, columns]` is the standard pattern for subsetting both dimensions in one step.
+
+```python
+# Compact form
+result = df.loc[df['week'] == 1, ['household_id', 'sales_value']]
+
+# Readable multi-line form (preferred for complex conditions)
+rows = df['sales_value'] > 50
+cols = ['product_id', 'sales_value', 'quantity']
+result = df.loc[rows, cols]
+```
+
+| Goal | Syntax |
+|------|--------|
+| All rows, some columns | `df.loc[:, ['col1', 'col2']]` |
+| Some rows, all columns | `df.loc[condition]` |
+| Some rows, some columns | `df.loc[condition, ['col1', 'col2']]` |
+
+---
+
+## [Views vs Copies](09-subsetting.html#views-vs-copies) {.unnumbered}
+
+> **Chained indexing** (`df[...][...]`) can return a copy instead of a view, making assignments silently fail. Always use `.loc[]` when assigning values.
+
+```python
+# Unsafe — triggers SettingWithCopyWarning; original may not update
+df[df['week'] == 1]['sales_value'] = 0
+
+# Safe — single .loc[] call updates the original DataFrame
+df.loc[df['week'] == 1, 'sales_value'] = 0
+```
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Why it happens | Fix |
+|---------|----------------|-----|
+| `df.head` (no parentheses) | Confusing an attribute with a method | `df.head()` — methods always need `()` |
+| `KeyError: 'saleprice'` | Column names are case-sensitive | Use `df.columns` to see exact names |
+| `df['col1', 'col2']` | Missing the inner list | `df[['col1', 'col2']]` — double brackets for multiple columns |
+| `df[(cond1) and (cond2)]` | Python's `and` is not element-wise | Use `&` for AND and `|` for OR |
+| `FileNotFoundError` on import | File path doesn't match actual location | Run `os.getcwd()` and check relative path |
+| Assignment does nothing | Chained indexing returns a copy | Use `df.loc[condition, 'col'] = value` for all assignments |

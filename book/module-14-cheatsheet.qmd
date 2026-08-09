@@ -1,0 +1,106 @@
+---
+title: "Module 14 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 33–34"
+---
+
+A quick-reference summary of the essential ideas from Module 14. This module is a map rather than a toolkit — the goal is knowing what exists and where to go next.
+
+---
+
+## [Gradient Boosting](33-modern-ml-algorithms.html) {.unnumbered}
+
+> **Gradient boosting** builds trees **sequentially**, each one trained to correct the errors of the ensemble so far. A random forest builds trees **in parallel** and averages them. Boosting usually wins on tabular data, at the cost of more careful tuning.
+
+| | Random Forest | Gradient Boosting |
+|--|---------------|-------------------|
+| Trees built | In parallel, independently | Sequentially, each fixing the last |
+| Base trees | Deep, low bias | Shallow "stumps", high bias |
+| Combines by | Averaging / voting | Weighted sum |
+| Overfits if | Rarely — more trees is safe | Yes — too many trees overfits |
+| Tuning | Forgiving | Sensitive, especially learning rate |
+
+```python
+from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
+from xgboost import XGBClassifier, XGBRegressor
+
+model = XGBRegressor(
+    n_estimators=500,
+    learning_rate=0.05,   # smaller needs more trees but generalizes better
+    max_depth=4,          # shallow by design
+    subsample=0.8,
+    random_state=123,
+)
+model.fit(X_train, y_train)
+```
+
+`n_estimators` and `learning_rate` trade off directly: halve the rate, roughly double the trees.
+
+---
+
+## Neural Networks {.unnumbered}
+
+> A **neural network** stacks layers of simple units. Each unit computes a weighted sum of its inputs and applies a non-linear **activation function**; stacking these lets the network approximate very complex relationships. It learns by **backpropagation** — comparing predictions to truth and pushing the error backward to adjust weights.
+
+| Term | Meaning |
+|------|---------|
+| **Layer** | A group of neurons; depth is what makes it "deep" learning |
+| **Activation** | Non-linearity (ReLU, sigmoid) — without it the network collapses to linear |
+| **Backpropagation** | How errors propagate backward to update weights |
+| **Epoch** | One full pass over the training data |
+| **Learning rate** | Step size for each weight update |
+
+| Architecture | Built for |
+|--------------|-----------|
+| **Feedforward (MLP)** | General tabular data |
+| **CNN** | Images and spatial data |
+| **RNN / LSTM** | Sequences and time series |
+| **Transformer** | Language, and increasingly everything else |
+
+---
+
+## Choosing an Algorithm {.unnumbered}
+
+| Situation | Reach for |
+|-----------|-----------|
+| Tabular data, need explanation | Linear / logistic regression, a single tree |
+| Tabular data, need accuracy | Random forest, then gradient boosting |
+| Images, audio, or text | Deep learning, usually a pretrained model |
+| Small dataset (< 1,000 rows) | Simpler models; deep learning will overfit |
+| Unlabeled data | Clustering, PCA |
+
+::: {.callout-tip}
+On tabular business data, a tuned gradient boosting model is usually the strongest option, and neural networks rarely justify their complexity. Deep learning's advantage shows up on unstructured data.
+:::
+
+**The interpretability–performance spectrum** runs from linear models (fully explainable, less flexible) through trees and forests to deep learning (most flexible, hardest to explain). Regulated decisions — credit, hiring, medical — often require the explainable end regardless of accuracy.
+
+---
+
+## Foundation Models and Transfer Learning {.unnumbered}
+
+> A **foundation model** is trained once at enormous scale, then adapted to specific tasks. **Transfer learning** means starting from those learned representations instead of from scratch — which is why modern practice often begins with a pretrained model and a small amount of task-specific data.
+
+---
+
+## [Where to Go Next](34-ml-roadmap.html) {.unnumbered}
+
+**Skills beyond modeling** — the ones that separate a course project from production work:
+
+| Area | Why it matters |
+|------|----------------|
+| SQL and data engineering | Most real work is getting and shaping the data |
+| Version control and testing | Analyses must be reproducible by someone else |
+| Deployment and monitoring | A model in a notebook creates no value |
+| Communication | The best analysis unexplained changes nothing |
+| Experiment design | A/B testing and causal inference answer "did it work?" |
+
+**Choosing a direction:**
+
+| If you want to | Study next |
+|----------------|-----------|
+| Go deeper on prediction | Gradient boosting, feature engineering at scale, time series |
+| Work with text or images | Deep learning, then transformers and pretrained models |
+| Drive business decisions | Causal inference, experiment design, optimization |
+| Build and ship systems | Data engineering, MLOps, cloud platforms |
+
+See Chapter 34 for the full roadmap and curated resources for each path.

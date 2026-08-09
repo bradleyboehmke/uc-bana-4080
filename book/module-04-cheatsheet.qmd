@@ -1,0 +1,226 @@
+---
+title: "Module 4 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 10–12"
+---
+
+A quick-reference summary of the essential ideas from Module 4. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [Renaming Columns](10-manipulating-data.html#renaming-columns) {.unnumbered}
+
+> **`.rename()`** accepts a `columns=` dictionary mapping old names to new names and returns a new DataFrame with updated labels.
+
+```python
+# Rename specific columns
+ames = ames.rename(columns={'MS SubClass': 'ms_subclass', 'MS Zoning': 'ms_zoning'})
+
+# Rename all columns at once — lowercase + underscores
+ames.columns = ames.columns.str.lower().str.replace(" ", "_")
+
+# Chain multiple string operations
+ames.columns = ames.columns.str.lower().str.replace(" ", "_").str.strip()
+```
+
+::: {.callout-warning}
+`.rename()` returns a **new** DataFrame — it does not modify the original. Either reassign the result (`df = df.rename(...)`) or use `inplace=True`.
+:::
+
+---
+
+## [Adding & Removing Columns](10-manipulating-data.html#adding-and-removing-columns) {.unnumbered}
+
+```python
+# Add a new column (scalar or column arithmetic)
+ames['sale_price_k'] = ames['saleprice'] / 1000
+ames['price_per_sqft'] = ames['saleprice'] / ames['gr_liv_area']
+
+# Overwrite an existing column
+ames['lot_area'] = ames['lot_area'] - 50
+
+# Remove one or more columns (returns a new DataFrame)
+ames = ames.drop(columns=['order', 'sale_price_k'])
+```
+
+---
+
+## [Handling Missing Values](10-manipulating-data.html#missing-values) {.unnumbered}
+
+> **`NaN`** is pandas' sentinel for a missing value. `.isnull()` and `.isna()` are interchangeable aliases that return a Boolean mask.
+
+```python
+# Detect missing values
+df.isnull()                          # Boolean DataFrame — True where missing
+df.isnull().sum()                    # Count missing per column
+df.isnull().any()                    # True/False per column — has any missing?
+
+# Drop rows with any missing value
+df.dropna()
+
+# Fill missing values
+df.fillna(0)                              # Replace NaN with a constant
+df['col'].fillna(df['col'].mean())        # Replace NaN with column mean
+df.ffill()                                # Forward-fill from previous non-NaN
+df.bfill()                                # Backward-fill from next non-NaN
+```
+
+| Method | Use when |
+|--------|----------|
+| `.dropna()` | Missing values are truly unrecoverable |
+| `.fillna(value)` | A fixed or computed replacement is appropriate |
+| `.ffill()` / `.bfill()` | Data is ordered and adjacent values are meaningful |
+
+---
+
+## [Replacing Values & Custom Functions](10-manipulating-data.html#replacing-values) {.unnumbered}
+
+```python
+# Map old values to new values using a dictionary
+month_map = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr',
+             5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug',
+             9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'}
+ames['mo_sold'] = ames['mo_sold'].replace(month_map)
+
+# Apply a function element-wise to a Series
+ames['saleprice'].apply(lambda x: 'Luxury' if x > 500000 else 'Standard')
+
+# Apply a named function
+def price_tier(x):
+    if x > 500000:
+        return 'Luxury'
+    return 'Standard'
+
+ames['saleprice'].apply(price_tier)
+```
+
+---
+
+## [Simple Aggregations](11_aggregating_data.html#simple-aggregation) {.unnumbered}
+
+> **Summary functions** collapse a column (or DataFrame) into one or more descriptive values — reducing many rows into one result per column.
+
+```python
+# Single-column summaries
+df['SalePrice'].mean()
+df['SalePrice'].median()
+df['SalePrice'].sum()
+
+# Quick overview of all numeric columns
+df.describe()                          # count, mean, std, min, quartiles, max
+df.describe(include='all')             # also includes object/categorical columns
+
+# Custom multi-column summary with .agg()
+df.agg({
+    'SalePrice':   ['mean', 'median'],
+    'Gr Liv Area': ['mean', 'min']
+})
+```
+
+| Method | Best for |
+|--------|----------|
+| `.mean()` / `.median()` | A single statistic on one column |
+| `.describe()` | Quick exploratory overview of all numeric columns |
+| `.agg({col: [fns]})` | Different statistics on different columns |
+
+---
+
+## [Grouped Aggregation](11_aggregating_data.html#grouped-aggregation) {.unnumbered}
+
+> **Split–apply–combine**: `groupby()` splits the DataFrame into groups, a summary function is applied to each group, and the results are recombined into one table.
+
+```python
+# Basic grouped summary
+ames.groupby('Neighborhood').agg({'SalePrice': 'mean'})
+
+# Multiple functions on multiple columns
+ames.groupby('Neighborhood').agg({
+    'SalePrice':   ['mean', 'median'],
+    'Gr Liv Area': ['mean', 'min']
+})
+
+# Group by multiple variables
+ames.groupby(['Neighborhood', 'Yr Sold'], as_index=False).agg({'SalePrice': 'mean'})
+```
+
+::: {.callout-tip}
+Use `as_index=False` to keep group columns as regular columns instead of the index — this makes filtering and further merges easier.
+:::
+
+---
+
+## [Understanding Keys](12-joining-data.html#understanding-keys) {.unnumbered}
+
+> A **key** is one or more columns used to match rows between two tables.
+
+| Key type | Definition |
+|----------|-----------|
+| **Primary key** | Uniquely identifies each row within its own table |
+| **Foreign key** | References a primary key in another table, creating a link |
+
+```python
+# Find columns shared between two DataFrames
+transactions.columns.intersection(demographics.columns)
+# → Index(['household_id'], dtype='object')
+```
+
+---
+
+## [Join Types](12-joining-data.html#types-of-joins) {.unnumbered}
+
+| Join type | `how=` | Rows kept |
+|-----------|--------|-----------|
+| **Inner** | `'inner'` | Only rows with matching keys in **both** tables |
+| **Left** | `'left'` | All rows from the **left** table; matches from right (NaN if none) |
+| **Right** | `'right'` | All rows from the **right** table; matches from left (NaN if none) |
+| **Outer** | `'outer'` | All rows from **both** tables (NaN where no match) |
+
+The default in `pd.merge()` is an **inner join**.
+
+---
+
+## [Performing Merges](12-joining-data.html#mutating-joins) {.unnumbered}
+
+```python
+# Inner join on a shared column name
+x.merge(y, on='id', how='inner')
+
+# Left join — keeps all transaction rows even if product is missing
+transactions.merge(products, on='product_id', how='left')
+
+# Join when the key has different names in each table
+a.merge(b, left_on='id_a', right_on='id_b')
+
+# pandas infers common column names when on= is omitted
+x.merge(y)   # auto-joins on all columns with the same name in both tables
+```
+
+::: {.callout-warning}
+Always verify the join key with `df1.columns.intersection(df2.columns)` before merging — accidentally joining on an unintended shared column produces wrong results without any error.
+:::
+
+---
+
+## [Merge Indicator](12-joining-data.html#merge-indicator) {.unnumbered}
+
+> The `indicator=True` argument adds a `_merge` column that shows where each row originated.
+
+```python
+result = transactions.merge(demographics, how='outer', indicator=True)
+# _merge values: 'left_only', 'right_only', 'both'
+
+# Count transactions with no matching demographic info
+result.query("_merge == 'left_only'").shape[0]
+```
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Why it happens | Fix |
+|---------|---------------|-----|
+| Renaming doesn't stick | `.rename()` returns a new DataFrame; original is unchanged | Reassign: `df = df.rename(columns={...})` |
+| `drop()` removes rows, not columns | Default `axis=0` targets rows | Use `drop(columns=['col'])` to target columns explicitly |
+| `fillna()` doesn't modify in place | Most pandas methods return copies | Reassign: `df['col'] = df['col'].fillna(value)` |
+| `describe()` skips text columns | Default covers numeric dtypes only | Use `df.describe(include='all')` to include object columns |
+| Wrong join type silently drops rows | Inner join discards unmatched rows with no warning | Check row counts before and after; use `indicator=True` to audit |
+| Merging on an unintended shared column | Both tables share a column you didn't mean to join on | Always specify `on=` explicitly; verify with `.columns.intersection()` |

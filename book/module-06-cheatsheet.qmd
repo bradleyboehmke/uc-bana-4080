@@ -1,0 +1,304 @@
+---
+title: "Module 6 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 16–18"
+---
+
+A quick-reference summary of the essential ideas from Module 6. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [`if` / `elif` / `else`](16-control-statements.html#if-statement) {.unnumbered}
+
+> **Conditional statements** let Python choose which code to run based on whether a condition is `True` or `False`.
+
+```python
+x = 22.50
+
+if x < 10:
+    print('low')
+elif x < 20:
+    print('medium-low')
+elif x < 30:
+    print('medium')
+else:
+    print('preferred')
+```
+
+- Conditions are checked **top to bottom**; only the first `True` branch runs.
+- Any non-zero number or non-empty object is **truthy**; `0`, `0.0`, `[]`, `""`, and `None` are **falsy**.
+- Combine conditions with `and` / `or`; Python stops evaluating as soon as the result is known.
+
+::: {.callout-warning}
+Using multiple `if` statements instead of `elif` means every condition is checked independently. Use `elif` when branches are mutually exclusive.
+:::
+
+---
+
+## [Dictionary Switch Pattern](16-control-statements.html#switch-statements) {.unnumbered}
+
+> Python has no `switch` statement. Use a **dictionary** to map keys to values or functions for clean, fast branching.
+
+```python
+# value lookup
+prices = {'spam': 1.25, 'ham': 1.99, 'eggs': 0.99}
+choice = 'ham'
+prices.get(choice, 'Bad choice')   # returns 1.99; default if key missing
+
+# function dispatch
+actions = {
+    'upper': str.upper,
+    'lower': str.lower,
+    'title': str.title,
+}
+actions.get('upper', str)('hello')  # 'HELLO'
+```
+
+Dictionary lookup is faster than a long `if/elif` chain and easier to update.
+
+---
+
+## [Vectorized Conditionals in Pandas](16-control-statements.html#applying-in-pandas) {.unnumbered}
+
+> Apply conditional logic across every row of a DataFrame without a Python loop.
+
+| Approach | Best for | Speed |
+|----------|----------|-------|
+| `np.where(cond, val_true, val_false)` | Two-outcome conditions | Fastest |
+| `df.apply(func, axis=1)` | Multi-branch or complex logic | Slower |
+
+```python
+import numpy as np
+
+# two outcomes — np.where
+df['tier'] = np.where(df['sales_value'] > 10, 'high', 'low')
+
+# multi-branch — define a function, then apply
+def classify(row):
+    if row['sales_value'] > 10:
+        return 'high'
+    elif row['sales_value'] > 5:
+        return 'medium'
+    return 'low'
+
+df['tier'] = df.apply(classify, axis=1)
+```
+
+---
+
+## [`for` Loops](17-iteration-statements.html#for-loop) {.unnumbered}
+
+> A `for` loop iterates over every element in a **sequence** (list, dict, DataFrame, range, …).
+
+```python
+# iterate over a range
+squared = {}
+for n in range(5):
+    squared[n] = n ** 2          # {0:0, 1:1, 2:4, 3:9, 4:16}
+
+# iterate over a list
+for file in file_list:
+    monthly_data[file] = pd.read_csv(file)
+
+# iterate over dict keys
+for key in my_dict:
+    print(key, my_dict[key])
+```
+
+Use `enumerate()` to get both index and value: `for i, val in enumerate(items):`
+
+---
+
+## [`break` and `continue`](17-iteration-statements.html#controlling-sequences) {.unnumbered}
+
+| Statement | Effect |
+|-----------|--------|
+| `break` | Exit the loop immediately |
+| `continue` | Skip the rest of this iteration; move to the next |
+
+```python
+for year in range(2018, 2024):
+    if year == 2020:
+        continue          # skip 2020, keep going
+    print(year)
+
+for year in range(2018, 2024):
+    if year == 2020:
+        break             # stop at 2020
+    print(year)
+```
+
+---
+
+## [List & Dict Comprehensions](17-iteration-statements.html#list-comprehensions) {.unnumbered}
+
+> **Comprehensions** condense a build-and-append loop into a single readable line.
+
+```python
+# list comprehension — all squares
+squares = [n ** 2 for n in range(10)]
+
+# with filter — squares of odd numbers only
+odd_squares = [n ** 2 for n in range(10) if n % 2 != 0]
+
+# conditional expression — discount or keep original price
+prices = [p * 0.8 if p > 100 else p for p in price_list]
+
+# dict comprehension
+sq_dict = {n: n ** 2 for n in range(10)}
+```
+
+::: {.callout-tip}
+Read a comprehension as: **[expression for item in sequence if condition]**.
+The `if` at the end *filters*; a ternary `… if … else …` before `for` *transforms without dropping rows*.
+:::
+
+---
+
+## [`while` Loops](17-iteration-statements.html#while-loop) {.unnumbered}
+
+> Use a `while` loop when you don't know the number of iterations in advance — only a stopping **condition**.
+
+```python
+attempts = 0
+found = False
+
+while not found:
+    result = try_something()
+    found = result is not None
+    attempts += 1
+
+print(f'Found after {attempts} attempts')
+```
+
+::: {.callout-warning}
+Always ensure the condition can eventually become `False`, or add a safety counter — otherwise the loop runs forever.
+:::
+
+---
+
+## [Defining Functions](18-functions.html#defining-functions) {.unnumbered}
+
+> Wrap repeated logic in a **function** when you've copied the same block more than twice.
+
+```python
+def store_sales(data, store, week):
+    filt = (data['store_id'] == store) & (data['week'] == week)
+    return data['sales_value'][filt].sum()
+
+store_sales(df, store=309, week=48)
+```
+
+Four steps: `def` + name → parameters → body → `return`.
+Without `return`, the function returns `None`.
+
+---
+
+## [Parameters & Arguments](18-functions.html#parameters-vs-arguments) {.unnumbered}
+
+| Pattern | Syntax | Purpose |
+|---------|--------|---------|
+| Positional | `f(df, 309, 48)` | Order-dependent; error-prone |
+| Keyword | `f(data=df, store=309, week=48)` | Explicit; order-free |
+| Default | `def f(x, n=2):` | Optional param with a fallback value |
+| `*args` | `def f(*args):` | Variable positional args → tuple |
+| `**kwargs` | `def f(**kwargs):` | Variable keyword args → dict |
+
+::: {.callout-warning}
+Default arguments must come **after** required parameters. `def f(n=2, x)` raises a `SyntaxError`.
+:::
+
+---
+
+## [Type Hints & Docstrings](18-functions.html#type-hints) {.unnumbered}
+
+> **Type hints** signal expected input/output types; **docstrings** explain intent, parameters, and return values.
+
+```python
+def store_sales(data: pd.DataFrame, store: int, week: int) -> float:
+    """
+    Compute total store sales for a given store and week.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Transactions DataFrame with columns store_id, week, sales_value.
+    store : int
+        Store identifier.
+    week : int
+        Week of year.
+
+    Returns
+    -------
+    float
+        Sum of sales_value for the matching rows.
+
+    Examples
+    --------
+    >>> store_sales(df, store=309, week=48)
+    395.6
+    """
+    filt = (data['store_id'] == store) & (data['week'] == week)
+    return data['sales_value'][filt].sum()
+```
+
+---
+
+## [Error Handling](18-functions.html#errors-and-exceptions) {.unnumbered}
+
+> Three tools for robust functions:
+
+```python
+# raise — signal a specific error
+if not isinstance(store, int):
+    raise TypeError('`store` must be an integer')
+
+# assert — internal sanity check (use for bugs, not user errors)
+assert 0 <= discount <= 1, 'Discount must be between 0 and 1'
+
+# try / except — handle expected failures gracefully
+try:
+    result = store_sales(df, store=35, week=48)
+except ValueError as e:
+    print(f'Invalid input: {e}')
+    result = 0.0
+finally:
+    print('Cleanup runs regardless of error')
+```
+
+Use `raise` / `TypeError` / `ValueError` for user-facing validation; `assert` for internal invariants.
+
+---
+
+## [Lambda Functions](18-functions.html#anonymous-functions) {.unnumbered}
+
+> A **lambda** is a short, anonymous function for simple one-off transformations — most useful inside `apply()`, `map()`, or `groupby()`.
+
+```python
+# equivalent definitions
+def square(x): return x ** 2
+square = lambda x: x ** 2
+
+# common pandas patterns
+df['tier'] = df['sales_value'].apply(lambda x: 'high' if x > 10 else 'low')
+
+df.groupby('basket_id').apply(
+    lambda g: (g['sales_value'] / g['quantity']).mean()
+)
+```
+
+::: {.callout-tip}
+Lambda bodies are limited to a **single expression** — no statements, no multi-line logic. For anything more complex, write a named function.
+:::
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Why it happens | Fix |
+|---------|---------------|-----|
+| `elif` conditions in wrong order | More general condition checked before specific one; e.g., `>= 5000` before `>= 10000` | Put the **most restrictive** condition first |
+| Modifying a list while iterating over it | Loop index goes out of sync as the list shrinks | Iterate over a **copy**: `for item in items[:]` |
+| Forgetting `else price` in a list comprehension filter | `[price * 0.8 for price in prices if price > 100]` silently drops cheap items | Use ternary form: `[price * 0.8 if price > 100 else price for price in prices]` |
+| Infinite `while` loop | Condition never becomes `False` | Add a counter or break condition as a safety exit |
+| Default argument before required parameter | `def f(n=2, x)` is a `SyntaxError` | Required params always come **before** defaults |
+| Using `df.apply(func)` on a large DataFrame for a simple condition | Row-wise Python loop is much slower than vectorized ops | Use `np.where()` or pandas boolean indexing for two-outcome conditions |
