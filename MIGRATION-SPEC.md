@@ -19,14 +19,16 @@ Work through phases in order. Check in after each phase before proceeding.
 | 4 | 4 | 10-manipulating-data, 11_aggregating_data, 12-joining-data |
 | 5 | 5 | 13-data-viz-pandas, 14-advanced-data-viz, 15-exploratory-data-analysis |
 | 6 | 6 | 16-control-statements, 17-iteration-statements, 18-functions |
-| — | 7 | Midterm project (no textbook chapters) |
-| 7 | 8 | 19-intro-ml-ai, 20-before-we-build |
-| 8 | 9 | 21-correlation-regression, 22-regression-evaluation |
-| 9 | 10 | 23-logistic-regression, 24-classification-evaluation |
-| 10 | 11 | 25-decision-trees, 26-random-forests, 27-feature-importance |
-| 11 | 12 | 28-cross-validation, 29-hyperparameter-tuning, 30-feature-engineering |
-| 12 | 13 | 31-clustering, 32-dimension-reduction |
-| 13 | 14 | 33-modern-ml-algorithms, 34-ml-roadmap |
+| 7 | 7 | Midterm project (no textbook chapters, no lecture) |
+| 8 | 8 | 19-intro-ml-ai, 20-before-we-build |
+| 9 | 9 | 21-correlation-regression, 22-regression-evaluation |
+| 10 | 10 | 23-logistic-regression, 24-classification-evaluation |
+| 11 | 11 | 25-decision-trees, 26-random-forests, 27-feature-importance |
+| 12 | 12 | 28-cross-validation, 29-hyperparameter-tuning, 30-feature-engineering |
+| 13 | 13 | 31-clustering, 32-dimension-reduction |
+| 14 | 14 | 33-modern-ml-algorithms, 34-ml-roadmap |
+
+Module number and week number are identical throughout — Module N is Week N.
 
 ---
 
@@ -109,23 +111,24 @@ Adapt each file:
 - Module 5 overview: reference ch14 (advanced-data-viz) and ch15
   (exploratory-data-analysis) — same as 7025 since we adopted those chapters
 
-**Week 7 (midterm)**: check if `../uc-bana-7025/` has a project/midterm overview
-page and copy its structure. Create a `midterm-project-overview.qmd` (or similar)
-in `book/` that describes the midterm week — link to the midterm project notebook
-and week-07 slides.
+**Module 7 (midterm week)**: create `module-07-overview.qmd`. Keep it **high level**
+— a short orientation to the Regork brief and what students will produce. Point to
+**Canvas** for the official project description, deadlines, and grading rubric, and
+treat Canvas as authoritative. This module has **no lecture**, so the Module
+Resources section omits the Lecture table entirely (there is no week-07 slide deck).
 
-**Modules 7-13 (weeks 8-14)**: create new overview files:
+**Modules 8-14**: create new overview files:
 ```
-module-07-overview.qmd  (intro ML + ML workflow)
-module-08-overview.qmd  (regression)
-module-09-overview.qmd  (classification)
-module-10-overview.qmd  (decision trees + random forests)
-module-11-overview.qmd  (cross-validation, tuning, feature engineering)
-module-12-overview.qmd  (clustering + dimension reduction)
-module-13-overview.qmd  (modern ML algorithms + learning roadmap)
+module-08-overview.qmd  (intro ML + ML workflow)
+module-09-overview.qmd  (regression)
+module-10-overview.qmd  (classification)
+module-11-overview.qmd  (decision trees + random forests)
+module-12-overview.qmd  (cross-validation, tuning, feature engineering)
+module-13-overview.qmd  (clustering + dimension reduction)
+module-14-overview.qmd  (modern ML algorithms + learning roadmap)
 ```
 
-Module 13 is the final week of class — its framing should send students off with a
+Module 14 is the final week of class — its framing should send students off with a
 clear picture of where to continue their learning, so the overview should lean
 forward (next topics, resources, career paths) rather than only summarizing.
 
@@ -150,16 +153,21 @@ module-06-cheatsheet.qmd
 
 Adapt each: "BANA 7025" → "BANA 4080", update any repo URLs.
 
-**Modules 7-13**: create new cheatsheets covering the ML content for each module:
+**Module 7** (midterm) gets **no cheatsheet** — its overview points students back at
+the Module 1-6 cheatsheets, which cover everything the project needs.
+
+**Modules 8-14**: create new cheatsheets covering the ML content for each module:
 ```
-module-07-cheatsheet.qmd  (sklearn workflow, train/test split, pipelines)
-module-08-cheatsheet.qmd  (LinearRegression, metrics, OLS interpretation)
-module-09-cheatsheet.qmd  (LogisticRegression, classification metrics, ROC)
-module-10-cheatsheet.qmd  (DecisionTreeClassifier, RandomForestClassifier, feature importance)
-module-11-cheatsheet.qmd  (cross_val_score, GridSearchCV, preprocessing transformers)
-module-12-cheatsheet.qmd  (KMeans, PCA, silhouette score)
-module-13-cheatsheet.qmd  (gradient boosting, neural network basics, where to go next)
+module-08-cheatsheet.qmd  (sklearn workflow, train/test split, pipelines)
+module-09-cheatsheet.qmd  (LinearRegression, metrics, OLS interpretation)
+module-10-cheatsheet.qmd  (LogisticRegression, classification metrics, ROC)
+module-11-cheatsheet.qmd  (DecisionTreeClassifier, RandomForestClassifier, feature importance)
+module-12-cheatsheet.qmd  (cross_val_score, GridSearchCV, preprocessing transformers)
+module-13-cheatsheet.qmd  (KMeans, PCA, silhouette score)
+module-14-cheatsheet.qmd  (gradient boosting, neural network basics, where to go next)
 ```
+
+That is 13 cheatsheets total: modules 1-6 and 8-14.
 
 Use the Module 1-6 cheatsheets as format templates. Focus on key sklearn API
 patterns, common parameters, and example code snippets.
@@ -192,8 +200,9 @@ patterns, common parameters, and example code snippets.
 Also rename the corresponding pre-built `.html` files to match (or delete them — they
 will be regenerated on next `quarto render`).
 
-Create `week-07.qmd` for the midterm project week. Check `../uc-bana-7025/slides/`
-to see if a project-week slide deck exists there to use as a starting template.
+**Do not create `week-07.qmd`.** Module 7 is the midterm project week and has no
+lecture, so there is no week 7 deck. `render-slides.sh` globs `slides/week-*.qmd`,
+so the gap is harmless.
 
 ### Update YAML headers
 
@@ -414,10 +423,11 @@ identical across both repos.
    `part: book/module-NN-overview.qmd`
 2. Update Module 5 chapters to list `14-advanced-data-viz.qmd` and
    `15-exploratory-data-analysis.qmd` (removing the old matplotlib/bokeh files)
-3. Add a midterm project entry between Module 6 and Module 7
-4. Add a "Cheat Sheets" part at the end with all 13 module cheatsheets
-5. Keep the existing ML chapter listings for Modules 7-13, updated with the new
-   module overview files (Module 13 = 33-modern-ml-algorithms, 34-ml-roadmap)
+3. List `module-07-overview.qmd` (the midterm) as a standalone entry, not a `part` —
+   it has no chapters under it
+4. Add a "Cheat Sheets" part at the end with all 13 module cheatsheets (1-6, 8-14)
+5. Keep the existing ML chapter listings for Modules 8-14, updated with the new
+   module overview files (Module 14 = 33-modern-ml-algorithms, 34-ml-roadmap)
 6. Change the book title from "BANA 4080: Data Mining" to the full
    "BANA 4080: Introduction to Data Mining with Python"
 
@@ -467,6 +477,6 @@ and `slides/*_files/` to the Quarto build output section).
    `../slides/week-01.html` resolves against `docs/slides/`
 4. Spot-check `slides/week-01.html` and `slides/week-08.html` for BANA 4080 branding
 5. Check that all internal links resolve: module overview → slides, cheatsheets, Colab badges
-6. Confirm Modules 7-13 overview pages link correctly to the ML labs and notebooks
+6. Confirm Modules 8-14 overview pages link correctly to the ML labs and notebooks
 7. Confirm the CI workflow's deploy step publishes `./docs`, not `book/`
 8. Report any broken references or rendering errors

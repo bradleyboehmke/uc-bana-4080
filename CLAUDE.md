@@ -47,17 +47,21 @@ planning/      Course development materials (largely gitignored)
 | 4 | 4 | 10-manipulating-data, 11_aggregating_data, 12-joining-data |
 | 5 | 5 | 13-data-viz-pandas, 14-advanced-data-viz, 15-exploratory-data-analysis |
 | 6 | 6 | 16-control-statements, 17-iteration-statements, 18-functions |
-| — | 7 | Midterm project (no textbook chapters) |
-| 7 | 8 | 19-intro-ml-ai, 20-before-we-build |
-| 8 | 9 | 21-correlation-regression, 22-regression-evaluation |
-| 9 | 10 | 23-logistic-regression, 24-classification-evaluation |
-| 10 | 11 | 25-decision-trees, 26-random-forests, 27-feature-importance |
-| 11 | 12 | 28-cross-validation, 29-hyperparameter-tuning, 30-feature-engineering |
-| 12 | 13 | 31-clustering, 32-dimension-reduction |
-| 13 | 14 | 33-modern-ml-algorithms, 34-ml-roadmap |
+| 7 | 7 | Midterm project (no textbook chapters, no lecture) |
+| 8 | 8 | 19-intro-ml-ai, 20-before-we-build |
+| 9 | 9 | 21-correlation-regression, 22-regression-evaluation |
+| 10 | 10 | 23-logistic-regression, 24-classification-evaluation |
+| 11 | 11 | 25-decision-trees, 26-random-forests, 27-feature-importance |
+| 12 | 12 | 28-cross-validation, 29-hyperparameter-tuning, 30-feature-engineering |
+| 13 | 13 | 31-clustering, 32-dimension-reduction |
+| 14 | 14 | 33-modern-ml-algorithms, 34-ml-roadmap |
+
+Module number and week number are always identical — Module N is Week N.
 
 Modules 1–6 share their chapters with BANA 7025 — keep them in sync with
-`../uc-bana-7025/book/`. Modules 7–13 are unique to BANA 4080.
+`../uc-bana-7025/book/`. Modules 7–14 are unique to BANA 4080. Module 7 is the
+midterm project week: no chapters, no lecture, no cheatsheet, and Canvas holds the
+authoritative project description and rubric.
 
 ## Content conventions
 
