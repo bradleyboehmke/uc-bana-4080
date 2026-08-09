@@ -267,17 +267,27 @@ Rename lab files in `labs/` to match 7025's `lab-NN-topic.ipynb` convention:
 | `13_wk13_lab.ipynb` | `lab-13-clustering.ipynb` |
 | `masters_extra_credit.ipynb` | leave as-is or move to `instructor/` |
 
-Move all TA guidance notebooks into `labs/ta-guides/`:
+Move all TA guidance notebooks into **`instructor/ta-guides/`** — not `labs/`. They
+contain worked solutions, so they follow the same restricted-content pattern as
+7025's `instructor/answer-keys/`: present on disk for instructors, gitignored so
+they never reach the public repo.
+
 ```
-ta_guidance_wk2.ipynb  → labs/ta-guides/ta-guide-02.ipynb
-ta_guidance_wk3.ipynb  → labs/ta-guides/ta-guide-03.ipynb
-ta_guidance_wk4.ipynb  → labs/ta-guides/ta-guide-04.ipynb
-ta_guidance_wk5.ipynb  → labs/ta-guides/ta-guide-05.ipynb
-ta_guidance_wk8.ipynb  → labs/ta-guides/ta-guide-08.ipynb
-ta_guidance_wk9.ipynb  → labs/ta-guides/ta-guide-09.ipynb
-ta_guidance_wk10.ipynb → labs/ta-guides/ta-guide-10.ipynb
-ta_guidance_wk12.ipynb → labs/ta-guides/ta-guide-12.ipynb
+ta_guidance_wk2.ipynb  → instructor/ta-guides/ta-guide-02.ipynb
+ta_guidance_wk3.ipynb  → instructor/ta-guides/ta-guide-03.ipynb
+ta_guidance_wk4.ipynb  → instructor/ta-guides/ta-guide-04.ipynb
+ta_guidance_wk5.ipynb  → instructor/ta-guides/ta-guide-05.ipynb
+ta_guidance_wk8.ipynb  → instructor/ta-guides/ta-guide-08.ipynb
+ta_guidance_wk9.ipynb  → instructor/ta-guides/ta-guide-09.ipynb
+ta_guidance_wk10.ipynb → instructor/ta-guides/ta-guide-10.ipynb
+ta_guidance_wk12.ipynb → instructor/ta-guides/ta-guide-12.ipynb
 ```
+
+`.gitignore` gains `instructor/ta-guides/`, `instructor/answer-keys/`, and
+`instructor/planning/`, mirroring 7025.
+
+`masters_extra_credit.ipynb` does not exist in this repo and is not being used —
+no action needed.
 
 ---
 
@@ -374,18 +384,18 @@ homework1.ipynb → assignments/homework/homework-01.ipynb
 homework2.ipynb → assignments/homework/homework-02.ipynb
 ```
 
-Move all answer key files to `instructor/answer-keys/`:
+**Answer keys — already done during Phase 6.** The keys that actually exist were
+moved to `instructor/answer-keys/`, numbered by week (which equals the module):
+
 ```
-homework1_answer_key.ipynb  → instructor/answer-keys/homework-01-answer-key.ipynb
-homework1_answer_key.html   → instructor/answer-keys/
-homework1_answer_key.pdf    → instructor/answer-keys/
-homework2_answer_key.ipynb  → instructor/answer-keys/homework-02-answer-key.ipynb
-homework2_answer_key.html   → instructor/answer-keys/
-homework2_answer_key.pdf    → instructor/answer-keys/
-homework_wk09_answer_key.*  → instructor/answer-keys/
-homework_wk10_answer_key.*  → instructor/answer-keys/
-homework_wk11_answer_key.*  → instructor/answer-keys/
+homework_wk10_answer_key.{ipynb,html,pdf} → instructor/answer-keys/homework-10-answer-key.*
+homework_wk11_answer_key.{ipynb,html,pdf} → instructor/answer-keys/homework-11-answer-key.*
+homework_wk13_answer_key.{ipynb,pdf}      → instructor/answer-keys/homework-13-answer-key.*
 ```
+
+The spec previously also listed keys for homework 1, 2, and week 9. Those files do
+not exist in this repo. Remaining student-facing homework in `homework/`
+(`homework_wk13.ipynb`, `homework_wk13_v2.*`, `wk12_homework.*`) is handled below.
 
 **Midterm project**: the template was moved to `assignments/midterm-project/` in Phase 6.
 Check `../uc-bana-7025/assignments/final-project/` for any additional scaffolding files
