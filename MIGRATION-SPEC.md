@@ -176,6 +176,12 @@ patterns, common parameters, and example code snippets.
 
 ## Phase 5: Slides
 
+This phase covers **filenames, YAML headers, and shared assets only**. Deck content
+is deliberately left untouched — the 4080 decks are kept, not replaced with 7025's,
+because they carry midterm project material 7025 has no equivalent for. Content
+revision (interactivity, code-along notebooks, and the week 5 chapter mismatch) is
+Phase 11.
+
 ### Rename files (in `slides/`)
 
 | Old name | New name |
@@ -477,3 +483,63 @@ regenerates them into `docs/slides/`.
 6. Confirm Modules 8-14 overview pages link correctly to the ML labs and notebooks
 7. Confirm the CI workflow's deploy step publishes `./docs`, not `book/`
 8. Report any broken references or rendering errors
+
+---
+
+## Phase 11: Slide content revision (deferred)
+
+Phase 5 renamed and restyled the decks but **did not touch their content**. This
+phase revisits each deck the way the 7025 decks were revised: more interactive, with
+a companion code-along notebook for each Tuesday lecture.
+
+### Goals
+
+- Work through `slides/week-01.qmd` … `week-14.qmd` one deck at a time
+- Make them more interactive, following the pattern established in
+  `../uc-bana-7025/slides/`
+- Add a code-along notebook per Tuesday lecture (see below)
+
+### Code-along notebooks
+
+Mirror `../uc-bana-7025/notebooks/tuesday-your-turn/`, which holds student-facing
+in-class notebooks that follow each lecture. Per that directory's README, each one
+contains guided examples, short "Your Turn" exercises with `# Your code here`
+placeholders, and brief reflection prompts.
+
+Create `notebooks/tuesday-your-turn/` here with `week-NN-lecture.ipynb` for each
+lecture week (1-6 and 8-14; module 7 is the midterm and has no lecture), plus a
+README.
+
+Once these exist, restore the "Tuesday Your Turn Notebook" row in the affected
+module overview pages. Phase 3 dropped that row for modules 2, 5, and 6 because
+4080 had no equivalent, and pointed modules 3 and 4 at the existing
+`wk03_data_detective` / `wk04_data_detective` notebooks instead. Modules 8-14 never
+had the row.
+
+### Known content gap to fix first
+
+**Week 5 does not match its chapters.** Phase 2 replaced the old matplotlib and
+Bokeh chapters with `14-advanced-data-viz` (Seaborn-led) and
+`15-exploratory-data-analysis`, but the week 5 deck still reflects the old
+chapters — Matplotlib is mentioned 17 times and Bokeh 14, against 2 for Seaborn and
+1 for EDA. 7025's week 5 deck is weighted to match the new chapters (Seaborn 20,
+Matplotlib 26, Bokeh 9, plus EDA).
+
+Recommended fix is a merge rather than a copy: bring 7025's Seaborn and EDA material
+into the 4080 deck, reduce the Bokeh coverage to match the chapter's lighter
+treatment, and **keep the existing 4080 Mid-term section**.
+
+### What not to lose
+
+The 4080 decks carry midterm project material that 7025 has no equivalent for —
+7025 runs a semester-long project with weekly checkpoints instead. Preserve it when
+revising:
+
+- `week-05.qmd` — "Mid-term" section: deadline countdown, the Thursday lab dedicated
+  to project work, pointer to the rubric
+- `week-06.qmd` — "Mid-term Project Discussion" section: Canvas groups, timeline,
+  requirements, logistics
+- `week-01.qmd` — brief midterm references
+
+Weeks 1-4 and 6 still match their chapters on content, so they need interactivity
+work but no correction.
