@@ -6,8 +6,10 @@ on:
   # Allow manual trigger from Actions tab
   workflow_dispatch:
   schedule:
-    # Run nightly at 11 PM UTC
-    - cron: '0 23 * * *'
+    # Weekly, Sundays at 11 PM UTC. Doubles as a dependency canary: a green run
+    # refreshes the book's build date, so a current date on the site means the
+    # whole book still renders against current dependencies.
+    - cron: '0 23 * * 0'
 
 name: Render and publish book
 
@@ -50,3 +52,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
+          # Publish as a single orphan commit. The site is ~150MB (mostly
+          # self-contained slide decks), and date: today makes every page change
+          # on each build, so retaining history would grow gh-pages indefinitely.
+          # The branch is rebuilt from source every run, so its history has no value.
+          force_orphan: true
