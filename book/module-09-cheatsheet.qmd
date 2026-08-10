@@ -1,0 +1,130 @@
+---
+title: "Module 9 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 21–22"
+---
+
+A quick-reference summary of the essential ideas from Module 9. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [Correlation](21-correlation-regression.html) {.unnumbered}
+
+> **Correlation** measures the strength and direction of a *linear* relationship between two numeric variables. It ranges from −1 (perfect negative) through 0 (none) to +1 (perfect positive).
+
+```python
+import pandas as pd
+import seaborn as sns
+
+df['col_a'].corr(df['col_b'])   # a single pair
+df.corr(numeric_only=True)       # full correlation matrix
+
+sns.heatmap(df.corr(numeric_only=True), annot=True, cmap='coolwarm', center=0)
+sns.scatterplot(data=df, x='col_a', y='col_b')   # always look before trusting r
+```
+
+| |r| | Rough interpretation |
+|-----|----------------------|
+| 0.0 – 0.3 | Weak |
+| 0.3 – 0.7 | Moderate |
+| 0.7 – 1.0 | Strong |
+
+::: {.callout-warning}
+Correlation only detects **linear** relationships and says nothing about causation. A strong curve can produce r ≈ 0, and a strong r can come from a lurking third variable. Plot the data.
+:::
+
+---
+
+## [Linear Regression](21-correlation-regression.html) {.unnumbered}
+
+> **Linear regression** fits a straight line that predicts a continuous target from one or more features by minimizing the sum of squared errors.
+
+```python
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+X = df[['feature_1', 'feature_2']]
+y = df['target']
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=123
+)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+preds = model.predict(X_test)
+
+model.intercept_    # the constant term
+model.coef_         # one coefficient per feature, in column order
+```
+
+**Reading coefficients:** each coefficient is the expected change in the target for a one-unit increase in that feature, *holding the other features constant*.
+
+```python
+# Pair coefficients with names so they are readable
+pd.Series(model.coef_, index=X.columns).sort_values(ascending=False)
+```
+
+**Categorical predictors** must be converted to numeric columns first:
+
+```python
+X = pd.get_dummies(df[['numeric_col', 'category_col']], drop_first=True)
+```
+
+`drop_first=True` avoids perfect collinearity — each dummy is then read relative to the omitted baseline category.
+
+---
+
+## [Evaluating Regression Models](22-regression-evaluation.html) {.unnumbered}
+
+> Regression finds the line minimizing **SSE** (sum of squared errors). SSE itself is not interpretable because it grows with dataset size and squared units, so we report derived metrics instead.
+
+```python
+from sklearn.metrics import (
+    r2_score,
+    mean_squared_error,
+    root_mean_squared_error,
+    mean_absolute_error,
+    mean_absolute_percentage_error,
+)
+
+r2   = r2_score(y_test, preds)
+mse  = mean_squared_error(y_test, preds)
+rmse = root_mean_squared_error(y_test, preds)   # sklearn >= 1.4
+mae  = mean_absolute_error(y_test, preds)
+mape = mean_absolute_percentage_error(y_test, preds)
+```
+
+| Metric | Units | Reads as | Sensitive to outliers |
+|--------|-------|----------|----------------------|
+| **R²** | none (0–1) | Share of variance explained | Moderately |
+| **MSE** | target² | Average squared error | Very |
+| **RMSE** | target | Typical error, same units as target | Very |
+| **MAE** | target | Average absolute error | Less |
+| **MAPE** | percent | Average error as a % of actual | Breaks near zero |
+
+**Choosing a metric:**
+
+| Situation | Prefer |
+|-----------|--------|
+| Large errors are disproportionately costly | RMSE |
+| All errors cost about the same per unit | MAE |
+| Stakeholders think in percentages | MAPE |
+| Explaining overall fit to a non-technical audience | R² |
+
+::: {.callout-tip}
+Report metrics on the **test set**. Training metrics only tell you how well the model memorized. A large train/test gap is the signature of overfitting.
+:::
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Fix |
+|---------|-----|
+| Reading correlation as causation | Correlation constrains explanations; it does not establish them |
+| Trusting r without plotting | Anscombe's quartet: identical r, wildly different data |
+| Comparing coefficients on different scales | Standardize features first, or compare within a single unit |
+| Using MAPE when actuals near zero | Percent error explodes; use MAE instead |
+| Reporting R² from the training set | Always evaluate on held-out data |
+| Forgetting `drop_first=True` on dummies | Perfect collinearity makes coefficients unstable |

@@ -1,0 +1,185 @@
+---
+title: "Module 12 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 28–30"
+---
+
+A quick-reference summary of the essential ideas from Module 12. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [Cross-Validation](28-cross-validation.html) {.unnumbered}
+
+> Every time you check the test set and adjust something, a little information leaks and the test set becomes less honest. **Cross-validation** solves this by rotating through subsets of the *training* data, leaving the test set untouched until the very end.
+
+**k-fold:** split the training data into *k* folds; train on *k*−1 and validate on the held-out fold; repeat *k* times and average.
+
+```python
+from sklearn.model_selection import cross_val_score, cross_validate, KFold
+
+scores = cross_val_score(model, X_train, y_train, cv=5, scoring='r2')
+scores.mean(), scores.std()
+
+# Multiple metrics at once
+results = cross_validate(
+    model, X_train, y_train, cv=5,
+    scoring=['r2', 'neg_root_mean_squared_error'],
+    return_train_score=True,
+)
+```
+
+| Argument | Notes |
+|----------|-------|
+| `cv=5` or `cv=10` | 5 is the common default; 10 for smaller datasets |
+| `scoring` | `'r2'`, `'neg_root_mean_squared_error'`, `'accuracy'`, `'roc_auc'`, `'f1'` |
+| `StratifiedKFold` | Use for classification — preserves class balance per fold |
+
+::: {.callout-tip}
+Report the **standard deviation** alongside the mean. A model averaging 0.82 ± 0.02 is far more trustworthy than one averaging 0.84 ± 0.15.
+:::
+
+Metrics prefixed `neg_` are negated so that higher is always better. Flip the sign to report them.
+
+---
+
+## [Bias, Variance, and Hyperparameters](29-hyperparameter-tuning.html) {.unnumbered}
+
+> **Parameters** are learned from data. **Hyperparameters** are set by you before training and control model complexity.
+
+| | Underfitting (high bias) | Overfitting (high variance) |
+|--|--------------------------|-----------------------------|
+| Training score | Low | High |
+| Validation score | Low | Much lower than training |
+| Fix | More complexity, better features | Less complexity, more data, regularization |
+
+---
+
+## Grid and Random Search {.unnumbered}
+
+```python
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from scipy.stats import randint
+
+param_grid = {
+    'max_depth': [3, 5, 10, None],
+    'min_samples_leaf': [1, 5, 10],
+}
+
+grid = GridSearchCV(
+    estimator=model,
+    param_grid=param_grid,
+    cv=5,
+    scoring='roc_auc',
+    n_jobs=-1,
+)
+grid.fit(X_train, y_train)
+
+grid.best_params_       # winning combination
+grid.best_score_        # its cross-validated score
+grid.best_estimator_    # refit on all training data, ready to predict
+```
+
+```python
+# When the grid is large, sample it instead of enumerating it
+search = RandomizedSearchCV(
+    model,
+    param_distributions={'max_depth': randint(3, 20)},
+    n_iter=50, cv=5, random_state=123,
+)
+```
+
+| Approach | Cost | Use when |
+|----------|------|----------|
+| **Grid search** | Every combination | Few hyperparameters, small ranges |
+| **Random search** | `n_iter` samples | Many hyperparameters or wide ranges |
+| **Bayesian** | Adaptive | Expensive models where each fit is slow |
+
+**The full workflow:** split → tune with cross-validation on training data → compare models → refit the winner on all training data → evaluate **once** on the test set.
+
+---
+
+## [Feature Engineering](30-feature-engineering.html) {.unnumbered}
+
+**Encoding categoricals:**
+
+```python
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+
+pd.get_dummies(df, columns=['category'], drop_first=True)   # quick, in pandas
+OneHotEncoder(handle_unknown='ignore', sparse_output=False)  # inside a pipeline
+```
+
+| Encoding | Use for |
+|----------|---------|
+| **One-hot / dummy** | Nominal categories with no order (color, region) |
+| **Ordinal** | Categories with a meaningful order (small < medium < large) |
+| **Label** | The *target* in classification — not for features |
+
+**Scaling numerics:**
+
+```python
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+StandardScaler()   # mean 0, std 1 — the usual default
+MinMaxScaler()     # squash to [0, 1] — when bounded range matters
+```
+
+Scaling matters for distance- and gradient-based methods (KNN, K-Means, PCA, logistic regression). Trees and forests are unaffected.
+
+**Creating features:**
+
+```python
+from sklearn.preprocessing import PolynomialFeatures
+
+PolynomialFeatures(degree=2, include_bias=False)   # squares and interactions
+df['price_per_sqft'] = df['price'] / df['sqft']     # domain knowledge beats brute force
+```
+
+**Missing data:**
+
+```python
+from sklearn.impute import SimpleImputer
+
+SimpleImputer(strategy='median')                      # numeric
+SimpleImputer(strategy='most_frequent')               # categorical
+df['col_was_missing'] = df['col'].isna().astype(int)  # missingness can itself predict
+```
+
+---
+
+## Pipelines {.unnumbered}
+
+> A **pipeline** chains preprocessing and modeling into one object. This is the reliable way to prevent leakage: every step is fit on training folds only.
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+
+preprocess = ColumnTransformer([
+    ('num', Pipeline([('impute', SimpleImputer(strategy='median')),
+                      ('scale', StandardScaler())]), numeric_cols),
+    ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_cols),
+])
+
+pipe = Pipeline([
+    ('prep', preprocess),
+    ('model', RandomForestClassifier(random_state=123)),
+])
+
+pipe.fit(X_train, y_train)
+cross_val_score(pipe, X_train, y_train, cv=5)   # preprocessing refit per fold
+```
+
+Tune inside a pipeline with double-underscore names: `'model__max_depth': [3, 5, 10]`.
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Fix |
+|---------|-----|
+| Scaling or imputing before splitting | Put every transformer inside a `Pipeline` |
+| Tuning against the test set | Tune with cross-validation; touch the test set once |
+| Reporting `best_score_` as final performance | It is a validation score; report the test score |
+| Forgetting `neg_` metrics are negative | Flip the sign before reporting |
+| One-hot encoding a high-cardinality column | Consider grouping rare levels first |
+| `handle_unknown` left at default | Unseen categories at predict time raise an error |

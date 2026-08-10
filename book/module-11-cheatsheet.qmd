@@ -1,0 +1,132 @@
+---
+title: "Module 11 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 25–27"
+---
+
+A quick-reference summary of the essential ideas from Module 11. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [Decision Trees](25-decision-trees.html) {.unnumbered}
+
+> A **decision tree** predicts by asking a sequence of yes/no questions about the features, splitting the data at each step until it reaches a leaf. It captures non-linear relationships and interactions automatically, and it is readable by non-technical stakeholders.
+
+```python
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, plot_tree
+import matplotlib.pyplot as plt
+
+model = DecisionTreeClassifier(max_depth=3, random_state=123)
+model.fit(X_train, y_train)
+
+fig, ax = plt.subplots(figsize=(16, 8))
+plot_tree(model, feature_names=X.columns, class_names=['No', 'Yes'],
+          filled=True, rounded=True, ax=ax)
+```
+
+**How splits are chosen (CART):** the algorithm tries every feature and cut point and keeps the split that most reduces impurity — **Gini impurity** for classification, **SSE** for regression.
+
+**Controlling complexity.** An unconstrained tree grows until every leaf is pure, which memorizes the training data:
+
+| Parameter | Effect | Typical use |
+|-----------|--------|-------------|
+| `max_depth` | Caps how many questions deep the tree goes | The first knob to reach for; 3–10 |
+| `min_samples_split` | Minimum rows required to split a node | Raise to prevent tiny splits |
+| `min_samples_leaf` | Minimum rows required in a leaf | Raise to smooth predictions |
+| `max_leaf_nodes` | Hard cap on total leaves | Alternative to `max_depth` |
+
+::: {.callout-warning}
+A single deep tree is **high variance** — change a few rows and the structure can change completely. That instability is exactly what random forests fix.
+:::
+
+---
+
+## [Random Forests](26-random-forests.html) {.unnumbered}
+
+> A **random forest** trains many trees on bootstrap samples of the data, each considering only a random subset of features at each split, then aggregates their predictions — majority vote for classification, average for regression.
+
+Two sources of diversity make the ensemble work:
+
+1. **Bagging** — each tree sees a different bootstrap resample of the rows
+2. **Feature randomness** — each split considers only `max_features` of the columns, which decorrelates the trees
+
+```python
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+
+model = RandomForestClassifier(
+    n_estimators=500,
+    max_features='sqrt',
+    max_depth=None,
+    min_samples_leaf=1,
+    random_state=123,
+    n_jobs=-1,          # use all cores
+)
+model.fit(X_train, y_train)
+```
+
+| Parameter | Meaning | Guidance |
+|-----------|---------|----------|
+| `n_estimators` | Number of trees | More is never worse for accuracy, only slower; 100–500 |
+| `max_features` | Columns considered per split | `'sqrt'` for classification, ~1/3 for regression |
+| `max_depth` | Depth of each tree | Often left unlimited in a forest |
+| `min_samples_leaf` | Rows per leaf | Raise slightly on noisy data |
+| `n_jobs` | Parallel cores | `-1` uses all of them |
+
+| | Single tree | Random forest |
+|--|-------------|---------------|
+| Accuracy | Lower | Higher |
+| Stability | Fragile | Robust |
+| Interpretability | Fully readable | Needs importance tooling |
+
+---
+
+## [Feature Importance](27-feature-importance.html) {.unnumbered}
+
+> **Feature importance** quantifies how much each feature contributes to a model's predictions. It is how you regain interpretability after moving from one tree to hundreds.
+
+**Impurity-based (model-specific, free):**
+
+```python
+import pandas as pd
+
+importances = pd.Series(model.feature_importances_, index=X.columns)
+importances.sort_values(ascending=False).head(10).plot(kind='barh')
+```
+
+**Permutation importance (model-agnostic, more trustworthy):**
+
+```python
+from sklearn.inspection import permutation_importance
+
+result = permutation_importance(
+    model, X_test, y_test, n_repeats=10, random_state=123
+)
+perm = pd.Series(result.importances_mean, index=X.columns)
+```
+
+| Method | How it works | Watch out for |
+|--------|--------------|---------------|
+| **Impurity** | Total impurity reduction from splits on that feature | Inflates high-cardinality and continuous features; computed on training data |
+| **Permutation** | Shuffle one column, measure the performance drop | Slower; splits credit arbitrarily between correlated features |
+
+**Partial dependence — importance says *which*, PDP says *how*:**
+
+```python
+from sklearn.inspection import PartialDependenceDisplay
+
+PartialDependenceDisplay.from_estimator(
+    model, X_train, features=['feature_1', 'feature_2']
+)
+```
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Fix |
+|---------|-----|
+| Reading importance as causation | It measures predictive contribution, not cause and effect |
+| Trusting impurity importance alone | Cross-check with permutation importance on the test set |
+| Correlated features look unimportant | Their credit is split; group them or drop duplicates before ranking |
+| Unbounded tree that scores 100% on training | Set `max_depth` and compare train vs. test |
+| Forgetting `random_state` | Trees and bootstraps are random; results will not reproduce |
+| Assuming more trees can overfit | `n_estimators` does not overfit — tree depth does |

@@ -1,0 +1,239 @@
+---
+title: "Module 2 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 4–6"
+---
+
+A quick-reference summary of the essential ideas from Module 2. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [Cell Types](04-jupyter.html#code-vs-markdown-cells) {.unnumbered}
+
+> A **Jupyter notebook** is a document that blends executable code, formatted text, and output (tables, plots) in a single shareable file.
+
+| Cell type | Purpose | Run with |
+|-----------|---------|----------|
+| **Code** | Write and execute Python | `Shift + Enter` |
+| **Markdown** | Add headings, explanations, equations | `Shift + Enter` |
+
+**Markdown quick reference:**
+
+```markdown
+# Heading 1     ## Heading 2      ### Heading 3
+**bold**         *italic*          `inline code`
+- bullet         1. numbered list
+$a^2 + b^2 = c^2$   (inline math equation)
+```
+
+---
+
+## [Kernel & Execution State](04-jupyter.html#code-execution-state) {.unnumbered}
+
+The **kernel** is the running Python process behind your notebook. All variables defined in executed cells persist in memory until the kernel is restarted.
+
+::: {.callout-warning}
+Cells can be run out of order. Always **Restart & Run All** before sharing or submitting — this is the only way to confirm the notebook runs top-to-bottom without hidden state.
+:::
+
+| Action | When to use |
+|--------|-------------|
+| Restart kernel | Clear all variables and start fresh |
+| Restart & Run All | Verify notebook works top-to-bottom |
+| Clear outputs | Before committing or sharing |
+
+---
+
+## [Notebooks vs .py Scripts](04-jupyter.html#when-not-to-use-notebooks) {.unnumbered}
+
+| Use notebooks for… | Use `.py` scripts for… |
+|--------------------|----------------------|
+| Exploration & EDA | Reusable functions and modules |
+| Teaching & presentations | Production pipelines |
+| One-off analysis | Code that needs unit tests or version control |
+
+**Running a `.py` script from inside a notebook:**
+
+```python
+%run my_script.py      # execute script; its variables enter notebook scope
+%load my_script.py     # paste script contents into a new cell to edit
+import my_module       # import functions from a .py file like a package
+```
+
+---
+
+## [Lists](05-data-structures.html#lists-ordered-and-mutable) {.unnumbered}
+
+> A **list** is an ordered, **mutable** collection. Use it when items need to stay in sequence and may change over time.
+
+```python
+scores = [85, 90, 88, 92]
+
+scores[0]           # 85  — first element (zero-based indexing)
+scores[-1]          # 92  — last element
+scores.append(95)   # add to the end
+scores[1] = 91      # update in place
+len(scores)         # number of elements → 5
+scores.sort()       # sort in place (ascending)
+'apple' in scores   # membership check → False
+scores.remove(85)   # remove first occurrence of 85
+scores.pop()        # remove and return the last item
+```
+
+::: {.callout-warning}
+Python uses **zero-based indexing**: `scores[0]` is the first element, `scores[1]` is the second. Accessing `scores[5]` on a 5-item list raises an `IndexError`.
+:::
+
+---
+
+## [Tuples](05-data-structures.html#tuples-ordered-and-immutable) {.unnumbered}
+
+> A **tuple** is an ordered, **immutable** collection. Use it for fixed groupings that should never change (coordinates, dates, function return values).
+
+```python
+coordinates = (39.76, -84.19)
+birthday = (7, 14, 1998)
+
+coordinates[0]           # 39.76 — same indexing as lists
+# coordinates[0] = 41.0  # ← TypeError: tuples are immutable
+
+# Tuple unpacking — assign each element to its own variable
+lat, lon = coordinates
+month, day, year = birthday
+```
+
+---
+
+## [Dictionaries](05-data-structures.html#dictionaries-key-value-pairs) {.unnumbered}
+
+> A **dictionary** is a mutable collection of **key-value pairs**. Use it when data has meaningful labels (like a row of named fields).
+
+```python
+student = {'name': 'Jordan', 'score': 95, 'major': 'Data Science'}
+
+student['score']              # 95 — access by key
+student['score'] = 98         # update existing value
+student['grad_year'] = 2025   # add new key-value pair
+del student['major']          # remove a key
+
+student.keys()                # all keys
+student.values()              # all values
+student.items()               # all (key, value) pairs as tuples
+'name' in student             # True — membership check on keys
+student.get('gpa', 0)         # safe access — returns 0 if key missing
+```
+
+---
+
+## [Data Structure Comparison](05-data-structures.html#why-data-structures) {.unnumbered}
+
+| Structure | Syntax | Ordered | Mutable | Best for |
+|-----------|--------|---------|---------|---------|
+| `list` | `[1, 2, 3]` | ✓ | ✓ | Sequences that change |
+| `tuple` | `(1, 2, 3)` | ✓ | ✗ | Fixed groupings, function returns |
+| `dict` | `{'k': v}` | ✓* | ✓ | Labeled data, fast lookups |
+
+*Insertion order preserved in Python 3.7+
+
+---
+
+## [Standard Library](06-libraries.html#working-with-the-standard-library) {.unnumbered}
+
+> The **standard library** ships with every Python installation — no `pip` needed.
+
+```python
+import math
+math.sqrt(144)        # → 12.0
+math.factorial(6)     # → 720
+math.ceil(9.2)        # → 10
+
+import os
+os.getcwd()           # current working directory
+os.listdir()          # list files in current directory
+
+import datetime
+today = datetime.date.today()
+birthday = datetime.date(1998, 7, 14)
+(today - birthday).days   # days between two dates
+
+import random
+random.randint(1, 6)  # roll a 6-sided die
+```
+
+---
+
+## [Standard vs Third-Party Libraries](06-libraries.html#standard-library-vs-third-party-libraries) {.unnumbered}
+
+| | Standard library | Third-party library |
+|-|-----------------|---------------------|
+| **Available** | Automatically with Python | Install via `pip` |
+| **Examples** | `math`, `os`, `datetime`, `random` | `pandas`, `numpy`, `matplotlib`, `seaborn` |
+| **Internet needed** | No | Yes (to install) |
+
+**Install a third-party package:**
+
+```python
+# In terminal
+pip install pandas
+
+# Inside a Jupyter notebook cell
+!pip install pandas
+```
+
+---
+
+## [Importing Libraries](06-libraries.html#pythons-data-science-ecosystem-third-party-modules) {.unnumbered}
+
+Import once at the top of your notebook. Use the conventional aliases — they are universal in data science code.
+
+```python
+import numpy as np              # numerical arrays and vectorized math
+import pandas as pd             # DataFrames and data manipulation
+import matplotlib.pyplot as plt # static plotting
+import seaborn as sns           # statistical visualization
+import math                     # standard library — no alias needed
+```
+
+**Dot notation** accesses functions inside a library:
+
+```python
+math.sqrt(144)          # → 12.0
+np.mean([1, 2, 3])      # → 2.0
+pd.read_csv('data.csv') # load a CSV into a DataFrame
+```
+
+---
+
+## [Key Data Science Libraries](06-libraries.html#pythons-data-science-ecosystem-third-party-modules) {.unnumbered}
+
+| Library | Primary use | Signature example |
+|---------|------------|-------------------|
+| **NumPy** | Fast arrays, vectorized math | `arr ** 2` squares every element at once |
+| **Pandas** | DataFrames, tabular data | `df.groupby('label').sum()` |
+| **Matplotlib** | Static plots | `plt.plot(x, y)` |
+| **Seaborn** | Statistical visualizations | `sns.histplot(df, x='col')` |
+| **SciPy** | Scientific computing (stats, optimization) | `scipy.stats.ttest_ind(a, b)` |
+| **scikit-learn** | Machine learning | `model.fit(X, y)` |
+
+**NumPy vectorization** — operate on every element without a loop:
+
+```python
+import numpy as np
+
+x = np.arange(1, 10)   # array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+x ** 2                  # array([ 1,  4,  9, 16, 25, 36, 49, 64, 81])
+np.mean(x)              # → 5.0
+x.reshape((3, 3))       # reshape into a 3×3 matrix
+```
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Why it happens | Fix |
+|---------|---------------|-----|
+| `scores[5]` on a 5-item list raises `IndexError` | Indexing starts at 0; valid indices are 0–4 | Use `scores[-1]` for the last item |
+| Cells run out of order break later cells | Kernel state depends on execution order, not cell position | Restart & Run All before submitting |
+| `coordinates[0] = 5.0` raises `TypeError` | Tuples are immutable | Create a new tuple or convert to a list first |
+| `student['gpa']` raises `KeyError` | Key doesn't exist in the dictionary | Use `student.get('gpa', default)` |
+| `import pandas` then `pd.read_csv(...)` raises `NameError` | Alias `pd` not defined when importing without it | Use `import pandas as pd` |
+| `x_list ** 2` raises `TypeError` on a plain Python list | Lists don't support vectorized operations | Convert to NumPy: `x = np.array(x_list)` |

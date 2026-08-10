@@ -1,0 +1,149 @@
+---
+title: "Module 10 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 23–24"
+---
+
+A quick-reference summary of the essential ideas from Module 10. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## [Why Not Linear Regression?](23-logistic-regression.html) {.unnumbered}
+
+> Linear regression predicts unbounded numbers, so for a 0/1 outcome it will happily predict −0.3 or 1.4 — values that cannot be probabilities. **Logistic regression** fixes this by passing the linear combination through the logistic (sigmoid) function, squashing any input into the range (0, 1).
+
+---
+
+## [Logistic Regression](23-logistic-regression.html) {.unnumbered}
+
+```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=123, stratify=y
+)
+
+model = LogisticRegression(max_iter=1000)
+model.fit(X_train, y_train)
+
+model.predict(X_test)          # hard 0/1 labels using a 0.5 cutoff
+model.predict_proba(X_test)    # 2 columns: P(class 0), P(class 1)
+
+probs = model.predict_proba(X_test)[:, 1]   # probability of the positive class
+```
+
+| Parameter | Purpose |
+|-----------|---------|
+| `max_iter` | Raise it (e.g. 1000) if you see a convergence warning |
+| `class_weight='balanced'` | Reweights classes when one is rare |
+| `stratify=y` in the split | Keeps the class ratio identical in train and test |
+
+**Interpreting coefficients:**
+
+```python
+import numpy as np
+import pandas as pd
+
+coefs = pd.Series(model.coef_[0], index=X.columns)
+odds_ratios = np.exp(coefs)     # more interpretable than log-odds
+```
+
+| Scale | Meaning |
+|-------|---------|
+| **Coefficient** | Change in **log-odds** per one-unit increase — not directly intuitive |
+| **exp(coefficient)** | **Odds ratio**: multiplicative change in odds. 1.5 means odds increase 50% |
+| **Probability** | Depends on the other features; read from `predict_proba` |
+
+---
+
+## Choosing a Threshold {.unnumbered}
+
+> `predict()` uses 0.5 by default. That is a *business* choice, not a statistical one — lower it to catch more positives at the cost of more false alarms.
+
+```python
+custom_preds = (probs >= 0.25).astype(int)
+```
+
+---
+
+## [The Accuracy Trap](24-classification-evaluation.html) {.unnumbered}
+
+> When one class is rare, a model that always predicts the majority class scores high accuracy while being useless. If 3% of accounts default, predicting "no default" for everyone is 97% accurate and catches zero defaults.
+
+**Always look at the confusion matrix before trusting any single number.**
+
+```python
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+cm = confusion_matrix(y_test, preds)
+ConfusionMatrixDisplay(cm, display_labels=['No', 'Yes']).plot()
+```
+
+|  | Predicted Negative | Predicted Positive |
+|--|--------------------|--------------------|
+| **Actual Negative** | True Negative (TN) | False Positive (FP) — false alarm |
+| **Actual Positive** | False Negative (FN) — missed case | True Positive (TP) |
+
+---
+
+## Classification Metrics {.unnumbered}
+
+```python
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score,
+    f1_score, roc_auc_score, classification_report,
+)
+
+accuracy_score(y_test, preds)
+precision_score(y_test, preds)
+recall_score(y_test, preds)
+f1_score(y_test, preds)
+roc_auc_score(y_test, probs)        # pass probabilities, not labels
+
+print(classification_report(y_test, preds))   # all of the above at once
+```
+
+| Metric | Formula | Answers | Use when |
+|--------|---------|---------|----------|
+| **Accuracy** | (TP+TN)/all | How often is it right? | Classes are balanced |
+| **Precision** | TP/(TP+FP) | When it says yes, is it right? | False positives are expensive |
+| **Recall** | TP/(TP+FN) | Of the actual positives, how many did it catch? | Missing a case is expensive |
+| **F1** | harmonic mean of P and R | Balance of both | You need one number and care about both |
+| **AUC** | area under ROC | How well does it *rank* risk? | Comparing models, threshold-free |
+
+::: {.callout-tip}
+Precision and recall trade off against each other. Medical screening favors recall (never miss a case); spam filtering favors precision (never junk a real email).
+:::
+
+---
+
+## ROC Curves and AUC {.unnumbered}
+
+> The **ROC curve** plots true positive rate against false positive rate across every possible threshold. **AUC** summarizes it: the probability that the model ranks a random positive above a random negative.
+
+```python
+from sklearn.metrics import roc_curve, RocCurveDisplay
+
+fpr, tpr, thresholds = roc_curve(y_test, probs)
+RocCurveDisplay.from_estimator(model, X_test, y_test)
+```
+
+| AUC | Reading |
+|-----|---------|
+| 0.5 | No better than a coin flip |
+| 0.7 – 0.8 | Acceptable |
+| 0.8 – 0.9 | Good |
+| > 0.9 | Excellent — and worth checking for leakage |
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Fix |
+|---------|-----|
+| Reporting accuracy on imbalanced data | Report precision, recall, and the confusion matrix |
+| Passing labels to `roc_auc_score` | Pass probabilities from `predict_proba(...)[:, 1]` |
+| Reading coefficients as probabilities | They are log-odds; exponentiate for odds ratios |
+| Accepting the 0.5 threshold unexamined | Pick the threshold from the cost of each error type |
+| Convergence warnings ignored | Increase `max_iter` or scale your features |
+| Forgetting `stratify=y` | A rare class can end up absent from one split |

@@ -1,0 +1,283 @@
+---
+title: "Module 5 Cheat Sheet"
+subtitle: "Key concepts, definitions, and code from Chapters 13–15"
+---
+
+A quick-reference summary of the essential ideas from Module 5. Click any section heading to jump to the full coverage in the book.
+
+---
+
+## Which Tool Should I Use? {.unnumbered}
+
+| Goal | Reach for |
+|------|-----------|
+| Quick exploration directly from a DataFrame | **Pandas** `.plot()` |
+| Statistical visualization — distributions, comparisons, relationships | **Seaborn** |
+| Full layout control, publication-quality output, annotations | **Matplotlib** |
+| Interactive charts — hover, zoom, pan for stakeholder exploration | **Bokeh** |
+
+The libraries build on each other: Pandas wraps Matplotlib; Seaborn wraps Matplotlib; the `ax` object returned by any of them accepts Matplotlib customization. Learning Matplotlib once pays dividends across the entire ecosystem.
+
+---
+
+## [Pandas `.plot()`](13-data-viz-pandas.html) {.unnumbered}
+
+> **`.plot()`** is a DataFrame method that delegates to Matplotlib. It is the fastest path from a DataFrame to a chart.
+
+```python
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Common plot types
+df['col'].plot(kind='hist', bins=30)
+df['col'].plot(kind='box')
+df.plot(kind='bar',  x='category', y='value')
+df.plot(kind='barh', x='category', y='value')   # horizontal bars
+df.plot(kind='scatter', x='col_a', y='col_b')
+df.plot(kind='line')                              # default for numeric index
+
+# Key shared parameters
+df.plot(kind='bar', figsize=(10, 5), title='My Chart',
+        xlabel='X Label', ylabel='Y Label', legend=True)
+
+# Access the underlying Axes object to apply Matplotlib customization
+ax = df.plot(kind='bar', figsize=(10, 5))
+ax.set_title('Refined Title', fontsize=14)
+```
+
+---
+
+## [Seaborn](14-advanced-data-viz.html#seaborn) {.unnumbered}
+
+> **Seaborn** is a statistical visualization library built on Matplotlib. It works natively with DataFrames and adds distribution analysis, group comparison, and relational plots with minimal code.
+
+```python
+import seaborn as sns
+
+# Distribution — histogram with optional KDE overlay
+sns.histplot(df['col'], bins=40, kde=True)
+sns.histplot(df['col'], bins=40, kde=True, ax=ax)  # pass an Axes object
+
+# Group comparison — box or violin
+sns.boxplot(data=df, x='category', y='numeric_col', order=['A', 'B', 'C'])
+sns.violinplot(data=df, x='category', y='numeric_col')
+
+# Relational — scatter with a third dimension as color
+sns.scatterplot(data=df, x='col_a', y='col_b',
+                hue='group',
+                palette={'Group 1': '#e63946', 'Group 2': '#457b9d'},
+                s=80)
+
+# Heatmap — requires a pivot table as input
+pivot = df.pivot_table(index='row_var', columns='col_var', values='metric', aggfunc='sum')
+sns.heatmap(pivot, cmap='YlOrRd', annot=True, fmt='.0f',
+            cbar_kws={'label': 'Metric'})
+```
+
+| Function | Use when |
+|----------|----------|
+| `histplot` | Understanding the distribution of one numeric variable |
+| `boxplot` / `violinplot` | Comparing a numeric variable across categories |
+| `scatterplot` | Showing the relationship between two numeric variables, optionally colored by a third |
+| `heatmap` | Visualizing a matrix of values across two categorical dimensions |
+
+::: {.callout-tip}
+The `hue` parameter is Seaborn's built-in mechanism for adding a third dimension to almost any plot type — it maps a column to color without any extra code.
+:::
+
+---
+
+## [Matplotlib](14-advanced-data-viz.html#matplotlib) {.unnumbered}
+
+> **Matplotlib** is the foundation of Python visualization. Every other library is built on it. Use it when you need full control over figure layout, annotations, tick formatting, and multi-panel composition.
+
+**The standard starting pattern:**
+
+```python
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+
+fig, ax = plt.subplots(figsize=(width, height))
+# ... build the plot on ax ...
+plt.tight_layout()
+```
+
+**Multi-panel layout:**
+
+```python
+fig, axes = plt.subplots(1, 2, figsize=(13, 5), constrained_layout=True)
+axes[0].bar(x, y, color='steelblue')   # left panel
+axes[1].hist(values, bins=40)           # right panel
+fig.suptitle('Shared Title', fontsize=14, fontweight='bold');
+```
+
+**Common `ax.*` methods:**
+
+| Method | What it does |
+|--------|-------------|
+| `ax.plot(x, y)` | Line chart |
+| `ax.bar(x, y)` / `ax.barh(x, y)` | Vertical / horizontal bar chart |
+| `ax.scatter(x, y)` | Scatter plot |
+| `ax.hist(values, bins=n)` | Histogram |
+| `ax.set_title('text')` | Chart title |
+| `ax.set_xlabel('text')` | x-axis label |
+| `ax.set_ylabel('text')` | y-axis label |
+| `ax.set_xlim(lo, hi)` / `ax.set_ylim(lo, hi)` | Axis limits |
+| `ax.set_xscale('log')` | Log scale axis |
+| `ax.grid(linestyle='dashed', alpha=0.4)` | Grid lines |
+| `ax.annotate('text', xy=..., xytext=..., arrowprops=...)` | Arrow + label annotation |
+
+**Tick formatting:**
+
+```python
+import matplotlib.ticker as mtick
+
+ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))  # dollar format
+ax.yaxis.set_major_formatter(mtick.PercentFormatter())                # percent format
+plt.xticks(rotation=45, ha='right')                                   # rotate labels
+```
+
+**Built-in styles:**
+
+```python
+plt.style.use('fivethirtyeight')   # apply a style
+# ... build chart ...
+plt.style.use('default')           # always reset after to avoid side effects
+
+print(plt.style.available)         # list all available styles
+```
+
+---
+
+## [Bokeh](14-advanced-data-viz.html#bokeh) {.unnumbered}
+
+> **Bokeh** produces interactive charts that run in a web browser — users can zoom, pan, hover for details, and filter. Use it when your audience needs to explore the data themselves.
+
+**Setup:**
+
+```python
+from bokeh.plotting import figure, show
+from bokeh.models import HoverTool, ColumnDataSource
+from bokeh.io import output_notebook
+
+output_notebook()   # render inline in Jupyter
+```
+
+**Core pattern — figure → glyph → show:**
+
+```python
+source = ColumnDataSource(df)   # wraps a DataFrame for Bokeh
+
+p = figure(title='Chart Title', width=700, height=400,
+           tools='pan,wheel_zoom,box_zoom,reset,save')
+
+p.line('x_col', 'y_col', source=source, line_width=2, color='steelblue')
+# or: p.scatter(), p.circle(), p.rect(), p.vbar()
+
+show(p)
+```
+
+**HoverTool:**
+
+```python
+hover = HoverTool(tooltips=[
+    ('Label', '@column_name'),           # string column
+    ('Value', '@numeric_col{$0,0.00}'),  # dollar formatted
+    ('Date',  '@date_col{%F}'),          # date formatted
+], formatters={'@date_col': 'datetime'})
+p.add_tools(hover)
+```
+
+**Color encoding:**
+
+```python
+from bokeh.transform import factor_cmap
+from bokeh.palettes import Category10
+
+tiers = df['group'].unique().tolist()
+p.scatter('x', 'y', source=source,
+          color=factor_cmap('group', palette=Category10[3][:2], factors=tiers),
+          legend_field='group')
+```
+
+**Color mapper (continuous → color):**
+
+```python
+from bokeh.models import LinearColorMapper, ColorBar
+from bokeh.transform import transform
+from bokeh.palettes import YlOrRd9
+
+mapper = LinearColorMapper(palette=YlOrRd9[::-1],
+                           low=df['value'].min(),
+                           high=df['value'].max())
+p.rect(x='x_col', y='y_col', width=1, height=1, source=source,
+       fill_color=transform('value', mapper), line_color=None)
+color_bar = ColorBar(color_mapper=mapper, title='Value')
+p.add_layout(color_bar, 'right')
+```
+
+**Log axes:**
+
+```python
+p = figure(x_axis_type='log', y_axis_type='log', ...)
+```
+
+---
+
+## [EDA Workflow](15-exploratory-data-analysis.html) {.unnumbered}
+
+> **Exploratory Data Analysis (EDA)** is a systematic process for understanding a dataset before drawing conclusions. It is driven by questions, not random plotting.
+
+**The four-step framework:**
+
+1. **Start with a question** — specific enough to focus the analysis, open enough to allow discovery
+2. **Understand the structure first** — `.shape`, `.info()`, `.describe()`, `.isnull().sum()`
+3. **Explore distributions before relationships** — univariate before bivariate
+4. **Let the data surprise you** — follow unexpected findings; they are often the real insight
+
+**Common EDA patterns:**
+
+```python
+# 1. Orient to the data
+df.shape          # (rows, columns)
+df.info()         # dtypes and null counts
+df.describe()     # summary stats for numeric columns
+df.isnull().sum() # missing value counts per column
+
+# 2. Define the unit of analysis
+trips = (
+    transactions
+    .groupby(['household_id', 'basket_id'], as_index=False)
+    .agg(spend=('sales_value', 'sum'), items=('quantity', 'sum'))
+)
+
+# 3. Compute inter-event gaps
+df_sorted = df.sort_values(['id_col', 'date_col'])
+df_sorted['days_since_last'] = (
+    df_sorted.groupby('id_col')['date_col'].diff().dt.days
+)
+
+# 4. Classify into segments
+def classify(x):
+    if x <= 7:   return 'Frequent'
+    elif x <= 30: return 'Occasional'
+    else:         return 'Rare'
+
+df['segment'] = df['metric'].apply(classify)
+
+# 5. Normalize within groups for fair comparison
+df['pct'] = df.groupby('group')['count'].transform(lambda x: x / x.sum() * 100)
+```
+
+---
+
+## Common Pitfalls {.unnumbered}
+
+| Mistake | Fix |
+|---------|-----|
+| Forgot `plt.tight_layout()` → panels overlap | Add `plt.tight_layout()` or use `constrained_layout=True` in `plt.subplots()` |
+| `fig.suptitle()` prints text output in notebook | Add a trailing semicolon: `fig.suptitle('...');` |
+| `plt.style.use()` affects all subsequent plots | Always reset: `plt.style.use('default')` after a styled block |
+| Bokeh `wheel_zoom` captured by browser scroll | Add `box_zoom` to tools: `tools='pan,wheel_zoom,box_zoom,reset'` |
+| Seaborn `heatmap` missing categories | Use `.reindex(columns=order, fill_value=0)` instead of `[order]` column selection |
+| Hard y-axis limit hides all variation | Try log scale (`ax.set_yscale('log')`) or clip to a percentile before plotting |

@@ -1,143 +1,163 @@
-# CLAUDE.md
+# CLAUDE.md — BANA 4080 Development Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file guides Claude Code when working in this repository.
 
-## Repository Overview
+## What this repo is
 
-This is UC BANA 4080: Introduction to Data Mining with Python - a course repository containing educational materials for teaching Python data science fundamentals. The repository includes:
+**BANA 4080: Introduction to Data Mining with Python** — a 14-week undergraduate
+course at UC. Weeks 1–6 cover Python and data wrangling fundamentals, week 7 is
+the midterm project, and weeks 8–14 cover machine learning.
 
-- **Quarto book**: Course textbook content (Modules 1-6 plus appendices)
-- **Jupyter notebooks**: Example notebooks, labs, and homework assignments  
-- **Presentation slides**: Weekly lecture materials using Quarto/Reveal.js
-- **Datasets**: CSV and Excel files for hands-on exercises
-- **Python environment**: Configured with data science libraries
+- **Authoring layer:** Quarto (`.qmd` files) for textbook and slides
+- **Lab format:** Jupyter notebooks (`.ipynb`)
+- **Python stack:** pandas, numpy, matplotlib, seaborn, scikit-learn
+- **Datasets:** CSV/Excel files in `data/`, plus the `completejourney_py` package
+- **Deployment:** GitHub Actions renders the book and publishes to the `gh-pages`
+  branch (`.github/workflows/publish-book.yml`). Slides are not yet published —
+  Phase 9 of the migration moves the book to `docs/` and adds `docs/slides/` so
+  module overview pages can link to the decks.
 
-## Key Development Commands
+> **Migration in progress.** This repo is being restructured to match the layout
+> and conventions of the sibling course repo at `../uc-bana-7025/`. See
+> `MIGRATION-SPEC.md` for the phased plan. The layout below is the target
+> structure; some directories may not exist yet.
 
-### Building the Quarto Book
-The main course textbook is built using Quarto:
+## Repository layout
 
-```bash
-# Navigate to book directory and render
-cd book
-quarto render
-
-# Preview during development
-quarto preview
+```
+book/          Quarto textbook chapters (01–34 + index + appendices)
+               NOTE: _quarto.yml currently lives inside book/. Phase 9 moves it
+               (and index.qmd) to the repo root, matching 7025.
+slides/        Weekly Reveal.js decks (week-01.qmd through week-14.qmd)
+notebooks/     Jupyter notebooks (examples/)
+labs/          Thursday lab assignments (.ipynb), plus ta-guides/
+assignments/   homework/, midterm-project/, discussions/, quizzes/
+instructor/    Instructor-only materials — NEVER expose to students
+data/          Shared datasets
+planning/      Course development materials (largely gitignored)
 ```
 
-### Creating Presentation Slides
-Weekly slides use Quarto with Reveal.js format:
+## Module → week mapping
+
+| Module | Week | Chapters |
+|--------|------|---------|
+| 1 | 1 | 01-intro-data-mining, 02-preparing-for-code, 03-python-basics |
+| 2 | 2 | 04-jupyter, 05-data-structures, 06-libraries |
+| 3 | 3 | 07-importing-data, 08-dataframes, 09-subsetting |
+| 4 | 4 | 10-manipulating-data, 11_aggregating_data, 12-joining-data |
+| 5 | 5 | 13-data-viz-pandas, 14-advanced-data-viz, 15-exploratory-data-analysis |
+| 6 | 6 | 16-control-statements, 17-iteration-statements, 18-functions |
+| 7 | 7 | Midterm project (no textbook chapters, no lecture) |
+| 8 | 8 | 19-intro-ml-ai, 20-before-we-build |
+| 9 | 9 | 21-correlation-regression, 22-regression-evaluation |
+| 10 | 10 | 23-logistic-regression, 24-classification-evaluation |
+| 11 | 11 | 25-decision-trees, 26-random-forests, 27-feature-importance |
+| 12 | 12 | 28-cross-validation, 29-hyperparameter-tuning, 30-feature-engineering |
+| 13 | 13 | 31-clustering, 32-dimension-reduction |
+| 14 | 14 | 33-modern-ml-algorithms, 34-ml-roadmap |
+
+Module number and week number are always identical — Module N is Week N.
+
+Modules 1–6 share their chapters with BANA 7025 — keep them in sync with
+`../uc-bana-7025/book/`. Modules 7–14 are unique to BANA 4080. Module 7 is the
+midterm project week: no chapters, no lecture, no cheatsheet, and Canvas holds the
+authoritative project description and rubric.
+
+## Content conventions
+
+### Textbook chapters (`.qmd`)
+
+- Start with a short intro paragraph (2–4 sentences), no preamble heading
+- Second element: `By the end of this chapter, you will:` bullet list
+- Use `##` for major sections, `###` for subsections
+- Use Quarto callouts: `{.callout-note}`, `{.callout-tip}`, `{.callout-warning}`
+- Python code blocks: ` ```python ` for non-executable, ` ```{python} ` for executable
+- Use `#| eval: false` for code examples that shouldn't auto-run during render
+- Include Colab badges pointing at `bradleyboehmke/uc-bana-4080`
+
+### Slides (`.qmd` Reveal.js)
+
+- YAML header includes `self-contained: true`, `slide-number: true`
+- Title is the course name; subtitle is `"Week N: [Topic]"`; footer is `'BANA 4080 | Week N'`
+- Use `{background="#2c3e50"}` for section divider slides
+- Use `::: incremental` for bullet points that build
+- Use `. . .` for pauses between blocks
+- Keep each slide focused — one idea per slide
+
+### Lab notebooks (`.ipynb`)
+
+- Use markdown cells for setup, background, and instructions
+- Structure: Overview → Setup → Problem sections → Reflection
+- Clear all outputs before committing
+- Include a ` ```python\n# Your code here\n``` ` placeholder for student work areas
+
+## Python standards
+
+- Prefer `pandas` method chaining over intermediate variables
+- Use f-strings for string formatting
+- Import style: `import pandas as pd`, `import numpy as np`, `import matplotlib.pyplot as plt`, `import seaborn as sns`
+- DataFrames: snake_case names (e.g., `transactions`, `product_df`)
+- scikit-learn: import estimators directly (`from sklearn.ensemble import RandomForestClassifier`);
+  prefer `Pipeline` + `ColumnTransformer` over manual preprocessing steps
+
+## Restricted content
+
+- `instructor/` is always instructor-only
+- Answer keys, solution notebooks, and quiz answers are never student-facing
+- `planning/quizzes/` and `planning/gh-issues/` are gitignored — keep them that way
+
+## Build commands
 
 ```bash
-# From slides directory
-cd slides
-quarto render w[X]_[day].qmd  # e.g., w5_tuesday.qmd
-quarto preview w[X]_[day].qmd
-```
-
-### Python Environment Setup
-The course uses a Python virtual environment with specific data science packages:
-
-```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install required packages
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Launch Jupyter for notebook development
-jupyter lab
+# Render the full book (run from book/, where _quarto.yml currently lives)
+cd book && quarto render
+
+# Live preview (recommended during authoring)
+cd book && quarto preview
+
+# Render a single chapter
+cd book && quarto render 01-intro-data-mining.qmd
+
+# Render or preview a slide deck
+quarto render slides/week-01.qmd
+quarto preview slides/week-01.qmd
+
+# Clear Quarto cache
+quarto clean
 ```
 
-### Testing Jupyter Notebooks
-All example notebooks and labs should be tested for functionality:
+After Phase 9 the project moves to the repo root and these become:
 
 ```bash
-# Activate environment first
-source venv/bin/activate
-
-# Test individual notebook
-jupyter nbconvert --to notebook --execute path/to/notebook.ipynb
-
-# Clear outputs before committing
-jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace *.ipynb
+quarto render          # book → docs/
+quarto preview         # book only, no slides
+bash render-slides.sh  # slides → docs/slides/
+make all               # book + slides
 ```
 
-## Repository Structure
+## Adding new content
 
-### `/book/` - Course Textbook
-- **Source files**: `.qmd` files for each chapter/module
-- **Configuration**: `_quarto.yml` defines book structure and formatting
-- **Built content**: `_book/` directory (auto-generated, git-tracked for GitHub Pages)
-- **Assets**: `images/` directory with figures and screenshots
+When adding a new chapter:
+1. Create `book/NN-topic-name.qmd`
+2. Add it to `book/_quarto.yml` under the correct module part
+3. Run `quarto preview` from `book/` to verify it renders
 
-### `/slides/` - Weekly Presentations  
-- **Lecture slides**: `w[X]_[day].qmd` format using Quarto + Reveal.js
-- **Extensions**: Custom Quarto extensions for enhanced presentation features
-- **Built slides**: `.html` files for web-based presentations
+When adding a new slide deck:
+1. Create `slides/week-NN.qmd`
+2. Use the existing `week-01.qmd` as a template
 
-### `/example-notebooks/` - Course Examples
-- **Numbered sequence**: `01_first_notebook.ipynb` through `17_functions.ipynb`
-- **Companion script**: `my_first_script.py` for Python script demonstration
-- **Purpose**: Step-by-step examples following textbook modules
+When adding a new lab:
+1. Create `labs/lab-NN-topic.ipynb`
+2. Follow the lab notebook conventions above
+3. Place the answer key in `instructor/answer-keys/` (restricted)
 
-### `/labs/` - Weekly Lab Activities
-- **Lab sequence**: `01_python_intro.ipynb` through `06_midterm_project_template.ipynb`  
-- **Answer keys**: Some labs include `_answer_key.ipynb` versions
-- **Interactive exercises**: Hands-on practice for students
-- **Project templates**: Structured frameworks for major assignments
+## What NOT to do
 
-### `/homework/` - Assignments
-- **Student assignments**: `homework1.ipynb`, `homework2.ipynb`
-- **Multiple formats**: Answer keys in `.ipynb`, `.html`, and `.pdf` formats
-- **Grading support**: Complete solutions for instructor reference
-
-### `/data/` - Course Datasets
-- **CSV files**: Individual datasets like `airlines.csv`, `ames_clean.csv`
-- **Excel files**: `products.xlsx` for spreadsheet import exercises  
-- **Subdirectories**: `completejourney/` and `monthly_data/` for complex datasets
-- **Real-world data**: Datasets chosen for practical data science applications
-
-### `/planning/` - Course Development Materials
-- **Canvas documentation**: Weekly overview pages and course module descriptions
-- **Project materials**: Mid-term and final project specifications, rubrics, and templates
-- **Templates**: Reusable frameworks for slides, labs, and assessments
-- **GitHub issues**: Planning documents for course improvements and content creation
-- **Quizzes**: Assessment materials and answer keys (instructor use only)
-
-## Development Workflow
-
-### Adding New Course Content
-1. **Textbook chapters**: Create `.qmd` files in `/book/`, update `_quarto.yml` chapter list
-2. **Example notebooks**: Follow naming convention, ensure outputs are cleared before commit
-3. **Lab activities**: Create in `/labs/`, include both student and answer key versions
-4. **Datasets**: Add to `/data/`, document structure and source in relevant notebooks
-5. **Canvas documentation**: Create weekly overview pages in `/planning/canvas_docs/`
-6. **Project materials**: Develop specifications and rubrics in `/planning/projects/`
-
-### Content Guidelines
-- **Jupyter notebooks**: Always clear cell outputs before committing (except answer keys)
-- **Google Colab integration**: Include Colab badges in notebook headers for student access
-- **Progressive difficulty**: Content builds from Python basics through advanced data science topics
-- **Real datasets**: Use authentic data to demonstrate practical applications
-
-### Quality Assurance
-- **Test all notebooks**: Ensure they run end-to-end in the specified environment
-- **Quarto builds**: Verify book and slides render without errors
-- **Link validation**: Check that internal references and external links work correctly
-- **Accessibility**: Ensure content follows academic accessibility standards
-
-## Course Modules Structure
-
-The course follows a 6-module progression:
-
-1. **Module 1**: Python fundamentals and environment setup
-2. **Module 2**: Jupyter notebooks, data structures, libraries  
-3. **Module 3**: Data importing, DataFrames, subsetting
-4. **Module 4**: Data manipulation, aggregation, joins
-5. **Module 5**: Data visualization with multiple libraries
-6. **Module 6**: Control flow, iteration, functions
-
-This structure should be preserved when adding or modifying content to maintain course coherence.
+- Do not commit Quarto cache or build output (`.quarto/`, `_book/`, `*_files/`)
+- Do not commit notebook outputs — clear before committing (answer keys excepted)
+- Do not commit instructor materials or answer keys to student-facing directories
+- Do not generate content for graded assignments without explicit instruction
+- Do not manually publish the book — let GitHub Actions deploy to `gh-pages`
