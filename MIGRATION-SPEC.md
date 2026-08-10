@@ -378,33 +378,30 @@ assignments/
   quizzes/
 ```
 
-**Homework**: move student-facing files from `homework/` into `assignments/homework/`:
-```
-homework1.ipynb → assignments/homework/homework-01.ipynb
-homework2.ipynb → assignments/homework/homework-02.ipynb
-```
-
-**Answer keys — already done during Phase 6.** The keys that actually exist were
-moved to `instructor/answer-keys/`, numbered by week (which equals the module):
+**Homework**: moved to `assignments/homework/` using 7025's `week-NN-homework.ipynb`
+naming. Content comparison confirmed the mapping:
 
 ```
-homework_wk10_answer_key.{ipynb,html,pdf} → instructor/answer-keys/homework-10-answer-key.*
-homework_wk11_answer_key.{ipynb,html,pdf} → instructor/answer-keys/homework-11-answer-key.*
-homework_wk13_answer_key.{ipynb,pdf}      → instructor/answer-keys/homework-13-answer-key.*
+homework1.ipynb → assignments/homework/week-02-homework.ipynb   (7025: week-02-homework)
+homework2.ipynb → assignments/homework/week-04-homework.ipynb   (7025: week-04-homework)
 ```
 
-The spec previously also listed keys for homework 1, 2, and week 9. Those files do
-not exist in this repo. Remaining student-facing homework in `homework/`
-(`homework_wk13.ipynb`, `homework_wk13_v2.*`, `wk12_homework.*`) is handled below.
+The week 12 and 13 homework also moved (`week-12-homework.ipynb`,
+`week-13-homework.ipynb`, `week-13-homework-v2.ipynb`) but stays **gitignored**, as
+it was before the move. Only weeks 2 and 4 were ever public. Delete those
+`.gitignore` lines to publish the rest.
 
-**Midterm project**: the template was moved to `assignments/midterm-project/` in Phase 6.
-Check `../uc-bana-7025/assignments/final-project/` for any additional scaffolding files
-(rubrics, spec docs) to model a similar structure here.
+**Quizzes**: 4080's quizzes in `planning/quizzes/` contain `Correct Answer:` lines,
+unlike 7025's student-facing quizzes. They moved to `instructor/quizzes/`
+(gitignored), **not** `assignments/quizzes/`. `assignments/quizzes/README.md`
+documents the format and how to publish an answer-free version.
 
-**Discussions and quizzes**: create the directories. If there are quiz or discussion
-files in `planning/` or elsewhere, move them here. Otherwise leave empty for now.
+**Discussions**: 4080 has no discussion assignments in the repo yet; they are
+managed in Canvas. `assignments/discussions/README.md` records the convention.
 
-Delete the now-empty `homework/` directory.
+Colab badges inside the homework notebooks were rewritten to their new paths.
+
+The `homework/` directory is deleted.
 
 ---
 
