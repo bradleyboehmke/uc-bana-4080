@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.11.1">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>7&nbsp; Importing Data and Exploring Pandas DataFrames – BANA 4080: Introduction to Data Mining with Python</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../book/08-dataframes.html" rel="next">
+<link href="../book/module-03-overview.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-d5b4e69c7e37b49c6591bcc5116dd748.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-2655f62c70931241c821c3cd25ec806f.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-d5b4e69c7e37b49c6591bcc5116dd748.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-dc23092887890ac3706aa1fb170b7487.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-792121251204b57264eedaeb9a987e9d.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-dc23092887890ac3706aa1fb170b7487.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+</head>
+
+<body class="nav-sidebar docked quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const queryPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeDefault = queryPrefersDark.matches;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    queryPrefersDark.addEventListener("change", e => {
+      if(window.localStorage.getItem("quarto-color-scheme") !== null)
+        return;
+      const alternate = e.matches
+      toggleColorMode(alternate);
+      localAlternateSentinel = e.matches ? 'alternate' : 'default'; // this is used alongside local storage!
+      toggleGiscusIfUsed(alternate, darkModeDefault);
+    });
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/module-03-overview.html">Module 3: DataFrames &amp; Importing Data</a></li><li class="breadcrumb-item"><a href="../book/07-importing-data.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">BANA 4080: Introduction to Data Mining with Python</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://github.com/bradleyboehmke/uc-bana-4080" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="https://twitter.com/intent/tweet?url=|url|" title="Twitter" class="quarto-navigation-tool px-1" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-01-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 1: Getting Started</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/01-intro-data-mining.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/02-preparing-for-code.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Setting Up Your Python Environment</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/03-python-basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Python Basics – Working with Data and Variables</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-02-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 2: Python Data Science Ecosystem</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/04-jupyter.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Getting Started with Jupyter Notebooks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/05-data-structures.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Introduction to Data Structures</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/06-libraries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Packages, Libraries, and Modules</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-03-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 3: DataFrames &amp; Importing Data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/07-importing-data.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/08-dataframes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/09-subsetting.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Subsetting Data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-04-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 4: Data Manipulation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/10-manipulating-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Manipulating Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/11_aggregating_data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Summarizing Data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/12-joining-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Relational data</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-05-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 5: Data Visualization &amp; EDA</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/13-data-viz-pandas.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Intro to Data Visualization with Pandas</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/14-advanced-data-viz.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Advanced Data Visualization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/15-exploratory-data-analysis.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Exploratory Data Analysis</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-06-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 6: Creating Efficient Code</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/16-control-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Controlling Program Flow with Conditional Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/17-iteration-statements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Controlling Repetition with Iteration Statements</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/18-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Writing Your Own Functions</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-07-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 7: Midterm Project</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-08-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 8: Introduction to Machine Learning</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/19-intro-ml-ai.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Introduction to Machine Learning and Artificial Intelligence</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/20-before-we-build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Before You Build: Key Considerations</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-09-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 9: Regression</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/21-correlation-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Correlation and Linear Regression Foundations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/22-regression-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Evaluating Regression Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-10-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 10: Classification</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-9" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-9" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/23-logistic-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Introduction to Logistic Regression for Classification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/24-classification-evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Evaluating Classification Models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-11-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 11: Tree-Based Models and Feature Importance</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-10" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-10" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/25-decision-trees.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Decision Trees: Foundations and Interpretability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/26-random-forests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Random Forests: Ensemble Power and Robustness</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/27-feature-importance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Understanding Feature Importance: Peeking Inside the Black Box</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-12-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 12: Model Optimization and Validation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-11" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-11" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/28-cross-validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross-validation: Reliable model evaluation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/29-hyperparameter-tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Hyperparameter Tuning: Finding Optimal Model Configurations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/30-feature-engineering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Feature Engineering</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-13-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 13: Unsupervised Learning</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-12" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-12" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/31-clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Unsupervised Learning and Clustering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/32-dimension-reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Dimension Reduction with PCA</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../book/module-14-overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Module 14: Modern ML and Your Learning Roadmap</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-13" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-13" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/33-modern-ml-algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Beyond the Basics: Modern Machine Learning Algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/34-ml-roadmap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">The Machine Learning Roadmap: Where to Go Next</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true">
+ <span class="menu-text">Cheat Sheets</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-14" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-14" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-01-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Module 1 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-02-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">Module 2 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-03-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">37</span>&nbsp; <span class="chapter-title">Module 3 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-04-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">38</span>&nbsp; <span class="chapter-title">Module 4 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-05-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">39</span>&nbsp; <span class="chapter-title">Module 5 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-06-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">40</span>&nbsp; <span class="chapter-title">Module 6 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-08-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">41</span>&nbsp; <span class="chapter-title">Module 8 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-09-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">42</span>&nbsp; <span class="chapter-title">Module 9 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-10-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">43</span>&nbsp; <span class="chapter-title">Module 10 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-11-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">44</span>&nbsp; <span class="chapter-title">Module 11 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-12-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">45</span>&nbsp; <span class="chapter-title">Module 12 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-13-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">46</span>&nbsp; <span class="chapter-title">Module 13 Cheat Sheet</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/module-14-cheatsheet.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">47</span>&nbsp; <span class="chapter-title">Module 14 Cheat Sheet</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="true">
+ <span class="menu-text">Appendices</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-15" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-15" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/99-anaconda-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Anaconda Installation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../book/99-vscode-install.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">VS Code Installation</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#from-disk-to-dataframe-how-data-enters-python" id="toc-from-disk-to-dataframe-how-data-enters-python" class="nav-link active" data-scroll-target="#from-disk-to-dataframe-how-data-enters-python"><span class="header-section-number">7.1</span> From Disk to DataFrame: How Data Enters Python</a></li>
+  <li><a href="#importing-delimited-files-with-read_csv" id="toc-importing-delimited-files-with-read_csv" class="nav-link" data-scroll-target="#importing-delimited-files-with-read_csv"><span class="header-section-number">7.2</span> Importing Delimited Files with <code>read_csv()</code></a>
+  <ul class="collapse">
+  <li><a href="#knowledge-check" id="toc-knowledge-check" class="nav-link" data-scroll-target="#knowledge-check">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#file-paths" id="toc-file-paths" class="nav-link" data-scroll-target="#file-paths"><span class="header-section-number">7.3</span> File Paths</a>
+  <ul class="collapse">
+  <li><a href="#knowledge-check-1" id="toc-knowledge-check-1" class="nav-link" data-scroll-target="#knowledge-check-1">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#importing-data-in-google-colab" id="toc-importing-data-in-google-colab" class="nav-link" data-scroll-target="#importing-data-in-google-colab"><span class="header-section-number">7.4</span> Importing Data in Google Colab</a></li>
+  <li><a href="#inspecting-your-dataframe" id="toc-inspecting-your-dataframe" class="nav-link" data-scroll-target="#inspecting-your-dataframe"><span class="header-section-number">7.5</span> Inspecting Your DataFrame</a>
+  <ul class="collapse">
+  <li><a href="#knowledge-check-2" id="toc-knowledge-check-2" class="nav-link" data-scroll-target="#knowledge-check-2">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#attributes-methods" id="toc-attributes-methods" class="nav-link" data-scroll-target="#attributes-methods"><span class="header-section-number">7.6</span> Attributes &amp; Methods</a>
+  <ul class="collapse">
+  <li><a href="#knowledge-check-3" id="toc-knowledge-check-3" class="nav-link" data-scroll-target="#knowledge-check-3">Knowledge Check</a></li>
+  </ul></li>
+  <li><a href="#common-dataframe-errors" id="toc-common-dataframe-errors" class="nav-link" data-scroll-target="#common-dataframe-errors"><span class="header-section-number">7.7</span> Common DataFrame Errors</a>
+  <ul class="collapse">
+  <li><a href="#forgetting-parentheses-when-using-a-method" id="toc-forgetting-parentheses-when-using-a-method" class="nav-link" data-scroll-target="#forgetting-parentheses-when-using-a-method">Forgetting Parentheses When Using a Method</a></li>
+  <li><a href="#typos-in-column-names" id="toc-typos-in-column-names" class="nav-link" data-scroll-target="#typos-in-column-names">Typos in Column Names</a></li>
+  <li><a href="#filenotfounderror-when-loading-a-file" id="toc-filenotfounderror-when-loading-a-file" class="nav-link" data-scroll-target="#filenotfounderror-when-loading-a-file">FileNotFoundError When Loading a File</a></li>
+  <li><a href="#using-dot-notation-with-column-names-that-contain-spaces-or-special-characters" id="toc-using-dot-notation-with-column-names-that-contain-spaces-or-special-characters" class="nav-link" data-scroll-target="#using-dot-notation-with-column-names-that-contain-spaces-or-special-characters">Using Dot Notation with Column Names that Contain Spaces or Special Characters</a></li>
+  <li><a href="#confusing-methods-that-dont-exist" id="toc-confusing-methods-that-dont-exist" class="nav-link" data-scroll-target="#confusing-methods-that-dont-exist">Confusing Methods That Don’t Exist</a></li>
+  </ul></li>
+  <li><a href="#other-file-types" id="toc-other-file-types" class="nav-link" data-scroll-target="#other-file-types"><span class="header-section-number">7.8</span> Other File Types</a>
+  <ul class="collapse">
+  <li><a href="#importing-excel-files-with-read_excel" id="toc-importing-excel-files-with-read_excel" class="nav-link" data-scroll-target="#importing-excel-files-with-read_excel">Importing Excel Files with <code>read_excel()</code></a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">7.9</span> Summary</a></li>
+  <li><a href="#exercise-covid-19-cases-at-u.s.-colleges" id="toc-exercise-covid-19-cases-at-u.s.-colleges" class="nav-link" data-scroll-target="#exercise-covid-19-cases-at-u.s.-colleges"><span class="header-section-number">7.10</span> Exercise: COVID-19 Cases at U.S. Colleges</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/book/07-importing-data.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../book/module-03-overview.html">Module 3: DataFrames &amp; Importing Data</a></li><li class="breadcrumb-item"><a href="../book/07-importing-data.html"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-importing-data" class="quarto-section-identifier"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Importing Data and Exploring Pandas DataFrames</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Imagine you’re working as a summer intern for a real estate analytics firm. On your first day, your manager hands you a file: “Here’s the raw data for the Ames, Iowa housing market. Let’s start by pulling it into Python and taking a quick look around.”</p>
+<p>You double-click the file — it’s filled with rows and rows of numbers, codes, and column headers you don’t quite understand. Where do you even begin?</p>
+<p>In this chapter, you’ll walk through the exact steps you’d take in that situation. You’ll load real data, explore it using Python, and start to build your intuition for what’s inside a dataset. You won’t be doing full analysis yet — but you will learn how to get your bearings using one of Python’s most powerful tools: Pandas.</p>
+<p>Later chapters will teach you how to clean, transform, and analyze data — but first, you need to bring it into Python and take a look around.</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Experience First: Explore a Raw Dataset
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Before we dive into the code, let’s simulate your first task on the job. Check out <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_raw.csv">this</a> dataset on residential property sales in Ames, Iowa (<a href="http://jse.amstat.org/v19n3/decock.pdf">source</a>).</p>
+<ol type="1">
+<li>Download the ames_raw.csv file from this URL: https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_raw.csv</li>
+<li>Open the file in Excel, Google Sheets, or a text editor.</li>
+<li>Skim through the data. Ask yourself:
+<ul>
+<li>What kind of information is being recorded?</li>
+<li>Do any columns or values confuse you?</li>
+<li>How would you describe this dataset to someone else?</li>
+</ul></li>
+<li>Write down 2–3 observations or questions you have just from visually exploring the file.</li>
+</ol>
+</div>
+</div>
+</div>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li>Describe how imported data is stored in memory</li>
+<li>Import tabular data with Pandas</li>
+<li>Explore basic structure and metadata of a DataFrame</li>
+<li>Read alternative file formats like Excel, JSON, and Pickle files</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>📓 Follow Along in Colab!
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>As you read through this chapter, we encourage you to follow along using the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/notebooks/examples/07_importing_data.ipynb">companion notebook</a> in Google Colab (or other editor of choice). This interactive notebook lets you run code examples covered in the chapter—and experiment with your own ideas.</p>
+<p>👉 Open the <a href="https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/examples/07_importing_data.ipynb">Importing Data Notebook in Colab</a>.</p>
+</div>
+</div>
+<section id="from-disk-to-dataframe-how-data-enters-python" class="level2" data-number="7.1">
+<h2 data-number="7.1" class="anchored" data-anchor-id="from-disk-to-dataframe-how-data-enters-python"><span class="header-section-number">7.1</span> From Disk to DataFrame: How Data Enters Python</h2>
+<p>Python stores its data in memory - this makes it relatively quickly accessible but can cause size limitations in certain fields. In this class we will mainly work with small to moderate data sets, which means we should not run into any space limitations.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/cHZ7yE4wlb8?si=2C1HjaWhCtbfZ8ql" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Python does provide tooling that allows you to work with <em>big data</em> via distributed data (i.e.&nbsp;<a href="http://spark.apache.org/docs/2.0.0/api/python/index.html">Pyspark</a>) and relational databrases (i.e.&nbsp;SQL).</p>
+</div>
+</div>
+</div>
+<p>Python memory is session-specific, so quitting Python (i.e.&nbsp;shutting down JupyterLab) removes the data from memory. A general way to conceptualize data import into and use within Python:</p>
+<ol type="1">
+<li>Data sits in on the computer/server - this is frequently called “disk”</li>
+<li>Python code can be used to copy a data file from disk to the Python session’s memory</li>
+<li>Python data then sits within Python’s memory ready to be used by other Python code</li>
+</ol>
+<p>Here is a visualization of this process:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/import-framework.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figcaption>Python memory</figcaption>
+</figure>
+</div>
+</section>
+<section id="importing-delimited-files-with-read_csv" class="level2" data-number="7.2">
+<h2 data-number="7.2" class="anchored" data-anchor-id="importing-delimited-files-with-read_csv"><span class="header-section-number">7.2</span> Importing Delimited Files with <code>read_csv()</code></h2>
+<p>Text files are a popular way to store and exchange tabular data. Nearly every data application supports exporting to CSV (Comma Separated Values) format or another type of text-based format. These files use a delimiter — such as a comma, tab, or pipe symbol — to separate elements within each line. Because of this consistent structure, importing text files into Python typically follows a straightforward process once the delimiter is identified.</p>
+<p>Pandas provides a very efficient and simple way to load these types of files using its <code>read_csv()</code> function. While there are other approaches available (such as Python’s built-in <code>csv</code> module), Pandas is preferred for its ease of use and direct creation of a DataFrame — the primary tabular data structure used throughout this course.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/_pXeLrqQhxI?si=NDBCiV2x9sek6j6X" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>In the example below, we use <code>read_csv()</code> to load a <a href="https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/refs/heads/main/data/planes.csv">dataset listing some information on aircraft</a>.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Please note that <strong>you must have internet access for this example to work.</strong></p>
+<p>In this first example, we will demonstrate how to import data directly from a URL. This approach is useful when your data is hosted online and you want to access it directly within your analysis.</p>
+<p>Later in this chapter, we will discuss how to import data that resides on your local computer.</p>
+</div>
+</div>
+</div>
+<div id="53764551" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>planes <span class="op">=</span> pd.read_csv(<span class="st">'https://tinyurl.com/planes-data'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We see that our imported data is represented as a DataFrame:</p>
+<div id="a189329c" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span>(planes)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<pre><code>pandas.core.frame.DataFrame</code></pre>
+</div>
+</div>
+<p>We can look at it in the Jupyter notebook, since Jupyter will display it in a well-organized, pretty way.</p>
+<div id="b192289e" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>planes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">tailnum</th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">manufacturer</th>
+<th data-quarto-table-cell-role="th">model</th>
+<th data-quarto-table-cell-role="th">engines</th>
+<th data-quarto-table-cell-role="th">seats</th>
+<th data-quarto-table-cell-role="th">speed</th>
+<th data-quarto-table-cell-role="th">engine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>N10156</td>
+<td>2004.0</td>
+<td>Fixed wing multi engine</td>
+<td>EMBRAER</td>
+<td>EMB-145XR</td>
+<td>2</td>
+<td>55</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>N102UW</td>
+<td>1998.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>N103US</td>
+<td>1999.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>N104UW</td>
+<td>1999.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>N10575</td>
+<td>2002.0</td>
+<td>Fixed wing multi engine</td>
+<td>EMBRAER</td>
+<td>EMB-145LR</td>
+<td>2</td>
+<td>55</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3317</th>
+<td>N997AT</td>
+<td>2002.0</td>
+<td>Fixed wing multi engine</td>
+<td>BOEING</td>
+<td>717-200</td>
+<td>2</td>
+<td>100</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3318</th>
+<td>N997DL</td>
+<td>1992.0</td>
+<td>Fixed wing multi engine</td>
+<td>MCDONNELL DOUGLAS AIRCRAFT CO</td>
+<td>MD-88</td>
+<td>2</td>
+<td>142</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3319</th>
+<td>N998AT</td>
+<td>2002.0</td>
+<td>Fixed wing multi engine</td>
+<td>BOEING</td>
+<td>717-200</td>
+<td>2</td>
+<td>100</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3320</th>
+<td>N998DL</td>
+<td>1992.0</td>
+<td>Fixed wing multi engine</td>
+<td>MCDONNELL DOUGLAS CORPORATION</td>
+<td>MD-88</td>
+<td>2</td>
+<td>142</td>
+<td>NaN</td>
+<td>Turbo-jet</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3321</th>
+<td>N999DN</td>
+<td>1992.0</td>
+<td>Fixed wing multi engine</td>
+<td>MCDONNELL DOUGLAS CORPORATION</td>
+<td>MD-88</td>
+<td>2</td>
+<td>142</td>
+<td>NaN</td>
+<td>Turbo-jet</td>
+</tr>
+</tbody>
+</table>
+
+<p>3322 rows × 9 columns</p>
+</div>
+</div>
+</div>
+<p>This is a nice representation of the data, but we really do not need to display that many rows of the DataFrame in order to understand its structure. Instead, we can use the <code>head()</code> method of data frplanes to look at the first few rows. This is more manageable and gives us an overview of what the columns are. Note also the the missing data was populated with NaN.</p>
+<div id="300a8b48" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>planes.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">tailnum</th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">manufacturer</th>
+<th data-quarto-table-cell-role="th">model</th>
+<th data-quarto-table-cell-role="th">engines</th>
+<th data-quarto-table-cell-role="th">seats</th>
+<th data-quarto-table-cell-role="th">speed</th>
+<th data-quarto-table-cell-role="th">engine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>N10156</td>
+<td>2004.0</td>
+<td>Fixed wing multi engine</td>
+<td>EMBRAER</td>
+<td>EMB-145XR</td>
+<td>2</td>
+<td>55</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>N102UW</td>
+<td>1998.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>N103US</td>
+<td>1999.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>N104UW</td>
+<td>1999.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>N10575</td>
+<td>2002.0</td>
+<td>Fixed wing multi engine</td>
+<td>EMBRAER</td>
+<td>EMB-145LR</td>
+<td>2</td>
+<td>55</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<section id="knowledge-check" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Getting Started with Ames Housing Data
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use the Pandas library to complete the following tasks.</p>
+<ol type="1">
+<li><strong>Load the Data</strong>: Import the Ames housing dataset using the following URL - <code>https://tinyurl.com/ames-raw</code></li>
+<li><strong>Verify the Object Type</strong>: What type of Python object is the result of your import? Use the <code>type()</code> function to confirm.</li>
+<li><strong>Preview the Data</strong>: Use the <code>.head()</code> method to print the first few rows of the dataset. Based on the output:
+<ul>
+<li>What are some of the column names you see?</li>
+<li>What kinds of values are stored in these columns?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="file-paths" class="level2" data-number="7.3">
+<h2 data-number="7.3" class="anchored" data-anchor-id="file-paths"><span class="header-section-number">7.3</span> File Paths</h2>
+<p>In the previous example, we imported data directly from a URL; however, datasets often reside on our computer and we need to specify the file path to read them from. For example, rather than import the <code>planes.csv</code> data from the URL we used above, I can read in that same dataset as follows.</p>
+<div id="780a81ab" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>planes <span class="op">=</span> pd.read_csv(<span class="st">'../data/planes.csv'</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>planes.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">tailnum</th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">manufacturer</th>
+<th data-quarto-table-cell-role="th">model</th>
+<th data-quarto-table-cell-role="th">engines</th>
+<th data-quarto-table-cell-role="th">seats</th>
+<th data-quarto-table-cell-role="th">speed</th>
+<th data-quarto-table-cell-role="th">engine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>N10156</td>
+<td>2004.0</td>
+<td>Fixed wing multi engine</td>
+<td>EMBRAER</td>
+<td>EMB-145XR</td>
+<td>2</td>
+<td>55</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>N102UW</td>
+<td>1998.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>N103US</td>
+<td>1999.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>N104UW</td>
+<td>1999.0</td>
+<td>Fixed wing multi engine</td>
+<td>AIRBUS INDUSTRIE</td>
+<td>A320-214</td>
+<td>2</td>
+<td>182</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>N10575</td>
+<td>2002.0</td>
+<td>Fixed wing multi engine</td>
+<td>EMBRAER</td>
+<td>EMB-145LR</td>
+<td>2</td>
+<td>55</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>But to understand why I use <code>'../data/planes.csv'</code> in the code above, we need to spend a little time talking about file paths.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/HjIceUNes48?si=dyN8qf7bzTkj5bFf" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>It’s important to understand where files exist on your computer and how to reference those paths. There are two main approaches:</p>
+<ol type="1">
+<li>Absolute paths</li>
+<li>Relative paths</li>
+</ol>
+<p>An <strong>absolute path</strong> always contains the root elements and the complete list of directories to locate the specific file or folder. For the planes.csv file, the absolute path on my computer is:</p>
+<div id="462d5154" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>absolute_path <span class="op">=</span> os.path.abspath(<span class="st">'../data/planes.csv'</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>absolute_path</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<pre><code>'/home/runner/work/uc-bana-4080/uc-bana-4080/data/planes.csv'</code></pre>
+</div>
+</div>
+<p>I can always use this absolute path in <code>pd.read_csv()</code>:</p>
+<div id="829b138b" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>planes <span class="op">=</span> pd.read_csv(absolute_path)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>In contrast, a <strong>relative path</strong> is a path built starting from the current location. For example, say that I am operating in a directory called “Project A”. If I’m working in “my_notebook.ipynb” and I have a “my_data.csv” file in that same directory:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># illustration of the directory layout</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Project</span> A</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> my_notebook.ipynb</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">└──</span> my_data.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then I can use this relative path to import this file: <code>pd.read_csv('my_data.csv')</code>. This just means to look for the ‘my_data.csv’ file relative to the current directory that I am in.</p>
+<p>Often, people store data in a “data” directory. If this directory is a subdirectory within my Project A directory:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># illustration of the directory layout</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Project</span> A</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> my_notebook.ipynb</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">└──</span> data</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">└──</span> my_data.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then I can use this relative path to import this file: <code>pd.read_csv('data/my_data.csv')</code>. This just means to look for the ‘data’ subdirectory relative to the current directory that I am in and then look for the ‘my_data.csv’ file.</p>
+<p>Sometimes, the data directory may not be in the current directory. Sometimes a project directory will look the following where there is a subdirectory containing multiple notebooks and then another subdirectory containing data assets. If you are working in “notebook1.ipynb” within the notebooks subdirectory, you will need to tell Pandas to go up one directory relative to the notebook you are working in to the main Project A directory and then go down into the data directory.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># illustration of the directory layout</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Project</span> A</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> notebooks</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   ├── notebook1.ipynb</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   ├── notebook2.ipynb</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   └── notebook3.ipynb</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="ex">└──</span> data</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">└──</span> my_data.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>I can do this by using dot-notation in my relative path specification - here I use ‘..’ to imply “go up one directory relative to my current location”: <code>pd.read_csv('../data/my_data.csv')</code>. And this is why is used <code>'../data/planes.csv'</code> in the code at the beginning of this section, because my directory layout is:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Project</span> A</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> notebooks</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   ├── notebook1.ipynb</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   ├── notebook2.ipynb</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">│</span>   └── notebook3.ipynb</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ex">└──</span> data</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="ex">└──</span> planes.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="knowledge-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-1">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Try Different File Paths
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Download the <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/ames_raw.csv"><code>ames_raw.csv</code> dataset</a> and save the file in a folder structure like this:</p>
+<pre><code>Project A
+├── notebooks
+│   └── import_demo.ipynb
+└── data
+    └── ames_raw.csv</code></pre>
+<p>Now, do the following:</p>
+<ol type="1">
+<li><strong>Import using a relative path</strong>: In <code>import_demo.ipynb</code>, write the code to import the file using a relative path.</li>
+<li><strong>Import using an absolute path</strong>: Use Python’s <code>os.path.abspath()</code> to determine the full absolute path of the file. Then use that path in <code>pd.read_csv()</code>.</li>
+<li><strong>Reflection questions (write your answers in a Markdown cell):</strong>
+<ul>
+<li>Which method feels easier or more flexible to you?</li>
+<li>In what situations might you prefer absolute over relative paths?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="importing-data-in-google-colab" class="level2" data-number="7.4">
+<h2 data-number="7.4" class="anchored" data-anchor-id="importing-data-in-google-colab"><span class="header-section-number">7.4</span> Importing Data in Google Colab</h2>
+<p>If you’re working in <strong>Google Colab</strong>, your files aren’t stored on your local machine — you’re running code on a cloud-based virtual machine. That means reading in local files (like a <code>.csv</code> on your desktop) works a little differently.</p>
+<p>Here’s how you can upload a file directly from your computer into Colab:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> google.colab <span class="im">import</span> files</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># This will open a file picker in Colab</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>uploaded <span class="op">=</span> files.upload()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Once you select the file you want to upload (e.g., <code>planes.csv</code>), Colab will store it temporarily in your session and make it available to use just like any other file:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Now you can load the file into a DataFrame</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>planes <span class="op">=</span> pd.read_csv(<span class="st">'planes.csv'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Files uploaded this way <strong>only persist for the current Colab session</strong>. If you close the browser or restart your runtime, you’ll need to re-upload the file.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="inspecting-your-dataframe" class="level2" data-number="7.5">
+<h2 data-number="7.5" class="anchored" data-anchor-id="inspecting-your-dataframe"><span class="header-section-number">7.5</span> Inspecting Your DataFrame</h2>
+<p>After importing, the data is stored as a DataFrame — the core data structure in Pandas. And with DataFrames, there are several ways to start understanding some basic, descriptive information about our data. For example, we can get the dimensions of our DataFrame. Here, we see that we have 3,322 rows and 9 columns.</p>
+<div id="d3054a2b" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>planes.shape</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<pre><code>(3322, 9)</code></pre>
+</div>
+</div>
+<p>We can also see what type of data each column is. For example, we see that the <code>tailnum</code> column data type is <code>object</code>, the <code>year</code> column is a floating point (<code>float64</code>), and <code>engines</code> is an integer (<code>int64</code>).</p>
+<div id="82bfd366" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>planes.dtypes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<pre><code>tailnum          object
+year            float64
+type             object
+manufacturer     object
+model            object
+engines           int64
+seats             int64
+speed           float64
+engine           object
+dtype: object</code></pre>
+</div>
+</div>
+<p>The following are the most common data types that appear frequently in DataFrames.</p>
+<ul>
+<li><strong>boolean</strong> - only two possible values, <code>True</code> and <code>False</code></li>
+<li><strong>integer</strong> - whole numbers without decimals</li>
+<li><strong>float</strong> - numbers with decimals</li>
+<li><strong>object</strong> - typically strings, but may contain any object</li>
+<li><strong>datetime</strong> - a specific date and time with nanosecond precision</li>
+</ul>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Booleans, integers, floats, and datetimes all use a particular amount of memory for each of their values. The memory is measured in bits. The number of bits used for each value is the number appended to the end of the data type name. For instance, integers can be either 8, 16, 32, or 64 bits while floats can be 16, 32, 64, or 128. A 128-bit float column will show up as <code>float128</code>. Technically a <code>float128</code> is a different data type than a <code>float64</code> but generally you will not have to worry about such a distinction as the operations between different float columns will be the same.</p>
+</div>
+</div>
+</div>
+<p>We can also use the <code>info()</code> method, which provides output similar to dtypes, but also shows the number of non-missing values in each column along with more info such as:</p>
+<ul>
+<li>Type of object (always a DataFrame)</li>
+<li>The type of index and number of rows</li>
+<li>The number of columns</li>
+<li>The data types of each column and the number of non-missing (a.k.a non-null)</li>
+<li>The frequency count of all data types</li>
+<li>The total memory usage</li>
+</ul>
+<div id="70cf746f" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>planes.info()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 3322 entries, 0 to 3321
+Data columns (total 9 columns):
+ #   Column        Non-Null Count  Dtype  
+---  ------        --------------  -----  
+ 0   tailnum       3322 non-null   object 
+ 1   year          3252 non-null   float64
+ 2   type          3322 non-null   object 
+ 3   manufacturer  3322 non-null   object 
+ 4   model         3322 non-null   object 
+ 5   engines       3322 non-null   int64  
+ 6   seats         3322 non-null   int64  
+ 7   speed         23 non-null     float64
+ 8   engine        3322 non-null   object 
+dtypes: float64(2), int64(2), object(5)
+memory usage: 233.7+ KB</code></pre>
+</div>
+</div>
+<section id="knowledge-check-2" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-2">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Inspecting the Ames Housing Data
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In the previous section, you imported the <code>ames_raw.csv</code> dataset. Now let’s explore its structure using the tools you just learned.</p>
+<ol type="1">
+<li><strong>How big is the dataset?</strong>: Use <code>.shape</code> to find out how many rows and columns are in the dataset.</li>
+<li><strong>What kinds of data are stored?</strong>: Use <code>.dtypes</code> to print out the data types of all columns.
+<ul>
+<li>How many columns are <code>object</code> type?</li>
+<li>How many are <code>float</code> or <code>int</code>?</li>
+</ul></li>
+<li><strong>Dig deeper with <code>.info()</code></strong>
+<ul>
+<li>How many non-null values are in each column?</li>
+<li>How much memory does the dataset use?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="attributes-methods" class="level2" data-number="7.6">
+<h2 data-number="7.6" class="anchored" data-anchor-id="attributes-methods"><span class="header-section-number">7.6</span> Attributes &amp; Methods</h2>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/u62SwUgxpuI?si=ta29I-o5DYIf005d" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>We’ve seen that we can use the dot-notation to access functions in libraries (i.e.&nbsp;<code>pd.read_csv()</code>). We can use this same approach to access things inside of <em>objects</em>. What’s an object? Basically, a variable that contains other data or functionality inside of it that is exposed to users. Consequently, our DataFrame item is an object.</p>
+<p>In the above code, we saw that we can make different calls with our DataFrame such as <code>planes.shape</code> and <code>planes.head()</code>. An observant reader probably noticed the difference between the two – one has parentheses and the other does not.</p>
+<p>An <strong>attribute</strong> inside an object is simply a variable that is unique to that object and a <strong>method</strong> is just a function inside an object that is unique to that object.</p>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Variables inside an object are often called attributes and functions inside objects are called methods.</p>
+<p><strong>attribute</strong>: A variable associated with an object and is referenced by name using dotted expressions. For example, if an object <code>o</code> has an attribute <code>a</code> it would be referenced as <code>o.a</code></p>
+<p><strong>method</strong>: A function associated with an object and is also referenced using dotted expressions but will include parentheses. For example, if an object <code>o</code> has a method <code>m</code> it would be called as <code>o.m()</code></p>
+</div>
+</div>
+</div>
+<p>Earlier, we saw the attributes <code>shape</code> and <code>dtypes</code>. Another attribute is <code>columns</code>, which will list all column names in our DataFrame.</p>
+<div id="e9a35ad8" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>planes.columns</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<pre><code>Index(['tailnum', 'year', 'type', 'manufacturer', 'model', 'engines', 'seats',
+       'speed', 'engine'],
+      dtype='object')</code></pre>
+</div>
+</div>
+<p>Similar to regular functions, methods are called with parentheses and often take arguments. For example, we can use the <code>tail()</code> method to see the last <em>n</em> rows in our DataFrame:</p>
+<div id="df48f72b" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>planes.tail(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">tailnum</th>
+<th data-quarto-table-cell-role="th">year</th>
+<th data-quarto-table-cell-role="th">type</th>
+<th data-quarto-table-cell-role="th">manufacturer</th>
+<th data-quarto-table-cell-role="th">model</th>
+<th data-quarto-table-cell-role="th">engines</th>
+<th data-quarto-table-cell-role="th">seats</th>
+<th data-quarto-table-cell-role="th">speed</th>
+<th data-quarto-table-cell-role="th">engine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3319</th>
+<td>N998AT</td>
+<td>2002.0</td>
+<td>Fixed wing multi engine</td>
+<td>BOEING</td>
+<td>717-200</td>
+<td>2</td>
+<td>100</td>
+<td>NaN</td>
+<td>Turbo-fan</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3320</th>
+<td>N998DL</td>
+<td>1992.0</td>
+<td>Fixed wing multi engine</td>
+<td>MCDONNELL DOUGLAS CORPORATION</td>
+<td>MD-88</td>
+<td>2</td>
+<td>142</td>
+<td>NaN</td>
+<td>Turbo-jet</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">3321</th>
+<td>N999DN</td>
+<td>1992.0</td>
+<td>Fixed wing multi engine</td>
+<td>MCDONNELL DOUGLAS CORPORATION</td>
+<td>MD-88</td>
+<td>2</td>
+<td>142</td>
+<td>NaN</td>
+<td>Turbo-jet</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>We will be exposed to <em>many</em> of the available DataFrame methods throughout this course!</p>
+</div>
+</div>
+</div>
+<section id="knowledge-check-3" class="level3">
+<h3 class="anchored" data-anchor-id="knowledge-check-3">Knowledge Check</h3>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Attributes vs.&nbsp;Methods in the Ames Housing Data
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Using the <code>ames_raw</code> DataFrame you’ve already imported:</p>
+<ol type="1">
+<li><strong>List all column names</strong>: Use the appropriate <strong>attribute</strong> to display all the column names in the dataset.</li>
+<li><strong>Preview the last 5 rows</strong>: Use the appropriate <strong>method</strong> to display the last five rows of the dataset.</li>
+<li><strong>Identify each line of code</strong>: For each of the following, decide whether it’s a method or an attribute:
+<ul>
+<li><code>ames.columns</code></li>
+<li><code>ames.head()</code></li>
+<li><code>ames.shape</code></li>
+<li><code>ames.tail(10)</code></li>
+<li><code>ames.dtypes</code></li>
+</ul></li>
+<li><strong>Reflect</strong> In a markdown cell, briefly explain in your own words:
+<ul>
+<li>What’s the difference between an attribute and a method?</li>
+<li>How can you tell which one you’re using?</li>
+</ul></li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+<section id="common-dataframe-errors" class="level2" data-number="7.7">
+<h2 data-number="7.7" class="anchored" data-anchor-id="common-dataframe-errors"><span class="header-section-number">7.7</span> Common DataFrame Errors</h2>
+<p>As you’re learning to work with DataFrames in Pandas, you’ll likely encounter a few common errors. Don’t worry — these are normal and part of the learning process. This section introduces a few of the most frequent issues and how to fix them.</p>
+<section id="forgetting-parentheses-when-using-a-method" class="level3">
+<h3 class="anchored" data-anchor-id="forgetting-parentheses-when-using-a-method">Forgetting Parentheses When Using a Method</h3>
+<p>One of the most common mistakes is confusing <strong>methods</strong> with <strong>attributes</strong>. Remember: methods require parentheses <code>()</code> — even if they don’t take arguments.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>ames.head     <span class="co"># 🚫 Returns the method itself, not the data</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>ames.head()   <span class="co"># ✅ Correct — this returns the first few rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="typos-in-column-names" class="level3">
+<h3 class="anchored" data-anchor-id="typos-in-column-names">Typos in Column Names</h3>
+<p>Column names in a DataFrame must be typed exactly as they appear. They’re case-sensitive and must match spacing and punctuation.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>ames[<span class="st">'SalePrice'</span>]     <span class="co"># ✅ Correct</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>ames[<span class="st">'saleprice'</span>]     <span class="co"># 🚫 KeyError: 'saleprice'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Tip: Use <code>ames.columns</code> to check exact column names.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="filenotfounderror-when-loading-a-file" class="level3">
+<h3 class="anchored" data-anchor-id="filenotfounderror-when-loading-a-file">FileNotFoundError When Loading a File</h3>
+<p>This happens when the file path is incorrect or the file isn’t in the expected location.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 🚫 Incorrect: file doesn't exist at this path</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>pd.read_csv(<span class="st">'data.csv'</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Correct (based on your current working directory)</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>pd.read_csv(<span class="st">'../data/ames_raw.csv'</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Tip: Use <code>os.getcwd()</code> to check your working directory, and <code>os.path.abspath()</code> to confirm the full path.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="using-dot-notation-with-column-names-that-contain-spaces-or-special-characters" class="level3">
+<h3 class="anchored" data-anchor-id="using-dot-notation-with-column-names-that-contain-spaces-or-special-characters">Using Dot Notation with Column Names that Contain Spaces or Special Characters</h3>
+<p>Pandas allows you to access columns using dot notation only if the column name is a valid Python variable name.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>ames.SalePrice     <span class="co"># ✅ Works (if column is named 'SalePrice')</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>ames.MS Zoning     <span class="co"># 🚫 SyntaxError</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ✅ Use bracket notation instead</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>ames[<span class="st">'MS Zoning'</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="confusing-methods-that-dont-exist" class="level3">
+<h3 class="anchored" data-anchor-id="confusing-methods-that-dont-exist">Confusing Methods That Don’t Exist</h3>
+<p>Sometimes, learners assume there’s a method for something that doesn’t exist.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>ames.rows()    <span class="co"># 🚫 AttributeError: 'DataFrame' object has no attribute 'rows'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Tip: Use <code>dir(ames)</code> to see a list of available methods and attributes, or use tab-completion in Jupyter to explore.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="other-file-types" class="level2" data-number="7.8">
+<h2 data-number="7.8" class="anchored" data-anchor-id="other-file-types"><span class="header-section-number">7.8</span> Other File Types</h2>
+<p>So far, we’ve focused on CSVs — the most common format for tabular data. But Python, especially through the Pandas library, can import a wide variety of file types beyond just delimited text files.</p>
+<p>Here are a few common formats you might encounter:</p>
+<ul>
+<li><strong>Excel spreadsheets</strong> (<code>.xls</code>, <code>.xlsx</code>)</li>
+<li><strong>JSON</strong> files — often used for APIs and web data</li>
+<li><strong>Pickle</strong> files — Python’s own format for saving data structures</li>
+<li><strong>SQL databases</strong> — such as SQLite, PostgreSQL, or MySQL</li>
+<li><strong>Parquet</strong> and <strong>Feather</strong> — efficient storage formats for big data workflows</li>
+</ul>
+<p>In most cases, Pandas provides a convenient <code>read_</code> function to handle the import process. For example, let’s look at how we can import an Excel file directly — without converting it to a CSV first.</p>
+<section id="importing-excel-files-with-read_excel" class="level3">
+<h3 class="anchored" data-anchor-id="importing-excel-files-with-read_excel">Importing Excel Files with <code>read_excel()</code></h3>
+<p>Excel is still one of the most widely used tools for storing and sharing data. And while many users convert Excel files into CSVs before importing them into Python, Pandas allows you to skip that step entirely.</p>
+<p>To import data directly from an Excel workbook, you can use the <code>read_excel()</code> function. But first, you may need to install an additional dependency:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run this in your terminal if you haven’t already</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install openpyxl</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In this example, we’ll import a mock dataset of grocery store products stored in a file called <code>products.xlsx</code> (download <a href="https://github.com/bradleyboehmke/uc-bana-4080/blob/main/data/products.xlsx">here</a>).</p>
+<div id="2faaaae9" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Preview the available sheets in the workbook</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>products_excel <span class="op">=</span> pd.ExcelFile(<span class="st">'../data/products.xlsx'</span>)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>products_excel.sheet_names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>['metadata', 'products data', 'grocery list']</code></pre>
+</div>
+</div>
+<p>To load a specific sheet from this workbook:</p>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>If you don’t explicitly specify a sheet name, Pandas will default to importing the <strong>first worksheet</strong> in the file.</p>
+</div>
+</div>
+</div>
+<div id="fefa1ef8" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>products <span class="op">=</span> pd.read_excel(<span class="st">'../data/products.xlsx'</span>, sheet_name<span class="op">=</span><span class="st">'products data'</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>products.head()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">product_num</th>
+<th data-quarto-table-cell-role="th">department</th>
+<th data-quarto-table-cell-role="th">commodity</th>
+<th data-quarto-table-cell-role="th">brand_ty</th>
+<th data-quarto-table-cell-role="th">x5</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>92993</td>
+<td>NON-FOOD</td>
+<td>PET</td>
+<td>PRIVATE</td>
+<td>N</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>93924</td>
+<td>NON-FOOD</td>
+<td>PET</td>
+<td>PRIVATE</td>
+<td>N</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>94272</td>
+<td>NON-FOOD</td>
+<td>PET</td>
+<td>PRIVATE</td>
+<td>N</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>94299</td>
+<td>NON-FOOD</td>
+<td>PET</td>
+<td>PRIVATE</td>
+<td>N</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>94594</td>
+<td>NON-FOOD</td>
+<td>PET</td>
+<td>PRIVATE</td>
+<td>N</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-tip">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Here’s an additional video provided by Corey Schafer that you might find useful. It covers importing and exporting data from multiple different sources.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/N6hyN6BW6ao" title="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="summary" class="level2" data-number="7.9">
+<h2 data-number="7.9" class="anchored" data-anchor-id="summary"><span class="header-section-number">7.9</span> Summary</h2>
+<p>In this chapter, you learned how to import real-world data into Python and begin exploring it using Pandas — one of the most important tools in the data science workflow.</p>
+<p>You started with a realistic scenario: opening up a raw dataset and figuring out how to make sense of it. You learned how to read in delimited files (like CSVs), use relative and absolute file paths, and inspect your data using essential DataFrame attributes and methods like <code>.shape</code>, <code>.dtypes</code>, <code>.info()</code>, and <code>.head()</code>.</p>
+<p>You also saw how Pandas supports a wide variety of file formats beyond CSV, including Excel, JSON, Pickle, and SQL databases — making it a flexible tool for working with nearly any type of data source.</p>
+<p>This chapter was focused on getting your data <strong>into</strong> Python and taking a first look around. In upcoming chapters, we’ll dig into the heart of data science: cleaning, wrangling, summarizing, and uncovering patterns in your data to support real-world decision making.</p>
+</section>
+<section id="exercise-covid-19-cases-at-u.s.-colleges" class="level2" data-number="7.10">
+<h2 data-number="7.10" class="anchored" data-anchor-id="exercise-covid-19-cases-at-u.s.-colleges"><span class="header-section-number">7.10</span> Exercise: COVID-19 Cases at U.S. Colleges</h2>
+<p>The New York Times published a dataset tracking COVID-19 cases at colleges and universities across the United States. You can read about this dataset <a href="https://github.com/nytimes/covid-19-data/tree/master/colleges">here</a>. In this exercise, you’ll download and explore that dataset to practice the skills you’ve learned in this chapter.</p>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Step 1: Download the Data
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Download the dataset directly from this GitHub URL: <a href="https://github.com/nytimes/covid-19-data/blob/master/colleges/colleges.csv"><code>colleges.csv</code></a></p>
+<p>Set up your project directory to look like this:</p>
+<pre><code>BANA 4080
+├── notebooks
+│   └── covid_analysis.ipynb
+└── data
+    └── colleges.csv</code></pre>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Step 2: Import the Data
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In your <code>covid_analysis.ipynb</code> notebook:</p>
+<ol type="1">
+<li>Import Pandas</li>
+<li>Load the dataset using a <strong>relative path</strong></li>
+<li>Use the <code>type()</code> function to confirm that the data is stored as a DataFrame</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Step 3: Explore the Structure
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>Use the following DataFrame attributes and methods:</p>
+<ul>
+<li><code>.shape</code> — how many rows and columns are in the dataset?</li>
+<li><code>.columns</code> — what variables are included?</li>
+<li><code>.head()</code> — what do the first few rows of the dataset look like?</li>
+<li><code>.info()</code> — are there any missing values?</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="callout callout-style-simple callout-none no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">None</span>Step 4: Reflect
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p>In a Markdown cell, write a short summary addressing the following:</p>
+<ul>
+<li>What is this dataset tracking?</li>
+<li>What are some variables you’d want to explore further?</li>
+<li>What kinds of questions could you answer with this data in future chapters?</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../book/module-03-overview.html" class="pagination-link" aria-label="Module 3: DataFrames &amp; Importing Data">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Module 3: DataFrames &amp; Importing Data</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../book/08-dataframes.html" class="pagination-link" aria-label="Deeper Dive on DataFrames">
+        <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Deeper Dive on DataFrames</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/edit/main/book/07-importing-data.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/bradleyboehmke/uc-bana-4080/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
