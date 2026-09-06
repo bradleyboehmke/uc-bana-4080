@@ -33,8 +33,6 @@ execute:
 - Master DataFrame investigation techniques  
 - Discover the power of data subsetting
 
-**First Challenge:** Before we start coding, let's see what manual data exploration feels like, but first...
-
 # Discussion: Last Week's Content {background="#43464B"}
 
 ## Questions from Week 2? {.smaller}
@@ -53,6 +51,12 @@ Let's take a few minutes to address any questions or concerns from last week bef
 - How to approach problem-solving in Python
 
 **Don't hesitate to ask - chances are others have the same questions!**
+:::
+
+::: {.callout-tip}
+## Stuck on a homework problem?
+
+Let me know which one — we can work through it together in Thursday's lab.
 :::
 
 # Experience First: The Spreadsheet Challenge {background="#43464B"}
@@ -94,28 +98,14 @@ Let's take a few minutes to address any questions or concerns from last week bef
 **Let's see what people found...**
 
 
-# The Real Estate Intern Story {background="#43464B"}
-
-## Your First Day on the Job {.smaller}
-
-**Scenario:** You're a summer intern at a real estate analytics firm
-
-:::: {.columns}
-::: {.column}
-**Your manager says:**
-> "Here's the raw data for the Ames, Iowa housing market. Let's start by pulling it into Python and taking a quick look around."
-
-**You double-click the file:** Rows and rows of numbers, codes, and column headers you don't understand.
-
-**Where do you even begin?**
-:::
-::: {.column}
-![](images/ames-raw-df.png)
-:::
-::::
+## 📓 Follow Along in the Notebook
 
 ::: {.callout-tip}
-**Today's Goal:** By the end of class, you'll have the detective skills to tackle any dataset with confidence!
+## Week 3 Lecture Notebook
+
+Open the companion notebook in Colab now and follow along as we work through today's examples on importing data, exploring DataFrames, and subsetting rows and columns.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-03-lecture.ipynb)
 :::
 
 # Getting Data Into Python {background="#43464B"}
@@ -133,8 +123,6 @@ Python stores data in **memory** for fast analysis, but first we need to get it 
 2. Python copies the file into **memory** (RAM)
 3. You can now investigate and analyze!
 
-**Why memory?** Lightning fast access, but size limitations for huge datasets
-
 :::
 ::: {.column}
 
@@ -143,50 +131,14 @@ Python stores data in **memory** for fast analysis, but first we need to get it 
 :::
 ::::
 
-::: {.callout-note}
-Don't worry about big data yet - we'll work with manageable datasets in this class!
-:::
+::: {.callout-important}
+## Copied, not connected
 
-## File Paths: Finding Your Data 📁 {.smaller}
+Importing **copies** the data into your Python session — it does not open a live link to the file.
 
-**The Challenge:** Your data lives somewhere on your computer. Python needs directions!
+This matters most in **Colab**, where your session runs on a temporary cloud machine: when you close the notebook or the runtime restarts, that copy is gone. Same idea locally — close Python, and the data in memory disappears.
 
-:::: {.columns}
-::: {.column}
-**Two Types of Directions:**
-
-**Absolute Path:** Full address from computer's root
-
-```
-/Users/jane/Desktop/my_project/data/ames.csv
-```
-
-**Relative Path:** Directions from where you are now
-
-```
-../data/ames.csv
-data/ames.csv
-```
-:::
-::: {.column}
-**Common Project Structure:**
-
-```
-my_project/
-├── notebooks/
-│   └── analysis.ipynb  ← You are here
-└── data/
-    └── ames.csv       ← Your data
-```
-
-**To reach data:** `../data/ames.csv`
-
-`..` means "go up one folder"
-:::
-::::
-
-::: {.callout-tip}
-**Pro Tip:** Use relative paths! They work on any computer when you share your project.
+**The takeaway:** every session starts by re-importing your data. That's not a chore, it's what makes your analysis reproducible.
 :::
 
 ## Your Detective Toolkit: Pandas 🐼 {.smaller}
@@ -215,12 +167,6 @@ Excel + Python power = Reproducible & scalable data analysis
 :::
 ::::
 
-::: {.callout-important}
-## Follow Along
-
-<https://tinyurl.com/255kurnz>
-:::
-
 ## Let's Import Our First Dataset! {.smaller}
 
 **Step 1:** Import pandas and load the Ames housing data
@@ -228,92 +174,94 @@ Excel + Python power = Reproducible & scalable data analysis
 ```{python}
 import pandas as pd
 
-# Load the real estate data
-ames = pd.read_csv("../data/ames_raw.csv")
-```
-
-**Step 2:** Take a quick peek at what we imported
-
-```{python}
-# What type of object did we create?
-type(ames)
+# Load the real estate data straight from the course repo
+url = "https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/main/data/ames_raw.csv"
+ames = pd.read_csv(url)
 ```
 
 . . .
 
-We've created a **DataFrame** - Python's version of a spreadsheet!
+<br>
+
+**Working from a local file instead?** `read_csv()` takes a file path just as happily as a URL:
+
+:::: {.columns}
+::: {.column width="52%"}
+```python
+# Absolute path — full address from the root
+pd.read_csv("/Users/jane/project/data/ames_raw.csv")
+
+# Relative path — directions from where you are
+pd.read_csv("../data/ames_raw.csv")
+```
+:::
+::: {.column width="48%"}
+```
+my_project/
+├── notebooks/
+│   └── analysis.ipynb  ← You are here
+└── data/
+    └── ames_raw.csv    ← Your data
+```
+
+:::
+::::
+
+::: {.callout-tip}
+**Pro tip:** Prefer relative paths over absolute ones — they're easier to share and maintain with co-workers.
+:::
+
+## Importing Data in Google Colab ☁️ {.smaller}
+
+**The challenge:** In Colab, your files aren't on your local machine — they're on a cloud VM.
+
+**Option 1: Load directly from a URL** — what we just did
+
+Because we read from a URL, that import ran the same way on your laptop and in Colab. This is the approach we'll use most this term.
+
+**Option 2: Upload a local file** — for data that isn't online
+```python
+from google.colab import files
+
+# Opens a file picker — select a file from your computer
+uploaded = files.upload()
+```
+
+Then read the uploaded file just like any local file:
+
+```python
+ames = pd.read_csv('ames_raw.csv')
+```
+
+::: {.callout-warning}
+Files uploaded this way **only persist for the current Colab session**. If you close the browser or restart your runtime, you'll need to re-upload.
+:::
+
+# Getting to Know Your Data 🧐 {background="#43464B"}
+
+## Meet Your Data {.smaller .scrollable}
+
+Here's what we just imported:
 
 ```{python}
 ames
 ```
 
-# Getting to Know Your Data 🧐 {background="#43464B"}
+## Size It Up Yourself {.smaller}
 
-## Detective Questions: Data Inspection {.smaller}
+Pandas gives you a whole toolkit for getting to know a new dataset — run each of these in your notebook and read what comes back:
 
-Think of these as your **"data detective questions"**:
-
-:::: {.columns}
-::: {.column}
-
-**🔍 "How big is this dataset?"**
-```{python}
-ames.shape
-```
-
-**👀 "What does the data look like?"**
-```{python}
-ames.head()
-```
-
-:::
-::: {.column}
-
-**📊 "What types of data do I have?"**
-```{python}
-ames.info()
-```
-
-:::
-::::
-
-## More Detective Tools {.smaller}
-
-:::: {.columns}
-::: {.column}
-
-**📋 "What are my column names?"**
-```{python}
-ames.columns
-```
-
-:::
-::: {.column}
-
-**🎯 "What data types am I working with?"**
-```{python}
-ames.dtypes
-```
-
-:::
-::::
-
-::: {.callout-important}
-**Key Insight:** Always inspect your data first! These tools help you understand what you're working with.
-:::
-
-## Detective Summary Statistics {.smaller}
-
-**📈 "What are the basic statistics?"**
-
-The `.describe()` method gives you a quick statistical summary of your numeric columns:
-
-```{python}
-ames.describe()
+```python
+ames.shape       # How big is it?
+ames.columns     # What are the columns called?
+ames.dtypes      # What type is each column?
+ames.head()      # What do the first rows look like?
+ames.info()      # Types and missing values, all at once
+ames.describe()  # Summary statistics for numeric columns
 ```
 
 ::: {.callout-tip}
-**What you get:** Count, mean, standard deviation, min/max values, and quartiles for every numeric column. Perfect for a quick data health check!
+Don't just run them — *read* the output. Anything surprise you?
 :::
 
 ## Attributes vs Methods: Your Detective Tools {.smaller}
@@ -351,6 +299,34 @@ ames.describe() # With parentheses
 **Memory Trick:** Methods = Actions = Parentheses!
 :::
 
+## Why Inspect Before You Analyze {.smaller}
+
+Those six commands take about ten seconds. Skipping them costs hours.
+
+:::: {.columns}
+::: {.column}
+**What you're really checking:**
+
+- **`.shape`** — did every row load, or did the file get truncated?
+- **`.dtypes`** — is `SalePrice` actually numeric, or did pandas read it as text because one cell had a stray character?
+- **`.info()`** — which columns have missing values, and how many?
+- **`.describe()`** — any impossible values? A minimum of 0, a maximum of 999999?
+:::
+::: {.column}
+::: {.callout-important}
+## The real point
+
+Every dataset arrives with a story attached — *"this is last year's sales."*
+
+Inspection is how you check whether the data matches the story **before** you build an analysis on top of it.
+:::
+:::
+::::
+
+::: {.callout-tip}
+**Golden Rule:** `.shape`, `.info()`, `.describe()` — every time, before anything else.
+:::
+
 # Understanding DataFrames & Series {background="#43464B"}
 
 ## DataFrames: Your Digital Spreadsheet {.smaller .scrollable}
@@ -376,39 +352,6 @@ A **DataFrame** is like an Excel spreadsheet in Python:
 ames
 ```
 
-## Series: Single Columns of Data {.smaller}
-
-**What's a Series?** A single column from your DataFrame
-
-:::: {.columns}
-::: {.column}
-**Extract one column:**
-
-```{python}
-#| code-line-numbers: "2"
-
-# Get the SalePrice column
-prices = ames['SalePrice']
-type(prices)
-```
-
-
-**A Series has 3 parts:**
-
-- **Values** (the actual data)
-- **Index** (row labels) 
-- **Data type** (dtype)
-:::
-::: {.column}
-```{python}
-# Look at the Series
-prices.head()
-```
-
-**Notice:** Series print differently than DataFrames!
-:::
-::::
-
 ## Quick Challenge! 🎯
 
 **Prediction Game:** What will each of these return?
@@ -433,38 +376,166 @@ ames[['SalePrice', 'Year Built']]
 ::: {.column}
 **Think about:**
 
-- What type of object?
-- Series or DataFrame?
-- Why might this matter?
+- What do `[]` do?
+- What do you think the output values will be?
+- What do you think the output types will be?
 
-**Turn to your neighbor and make predictions!**
 :::
 ::::
 
 ## The Answer Revealed! {.smaller}
 
-:::: {.columns}
-::: {.column}
-**Single brackets = Series**
-```{python}
-type(ames['SalePrice'])
-```
+Same column, three different requests — look at how the output *shape* changes:
 
-**Double brackets = DataFrame**
+:::: {.columns}
+::: {.column width="33%"}
+**Single brackets → Series**
+
+<br>
+
 ```{python}
-type(ames[['SalePrice']])
+ames['SalePrice'].head(3)
 ```
 :::
-::: {.column}
-**Multiple columns = DataFrame**
+::: {.column width="33%"}
+**Double brackets → DataFrame**
+
+```{python}
+ames[['SalePrice']].head(3)
+```
+:::
+::: {.column width="34%"}
+**Two columns → DataFrame**
+
+<br>
+
 ```{python}
 ames[['SalePrice', 'Year Built']].head(3)
 ```
 :::
 ::::
 
+::: {.callout-note}
+**What's actually happening:** the outer `[ ]` is pandas' selection syntax — the inner `[ ]` is just a plain Python **list**.
+
+So `ames[['SalePrice']]` is really `ames[ ]` handed the list `['SalePrice']`. And because it's an ordinary list, you can keep adding to it — `['SalePrice', 'Year Built', 'Neighborhood']` — which is exactly why double brackets scale to as many columns as you want, and single brackets don't.
+:::
+
+## Why Should You Care? {.smaller .scrollable}
+
+**Rule #1 — always know which one you're holding.** 
+
+:::: {.columns}
+::: {.column}
+**A Series** — one column, with a `dtype:` footer underneath and **no header row**:
+
+```{python}
+ames['SalePrice'].head(3)
+```
+
+Three parts: **values**, **index**, and a single **dtype**.
+:::
+::: {.column}
+**A DataFrame** — a **table with a header row**, even holding just one column:
+
+
+```{python}
+ames[['SalePrice']].head(3)
+```
+
+:::
+::::
+
+::: {.callout-tip}
+Luckily, you can tell at a glance!
+:::
+
+## Why Should You Care? {.smaller .scrollable}
+
+**Rule #2 — they don't share the same toolkit.**
+
+Sometimes the *same* attribute or method works on both, but hands back **different output**:
+
+```{python}
+print("Series .shape:   ", ames['SalePrice'].shape)
+print("DataFrame .shape:", ames[['SalePrice']].shape)
+```
+
+```{python}
+ames['SalePrice'].mean()      # one number
+```
+
+```{python}
+ames[['SalePrice']].mean()    # a Series — note the dtype: footer!
+```
+
+```{python}
+ames[['SalePrice', 'Year Built']].mean()   
+```
+
+. . .
+
+Other times an attribute or method exists for one and simply **isn't there** on the other:
+
+```python
+ames['SalePrice'].columns    # ❌ AttributeError — a Series has no columns
+ames[['SalePrice']].columns  # ✅ Index(['SalePrice'], dtype='object')
+```
+
 ::: {.callout-important}
-**Key Rule:** Use `[[]]` when you want to keep working with DataFrame methods!
+**Key Rule:** Reach for `[[ ]]` when you want to keep working like a DataFrame — selecting several columns, chaining, joining, or writing back out to a file.
+:::
+
+## Your Turn! 🎯 {.smaller .scrollable}
+
+:::: {.columns}
+::: {.column width="65%"}
+
+Using the `ames` DataFrame:
+
+1. Extract the `Neighborhood` column as a **Series**. What neighborhood are the first 3 records in?
+2. Extract the `Neighborhood` column as a **DataFrame**.
+3. Extract the `Neighborhood`, `Overall Qual`, and `SalePrice` columns as a **DataFrame**.
+
+:::
+::: {.column width="35%"}
+
+<center>
+
+<div id="3minYourTurn"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minYourTurn", 180, "slide");
+    });
+</script>
+</center>
+
+:::
+::::
+
+::: {.fragment}
+**1 — One name in `[ ]` gives a Series.** The first three records are all in **NAmes** (North Ames):
+
+```{python}
+ames['Neighborhood'].head(3)
+```
+:::
+
+::: {.fragment}
+**2 — Wrap that same name in a list to get a DataFrame back:**
+
+```{python}
+ames[['Neighborhood']].head(3)
+```
+:::
+
+::: {.fragment}
+**3 — Keep adding to the list:**
+
+```{python}
+ames[['Neighborhood', 'Overall Qual', 'SalePrice']].head(3)
+```
 :::
 
 # Data Subsetting: Finding What Matters {background="#43464B"}
@@ -501,32 +572,31 @@ When analyzing data, you often want just a **subset** of your dataset:
 :::
 ::::
 
-## Selecting Columns: Pick Your Variables {.smaller}
+## Selecting Columns: Pick Your Variables {.smaller .scrollable}
 
-**Your Task:** Extract just the sales price and year built
+**You already know how to do this!**
 
-:::: {.columns}
-::: {.column}
-**Method 1: List the columns you want**
+**One column → Series**
+
 ```{python}
-#| code-line-numbers: "2"
+ames['SalePrice'].head(3)
+```
 
-# Select multiple columns
-house_basics = ames[['SalePrice', 'Year Built']]
-house_basics.head(3)
-```
-:::
-::: {.column}
-**Method 2: For just one column**
+**Two columns → DataFrame**
+
 ```{python}
-#| code-line-numbers: "2"
-# Just the prices (as a Series)
-just_prices = ames['SalePrice']
-print(f"Type: {type(just_prices)}")
-print(f"First few values: {just_prices.head(3).tolist()}")
+ames[['SalePrice', 'Year Built']].head(3)
 ```
+
+**Three columns → DataFrame**
+
+```{python}
+ames[['SalePrice', 'Year Built', 'Neighborhood']].head(3)
+```
+
+::: {.callout-tip}
+Notice the pattern: the list just keeps growing. Want a fourth column? Add it to the list. The only real decision is **one name in `[ ]`** (a Series) versus **a list in `[[ ]]`** (a DataFrame, however many columns).
 :::
-::::
 
 ## Data Mystery #1 🕵️ {.smaller .scrollable}
 
@@ -537,14 +607,15 @@ print(f"First few values: {just_prices.head(3).tolist()}")
 1. How many houses are in our dataset?
 2. What's the highest sale price?
 3. What's the average year built?
+4. How many **unique neighborhoods** are represented?
 
 **Detective Tools:**
 
 - `.shape`
 - `.max()`
 - `.mean()`
+- `.nunique()`
 
-**Colab Notebook:** [Data Mystery #1](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/examples/wk03_data_detective.ipynb)
 :::
 ::: {.column}
 <center>
@@ -558,15 +629,16 @@ print(f"First few values: {just_prices.head(3).tolist()}")
 </script>
 </center>
 
-**Work with a partner!**
+::: {.callout-tip}
+**Hint:** Can't remember what a column is called? `ames.columns` will list every one of them.
+:::
+
 :::
 ::::
 
 **Let's see what you discovered...**
 
 ## Data Mystery #1 Solutions 🎯 {.smaller}
-
-**The Answers:**
 
 :::: {.columns}
 ::: {.column}
@@ -589,8 +661,18 @@ print(f"Highest sale price: ${highest_price:,}")
 ```{python}
 # Calculate average year built
 avg_year = ames['Year Built'].mean()
-print(f"Average year built: {avg_year:.1f}")
+print(f"Average year built: {avg_year:.0f}")
 ```
+
+**Mystery 4: Unique neighborhoods?**
+```{python}
+# Count the distinct values in the column
+n_hoods = ames['Neighborhood'].nunique()
+print(f"Unique neighborhoods: {n_hoods}")
+```
+
+:::
+::::
 
 ::: {.callout-tip}
 **Detective Skills Unlocked!** 🔓
@@ -600,9 +682,8 @@ You now know how to:
 - Check dataset size with `.shape`
 - Find maximum values with `.max()`
 - Calculate averages with `.mean()`
+- Count distinct values with `.nunique()`
 :::
-:::
-::::
 
 ## Filtering Rows: The Magic of Conditions {.smaller}
 
@@ -635,12 +716,12 @@ Now we have a **filtered DataFrame** with only expensive houses!
 :::
 ::::
 
-## Building More Complex Filters {.smaller}
+## Building More Complex Filters {.smaller .scrollable}
 
 **Real Estate Question:** Find houses that are **expensive** AND **recently built**
 
 ```{python}
-#| code-line-numbers: "2,3,6"
+#| code-line-numbers: "2,3,6,9"
 # Step 1: Define our conditions
 expensive = ames['SalePrice'] > 200000
 recent = ames['Year Built'] > 2000
@@ -657,54 +738,84 @@ print(f"Expensive AND recent houses: {result.shape[0]}")
 **Important:** Always use `&` for AND and `|` for OR with pandas (not `and`/`or`)
 :::
 
+::: {.fragment}
+**Another Real Estate Question:** Find houses at either end of the market — **inexpensive** (under \$100,000) OR **expensive** (over \$500,000)
+
+```{python}
+#| code-line-numbers: "2,3,6,9"
+# Step 1: Define our conditions
+inexpensive = ames['SalePrice'] < 100000
+expensive = ames['SalePrice'] > 500000
+
+# Step 2: Combine with | (OR)
+either_extreme = inexpensive | expensive
+
+# Step 3: Filter the data
+result = ames[either_extreme]
+print(f"Inexpensive: {inexpensive.sum()}  |  Expensive: {expensive.sum()}")
+print(f"Either extreme: {result.shape[0]}")
+```
+
+::: {.callout-note}
+Notice the difference: `&` **narrows** your results — a row must satisfy *both* conditions. `|` **widens** them — a row only needs *one*. Here no house can be under \$100k and over \$500k at once, so the two groups don't overlap and the counts simply add up.
+:::
+:::
+
 ## The Powerful .loc Accessor {.smaller .scrollable}
 
-**Professional Tip:** Use `.loc[]` for clean, readable filtering
+So far we've treated our two dimensions separately — **pick columns**, or **filter rows**. In practice you almost always want them *at the same time*:
 
-**Why use .loc?**
+> *"Give me the neighborhood, price, and size — but only for the homes I actually care about."*
 
-- Cleaner syntax
-- Safer (avoids warnings)
-- More explicit
-- Best practice!
+You could do it in two steps, filtering and then selecting. `.loc[]` does both in one:
 
 ::: {.callout-tip}
-**Pattern:** `df.loc[rows, columns]`
+**Pattern:** `df.loc[rows, columns]` — the row condition first, the column list second.
 :::
+
+**Why `.loc`?** Cleaner, more explicit, avoids pandas warnings — and it's what you'll see in professional code.
 
 . . .
 
-**Basic filtering:**
+**Example 1 — Recent *and* expensive.** Neighborhood, price, and living area for homes built after 2000 **and** sold above \$200,000:
+
 ```{python}
-#| code-line-numbers: "2"
-# Houses built after 2000
-recent_houses = ames.loc[ames['Year Built'] > 2000]
-print(f"Shape: {recent_houses.shape}")
+#| code-line-numbers: "1,2,4"
+rows = (ames['Year Built'] > 2000) & (ames['SalePrice'] > 200000)
+cols = ['Neighborhood', 'SalePrice', 'Gr Liv Area']
+
+recent_expensive = ames.loc[rows, cols]
+print(f"Matching homes: {recent_expensive.shape[0]}")
+recent_expensive.head(3)
 ```
 
-**Select columns AND filter rows:**
-```{python}
-#| code-line-numbers: "2,3,5"
-# Get price and year for recent houses
-rows = ames['Year Built'] > 2000
-cols = ['SalePrice', 'Year Built']
+. . .
 
-recent_prices = ames.loc[rows, cols]
-recent_prices.head()
+**Example 2 — Either end of the market.** Same three columns, but for homes under \$100,000 **or** over \$500,000:
+
+```{python}
+#| code-line-numbers: "1,2,4"
+rows = (ames['SalePrice'] < 100000) | (ames['SalePrice'] > 500000)
+cols = ['Neighborhood', 'SalePrice', 'Gr Liv Area']
+
+price_extremes = ames.loc[rows, cols]
+print(f"Matching homes: {price_extremes.shape[0]}")
+price_extremes.head(3)
 ```
 
+::: {.callout-note}
+Recognize that **254**? It's the same set of houses we found on the previous slide — except now we're getting back just the three columns we asked for instead of all 82.
+:::
 
 ## Data Mystery #2 🕵️‍♀️ {.smaller .scrollable}
 
-**Your Challenge:** Be the real estate detective!
+**Your Challenge:** A developer wants to know where the market for **newer, larger homes** actually is.  Work these in order — each step builds on the one before it:
 
 :::: {.columns}
 ::: {.column}
-Using the Ames dataset, find:
-
-1. **How many houses** were built in 2005 or later?
-2. **What's the average price** of houses with more than 2000 sq ft living area? (use `Gr Liv Area` column)
-3. **Challenge:** Find houses that are both expensive (>$300k) AND large (>2500 sq ft)
+1. Use **`.loc[]`** to pull the `Neighborhood`, `Year Built`, `Gr Liv Area`, and `SalePrice` columns for homes built in **2000 or later** *and* **3,000 sq ft or larger**.
+2. **How many homes** meet that condition?
+3. For those homes: what's the **average sale price**, and **how many different neighborhoods** do they span?
 
 :::
 ::: {.column}
@@ -719,51 +830,55 @@ Using the Ames dataset, find:
 </script>
 </center>
 
-**Work in teams of 2-3!**
-
-**Hint:** Use `.loc[]` for clean solutions
 :::
 ::::
 
+::: {.callout-tip}
+**Hint:** Save your `.loc[]` result to a variable — then steps 2 and 3 are one short line each.
+
+**Detective Tools:** `.loc[]` · `.shape` · `.mean()` · `.nunique()`
+:::
+
+
 ## Data Mystery #2 Solutions 🎯 {.smaller .scrollable}
 
-**The Answers:**
+**Step 1 — filter rows and select columns in one move:**
 
-**Mystery 1: Houses built 2005+**
 ```{python}
-#| code-line-numbers: "2"
-# Filter for houses built in 2005 or later
-recent_houses = ames[ames['Year Built'] >= 2005]
-print(f"Houses built 2005+: {recent_houses.shape[0]}")
+#| code-line-numbers: "1,2,4"
+rows = (ames['Year Built'] >= 2000) & (ames['Gr Liv Area'] >= 3000)
+cols = ['Neighborhood', 'Year Built', 'Gr Liv Area', 'SalePrice']
+
+new_large = ames.loc[rows, cols]
+new_large.head(3)
 ```
 
-**Mystery 2: Average price (>2000 sq ft)**
+. . .
+
+**Step 2 — how many homes?**
+
 ```{python}
-#| code-line-numbers: "2,3"
-# Filter for large houses and get average price
-large_houses = ames[ames['Gr Liv Area'] > 2000]
-avg_price = large_houses['SalePrice'].mean()
-print(f"Average price (>2000 sq ft): ${avg_price:,.0f}")
+print(f"Homes built 2000+ at 3,000+ sq ft: {new_large.shape[0]}")
 ```
 
-**Mystery 3: Expensive AND large houses**
+. . .
+
+**Step 3 — now ask questions of that subset:**
+
 ```{python}
-#| code-line-numbers: "2"
-# Combine conditions: expensive (>$300k) AND large (>2500 sq ft)
-expensive_and_large = ames.loc[(ames['SalePrice'] > 300000) & (ames['Gr Liv Area'] > 2500)]
-print(f"Expensive AND large houses: {expensive_and_large.shape[0]}")
-expensive_and_large[['SalePrice', 'Gr Liv Area']].head(3)
+avg_price = new_large['SalePrice'].mean()
+n_hoods = new_large['Neighborhood'].nunique()
+
+print(f"Average sale price: ${avg_price:,.0f}")
+print(f"Spanning {n_hoods} of the {ames['Neighborhood'].nunique()} neighborhoods in Ames")
 ```
 
-::: {.callout-tip}
-**Advanced Detective Skills!** 🔓
+::: {.callout-important}
+**That last number is the real finding.** Homes this new *and* this large exist in just **4 of 28** neighborhoods — the top of this market is concentrated in a handful of places. Our developer now knows where this market is concentrated.
 
-You now master:
-
-- Complex filtering with multiple conditions
-- Combining `&` (AND) and `|` (OR) operators
-- Using `.loc[]` for professional-grade code
+Notice the workflow: **subset first, then analyze.** Once `new_large` exists, every follow-up question is a one-liner.
 :::
+
 
 ## Common Detective Mistakes 🚨 {.smaller}
 
@@ -818,7 +933,8 @@ ames[ames['Year Built'] > 2000] # ✅ Correct
 
 ```{python}
 # Load the planes dataset
-planes = pd.read_csv("../data/planes.csv")
+planes_url = "https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/main/data/planes.csv"
+planes = pd.read_csv(planes_url)
 
 # Take a quick look at the data structure
 planes.head()
@@ -861,51 +977,31 @@ print(f"Seat range: {embraer_recent['seats'].min()} to {embraer_recent['seats'].
 - **Python:** Automated, reproducible, scalable to millions of rows! 
 :::
 
-## 🧾 Detective's Quick Reference {.smaller}
+## 🧾 What You Learned {.smaller .scrollable}
 
-| Detective Task | Pandas Code | Returns |
-|----------------|-------------|---------|
-| **Inspect data size** | `df.shape` | Tuple (rows, cols) |
-| **Preview data** | `df.head()` | First 5 rows |
-| **Get column info** | `df.info()` | Data types & missing values |
-| **Select one column** | `df['col']` | Series |
-| **Select multiple columns** | `df[['col1', 'col2']]` | DataFrame |
-| **Filter rows** | `df[df['col'] > value]` | DataFrame |
-| **Filter + Select** | `df.loc[condition, ['col1', 'col2']]` | DataFrame |
+| Code | What it does |
+|------|--------------|
+| `pd.read_csv(url)` / `pd.read_csv(path)` | Reads a CSV into a DataFrame — copies it into memory **for this session only** |
+| `df.shape` | How big is it? Rows and columns, as a tuple |
+| `df.head()` | Peek at the first 5 rows |
+| `df.columns` | Every column name — your lookup when you forget one |
+| `df.dtypes` | The data type of each column |
+| `df.info()` | Types *and* missing-value counts, in one summary |
+| `df.describe()` | Summary statistics for the numeric columns |
+| `df['col']` | One column, as a **Series** |
+| `df[['col']]` | One column, as a **DataFrame** |
+| `df[['a', 'b', 'c']]` | Several columns — the inner `[ ]` is just a Python list |
+| `df[df['col'] > value]` | Keeps only the rows where the condition is `True` |
+| `&` and <code>&#124;</code> | Combine conditions — `&` **narrows** (AND), <code>&#124;</code> **widens** (OR) |
+| `df.loc[rows, cols]` | Filter rows **and** select columns in a single step |
+| `s.mean()` · `s.max()` · `s.min()` | Collapse a column down to one number |
+| `s.nunique()` | How many *distinct* values a column holds |
 
 ::: {.callout-important}
-**Golden Rule:** Always start with `.head()`, `.info()`, and `.shape` to understand your data!
-:::
+**The two ideas underneath all of it:**
 
-## What We've Discovered Today {.smaller}
-
-**You are now data detectives!** 🎉
-
-:::: {.columns}
-::: {.column}
-**✅ You can:**
-
-- Import datasets from files
-- Understand file paths (absolute vs relative)
-- Inspect data with detective questions
-- Distinguish DataFrames from Series
-- Select specific columns
-- Filter rows with conditions
-- Combine filtering and selection
-:::
-::: {.column}
-**✅ You know:**
-
-- Attributes vs methods
-- When to use `[]` vs `[[]]`
-- How to avoid common mistakes
-- The power of `.loc[]`
-- Why this beats spreadsheets!
-:::
-::::
-
-::: {.callout-note}
-**Remember:** Every dataset tells a story. Now you have the tools to read it!
+1. **Know what you're holding.** One name in `[ ]` gives you a Series; a list in `[[ ]]` gives you a DataFrame — and they don't share the same toolkit.
+2. **Subset first, then analyze.** Narrow to the rows and columns that matter, *then* ask your questions of that subset.
 :::
 
 # Thursday's Lab Preview {background="#43464B"}
@@ -927,20 +1023,6 @@ print(f"Seat range: {embraer_recent['seats'].min()} to {embraer_recent['seats'].
 
 **Come prepared with questions about anything that felt confusing today!**
 
-## Connection to Your Reading
-
-**Before Thursday, read:**
-
-- **Chapter 7**: Importing Data (file paths, data types)
-- **Chapter 8**: DataFrames deep dive (Series, indexing)  
-- **Chapter 9**: Subsetting (filtering, selection)
-
-**Why read after class?** 
-
-- Reinforce what you learned today
-- See additional examples and details
-- Prepare for more advanced techniques
-
 ## Any Final Questions? 🙋‍♀️ {.smaller}
 
 **About today's concepts:**
@@ -948,21 +1030,6 @@ print(f"Seat range: {embraer_recent['seats'].min()} to {embraer_recent['seats'].
 - Data importing or file paths?
 - DataFrame vs Series confusion?
 - Filtering or selection techniques?
-
-**About Thursday's lab:**
-
-- What to expect?
-- How to prepare?
-
-**About homework or projects:**
-
-- Real estate dataset analysis?
+- About Thursday's lab?
+- Questions from last week's homework assignment?
 - Upcoming assignments?
-
----
-
-<center>
-**You're now equipped to investigate any dataset!**
-
-**See you Thursday for hands-on detective training! 🔍**
-</center>
