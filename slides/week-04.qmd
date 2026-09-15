@@ -27,72 +27,76 @@ execute:
 
 ## Welcome to Week 4
 
-* Quick overview of today's plan:
+**Today's plan:**
 
-  * Discuss last week's homework & content
-  * Load & explore the Complete Journey datasets
-  * Brainstorm analysis questions
-  * Manipulating Data (15–20 min)
-  * Summarizing Data (15–20 min)
-  * Joining Data (15–20 min)
+- Week 3 questions
+- Meet the Complete Journey data
+- **Manipulating** data
+- **Summarizing** data
+- **Joining** data
 
-# Discussion: Homework & Questions {background="#43464B"}
+## Questions from Week 3? {.smaller}
 
-## Questions from Week 3?
+::: {.callout}
+## Share with the Class
 
-* DataFrames vs. Series?
-* Subsetting procedures?
-* Anything confusing in the quiz or class lab?
-* Time to ask!
+**Open floor for questions about:**
 
-# Complete Journey Data {background="#43464B"}
-
-## Intro Activity – Load the Data {.smaller .scrollable}
-
-::: {.callout-important}
-## Follow along
-
-Open up Colab and load the Complete Journey data: [tinyurl.com/bana4080-wk4-lecture](https://tinyurl.com/bana4080-wk4-lecture)
+- DataFrames vs. Series
+- Selecting columns, filtering rows, and `.loc[]`
+- The homework, quiz, or last Thursday's lab
 :::
 
+::: {.callout-tip}
+## Stuck on a homework problem?
+
+Let me know which one — we can work through it together in Thursday's lab.
+:::
+
+## 📓 Follow Along in the Notebook
+
+::: {.callout-tip}
+## Week 4 Lecture Notebook
+
+Open the companion notebook in Colab now and follow along as we work through today's examples on manipulating, summarizing, and joining data.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-04-lecture.ipynb)
+:::
+
+## Meet the Complete Journey Data {.smaller}
 
 :::: {.columns}
 ::: {.column}
-![](images/cj_data_relationships.png){width="80%"}
-:::
-::: {.column}
-
-<br>
+**One year** of real grocery purchases from **2,000+ households**, spread across **several related tables**.
 
 ```{python}
-# you may need to pip install first
-# !pip install completejourney-py
-
+# !pip install completejourney-py   # Colab only
 from completejourney_py import get_data
 
-# Load all datasets
 cj_data = get_data()
 cj_data.keys()
 ```
 
+Docs: [bit.ly/completejourney_py](https://bit.ly/completejourney_py)
+:::
+::: {.column}
+![](images/cj_data_relationships.png){width="90%"}
 :::
 ::::
 
-::: {.callout-note}
-Complete Journey Docs: [bit.ly/completejourney_py](https://bit.ly/completejourney_py)
-:::
-
 ## Small Group Brainstorm {.smaller}
-
-In your group, come up with 2–3 questions you’d like to answer using these datasets. Think about business insights a grocery retailer might want.
 
 :::: {.columns}
 ::: {.column width="70%"}
 
+In your group:
+
+1. Browse the **datasets** available in Complete Journey: [Complete Journey dataset guide](https://cunningjames.github.io/completejourney_py/user-guide/datasets/)
+2. Come up with **2–3 questions** a grocery retailer would want answered with this data.
+
 Example questions:
 
 - What income level is buying the most?
-- Do families with kids spend more than families without kids?
 - Which department and product is the most commonly purchased?
 - Which coupon was used the most?
 
@@ -101,11 +105,11 @@ Example questions:
 
 <center>
 
-<div id="5minWaiting"></div>
+<div id="5minBrainstorm"></div>
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("5minWaiting", 300, "slide"); 
+        initializeTimer("5minBrainstorm", 300, "slide");
     });
 </script>
 </center>
@@ -113,769 +117,623 @@ Example questions:
 :::
 ::::
 
-Then we’ll take a few responses...
-
-## From Questions to Analysis {.smaller}
-
-A lot of the insights you’ve just brainstormed will require:
-
-- **Manipulating & wrangling data** to prepare it for analysis  
-    - Cleaning up column names for clarity  
-    - Creating new columns based on existing ones  
-- **Aggregating data**  
-    - Summarizing at different levels (by product, by customer, by time)  
-    - Computing summary statistics  
-- **Joining datasets**  
-    - Combining related tables to get a complete picture  
-
-<br>
-
-::: {.callout}
-💡 **And that’s exactly what we’re going to cover this week!**
-:::
-
 # Manipulating Data {background="#43464B"}
 
-## Why Is This Important? {.smaller}
+## 🎯 What Would You Fix? {.smaller}
 
-- Data rarely comes perfectly ready for analysis.
-- Column names might be unclear or inconsistent.
-- Some columns might not be needed at all.
-- You might need to create new columns from existing ones.
-- **Clean, well-structured data = easier, faster, and more accurate analysis.**
+:::: {.columns}
+::: {.column width="70%"}
 
-## Messy Data {.smaller}
-
-Our complete journey data is not too bad; however, let's look at this raw Ames data.
-
-[What do you notice?]{.mark}
+Real data rarely arrives ready for analysis. Import the raw Ames housing data in your notebook:
 
 ```{python}
 import pandas as pd
 
-ames = pd.read_csv("../data/ames_raw.csv")
-ames.head()
+url = "https://raw.githubusercontent.com/bradleyboehmke/uc-bana-4080/main/data/ames_raw.csv"
+ames = pd.read_csv(url)
 ```
 
-## Examples from Our Data {.smaller}
+Spend a couple of minutes looking through it with your Week 3 tools — `.head()`, `.columns`, `.info()`, `.describe()`.
 
-<br>
+**What would you want to change before you start an analysis?**
 
-- Columns differ (`Order`, `MS SubClass`, `SalePrice`) - might want to standardize.
-- Do we really need all these columns (`Order`, `PID`) - might want to drop irrelevant ones.
-- Could we add new columns (`price_per_sqft`)
-- We've got missing values - (houses without pools or misc features)
-
-## Renaming Columns {.smaller}
-
-We can easily `rename` specific columns
-
-:::: {.columns}
-::: {.column}
-* Use `rename` to rename certain columns
-* Feed it `dict` with {`old`: `new`} pairings
-* Note the use of `inplace=True`
-
-::: {.callout-caution}
-Great, but we have 82 columns!
 :::
-:::
-::: {.column}
-```{python}
-ames.rename(columns={
-    'MS SubClass': 'ms_subclass',
-    'MS Zoning': 'ms_zoning'
-    }, inplace=True)
+::: {.column width="30%"}
 
-ames.head()
-```
+<center>
+
+<div id="2minWhatToFix"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("2minWhatToFix", 120, "slide");
+    });
+</script>
+</center>
+
 :::
 ::::
 
-## Reformatting Many Columns {.smaller}
+## Four Common Data Issues {.smaller .scrollable}
 
-😳
+::: {.callout-note}
+Datasets can be messy in **many** different ways. Today we'll illustrate **four common data issues** you'll often need to address.
+:::
+
+1. **Inconsistent column names** — `MS SubClass`, `SalePrice`, `Year Remod/Add`
+2. **Columns we don't need** — `Order`, `PID`
+3. **Metrics that don't exist yet** — price per square foot?
+4. **Missing values** — lots of `NaN`
 
 ```{python}
-(
-  ames.columns
-  .str.lower()               # convert to lowercase
-  .str.replace(' ', '_')     # replace spaces with underscores
-  .str.replace('-', '_')     # replace hyphens with underscores
-  .str.strip()               # strip out extra leading/ending spaces
-)
+ames.head()
 ```
 
-## Reformatting Many Columns {.smaller}
+## Cleaning Up Column Names {.smaller}
 
-😎
+:::: {.columns}
+::: {.column}
+**A few columns** → `rename()` with an `{old: new}` dict
+
+```{python}
+ames = ames.rename(columns={
+    'MS SubClass': 'ms_subclass',
+    'MS Zoning': 'ms_zoning'
+})
+ames.columns[:5]
+```
+:::
+::: {.column}
+**All 82 columns** → `.str` methods on `.columns`
 
 ```{python}
 ames.columns = (
-  ames.columns.
-  str.lower()               # convert to lowercase
-  .str.replace(' ', '_')    # replace spaces with underscores
-  .str.replace('-', '_')    # replace hyphens with underscores
-  .str.strip()              # strip out extra leading/ending spaces
+    ames.columns
+    .str.lower()               # lowercase
+    .str.replace(' ', '_')     # spaces  -> underscores
+    .str.replace('/', '_')     # slashes -> underscores
 )
-
-ames.head()
+ames.columns[:5]
 ```
-
-## Dropping Columns {.smaller}
-
-Last week we learned how to select columns of interest.
-
-But we may also want to invert that thinking and just [drop columns of disinterest]{.mark}!
-
-. . .
-
-<br>
-
-:::: {.columns}
-::: {.column}
-
-**Selecting columns of interest**
-
-```{python}
-cols = ['gr_liv_area', 'saleprice', 'overall_qual']
-
-ames[cols].head()
-```
-
-:::
-::: {.column}
-**Dropping columns of disinterest**
-
-```{python}
-cols = ['order', 'pid', 'ms_subclass']
-
-ames.drop(columns=cols, inplace=True)
-ames.head()
-```
-
 :::
 ::::
-
-## Adding/Modifying New Columns {.smaller}
-
-Why we might do this:
-
-- To create **new metrics** that don’t exist in the raw data (e.g., `price_per_sqft`, `unit_price`).
-- To **transform existing data** into a more useful format (e.g., converting grams to pounds).
-- To **transform values** (e.g., months `1`, `2`, `3` → `"Jan"`, `"Feb"`, `"Mar"`).
-  
-## Adding/Modifying New Columns {.smaller}
-
-Why we might do this:
-
-- [To create **new metrics** that don’t exist in the raw data (e.g., `price_per_sqft`, `unit_price`).]{.mark}
-- To **transform existing data** into a more useful format (e.g., converting grams to pounds).
-- To **transform values** (e.g., months `1`, `2`, `3` → `"Jan"`, `"Feb"`, `"Mar"`).
-
-
-```{python}
-# Create a price per sqft column
-ames['price_per_sqft'] = ames['saleprice'] / ames['gr_liv_area']
-
-ames.head()
-```
-
-## Adding/Modifying New Columns {.smaller}
-
-Why we might do this:
-
-- To create **new metrics** that don’t exist in the raw data (e.g., `price_per_sqft`, `unit_price`).
-- To **transform existing data** into a more useful format (e.g., converting grams to pounds).
-- [To **transform values** (e.g., months `1`, `2`, `3` → `"Jan"`, `"Feb"`, `"Mar"`).]{.mark}
-
-
-```{python}
-# dict containing mapping of {old values: new values}
-months = {
-    1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 
-    7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'
-}
-
-# use map function to apply changes to a column
-ames['mo_sold'] = ames['mo_sold'].map(months)
-ames.head()
-```
-
-
-## Handling Missing Values {.smaller}
-
-We can always check for missing values with `isnull()`.
-
-```{python}
-ames.isnull().sum().sort_values(ascending=False)
-```
-
-. . .
-
-
-
-- Understanding *why* data is missing helps choose the right strategy to handle it.
-- Different causes of missingness require different approaches.
 
 ::: {.callout-warning}
-Why are there so many pool quality (`pool_qc`) values missing?
+## Assign it back — or nothing changes
+
+pandas methods **return a new result**; they don't change `ames` on their own. Running `ames.rename(...)` by itself prints a renamed copy and throws it away. That's why every example today starts with `ames = ...` or `ames.columns = ...`.
+:::
+
+## Selecting vs. Dropping Columns {.smaller}
+
+Last week you **selected** the columns you wanted. Sometimes it's easier to **drop** the ones you don't.
+
+:::: {.columns}
+::: {.column}
+**Keep columns of interest**
+
+```{python}
+cols = ['neighborhood', 'gr_liv_area', 'saleprice']
+ames[cols].head(3)
+```
+:::
+::: {.column}
+**Drop columns of disinterest**
+
+```{python}
+ames = ames.drop(columns=['order', 'pid'])
+ames.shape
+```
+:::
+::::
+
+::: {.callout-tip}
+Rule of thumb: keeping a **few** columns → select. Removing a **few** columns → drop.
+:::
+
+## Creating New Columns {.smaller}
+
+:::: {.columns}
+::: {.column}
+**Build a new metric** from existing columns
+
+```{python}
+ames['price_per_sqft'] = (
+    ames['saleprice'] / ames['gr_liv_area']
+)
+
+ames[['saleprice', 'gr_liv_area', 'price_per_sqft']].head(3)
+```
+:::
+::: {.column}
+**Translate values** with `.map()` and a dict
+
+```{python}
+months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr',
+          5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug',
+          9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'}
+
+ames['month_sold'] = ames['mo_sold'].map(months)
+ames[['mo_sold', 'month_sold']].head(3)
+```
+:::
+::::
+
+::: {.callout-note}
+The pattern is always the same: **`df['new_col'] = <something computed from other columns>`**.
 :::
 
 ## Handling Missing Values {.smaller}
 
 :::: {.columns}
 ::: {.column}
+**Step 1 — Find it**
+
 ```{python}
-ames[['pool_area', 'pool_qc']].head()
+ames.isnull().sum().sort_values(ascending=False).head()
 ```
 
-<br>
+**Step 2 — Ask *why*.** 2,917 homes are missing `pool_qc`... and 2,917 homes have a `pool_area` of 0.
+:::
+::: {.column}
+**Step 3 — Fill it with what it actually means**
 
 ```{python}
+ames['pool_qc'] = ames['pool_qc'].fillna('no pool')
 ames['pool_qc'].value_counts()
+```
+:::
+::::
+
+::: {.callout-important}
+Missing isn't always an error. Here `NaN` means *"there's no pool"* — so the right fix is a label, not a deleted row or a made-up average. **Understand why data is missing before you decide how to handle it.**
+:::
+
+## 🎯 Your Turn: Clean It Up {.smaller}
+
+:::: {.columns}
+::: {.column width="70%"}
+
+Back to Complete Journey. In your notebook:
+
+1. In `products`, create a `clean_category` column: `product_category` in **lowercase** with spaces replaced by **underscores**.
+    - *Optional:* some products are missing a category. See if you can fill these in with `"unknown"`.
+2. In `transactions`, create a `unit_price` column: `sales_value` divided by `quantity`.
+3. Sort `transactions` by `unit_price`, highest first. **What looks strange?**
+
+```python
+products = cj_data['products']
+transactions = cj_data['transactions']
 ```
 
 :::
-::: {.column}
-```{python}
-ames['pool_qc'].fillna('no pool', inplace=True)
-ames[['pool_area', 'pool_qc']].head()
-```
+::: {.column width="30%"}
 
-<br>
+<center>
 
-```{python}
-ames[['pool_qc']].value_counts()
-```
+<div id="5minCleanUp"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("5minCleanUp", 300, "slide");
+    });
+</script>
+</center>
 
 :::
 ::::
 
-## 🧑‍💻 Code With Me: Clean Product Names {.smaller .scrollable}
+## Your Turn Solutions 🎯 {.smaller .scrollable}
 
-**Business Question:** Our marketing team wants cleaner product category names for their dashboard. Can we standardize the Complete Journey product categories?
+**1 — Chain `.str` methods on a column, then assign the result to a new column:**
 
 ```{python}
-# Load the products data
-products = cj_data["products"]
-products['product_category'].value_counts()
-```
+products = cj_data['products']
 
-. . .
-
-**Your turn:** Help me clean these category names by:
-
-1. Converting to lowercase
-2. Replacing spaces/hyphens with underscores  
-3. Creating a new column called `clean_category`
-
-```python
-# Fill in the blanks together!
 products['clean_category'] = (
     products['product_category']
-    .str.______()                    # convert to lowercase
-    .str.replace(' ', '_')           # replace spaces
-    .str.replace(__, __)             # replace hyphens
+    .str.lower()
+    .str.replace(' ', '_')
 )
-
-products[['product_category', 'clean_category']].head()
+products[['product_category', 'clean_category']].head(3)
 ```
 
-## 🧑‍💻 Code With Me: Create Business Metrics {.smaller .scrollable}
-
-**Business Question:** Our analytics team wants to calculate unit prices to identify premium vs budget products.
+**Optional — fill the missing categories.** `.fillna()` is just one more link in the chain:
 
 ```{python}
-# Let's look at our transaction data
-transactions = cj_data["transactions"]
-transactions[['sales_value', 'quantity']].head()
+products['clean_category'] = (
+    products['product_category']
+    .str.lower()
+    .str.replace(' ', '_')
+    .fillna('unknown')
+)
+print(f"Missing categories filled: {products['product_category'].isnull().sum()}")
+products[['product_category', 'clean_category']].head(3)
 ```
 
 . . .
 
-**Your turn:** Help me create a `unit_price` column:
+**2 & 3 — Compute, then sort:**
 
-```python
-# Fill in the blanks together!
-transactions['unit_price'] = transactions['_______'] / transactions['_______']
+```{python}
+transactions = cj_data['transactions']
 
-# Let's see which products have the highest unit prices
-transactions[['product_id', 'sales_value', 'quantity', 'unit_price']].head()
+transactions['unit_price'] = transactions['sales_value'] / transactions['quantity']
+transactions.sort_values('unit_price', ascending=False)[['product_id', 'sales_value', 'quantity', 'unit_price']].head(3)
 ```
+
+::: {.callout-warning}
+**`inf`?** Some transactions have a `quantity` of **0**, and dividing by zero gives infinity. The code ran fine — the *data* surprised us. Always sanity-check a new column before you build an analysis on it.
+:::
 
 # Summarizing Data {background="#43464B"}
 
-## Why Is This Important? 
+## From Rows to Answers {.smaller}
 
-- Raw data often contains **many individual records** that need to be condensed for analysis.
-- Summaries reveal **patterns and trends** that are hard to spot in row-level data.
-- Many business questions are **aggregate in nature**:
-    - Total sales by product category
-    - Average spend per customer
-    - Most frequent coupon usage
+`transactions` has **1.4 million rows**. Nobody wants to read them — they want answers:
 
-## Simple Aggregation {.smaller}
-
-Last week we saw how we can compute various summary stats for a given column:
-
-```{python}
-avg_price = ames['saleprice'].mean()
-print(f"Avg Sale Price: ${avg_price:,.2f}")
-```
-
-<br>
-
-```{python}
-min_ppsqft = ames['price_per_sqft'].min()
-max_ppsqft = ames['price_per_sqft'].max()
-print(f"Min & Max Price per Sqft: ${min_ppsqft:,.2f} - ${max_ppsqft:,.2f}")
-```
-
-. . .
-
-<br>
-
-We can even get summary stats for multiple columns:
-
-```{python}
-cols = ['gr_liv_area', 'saleprice', 'price_per_sqft']
-ames[cols].mean()
-```
-
-
-## Multiple Aggregations {.smaller}
-
-But, when we want to get more complicated and get:
-
-* Multiple stats for different columns and...
-* Multiple types of stats per column
-
-Then we should start using `.aggregate()` / `.agg()`
-
-. . .
-
-:::: {.columns}
-::: {.column}
-
-```{python}
-ames.aggregate({
-    'saleprice': ['mean', 'median'],
-    'price_per_sqft': ['mean', 'min', 'max']
-})
-```
-
-:::
-::: {.column}
-```{python}
-ames.agg({
-    'saleprice': ['mean', 'median'],
-    'price_per_sqft': ['mean', 'min', 'max']
-})
-```
-:::
-::::
-
-## Group-level Aggregations {.smaller}
-
-That's great and all but in many real-world analyses, we’re interested in **summarizing within groups** rather than across the whole dataset.
-
-* Total home sales by neighborhood
-* Average square footage by number of bedrooms
-* Median sale price by year
-* Maximum temperature by month
+- What are total sales?
+- Which households spend the most?
+- Which stores bring in the most revenue?
 
 ![](images/summarizing-by-groups.png){fig-align="center"}
 
+::: {.callout-note}
+Most business questions are **aggregate** questions — they collapse many rows into a few numbers, often **one number per group**.
+:::
+
+## Summarizing the Whole Table {.smaller}
+
+:::: {.columns}
+::: {.column}
+**One statistic, one column**
+
+```{python}
+total_sales = transactions['sales_value'].sum()
+print(f"Total sales: ${total_sales:,.2f}")
+```
+:::
+::: {.column}
+**Several statistics, several columns** → `.agg()`
+
+```{python}
+transactions.agg({
+    'sales_value': ['sum', 'mean'],
+    'quantity': ['sum', 'max']
+})
+```
+:::
+::::
+
+::: {.callout-tip}
+`.agg()` takes a dict of **`{column: statistic(s)}`**. Common statistics: `'sum'`, `'mean'`, `'median'`, `'min'`, `'max'`, `'count'`, `'nunique'`.
+:::
+
 ## The Groupby Model {.smaller}
 
-Grouped aggregation in Pandas always follows the same three-step process:
+Grouped aggregation always follows the same three steps: **split** the rows into groups, **apply** a summary to each group, **combine** the results into a new DataFrame.
 
-1. Group the data using groupby()
-2. Apply a summary method like .sum(), .agg(), or .describe()
-3. Return a DataFrame of group-level summaries
-
-![](images/model-for-grouped-aggs.png){fig-align="center"}
-
-## Avg Sale Price By Neighborhood {.smaller}
+![](images/model-for-grouped-aggs.png){fig-align="center" width="70%"}
 
 ```{python}
-(
-  ames.
-  groupby('neighborhood', as_index=False).
-  agg({'saleprice': ['mean', 'median']})
-)
+transactions.groupby('store_id', as_index=False).agg({'sales_value': 'sum'}).head(3)
 ```
 
-## Group-by Multiple Variables {.smaller}
+## Group → Aggregate → Sort {.smaller}
+
+**Business Question:** Who are our top 5 households by total spend — and how many shopping trips did it take them?
 
 ```{python}
-(
-  ames.
-  groupby(['neighborhood', 'mo_sold'], as_index=False).
-  agg({'saleprice': 'mean'})
-)
-```
-
-## Get Familiar!
-
-::: {.callout-important}
-We can answer so many typical business questions with just this skillset!
-:::
-
-## 🧑‍💻 Code With Me: Top Revenue Products {.smaller .scrollable}
-
-**Business Question:** Which products generate the most revenue? Our merchandising team needs this for inventory planning.
-
-```{python}
-# Let's look at our transaction data
-transactions = cj_data["transactions"]
-transactions[['product_id', 'sales_value', 'quantity']].head()
-```
-
-. . .
-
-**Your turn:** Help me find the top revenue-generating products:
-
-```python
-# Fill in the blanks together!
-product_revenue = (
-    transactions
-    .groupby('_______', as_index=False)
-    .agg({'sales_value': '_______'})
-    .sort_values('sales_value', ascending=False)
-)
-
-product_revenue.head(10)
-```
-
-## 🧑‍💻 Code With Me: Store Performance {.smaller}
-
-**Business Question:** Which stores are performing best? Our operations team wants to understand store-level performance.
-
-```{python}
-# Look at store information in our transactions
-transactions['store_id'].value_counts().head()
-```
-
-. . .
-
-**Your turn:** Help me compare total sales and transaction counts by store:
-
-```python
-# Fill in the blanks together!
-store_performance = (
-    transactions
-    .groupby('_______', as_index=False)
-    .agg({
-        'sales_value': ['_______', '_______'],  # sum, mean
-        'basket_id': '_______'                  # count (for # of transactions)
-    })
-)
-
-store_performance.head()
-```
-
-# Joining Data {background="#43464B"}
-
-## Complete Journey {.smaller}
-
-Think back to your brainstorm from earlier - Which of your group’s questions require **information from more than one dataset**?
-
-:::: {.columns}
-::: {.column}
-
-<br>
-
-- Comparing spend by income level → needs `transactions` + `demographics`.
-- Most commonly purchased product → needs `transactions` + `products`.
-- Most used coupons on products → needs `coupon_redemptions` + `coupons`.
-:::
-::: {.column}
-![](images/cj_data_relationships.png){width="80%"}
-:::
-::::
-
-
-## Joining Data {.smaller}
-
-::: {.callout-important}
-Most organizations store data **in separate tables** for:
-
-- Storage efficiency
-- Different data collection processes
-- Security and access control
-
-Being able to **combine datasets** is essential to answer more complex questions and see the bigger picture.
-:::
-
-## The Importance of Keys {.smaller}
-
-- **Keys** are the columns used to match rows between two datasets.  
-
-. . .
-
-:::: {.columns}
-::: {.column}
-- Without a **reliable, unique key**, joins may:
-    - Fail to match rows (missing data)
-    - Match incorrectly (wrong data)
-    - Duplicate rows unexpectedly
-
-
-**In the Complete Journey data:**
-
-- `household_id` connects **transactions** with **demographics**
-- `product_id` connects **transactions** with **products**
-- `coupon_upc` connects **coupons** with **coupon_redemptions**
-:::
-::: {.column}
-![](images/cj_data_relationships.png){width="80%"}
-:::
-::::
-
-## The Importance of Keys {.smaller}
-
-- **Keys** are the columns used to match rows between two datasets.  
-
-:::: {.columns}
-::: {.column}
-**Good key characteristics:**
-
-- **Consistent naming** across datasets
-- **Same data type** in both tables (e.g., both are integers or strings)
-- **Unique values** when needed (e.g., a `customer_id` in a customer table)
-- **Stable over time** (values don’t change)
-:::
-::: {.column}
-![](images/cj_data_relationships.png){width="80%"}
-:::
-::::
-
-## Types of Joins {.smaller}
-
-There are 4 primary types of joins you'll read about this week:
-
-:::: {.columns}
-::: {.column}
-- **Inner join** 
-- **Left join**   
-- **Right join** 
-- **Outer join**
-:::
-::: {.column}
-:::
-::::
-
-## Types of Joins {.smaller}
-
-There are 4 primary types of joins you'll read about this week:
-
-:::: {.columns}
-::: {.column}
-- **Inner join** → Only rows with matching keys in both tables 
-- Left join   
-- Right join
-- Outer join
-:::
-::: {.column}
-![](images/join-inner.png)
-:::
-::::
-
-## Types of Joins {.smaller}
-
-There are 4 primary types of joins you'll read about this week:
-
-:::: {.columns}
-::: {.column}
-- Inner join 
-- **Left join** → All rows from left table, matching from right  
-- Right join
-- Outer join
-:::
-::: {.column}
-![](images/join-left.png)
-:::
-::::
-
-## Types of Joins {.smaller}
-
-There are 4 primary types of joins you'll read about this week:
-
-:::: {.columns}
-::: {.column}
-- Inner join
-- Left join   
-- **Right join** → All rows from right table, matching from left  
-- Outer join
-:::
-::: {.column}
-![](images/join-right.png)
-:::
-::::
-
-## Types of Joins {.smaller}
-
-There are 4 primary types of joins you'll read about this week:
-
-:::: {.columns}
-::: {.column}
-- Inner join 
-- Left join   
-- Right join
-- **Outer join** → All rows from both tables
-:::
-::: {.column}
-![](images/join-outer-full.png)
-:::
-::::
-
-## Pandas `merge()` Basics {.smaller}
-
-We use `merge()` to join datasets.
-
-:::: {.columns}
-::: {.column}
-```python
-pd.merge(
-  left_df,          # left DF
-  right_df,         # right DF
-  on='key_column',  # column(s) to join on
-  how='inner'       # type of join
-  )      
-```
-:::
-::: {.column}
-```python
-(
-  left_df.               # start with left DF
-  merge(right_df,        # right DF
-        on='key_column', # column(s) to join on
-        how='inner'      # type of join
-        )           
-)
-```
-:::
-::::
-
-
-<br>
-
-::: {.callout-note}
-Two general approaches your see. Either is fine.
-:::
-
-## Example {.smaller}
-
-> What is the total sales value for the top 10 selling products?
-
-<br>
-
-```{python}
-transactions = cj_data["transactions"]
-products = cj_data["products"]
-
 (
     transactions
-    .merge(products, how='inner', on='product_id')
-    .groupby(['product_id', 'product_category'], as_index=False)
+    .groupby('household_id', as_index=False)
+    .agg({'sales_value': 'sum', 'basket_id': 'nunique'})
+    .rename(columns={'basket_id': 'n_baskets'})
+    .nlargest(5, 'sales_value')
+)
+```
+
+::: {.callout-tip}
+- `'nunique'` counts **distinct** baskets — a basket with 20 items is still **one** trip.
+- The result is a *count* of baskets, not a basket ID — so `.rename()` it to say what it holds.
+- Want a group for every combination of two columns? Pass a list: `.groupby(['household_id', 'store_id'])`.
+- `as_index=False` keeps the group labels as a normal column instead of the index.
+:::
+
+## 🎯 Your Turn: Summarize It {.smaller}
+
+:::: {.columns}
+::: {.column width="70%"}
+
+Using `transactions`:
+
+1. Find the **top 10 products** (`product_id`) by **total** `sales_value`.
+2. For each **store**, compute **total sales** and the **number of unique baskets**. Which store brings in the most revenue?
+3. Look back at your answer to #1. **Anything surprising about the #1 product?**
+
+:::
+::: {.column width="30%"}
+
+<center>
+
+<div id="5minSummarize"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("5minSummarize", 300, "slide");
+    });
+</script>
+</center>
+
+:::
+::::
+
+## Your Turn Solutions 🎯 {.smaller .scrollable}
+
+:::: {.columns}
+::: {.column}
+**1 — Top 10 products**
+
+```{python}
+(
+    transactions
+    .groupby('product_id', as_index=False)
     .agg({'sales_value': 'sum'})
     .nlargest(10, 'sales_value')
 )
 ```
-
-## 🧑‍💻 Code With Me: Customer Demographics Analysis {.smaller .scrollable}
-
-**Business Question:** Do families with kids spend more than families without kids? Our marketing team wants to target family-friendly promotions.
+:::
+::: {.column}
+**2 — Store performance**
 
 ```{python}
-# Let's explore what we have
-transactions = cj_data["transactions"]
-demographics = cj_data["demographics"] 
-
-demographics[['household_id', 'kids_count']].head()
-```
-
-. . .
-
-**Your turn:** Help me join transactions with demographics:
-
-```python
-# Fill in the blanks together!
-family_data = (
+(
     transactions
-    .merge(demographics, on='_______', how='_______')
+    .groupby('store_id', as_index=False)
+    .agg({'sales_value': 'sum', 'basket_id': 'nunique'})
+    .rename(columns={'basket_id': 'n_baskets'})
+    .sort_values('sales_value', ascending=False)
+    .head()
 )
-
-family_data[['household_id', 'sales_value', 'kids_count']].head()
 ```
+:::
+::::
 
-## 🧑‍💻 Code With Me: Family Spending Analysis {.smaller}
+. . .
 
-**Continuing our analysis:** Now let's compare average spending by family type.
+::: {.callout-important}
+**3 — Product `6534178` brings in about 10× more than any other product.** So... what *is* it?
+
+`transactions` can't tell us — it only stores the ID. The product details live in a **different table**.
+:::
+
+# Joining Data {background="#43464B"}
+
+## What Is Product 6534178? {.smaller}
+
+:::: {.columns}
+::: {.column}
+Organizations store data in **separate tables** — it's more efficient, and different teams collect different pieces.
+
+To answer a question that spans tables, we join them on a **key**: a column that appears in both.
+
+- `product_id` → **transactions** + **products**
+- `household_id` → **transactions** + **demographics**
+- `coupon_upc` → **coupons** + **coupon_redemptions**
+
+::: {.callout-warning}
+A key needs the **same meaning and the same data type** in both tables — otherwise rows fail to match, or match wrong.
+:::
+:::
+::: {.column}
+![](images/cj_data_relationships.png){width="90%"}
+:::
+::::
+
+## Four Types of Joins {.smaller}
+
+The join type decides **what happens to rows that don't find a match**.
+
+:::: {.columns}
+::: {.column}
+**Inner** — only rows with a match in **both** tables
+
+![](images/join-inner.png){width="75%"}
+
+**Right** — **all** rows from the right table, matches from the left
+
+![](images/join-right.png){width="75%"}
+:::
+::: {.column}
+**Left** — **all** rows from the left table, matches from the right
+
+![](images/join-left.png){width="75%"}
+
+**Outer** — **all** rows from **both** tables
+
+![](images/join-outer-full.png){width="75%"}
+:::
+::::
+
+## Joining with `.merge()` {.smaller .scrollable}
 
 ```python
-# Fill in the blanks together!
-family_spending = (
-    family_data
-    .groupby('_______', as_index=False)
-    .agg({'sales_value': ['_______', '_______', 'count']})  # mean, sum
+# how = 'inner', 'left', 'right', or 'outer'
+left_df.merge(right_df, on='key_column', how='inner')
+```
+
+::: {.callout-tip}
+`pd.merge(left_df, right_df, on='key_column', how='inner')` does the same thing — you'll see both.
+:::
+
+. . .
+
+**Mystery solved:** summarize first, then join on the product details.
+
+```{python}
+top_products = (
+    transactions
+    .groupby('product_id', as_index=False)
+    .agg({'sales_value': 'sum'})
+    .nlargest(5, 'sales_value')
 )
 
-family_spending
+product_info = products[['product_id', 'department', 'product_type']]
+top_products.merge(product_info, on='product_id', how='left')
+```
+
+::: {.callout-important}
+Four of our top five "products" are **gasoline** — the kiosk at the store. Our real grocery best seller is a gallon of milk. **A join turned an ID into an insight.**
+:::
+
+## 🎯 Predict It {.smaller}
+
+:::: {.columns}
+::: {.column width="70%"}
+
+- `transactions` has **1,469,307** rows from **2,469** households.
+- `demographics` has one row for each of **801** households.
+
+If we join them on `household_id`, **how many rows come back?**
+
+1. With an **inner** join?
+2. With a **left** join (`transactions` on the left)?
+
+**Write down your guesses — then run both in your notebook.**
+
+:::
+::: {.column width="30%"}
+
+<center>
+
+<div id="2minPredict"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("2minPredict", 120, "slide");
+    });
+</script>
+</center>
+
+:::
+::::
+
+## The Join Type Changes Your Data {.smaller}
+
+```{python}
+demographics = cj_data['demographics']
+
+inner = transactions.merge(demographics, on='household_id', how='inner')
+left = transactions.merge(demographics, on='household_id', how='left')
+
+print(f"transactions: {len(transactions):,} rows")
+print(f"inner join:   {len(inner):,} rows")
+print(f"left join:    {len(left):,} rows  ({left['age'].isnull().sum():,} with no demographics)")
 ```
 
 . . .
 
-**Discussion:** What does this tell us about family spending patterns?
+::: {.callout-important}
+Only 801 of 2,469 households filled out a demographic survey.
+
+- **Inner** quietly drops more than **40%** of all transactions.
+- **Left** keeps every transaction, but fills the missing demographics with `NaN`.
+
+Neither one is wrong — but **you** have to choose, and know what you've chosen, before you summarize.
+:::
+
+## 🎯 Your Turn: Join It {.smaller}
+
+:::: {.columns}
+::: {.column width="70%"}
+
+**Business Question:** Our marketing team wants to know which **age group** spends the most.
+
+1. Join `transactions` and `demographics`. Which join type makes sense here?
+2. For each `age` group, compute **total sales** and the **number of unique households**.
+3. **Bonus:** add a `spend_per_household` column. Does the same age group still come out on top?
+
+:::
+::: {.column width="30%"}
+
+<center>
+
+<div id="5minJoin"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("5minJoin", 300, "slide");
+    });
+</script>
+</center>
+
+:::
+::::
+
+## Your Turn Solution 🎯 {.smaller .scrollable}
+
+**Join → group → aggregate** — then use last hour's skill to build a new column:
+
+```{python}
+age_spend = (
+    transactions
+    .merge(demographics, on='household_id', how='inner')
+    .groupby('age', as_index=False)
+    .agg({'sales_value': 'sum', 'household_id': 'nunique'})
+    .rename(columns={'household_id': 'n_households'})
+)
+
+age_spend['spend_per_household'] = age_spend['sales_value'] / age_spend['n_households']
+age_spend.sort_values('spend_per_household', ascending=False)
+```
+
+. . .
+
+::: {.callout-important}
+**45–54 spends the most in total — but they're also the biggest group.** Per household, **35–44** comes out on top.
+
+Total vs. per-household is exactly the kind of decision that changes a marketing recommendation. Every step today — **manipulate, summarize, join** — played a part in getting there.
+:::
 
 # Let's Wrap This Up {background="#43464B"}
 
-## Recap: What Did We Learn?
+## 🧾 What You Learned {.smaller .scrollable}
 
-* Why clean, well-structured data matters for reliable analysis
-* **Manipulating Data:** rename/add/drop columns; handle missing values
-* **Summarizing Data:** `describe()`, `groupby()`, and aggregations
-* **Joining Data:** combine related tables with `merge()` (inner/left/right/outer)
-* Used the **Ames Housing Data** and **Complete Journey** datasets to anchor real questions
-
-## 🧾 Quick Reference {.smaller}
-
-| Task                                  | Syntax Example                                                                 |
-| ------------------------------------- | ------------------------------------------------------------------------------ | 
-| Rename columns                        | `df.rename(columns={"old":"new"}, inplace=True)`                               | 
-| Create a new column                   | `df["unit_price"] = df["sales_value"] / df["quantity"]`                        | 
-| Drop column(s)                        | `df.drop(columns=["col1","col2"], inplace=True)`                               | 
-| Fill missing values                   | `df["col"].fillna(0, inplace=True)`                                            | 
-| Group and single aggregation          | `df.groupby("dept")["sales_value"].sum()`                                      | 
-| Group with multiple aggregations      | `df.groupby("dept").agg({"sales_value":["sum","mean"], "quantity":"sum"})`     | 
-| Sort results                          | `df.sort_values(["sales_value"], ascending=False)`                             | 
-| Most frequent items                   | `df["product_id"].value_counts()`                                     | 
-| Join two tables (inner)               | `pd.merge(left_df, right_df, on="key", how="left)`                              |
-
-## Key Takeaways
-
-* Most orgs store data **across multiple tables** → joins are essential
-* **Clean columns + clear keys** → fewer surprises when aggregating/joining
-* **groupby + agg** unlocks “who/what/where/how much” business questions
-* Handling missingness requires **reasoning** (MCAR/MAR/MNAR), not just `.fillna()`
-* Build analysis from your questions → manipulate → summarize → join → summarize → interpret
-
-## Coming Up Next...
-
-* **Thursday Lab:** come ready to **answer your group’s questions** using joins & aggregations
-* **Homework:** apply this week’s skills to manipulate, summarize, and join data
+| Code | What it does |
+|------|--------------|
+| `df = df.rename(columns={'old': 'new'})` | Rename specific columns |
+| `df.columns = df.columns.str.lower().str.replace(' ', '_')` | Clean **every** column name at once |
+| `df = df.drop(columns=['a', 'b'])` | Remove columns you don't need |
+| `df['new'] = df['a'] / df['b']` | Create a new column from existing ones |
+| `df['col'].map({old: new})` | Translate values using a dict |
+| `df.isnull().sum()` | Count missing values in each column |
+| `df['col'] = df['col'].fillna(value)` | Fill missing values — once you know *why* they're missing |
+| `df.agg({'col': ['sum', 'mean']})` | Several statistics across the whole table |
+| `df.groupby('grp', as_index=False).agg({...})` | One row of statistics **per group** |
+| `'nunique'` | Count **distinct** values (baskets, households) |
+| `df.sort_values('col', ascending=False)` · `df.nlargest(n, 'col')` | Rank your results |
+| `left.merge(right, on='key', how='inner')` | Join tables — `how` decides what happens to unmatched rows |
 
 ::: {.callout-important}
-Be sure to finish the Week 4 readings **before** Thursday’s lab so you can hit the ground running!
+**The ideas underneath all of it:**
+
+1. **Assign it back.** pandas returns new results — save them, or they're gone.
+2. **Question → manipulate → summarize → join → interpret.** Most business questions use all three skills.
+3. **Check what your join did.** Compare row counts before and after, every time.
 :::
 
-## Q&A 🙋🏻
+## Thursday's Lab & Questions 🙋 {.smaller}
 
-Open floor for any questions regarding...
+::: {.callout-tip}
+## This Week's Lab: RetailMax Analytics
 
-- Today’s manipulation / aggregation / joining topics
-- What to do before Thursday’s lab
-- Reading clarifications or edge cases you’ve run into
-- Anything else on your mind
+You'll play a junior analyst answering questions from leadership with the Complete Journey data — manipulating, summarizing, and joining to find the answers.
+
+Finish the Week 4 readings **before** Thursday so you can hit the ground running!
+:::
+
+**Any final questions?**
+
+- Manipulating, summarizing, or joining?
+- Choosing a join type?
+- Thursday's lab or the homework?
