@@ -1,6 +1,6 @@
 ---
 title: "BANA 4080: Introduction to Data Mining with Python"
-subtitle: "Week 5: Data Visualization Foundations"
+subtitle: "Week 5: Data Visualization & EDA"
 format:
   revealjs:
     self-contained: true
@@ -25,780 +25,999 @@ execute:
     echo: true
 ---
 
+```{python}
+#| echo: false
+
+import warnings
+warnings.filterwarnings('ignore')
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+import seaborn as sns
+from completejourney_py import get_data
+
+cj = get_data()
+transactions  = cj['transactions']
+products      = cj['products']
+demographics  = cj['demographics']
+
+# Basket-level table — the backbone of the Part 2 worked example
+baskets = (
+    transactions
+    .groupby(['household_id', 'basket_id'], as_index=False)
+    .agg(basket_spend=('sales_value', 'sum'),
+         coupon_disc=('coupon_disc', 'sum'),
+         n_lines=('product_id', 'size'))
+)
+baskets['used_coupon']    = baskets['coupon_disc'] != 0
+baskets['spend_per_line'] = baskets['basket_spend'] / baskets['n_lines']
+
+# Joined to demographics (note: not every household has demographics)
+baskets_demo = baskets.merge(demographics, on='household_id', how='inner')
+
+# Simpler views used in Part 1 and Exercise 1
+basket_spend = baskets[['household_id', 'basket_id', 'basket_spend']]
+basket_demo  = baskets_demo
+
+# Weekly sales
+weekly_sales = (
+    transactions
+    .set_index('transaction_timestamp')['sales_value']
+    .resample('W').sum()
+    .reset_index()
+    .rename(columns={'transaction_timestamp': 'week', 'sales_value': 'total_sales'})
+)
+
+# Top 10 departments by revenue
+category_totals = (
+    transactions
+    .merge(products[['product_id', 'department']], on='product_id')
+    .groupby('department', as_index=False)['sales_value'].sum()
+    .sort_values('sales_value')
+    .tail(10)
+)
+
+income_order = [
+    'Under 15K','15-24K','25-34K','35-49K',
+    '50-74K','75-99K','100-124K','125-149K',
+    '150-174K','175-199K','200-249K','250K+'
+]
+
+plt.style.use('default')
+
+# Validated two-series categorical palette (blue = no coupon, orange = coupon)
+C_NO, C_YES = '#2a78d6', '#eb6834'
+```
+
 ## Welcome to Week 5
 
-* Quick overview of today's plan:
+**Three things today:**
 
-  * Quick review & questions on last week’s content
-  * Why data visualization matters in data science
-  * Overview: Pandas, Matplotlib, Bokeh for different purposes
-  * High-level plotting considerations & common pitfalls
-  * Midterm project preview & expectations
-
-# Discussion: Homework & Questions {background="#43464B"}
-
-## Questions from Week 5? {.smaller}
-
-* Manipulating & cleaning DataFrames?
-* Aggregating data with vs. without `groupby`?
-* Joining datasets for richer context
-* Anything confusing in the quiz or class lab?
-* Time to ask!
+1. **Your Visualization Toolkit** — Pandas, Seaborn, Matplotlib, and Bokeh, and when to reach for each
+2. **EDA Framework** — how to think through an analysis, not just run code
+3. **The Midterm Project** — the scenario, deliverables, and Thursday's lab
 
 . . .
 
-:::: {.columns}
-::: {.column width='70%'}
-::: {.callout}
-## Activity
+Today is about **orientation, not memorization**. The companion notebook has every example we see — plus the ones we skip.
 
-Converse with your neighbor and identify...
+## 📓 Follow Along in the Notebook
 
-* 1 thing we covered last week that was clear and very helpful
-* 1 thing we covered last week that is still confusing
+::: {.callout-tip}
+## Week 5 Lecture Notebook
+
+Open the companion notebook in Colab now. Everything we demo today is in there, runnable — along with cheat sheets for all four libraries and extra practice we won't get to in class.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-05-lecture.ipynb)
 :::
-:::
-::: {.column width='30%'}
-<center>
 
-<div id="3minWaiting"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minWaiting", 180, "slide"); 
-    });
-</script>
-</center>
-:::
-::::
+## Questions from Week 4? {.smaller}
 
-# Importance of Data Visualization {background="#43464B"}
-
-## Why We Visualize {.smaller}
-
-* **Communicate insights quickly & clearly** – visuals make complex data understandable at a glance
-* **Reveal patterns, trends, and outliers** – helps discover what might be hidden in tables
-* **Support decision-making** – effective visuals can influence strategic direction
-* **Engage your audience** – people connect with visual stories more than raw numbers
-
-## How Quickly Can You Spot Insights? {.smaller}
-
-Tell me, what are some insights you gather from this [table]{style="color:blue;"}:
+* Manipulating & cleaning DataFrames?
+* Aggregating data with `groupby`?
+* Joining datasets to bring in context?
+* Anything from the quiz or lab?
 
 <br>
 
-| Month | Product A | Product B | Product C |
-| ----- | --------- | --------- | --------- |
-| Jan   | 1050      | 1501      | 1200      |
-| Feb   | 987       | 1482      | 1093      |
-| Mar   | 1119      | 1428      | 1139      |
-| Apr   | 1129      | 1420      | 1081      |
-| May   | 1099      | 148       | 1018      |
-| Jun   | 1199      | 1396      | 1018      |
+::: {.callout}
+Anything still fuzzy from last week — now is the time.
+:::
+
+# Part 1: Your Visualization Toolkit {background="#2c3e50"}
 
 ## How Quickly Can You Spot Insights? {.smaller}
 
-Tell me, what are some insights you gather from this [plot]{style="color:blue;"}:
+What can you tell from this [table]{style="color:steelblue;font-weight:bold;"}?
 
-![](images/product_sales_trends_updated_numbers.png)
+| Week | Produce | Dairy  | Frozen | Deli  |
+|------|---------|--------|--------|-------|
+| 1    | 11,500  | 12,100 | 7,320  | 4,100 |
+| 2    | 12,800  | 11,400 | 7,180  | 4,080 |
+| 3    | 12,200  | 10,800 | 1,780  | 4,120 |
+| 4    | 13,900  | 10,100 | 7,410  | 4,090 |
+| 5    | 13,400  | 9,800  | 7,260  | 4,110 |
+| 6    | 15,100  | 9,200  | 7,350  | 4,085 |
+| 7    | 14,800  | 8,700  | 7,420  | 4,115 |
+| 8    | 16,400  | 8,100  | 7,190  | 4,095 |
 
-## Different Vizualization Needs
+## How Quickly Can You Spot Insights? {.smaller}
 
-::: {.callout}
-## Activity
+What can you tell from this [plot]{style="color:steelblue;font-weight:bold;"}?
 
-* I’ll give you three scenarios.
-* In your small groups (or with a partner), discuss:
-   - What is the main goal of the visualization in each case?
-   - What characteristics of the visualization will be most important?
-   - How do these differ in terms of speed, polish, customization, and interactivity?
-   - What trade-offs would you make for each?
+```{python}
+#| echo: false
+#| fig-height: 4.5
 
-You have 4 minutes.
-:::
+data = {
+    'Week': list(range(1, 9)) * 4,
+    'Dept': ['Produce']*8 + ['Dairy']*8 + ['Frozen']*8 + ['Deli']*8,
+    'Sales': [
+        11500, 12800, 12200, 13900, 13400, 15100, 14800, 16400,  # Produce: upward trend
+        12100, 11400, 10800, 10100,  9800,  9200,  8700,  8100,  # Dairy: downward trend
+         7320,  7180,  1780,  7410,  7260,  7350,  7420,  7190,  # Frozen: stable + anomaly
+         4100,  4080,  4120,  4090,  4110,  4085,  4115,  4095,  # Deli: flat
+    ]
+}
+plot_df = pd.DataFrame(data)
 
-## Different Vizualization Needs {.smaller}
+fig, ax = plt.subplots(figsize=(10, 4.5))
+for dept, grp in plot_df.groupby('Dept'):
+    ax.plot(grp['Week'], grp['Sales'], marker='o', label=dept, linewidth=2)
+ax.set_xlabel('Week')
+ax.set_ylabel('Weekly sales ($)')
+ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('{x:,.0f}'))
+ax.legend(loc='center right')
+ax.grid(True, alpha=0.3)
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
 
-:::: {.columns}
-::: {.column width='70%'}
+## Different Visualization Needs {.smaller}
 
 ::: {.callout}
 ## Scenario 1
 
-You’ve just pulled a messy dataset and need to quickly see if there are obvious data quality issues or trends before cleaning it.
+You just pulled the Complete Journey data and need to quickly check whether basket spend looks reasonable before writing any analysis code.
 :::
 
 ::: {.callout}
 ## Scenario 2
 
-You’re presenting quarterly revenue trends to the CFO and CEO in a boardroom setting. The chart will appear in a formal report and on a slide.
+You're presenting weekly revenue trends to the VP of Marketing in a board meeting. The chart will appear in a formal slide deck.
 :::
 
 ::: {.callout}
 ## Scenario 3
 
-You’re building a tool for the marketing team that lets them interactively filter sales data by product category, store, and date range, and explore patterns themselves.
+The promotions team wants a tool to interactively explore coupon redemption rates by store, product category, and week.
 :::
 
+. . .
+
+**Same data. Three very different jobs.** No single library is best at all three.
+
+## Match the Tool to the Goal {.smaller}
+
+We should match ***how*** we visualize to the goal we have in mind.
+
+<br>
+
+| Purpose | Tool | Why It Wins Here |
+|---------|------|-----------------|
+| Quick EDA | **Pandas** `.plot()` | One line, straight off a DataFrame |
+| Statistical comparison | **Seaborn** | Handles grouping, ordering, and stats for you |
+| Polished reporting | **Matplotlib** | Total control over every element |
+| Interactive exploration | **Bokeh** | Renders to the browser — zoom, hover, filter |
+
+. . .
+
+::: {.callout-tip}
+These are not four competitors. Pandas and Seaborn are both built **on top of** Matplotlib — so they stack.
 :::
-::: {.column width='30%'}
+
+# Pandas: Speed {background="#43464B"}
+
+## Pandas — When Speed Beats Polish {.smaller}
+
+* Your **first reach** when you need a fast answer — minimal code, tied directly to DataFrames
+* Call `.plot()` on any Series or DataFrame and pass `kind=`
+* Built on Matplotlib, so anything you learn later still applies
+* **Not** meant for final deliverables
+
+. . .
+
+::: {.callout-tip}
+If you can answer your question in one line, Pandas `.plot()` is the right tool. Rule of thumb: if you're typing a third line of formatting, you may want to switch libraries.
+:::
+
+## Pandas in One Line {.smaller}
+
+```{python}
+#| fig-height: 3.5
+
+category_totals.plot(
+    kind='barh', x='department', y='sales_value',
+    figsize=(10, 3.5), legend=False,
+    title='Total revenue by department (top 10)', xlabel='Total sales ($)'
+)
+plt.show()
+```
+
+. . .
+
+Swap `kind=` to change the chart: `'hist'`, `'box'`, `'line'`, `'bar'`, `'scatter'`, `'barh'`.
+
+# Seaborn: Statistical Grouping {background="#43464B"}
+
+## Seaborn — When You're Comparing Groups {.smaller}
+
+* Built on Matplotlib — cleaner syntax for common **statistical** chart types
+* Shines when you need **grouping, ordering, and distributions with shape**
+* One function call handles what Matplotlib needs 10–15 lines to produce
+
+. . .
+
+<br>
+
+| Pandas | Seaborn |
+|--------|---------|
+| `.plot(kind='hist')` — basic bin counts | `histplot()` — bins + KDE curve in one call |
+| `.groupby().mean().plot.bar()` — manual aggregation | `boxplot()` / `barplot()` — handles stats automatically |
+| No built-in group ordering | `order=` parameter on every chart |
+
+. . .
+
+Every Seaborn function follows one pattern: `sns.function(data=df, x=…, y=…, hue=…, order=…)`
+
+## Seaborn in One Call {.smaller}
+
+```{python}
+#| fig-height: 3.8
+#| code-line-numbers: "2-9"
+
+fig, ax = plt.subplots(figsize=(10, 3.8))
+sns.boxplot(
+    data=basket_demo,
+    x='income',
+    y='basket_spend',
+    order=income_order,   # explicit ordering — critical for income brackets
+    ax=ax,
+    showfliers=False
+)
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=8)
+ax.set_xlabel('Income bracket')
+ax.set_ylabel('Basket spend ($)')
+plt.tight_layout()
+plt.show()
+```
+
+# Matplotlib: Control {background="#43464B"}
+
+## Matplotlib — When the Chart Must Stand Alone {.smaller}
+
+* The most widely used Python plotting library — and the **foundation** for Seaborn and Pandas
+* **Full customization:** labels, annotations, tick formatting, styles, multi-panel layouts, export
+* Because Pandas and Seaborn return Matplotlib objects, you can start fast and polish later
+
+. . .
+
+::: {.callout-tip}
+Use Matplotlib when the chart needs to stand on its own — in a report, a slide deck, or a published figure. **This is the library your project report will live on.**
+:::
+
+## The Figure / Axes Hierarchy {.smaller}
+
+Everything in Matplotlib is an object you can reference and modify:
+
+```{python}
+#| fig-height: 2.5
+
+fig, ax = plt.subplots(figsize=(10, 2.5))
+# fig = the overall canvas
+# ax  = the actual plot area (axes, ticks, lines, labels)
+fig.set_facecolor('#eaf4fb')
+ax.set_facecolor('#d0eaf8')
+ax.set_title('fig (light blue canvas) contains ax (darker blue plot area)')
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+Once you have `fig` and `ax`, you control **everything** — including plots Seaborn or Pandas drew for you.
+
+## Before: A Quick Pandas Plot {.smaller}
+
+Fast, but it would not survive an executive meeting:
+
+```{python}
+#| fig-height: 3.0
+
+weekly_sales.plot(kind='line', x='week', y='total_sales', figsize=(10, 3.0), legend=False)
+plt.show()
+```
+
+## After: Executive-Ready Matplotlib {.smaller}
+
+```{python}
+#| fig-height: 5
+#| code-line-numbers: "|3-8|12-21"
+#| output-location: slide
+
+fig, ax = plt.subplots(figsize=(10, 3.5))
+ax.plot(weekly_sales['week'], weekly_sales['total_sales'], linewidth=2)
+
+# --- readable formatting ---
+ax.set_title('Weekly total sales — note holiday spike in late December', pad=10)
+ax.set_xlabel('Week')
+ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
+ax.grid(True, alpha=0.3)
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(False)
+
+# --- annotate the insight ---
+peak_idx  = weekly_sales['total_sales'].idxmax()
+peak_week = weekly_sales.loc[peak_idx, 'week']
+peak_val  = weekly_sales.loc[peak_idx, 'total_sales']
+ax.annotate(
+    f'Holiday spike\n${peak_val:,.0f}',
+    xy=(peak_week, peak_val),
+    xytext=(peak_week - pd.Timedelta(weeks=8), peak_val * 0.97),
+    arrowprops=dict(arrowstyle='->', lw=1.2),
+    fontsize=9
+)
+plt.tight_layout()
+plt.show()
+```
+
+::: {.callout-caution}
+Matplotlib is powerful but verbose. There is a massive [example gallery](https://matplotlib.org/stable/gallery/index.html), and AI tools are very good at adapting Matplotlib code. The notebook walks this build step by step.
+:::
+
+# Bokeh: Interactivity {background="#43464B"}
+
+## Bokeh — When Others Need to Explore {.smaller}
+
+* Renders HTML/JavaScript — charts live in a **browser**, not just a notebook
+* Users can **zoom, pan, hover, and filter** without writing new code
+* Best for dashboards, stakeholder exploration tools, and shareable deliverables
+
+```{python}
+#| echo: false
+
+from bokeh.plotting import figure, show
+from bokeh.models import HoverTool, ColumnDataSource
+from bokeh.io import output_notebook
+
+output_notebook()
+```
+
+## Interactive Weekly Sales Explorer {.smaller .scrollable}
+
+```{python}
+
+source = ColumnDataSource(weekly_sales)
+
+p = figure(
+    title='Total Weekly Sales — hover, zoom, and pan to explore',
+    x_axis_type='datetime',
+    width=750, height=350,
+    tools='pan,wheel_zoom,box_zoom,reset,save'
+)
+
+p.line('week', 'total_sales', source=source,
+       line_width=2, color='steelblue')
+
+hover = HoverTool(tooltips=[
+    ('Week',  '@week{%F}'),
+    ('Sales', '@total_sales{$0,0}')
+], formatters={'@week': 'datetime'})
+p.add_tools(hover)
+
+p.xaxis.axis_label = 'Week'
+p.yaxis.axis_label = 'Total Sales ($)'
+
+show(p)
+```
+
+::: {.callout-tip}
+Run this in the companion notebook to see the interactive version — it won't fully render in a static slide.
+:::
+
+---
+
+:::: {.columns}
+::: {.column width='65%'}
+::: {.callout-note}
+## Exercise 1 — Run & Compare 💻
+
+Open the **Exercise 1** section of the companion notebook. Every cell is ready to run — **you don't write any code today.**
+
+Run them top to bottom. Same Complete Journey data, drawn four ways:
+
+* **Pandas** — a one-line distribution, then a category comparison
+* **Seaborn** — that same comparison, now split by group
+* **Matplotlib** — the executive-ready version
+* **Bokeh** — the interactive version
+
+**Answer these two as you go:**
+
+1. Which tool got to a usable chart with the **least code**?
+2. Which output would you actually put in front of the CEO?
+
+> 5 minutes — run, look, compare.
+:::
+:::
+::: {.column width='35%'}
 <center>
-
-<div id="4minWaiting"></div>
+<div id="5minEx1"></div>
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minWaiting", 240, "slide"); 
+        initializeTimer("5minEx1", 240, "slide");
     });
 </script>
 </center>
 :::
 ::::
 
-## Different Needs, Different Visualizations {.smaller}
+## Where You Actually Learn These 📚 {.smaller}
 
-We should match ***how*** we visualize to the goal we have in mind.
+Today was a **tour**. The readings are where you learn to drive.
 
-. . .
-
-* **Quick plots during data exploration**
-  * Purpose: Spot-check patterns, identify data quality issues, guide next analysis steps
-  * Characteristics: Fast, minimal customization
-
-. . .
-
-* **Refined plots for reports/presentations**
-  * Purpose: Communicate results clearly to stakeholders
-  * Characteristics: Well-labeled, polished, consistent styling, tailored to audience
+| Chapter | What it teaches you | Where it shows up in the project |
+|---------|---------------------|----------------------------------|
+| **13** — Pandas | `.plot()` for fast exploratory charts | How you'll explore your own data |
+| **14** — Seaborn / Matplotlib / Bokeh | statistical charts, full control, interactivity | How you'll build report-quality figures |
+| **15** — EDA | a complete case study, start to finish | The model for your entire report |
 
 . . .
 
-* **Interactive plots for user-facing apps**
-  * Purpose: Allow exploration, filtering, drilling down into details
-  * Characteristics: Hover tools, zoom/pan, interlinked plots
+::: {.callout-important}
+## 20 of the project's 75 points ride on your charts
 
-## Different Needs, Different Visualizations {.smaller}
+**EDA (10 pts)** and **Findings (10 pts)** are graded on whether your visuals reveal something non-obvious *and* are clearly narrated. **Code & Craft** and **Delivery** lean on them too.
 
-We should match ***how*** we visualize to the goal we have in mind.
-
-<br>
-
-| Purpose            | Example Tool     | Example Use Case                 |
-| ------------------ | ---------------- | -------------------------------- |
-| Quick EDA          | Pandas `.plot()` | Checking missing data by month   |
-| Polished reporting | Matplotlib       | Quarterly sales trends for execs |
-| Interactive apps   | Bokeh            | Customer behavior dashboard      |
+Nobody produces professional-looking figures on the first attempt. The reps come from working through these chapters and applying them to your own data.
+:::
 
 
-## Why It Matters to Choose the Right Type {.smaller}
+# Part 2: How to Think About EDA {background="#2c3e50"}
 
-**Main Points:**
+## You Already Have Most of What EDA Needs {.smaller}
 
-* The **same dataset** can be visualized in multiple ways depending on the goal
-* A quick plot during EDA might be **ugly but informative** — and that’s okay
-* A polished plot for executives should be **clean, clear, and focused**
-* Interactive plots shine when your audience needs to **explore, not just consume**
+| You learned | Which lets you |
+|-------------|----------------|
+| **Subsetting & filtering** (Wk 3) | isolate the rows a question is actually about |
+| **`groupby` & aggregation** (Wk 4) | compute statistics at *any* level — household, basket, department, week |
+| **Joins** (Wk 4) | pull in the context that makes a comparison possible |
+| **Visualization** (this week) | see the shape, catch what's wrong, show the finding |
 
 . . .
 
-::: {.callout-tip}
+Aggregation tells you **what the numbers are**. Visualization tells you **what they mean** and helps you **communicate them**. Together, that is most of an EDA.
 
-Growing as a data scientist means growing your **understanding of visualization as a whole**.
+. . .
 
-This includes improving your ability to choose, design, and present visuals that best **communicate your analytic findings** for the specific task and audience at hand.
+::: {.callout-important}
+What's left is understanding how to **ask a good question of our data**.
 
+That's what the rest of Part 2 is about.
 :::
 
-# Pandas {background="#43464B"}
+## EDA Is a Conversation With Your Data {.smaller}
 
-## Pandas for Quick Plots {.smaller}
+Exploratory Data Analysis is not a checklist of charts to run.
 
-* Perfect for **fast exploratory data analysis** tied directly to DataFrames/Series
-* Minimal customization (but enough for quick insights)
-* Chart types: line (default), bar, scatter, histograms, etc.
-* When to use: **Speed over polish**
+It is a **sequence of questions** — each answer raising the next question.
 
-## Pandas for Quick Plots {.smaller}
+. . .
 
-Pandas provides a `.plot`...
+:::: {.columns}
+::: {.column width='50%'}
+**Data dump (avoid)**
+
+- Plot every variable
+- Report every mean and median
+- Move on
+
+:::
+::: {.column width='50%'}
+**Real EDA (aim for)**
+
+- Start with a sharp question
+- Let findings drive the next step
+- Stop when you can tell a story
+:::
+::::
+
+. . .
+
+::: {.callout-important}
+The goal is not to show that you looked at the data. The goal is to find something worth saying.
+:::
+
+## A Framework for EDA {.smaller}
+
+```{mermaid}
+%%| echo: false
+flowchart LR
+    A["1️⃣ Question"] --> B["2️⃣ Structure"]
+    B --> C["3️⃣ Distributions"]
+    C --> D["4️⃣ Segmentation"]
+    D --> E["5️⃣ Story"]
+    style A fill:#2c3e50,color:#fff
+    style B fill:#2980b9,color:#fff
+    style C fill:#27ae60,color:#fff
+    style D fill:#e67e22,color:#fff
+    style E fill:#8e44ad,color:#fff
+```
 
 <br>
 
-```{python}
-#| echo: false
-
-import pandas as pd
-
-df = pd.read_csv("../data/ames_clean.csv")
-```
-
-:::: {.columns}
-::: {.column}
-**Method**
-
-```{python}
-df['SalePrice'].plot(kind='hist')
-```
-
-:::
-::: {.column}
-**Attribute**
-
-```{python}
-df['SalePrice'].plot.hist()
-```
-
-:::
-::::
-
-## Lots of Plotting Choices {.smaller}
-
-:::: {.columns}
-::: {.column}
-* Histograms
-:::
-::: {.column}
-```{python}
-df['SalePrice'].plot(kind='hist')
-```
-:::
-
-::::
-
-## Lots of Plotting Choices {.smaller}
-
-:::: {.columns}
-::: {.column}
-* Histograms
-* Boxplots
-:::
-::: {.column}
-```{python}
-df['SalePrice'].plot(kind='box')
-```
-:::
-
-::::
-
-## Lots of Plotting Choices {.smaller}
-
-:::: {.columns}
-::: {.column}
-* Histograms
-* Boxplots
-* Scatter plots
-:::
-::: {.column}
-```{python}
-df.plot(kind='scatter', x='GrLivArea', y='SalePrice')
-```
-:::
-
-::::
-
-## Lots of Plotting Choices {.smaller}
-
-:::: {.columns}
-::: {.column}
-* Histograms
-* Boxplots
-* Scatter plots
-* Bar charts
-
-:::
-::: {.column}
-```{python}
-#| code-line-numbers: "5"
-(
-    df['Neighborhood']
-    .value_counts()
-    .sort_values()
-    .plot(kind='barh')
-)
-```
-:::
-
-::::
-
-## Lots of Plotting Choices {.smaller}
-
-:::: {.columns}
-::: {.column}
-* Histograms
-* Boxplots
-* Scatter plots
-* Bar charts
-* Line plots
-
-<br>
-
-::: {.callout}
-And many more options!
-:::
-
-:::
-::: {.column}
-```{python}
-#| code-line-numbers: "5"
-(
-    df[['MoSold', 'SalePrice']]
-    .groupby('MoSold', as_index=False)
-    .agg(avg_sale_price = ('SalePrice', 'mean'))
-    .plot(kind='line', x='MoSold', y='avg_sale_price')
-)
-```
-:::
-
-::::
-
-## Just a wrapper over Matplotlib {.smaller}
-
-Pandas `.plot()` method is just a wrapper around Matplotlib
-
-
-```{python}
-#| code-line-numbers: "1-3"
-import matplotlib.pyplot as plt
-
-plt.style.use('fivethirtyeight')
-
-(
-    df[['MoSold', 'SalePrice']]
-    .groupby('MoSold')
-    .agg(avg_sale_price = ('SalePrice', 'median'))
-    .plot.bar(title='Median home sales price by month', figsize=(10,3), legend=False)
-)
-```
-
-## Just a wrapper over Matplotlib {.smaller}
-
-Pandas `.plot()` method is just a wrapper around Matplotlib
-
-<br>
-
-::: {.callout-tip}
-This provides us more refined control [assuming we understand Matplotlib!]{style="color:blue;"}
-:::
-
-# Matplotlib {background="#43464B"}
-
-## Matplotlib for Full Control
-
-* The most widely used Python plotting library
-* **Full customization**: labels, legends, colors, annotations, grids, styles
-* Basis for many other visualization libraries (Pandas, Seaborn, etc.)
-* When to use: **Polish and precision over speed**
-
-::: {.callout-tip}
-Use Matplotlib for Custom, Publication-Ready Visuals!
-:::
-
-## From Pandas → Polished Matplotlib (Step 0: Quick Pandas) {.smaller}
-
-Start with the same data used in the Pandas section.
-
-```{python}
-#| echo: false
-
-monthly = (
-    df[['MoSold','SalePrice']]
-    .groupby('MoSold', as_index=False)
-    .agg(avg_sale_price=('SalePrice','median'))
-    .sort_values('MoSold')
-)
-
-plt.style.use('default')
-```
-
-```{python}
-# Quick EDA-style Pandas plot
-monthly.plot(kind='line', x='MoSold', y='avg_sale_price', legend=False)
-```
-
-
-## Step 1: Move to Figure/Axes API {.smaller}
-
-Gives you handles (`fig`, `ax`) for fine-grained control.
-
-```{python}
-fig, ax = plt.subplots(figsize=(8, 3.5))
-ax.plot(
-    monthly['MoSold'], monthly['avg_sale_price'],
-    marker='o'
-)
-ax.set_title("Median Home Sale Price by Month")
-ax.set_xlabel("Month")
-ax.set_ylabel("Sale Price ($)")
-plt.tight_layout()
-plt.show()
-```
-
-
-## Step 2: Make It Executive-Ready {.smaller .scrollable}
-
-Add formatting, spacing, and readable ticks.
-
-```{python}
-#| code-line-numbers: "1,15-24"
-from matplotlib.ticker import StrMethodFormatter
-
-fig, ax = plt.subplots(figsize=(10, 4))
-
-ax.plot(
-    monthly['MoSold'], monthly['avg_sale_price'],
-    marker='o', linewidth=2
-)
-
-# Titles & labels
-ax.set_title("Median Home Sale Price by Month", pad=10)
-ax.set_xlabel("Month (1–12)")
-ax.set_ylabel("Median Sale Price")
-
-# Currency formatting with thousands separators
-ax.yaxis.set_major_formatter(StrMethodFormatter('${x:,.0f}'))
-
-# Tick improvements
-ax.set_xticks(range(1,13))
-ax.grid(True, alpha=0.3)
-
-# Remove top/right spines for a cleaner look
-for spine in ["top", "right"]:
-    ax.spines[spine].set_visible(False)
-
-plt.tight_layout()
-plt.show()
-```
-
-
-## Step 3: Highlight Insights (Annotations & Reference Lines) {.smaller .scrollable}
-
-Direct attention to the takeaway.
-
-```{python}
-#| code-line-numbers: "12-29"
-fig, ax = plt.subplots(figsize=(10, 5))
-
-ax.plot(monthly['MoSold'], monthly['avg_sale_price'], marker='o', linewidth=2)
-
-# Format
-ax.yaxis.set_major_formatter(StrMethodFormatter('${x:,.0f}'))
-ax.set_xticks(range(1,13))
-ax.grid(True, alpha=0.3)
-for spine in ["top","right"]:
-    ax.spines[spine].set_visible(False)
-
-# Identify peak month
-peak_idx = monthly['avg_sale_price'].idxmax()
-peak_month = int(monthly.loc[peak_idx, 'MoSold'])
-peak_value = float(monthly.loc[peak_idx, 'avg_sale_price'])
-
-# Annotate the peak
-ax.annotate(
-    f"Peak: {peak_month} (~{peak_value:,.0f})",
-    xy=(peak_month, peak_value),
-    xytext=(peak_month-3, peak_value),
-    arrowprops=dict(arrowstyle="->", lw=1.2),
-    fontsize=9
-)
-
-# Optional: reference line at annual median
-ref = monthly['avg_sale_price'].median()
-ax.axhline(ref, linestyle='--', linewidth=1, alpha=0.6)
-ax.text(12.05, ref, f"  Annual median ≈ ${ref:,.0f}", va='center')
-
-ax.set_title("Median Home Sale Price by Month — Highlighting Peak & Annual Median", pad=10)
-ax.set_xlabel("Month (1–12)")
-ax.set_ylabel("Median Sale Price")
-
-plt.tight_layout()
-plt.show()
-```
-
-
-## Step 4: Final Touches & Export {.smaller .scrollable}
-
-Make it reproducible and ready for a report.
-
-```{python}
-#| code-line-numbers: "1-4,19"
-plt.rcParams.update({
-    "figure.dpi": 120,
-    "savefig.dpi": 300
-})
-
-fig, ax = plt.subplots(figsize=(10, 4))
-ax.plot(monthly['MoSold'], monthly['avg_sale_price'], marker='o', linewidth=2)
-
-ax.set_title("Median Home Sale Price by Month (Ames, IA)", pad=10)
-ax.set_xlabel("Month (1–12)")
-ax.set_ylabel("Median Sale Price")
-ax.yaxis.set_major_formatter(StrMethodFormatter('${x:,.0f}'))
-ax.set_xticks(range(1,13))
-ax.grid(True, alpha=0.3)
-for spine in ["top","right"]:
-    ax.spines[spine].set_visible(False)
-
-plt.tight_layout()
-plt.savefig("images/median_sale_price_by_month.png", bbox_inches="tight")
-plt.show()
-```
-
-
-## Common Gotchas (and Quick Fixes) {.smaller}
-
-* **Unreadable axes** → rotate ticks, add thousands separators, set sensible limits
-* **Cluttered legends** → label lines clearly, reduce categories, or annotate directly
-* **Overplotting** → use transparency (`alpha`), smaller markers, or aggregate first
-* **Inconsistent styles** → set `plt.style.use()` once and for all plots
-* **Cramped layout** → use `plt.tight_layout()` or `constrained_layout=True`
-
-<br>
+| Step | Question to ask |
+|------|----------------|
+| **Question** | What do I actually want to know? Is it specific enough to know when I've answered it? |
+| **Structure** | What shape is the data? What do I need to join? Where are the missing values? |
+| **Distributions** | What does the outcome variable look like across all households? Any outliers? |
+| **Segmentation** | Does the pattern differ across groups? Where does the interesting variation live? |
+| **Story** | What changed? What surprised me? What should the decision-maker do next? |
+
+## Step 1: Start With a Sharp Question {.smaller}
+
+The question determines everything that follows.
+
+. . .
 
 ::: {.callout-caution}
-## A Word of Caution on Matplotlib
+**Too broad:** "How do customers shop?"
 
-Matplotlib is incredibly powerful, but it’s not always the most intuitive library—especially when you’re just getting started. Its API can feel verbose and a bit clunky compared to higher-level tools.
-
-The good news? There’s a massive amount of example code out there, so if you can describe what you want, you can almost always find a solution by Googling or using your friendly AI copilot tool. Learning to adapt those examples to your needs is a valuable skill in itself.
+This can't be answered — no unit of analysis, no metric, no comparison to make.
 :::
 
-## Takeaway {.smaller}
+. . .
 
-* Use **Pandas** for speed during EDA
-* Use **Matplotlib** when clarity, control, and polish are required
-* Small incremental steps (labels → formatting → annotations → export) turn a quick plot into a **CEO-ready** visual
+::: {.callout-tip}
+**Sharp:** "Do households that redeem coupons have larger basket spend than those that don't — and does this differ across income brackets?"
 
-# Interactive Visualizations {background="#43464B"}
+This names: the unit (basket), the metric (spend), the comparison (coupon vs. no coupon), and the segmentation (income).
+:::
 
-## Why Interactive Visualizations?
+. . .
 
-* Enable **deeper exploration** of the data without writing new code
-* Allow users to **filter, zoom, and hover** for more details
-* Great for **storytelling** when the audience needs to discover insights themselves
-* Especially valuable in **dashboards** or **public-facing tools**
+A sharp EDA question tells you which tables to join, which columns to compute, and what a result would look like.
 
-## When to Use Interactive Visualizations
+. . .
 
-* **Exploratory data analysis** with many dimensions to explore
-* Presenting to **decision-makers** who want to “poke around” the data
-* Building **internal dashboards** or **data-driven applications**
-* When static plots **cannot capture all the nuance** or details
+::: {.callout-note}
+**We are going to answer this exact question** over the next four slides — one step of the framework at a time.
+:::
 
-## Tools for Interactive Plots {.smaller}
+## Step 2: Structure — What Do I Actually Have? {.smaller}
 
-Several Python libraries support interactivity:
+Our question compares **baskets**, but `transactions` gives us 1.5 million *item* rows. So the first move is structural: collapse to **one row per basket**, flag which ones used a coupon, then attach household demographics for the income half of the question.
 
-* **Bokeh** — Great for creating rich, interactive visualizations for the web
-* **Plotly** — Very popular, integrates well with Dash for dashboarding
-* **Altair** — Grammar-of-graphics style with easy interactivity
-* **Seaborn + Widgets** — More limited interactivity via notebooks
-* **Holoviews / Panel** — High-level interface for Bokeh
-
-## Example: Interactive Bokeh Line Chart {.smaller .scrollable}
-
-Let's create a nice plot showing the relationship between home sale price and living area — but interactive.
+Every one of those steps can quietly lose rows — so count what survives:
 
 ```{python}
-from bokeh.plotting import figure, show
-from bokeh.models import HoverTool, ColumnDataSource, NumeralTickFormatter
-from bokeh.transform import factor_cmap
-from bokeh.io import output_notebook
+#| echo: false
 
-# Render Bokeh plots inline (Jupyter/Colab)
-output_notebook()
+n_baskets   = len(baskets)
+n_coupon    = int(baskets['used_coupon'].sum())
+pct_coupon  = 100 * baskets['used_coupon'].mean()
+n_joined    = len(baskets_demo)
+pct_kept    = 100 * n_joined / n_baskets
 
-# If needed, load your data:
-# df = pd.read_csv("../data/ames_clean.csv")[['GrLivArea','SalePrice','CentralAir']].dropna()
-
-# ColumnDataSource
-source = ColumnDataSource(df)
-
-# Color map by CentralAir (adjust palette/order as desired)
-palette = ['red', 'blue']
-factors = list(df['CentralAir'].unique())
-color_mapper = factor_cmap('CentralAir', palette=palette, factors=factors)
-
-# Create the figure, stored in variable `p`
-p = figure(
-    frame_width=700,
-    frame_height=350,
-    title='Relationship between home sale price and living area \nAmes, Iowa (2006-2010)',
-    x_axis_label='Living Area (Square feet)',
-    y_axis_label='Sale Price',
-    tools="pan,wheel_zoom,box_zoom,reset,save"  # common interactive tools
-)
-
-# Scatter (with shared color mapping for fill & line)
-p.scatter(
-    source=source,
-    x='GrLivArea',
-    y='SalePrice',
-    marker='circle',
-    alpha=0.25,
-    fill_color=color_mapper,
-    line_color=color_mapper,
-    legend_field='CentralAir'
-)
-
-# Legend & axis formatting
-p.legend.title = "Has central air"
-p.yaxis.formatter = NumeralTickFormatter(format="$,")
-p.xaxis.formatter = NumeralTickFormatter(format=",")
-
-# Hover tooltips
-tooltips = [("Sale Price","@SalePrice{$0,0}"), ("SqFt","@GrLivArea{0,0}")]
-hover = HoverTool(tooltips=tooltips, mode='mouse')
-p.add_tools(hover)
-
-# Show the plot inline
-show(p)
-
+print(f"Baskets:                    {n_baskets:,}")
+print(f"  ... that used a coupon:   {n_coupon:,}  ({pct_coupon:.1f}%)")
+print(f"Households:                 {baskets['household_id'].nunique():,}")
+print()
+print(f"After joining demographics: {n_joined:,} baskets  ({pct_kept:.0f}% kept)")
+print(f"  ... households:           {baskets_demo['household_id'].nunique():,}")
 ```
 
+. . .
 
-## So Many Options!
-
-![](images/bokeh-gallery.png){fig-align="center"}
-
-::: footer
-See more at: [https://docs.bokeh.org/en/latest/docs/gallery.html](https://docs.bokeh.org/en/latest/docs/gallery.html)
+::: {.callout-warning}
+**The join cost us half the data.** Only 801 households have demographics. Any income comparison we make describes *those* households — not all shoppers. Notice this now, not in your conclusion.
 :::
 
-## Recap of Visualization Tools {.smaller}
+## Step 3: Distributions — Which Summary Can I Trust? {.smaller .scrollable}
+
+Before comparing any groups, look at the outcome variable alone: **what does a typical basket even look like?**
+
+```{python}
+#| echo: false
+#| fig-height: 3.0
+
+fig, ax = plt.subplots(figsize=(10, 3.0))
+sns.histplot(data=baskets, x='basket_spend', bins=60, kde=True, ax=ax)
+ax.set_xlim(0, 120)
+ax.axvline(baskets['basket_spend'].mean(),   color='crimson', ls='--', lw=1.6,
+           label=f"mean  ${baskets['basket_spend'].mean():.2f}")
+ax.axvline(baskets['basket_spend'].median(), color='seagreen', ls='-',  lw=1.6,
+           label=f"median ${baskets['basket_spend'].median():.2f}")
+ax.set_xlabel('Basket spend ($)')
+ax.set_title(f"Basket spend is heavily right-skewed (skew = {baskets['basket_spend'].skew():.1f})")
+ax.legend()
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+The mean sits **$12 above** the median — a handful of enormous baskets drag it to the right.
+
+::: {.callout-important}
+## Report the median — and say why you did
+
+With skew this strong, the **mean describes a basket almost nobody actually has**. The median is what a typical trip looks like, and it barely moves when a few $300 stock-ups show up.
+
+Put that reasoning in your own report — one sentence is enough: *“We compare medians because basket spend is right-skewed.”* It tells your reader the choice was deliberate rather than a default, and defending a judgment call like this is exactly what the EDA portion of the rubric rewards.
+:::
+
+## Step 4: Segmentation — Does the Pattern Hold? {.smaller}
+
+```{python}
+#| echo: false
+#| fig-height: 3.2
+
+med = baskets.groupby('used_coupon')['basket_spend'].median()
+fig, ax = plt.subplots(figsize=(10, 3.2))
+bars = ax.bar(['No coupon', 'Used a coupon'], [med[False], med[True]],
+              color=[C_NO, C_YES], width=0.5)
+for b, v in zip(bars, [med[False], med[True]]):
+    ax.text(b.get_x()+b.get_width()/2, v+1.2, f'${v:,.2f}', ha='center', fontsize=11, weight='bold')
+ax.set_ylabel('Median basket spend ($)')
+ax.set_title('Coupon baskets are 3.3x larger')
+ax.set_ylim(0, 62)
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+**And across income brackets?** The lift shows up in *every* bracket — 100% to 290%, with no clean upward or downward pattern.
+
+::: {.callout-note}
+Let's look, rather than assert.
+:::
+
+## Step 4 (cont.): Does It Differ by Income? {.smaller}
+
+```{python}
+#| echo: false
+#| fig-height: 3.6
+
+import numpy as np
+
+med = (baskets_demo.groupby(['income', 'used_coupon'])['basket_spend']
+       .median().unstack().reindex(income_order))
+hh  = baskets_demo.groupby('income')['household_id'].nunique().reindex(income_order)
+
+x, w = np.arange(len(income_order)), 0.38
+fig, ax = plt.subplots(figsize=(10, 3.6))
+
+# thin-data band behind the last three brackets
+ax.axvspan(x[-3] - 0.5, x[-1] + 0.5, color='#f0eeea', zorder=0)
+
+ax.bar(x - w/2 - 0.01, med[False], w, label='No coupon',     color=C_NO,  zorder=3)
+ax.bar(x + w/2 + 0.01, med[True],  w, label='Used a coupon', color=C_YES, zorder=3)
+
+ax.set_xticks(x)
+ax.set_xticklabels(income_order, rotation=45, ha='right', fontsize=8)
+ax.set_ylabel('Median basket spend ($)')
+ax.set_title('Spend rises with income — but the coupon gap holds at every level')
+ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
+ax.grid(axis='y', alpha=0.25, zorder=0)
+ax.legend(loc='upper left', frameon=False, fontsize=9)
+ax.text(x[-2], ax.get_ylim()[1]*0.90,
+        f'only {hh.iloc[-3:].min()}–{hh.iloc[-3:].max()} households',
+        ha='center', fontsize=8, color='#6b6b66', style='italic', zorder=4)
+for spine in ['top', 'right']:
+    ax.spines[spine].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+Orange clears blue in **every single bracket**. Both series drift up with income — so the real question is whether the *gap* widens.
+
+::: {.callout-note}
+It doesn't. As a ratio the lift bounces from **roughly 100% up to 290%** with no clean direction. Richer households spend more per trip, coupon or not — but **the coupon effect itself is not an income story.** The second half of our question resolves to "no," and ruling something out is progress, not failure.
+:::
+
+::: {.callout-warning}
+And notice the shaded brackets: those medians rest on **5–11 households**. That is the Step 2 join loss surfacing exactly where you'd be most tempted to read a trend.
+:::
+
+## Step 5: Build the Story — and the "So What" Test {.smaller}
+
+A 3.3x gap is tempting. **Push one question further before you recommend anything.**
+
+```{python}
+#| echo: false
+#| fig-height: 2.9
+
+g = baskets.groupby('used_coupon')
+lines, per_line = g['n_lines'].median(), g['spend_per_line'].median()
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 2.9))
+labels = ['No coupon', 'Coupon']
+
+axes[0].bar(labels, [lines[False], lines[True]], color=[C_NO, C_YES], width=0.5)
+axes[0].set_title('Median items per basket')
+for i, v in enumerate([lines[False], lines[True]]):
+    axes[0].text(i, v+0.5, f'{v:.0f}', ha='center', weight='bold')
+axes[0].set_ylim(0, 23)
+
+axes[1].bar(labels, [per_line[False], per_line[True]], color=[C_NO, C_YES], width=0.5)
+axes[1].set_title('Median spend per item')
+for i, v in enumerate([per_line[False], per_line[True]]):
+    axes[1].text(i, v+0.08, f'${v:.2f}', ha='center', weight='bold')
+axes[1].set_ylim(0, 3.6)
+
+for ax in axes:
+    for spine in ['top', 'right']:
+        ax.spines[spine].set_visible(False)
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+**Spend per item is identical.** Coupon baskets are not *pricier* — they are simply **bigger trips**.
+
+## What We Can — and Cannot — Say {.smaller}
+
+::: {.callout-important}
+## The "So What" Test
+
+*So what?* Coupon redemption marks the **weekly stock-up trip**, not a change in what people buy.
+:::
+
+. . .
+
+::: {.callout-caution}
+**The recommendation we cannot make:** *"Send more coupons to grow basket size."*
+
+Nothing here shows coupons **caused** bigger baskets. Shoppers planning a big trip may be the ones who bother to bring a coupon. 
+:::
+
+. . .
 
 <br>
 
-| Tool           | Strengths                               | Best Use Cases                                         |
-| -------------- | --------------------------------------- | ------------------------------------------------------ |
-| **Pandas**     | Fast, tied to DataFrames, minimal setup | Quick EDA during analysis                              |
-| **Matplotlib** | Complete control, high-quality output   | Reports, presentations, publications                   |
-| **Bokeh**      | Interactive, web-friendly               | Dashboards, stakeholder exploration, exploratory tools |
+**Next question:** do the *same* households shop differently with and without a coupon? That comparison could support a causal claim. This one can't.
 
+---
 
-# Mid-term {background="#43464B"}
+:::: {.columns}
+::: {.column width='65%'}
+::: {.callout-note}
+## Exercise 2 — What's the Next Question? 🤔
 
+We concluded: *coupon baskets are 3.3x larger, but spend per item is identical — coupons mark stock-up trips.*
 
-## Mid-term: It’s Closer Than You Think!
+Your VP of Promotions reads this and asks: **"So should we mail more coupons?"**
 
-* **We’re a little over 2 weeks out** from the mid-term deadline.
-* **Why talk about it now?**
-  * You have **two upcoming lab sessions** to work on it:
-    * **This Thursday:** Explore possible directions & form groups.
-    * **Next Thursday:** Entire lab dedicated to mid-term work.
+Name **3 follow-up analyses** you would run before answering, and what each would tell you.
 
-. . .
+> Discuss with your neighbor for 3 minutes.
+:::
+:::
+::: {.column width='35%'}
+<center>
+<div id="3minEx2"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minEx2", 180, "slide");
+    });
+</script>
+</center>
+:::
+::::
 
-* **Action this week:**
-  * Form your group (2–4 students).
-  * Review the mid-term instructions & grading rubric.
+# Part 3: The Midterm Project {background="#2c3e50"}
 
-## What’s the Goal?
+## The Regork Scenario {.smaller}
 
-**Scenario Recap:**
+You are a data scientist at **Regork**, a national grocery chain.
 
-* You’re a data scientist at **Regork**, a national grocery chain.
-* You’ve been asked to **identify a potential area of growth** that could increase revenue or profits.
-* Deliverables:
-
-  * **Written report** with clear business question, analysis, and recommendations.
-  * **3-minute presentation** for the CEO.
-
-
-## Project Details {.smaller}
-
-* **Group Size:** 2–4 students
-* **Choose 1 clear business question** and fully address it
-* Use the datasets provided (Complete Journey data)
-* **Analysis Requirements:**
-  * Data wrangling & cleaning
-  * Aggregations & visualizations
-  * Logical analytic approach that connects to the business question
+Your manager has asked you to identify a **potential growth opportunity** — an area where the company could invest future resources to increase revenue or profits.
 
 . . .
 
-::: {.callout-important}
-## Grading Criteria
+Your task:
 
-We'll discuss these in more depth in future classes:
+1. Define a **clear business question** that investigates a specific growth opportunity
+2. Analyze the Complete Journey data to answer it
+3. Communicate your findings through:
+   - A **written analytic report** (Jupyter Notebook → HTML)
+   - A **3-minute recorded presentation** for the CEO
 
-* Clarity of business question
-* Soundness of analytic approach
-* Quality & clarity of visuals
-* Actionable insights & recommendations
+. . .
+
+::: {.callout-tip}
+**Groups:** 2–4 students. Join one of the pre-defined groups in Canvas → People → Mid-Term Project. You may not create your own group outside that list.
 :::
 
+## What a Sharp Business Question Looks Like {.smaller}
 
+::: {.callout-tip}
+## You just watched one get answered
 
-## Example Business Questions
+*"Do households that redeem coupons have larger basket spend than those that don't — and does this differ across income brackets?"*
+:::
+
+That question survived contact with the data because it named four things up front:
+
+| It named | Which told us |
+|----------|---------------|
+| A **unit** — the basket | what one row of our table had to be |
+| A **metric** — spend | what to compute, and that skew mattered |
+| A **comparison** — coupon vs. not | what the chart at Step 4 had to show |
+| A **segmentation** — income | what to check next, even though it came back empty |
+
+. . .
+
+Notice it was answerable in **four steps** — and we knew we were done. That is the bar.
+
+## Three More Sharp Questions {.smaller .scrollable}
+
+<br>
+
+::: {.callout-tip}
+## Private label
+
+*“Do households with kids buy a higher share of private-label products than households without — and does that gap differ by department?”*
+
+Unit: household · Metric: private-label share of spend · Compare: kids vs. none · Segment: department
+:::
+
+::: {.callout-tip}
+## Trip behavior
+
+*“Do households that shop twice a week or more spend more over the year than occasional shoppers — or do they spread the same annual spend across more trips?”*
+
+Unit: household · Metric: annual spend & trip count · Compare: frequent vs. occasional · Segment: income
+:::
+
+::: {.callout-tip}
+## Promotions
+
+*“Do products featured in the weekly mailer sell more during the featured week — and does any lift carry into the week after?”*
+
+Unit: product-week · Metric: units sold · Compare: featured vs. not · Segment: department
+:::
+
+. . .
+
+::: {.callout-note}
+Notice the second one has the **same shape as our coupon finding**: *“more spend”* and *“more trips”* are different answers, and the question is built so you can tell them apart. Design that distinction in from the start — don't discover it at the end.
+:::
+
+## What Strong Analysis Looks Like {.smaller}
 
 ::: incremental
-* Are certain demographic groups underrepresented in specific product categories?
-* Do purchasing patterns shift seasonally or around holidays?
-* Are certain products frequently bought together?
-* Which promotions drive the most revenue uplift?
-* Are there product categories with declining sales in specific demographics?
+**A question worth asking** — specific, answerable, and tied to a decision someone actually makes. You saw the standard in Part 2.
+
+**A named decision-maker** — who acts on this, and what do they do differently on Monday? The VP of Promotions needs a recommendation, not a summary of what you computed.
+
+**Reasoning you can follow** — structure, then distributions, then segmentation. Each step raises the next question. Show the reasoning, not just the outputs.
+
+**Honesty about limits** — say what your analysis does *not* establish. The strongest projects name the recommendation they can't yet make, and what would be needed to make it.
+:::
+
+. . .
+
+::: {.callout-tip}
+Every chart earns its place by making **one** point. Label the axes, use a readable scale, and narrate what the reader should see. Plots without interpretation are decoration.
 :::
 
 . . .
 
 ::: {.callout-important}
-## Get Creative!
+## Don't guess at the bar — go look at it
 
-These are examples—you can explore your own ideas.
+The Canvas project page includes **real report and presentation submissions from previous classes.** They are the clearest picture you will get of what “strong” actually means.
+
+Before you write anything, read two of them end to end and ask: *what did they investigate, how did they narrate each chart, and where did they choose to stop?* An hour spent there will do more for your grade than an extra hour of code.
 :::
 
-## What “Good” Looks Like {.smaller}
+## Deliverables {.smaller}
 
-* **Clear narrative** that ties analysis back to the business question
-* **Appropriate visuals** that enhance the story (not just charts for the sake of charts)
-* **Actionable recommendations**—tell the CEO *what to do next*
+### A. Written Technical Report
 
-**Example:**
+- Jupyter Notebook rendered to **HTML**
+- Must include: data preparation, business question, EDA, narrative findings, recommendations
+- Show relevant code; suppress warnings and unnecessary/distracting output
+- File naming: `YYYY_BANA4080_groupXX_finalproject.html`
 
-* **Business Question:** *Are frozen pizzas and beer commonly purchased together?*
-* **Approach:** Join transactions + products, identify relevant items, compute co-purchase rates, visualize results.
-* **Recommendation:** Targeted “Pizza & Beer” weekend promotions.
-* **Dig Deeper:**
-  * Is the co-purchase **more common leading into the weekend** than earlier in the week?
-  * Does it **spike during football season** vs. the rest of the year?
-  * Are these items co-purchased **more by households with kids** than those without?
+### B. Recorded Stakeholder Presentation
 
-## What “Good” Looks Like {.smaller}
+- **3 minutes maximum** — no code, executive audience
+- Covers: business problem, key findings, one clear recommendation
+- Recorded via Zoom or Kaltura and submitted through Canvas
 
-* **Clear narrative** that ties analysis back to the business question
-* **Appropriate visuals** that enhance the story (not just charts for the sake of charts)
-* **Actionable recommendations**—tell the CEO *what to do next*
+::: {.callout-note}
+One group member submits both deliverables together. Submit early — large video files can take time to upload.
+:::
 
-**Example:**
+## What Gets Graded — and Where to Find the Rubric {.smaller}
 
-* **Business Question:** *Are frozen pizzas and beer commonly purchased together?*
-* **Approach:** Join transactions + products, identify relevant items, compute co-purchase rates, visualize results.
-* **Recommendation:** Targeted “Pizza & Beer” weekend promotions.
+**75 points total:** written report (40) + recorded presentation (35).
+
+:::: {.columns}
+::: {.column width='50%'}
+**Report — 40 pts**
+
+| Section | Pts |
+|---------|-----|
+| Introduction | 5 |
+| Libraries | 5 |
+| EDA | 10 |
+| Summary | 5 |
+| Code & Craft | 15 |
+:::
+::: {.column width='50%'}
+**Presentation — 35 pts**
+
+| Section | Pts |
+|---------|-----|
+| Introduction | 5 |
+| Findings | 10 |
+| Summary | 5 |
+| Delivery | 15 |
+:::
+::::
 
 ::: {.callout-important}
-## Dig Deeper
+## Canvas → Assignments → Mid-Term Project
 
-Bottom line: Provide a **robust, multi-angle understanding** of the business problem so you can **paint a complete picture for the CEO**.
+Full description, the **complete rubric**, and **example submissions from a previous course**. Reading the rubric *before* you start is one of the highest-leverage things you can do.
+:::
+::: {.callout-tip}
+EDA (10 pts) is where projects separate. One non-obvious pattern explained well beats five polished charts that say nothing new.
 :::
 
+## Thursday's Lab: Project Ideation {.smaller}
 
-## Key Takeaways for Today
+In Thursday's lab you will:
 
-* Form your group by **Thursday**
-* Come to Thursday’s lab ready to explore possible directions
-* Think both **analytically** and **visually**—what’s the story you want to tell?
-* Your business question may evolve as you explore the data—that’s normal!
+1. Form your group (2–4 students) and join a Canvas group
+2. **Brainstorm three distinct project ideas**, each with a business problem, decision-maker, data plan, and success criteria
+3. Choose your most compelling idea and do a **2–3 minute stand-up pitch** to the class
 
+. . .
 
-::: {.callout-important}
-Don't worry, we'll continue to discuss the details & expectations of this mid-term over the next couple weeks.
+::: {.callout}
+## Tips for a Strong Pitch
+
+* Lead with the **question**, not the dataset
+* Name a **specific decision-maker** and what they would do with your findings
+* Describe **what a meaningful finding would look like** — not just "explore the data"
 :::
 
-## Q&A 🙋🏾‍♂️
+. . .
 
-Open floor for any questions regarding...
+**After lab:** refine your idea into a formal proposal (the homework due this week).
 
-- Today’s visualization topics
-- What to do before Thursday’s lab
-- Reading clarifications or edge cases you’ve run into
-- Anything else on your mind
+## Q&A 🙋
+
+Open floor for questions on:
+
+- Today's visualization tools or the exercise
+- The EDA framework and how it connects to the project
+- Project scope, deliverables, or the proposal
+- Anything from the reading or labs so far
