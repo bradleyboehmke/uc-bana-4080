@@ -18,8 +18,10 @@ footer: 'BANA 4080 | Week 6'
 title-slide-attributes:
     data-background-image: images/programming-background.png
     data-background-size: cover
-    data-background-opacity: "0.90"
-filters:
+    data-background-opacity: "1.0"
+    data-background-color: "#000000"
+    style: "color: white;"
+filters: 
   - timer
 execute:
     echo: true
@@ -48,7 +50,7 @@ execute:
 ::: {.callout-important}
 ## Action item:
 
-Open Google Colab now and create a new notebook
+Open the [Week 6 companion notebook](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-06-lecture.ipynb){target="_blank"} in Google Colab and follow along as we work through today's examples.
 :::
 
 # Control Statements for Business Logic {background="#43464B"}
@@ -121,7 +123,7 @@ if is_vip:
     final_price = base_price * 0.8
     print(f"VIP discount applied!")
 else:
-    final_price = base_price
+    final_price = base_price * 0.95
     print(f"Standard price")
 
 print(f"Price: ${final_price}")
@@ -137,7 +139,7 @@ if is_vip:
     final_price = base_price * 0.8
     print(f"VIP discount applied!")
 else:
-    final_price = base_price
+    final_price = base_price * 0.95
     print(f"Standard price")
 
 print(f"Price: ${final_price}")
@@ -318,6 +320,63 @@ else:
 print(f"{customer_type} customer receives {discount:.0%} discount")
 ```
 
+## Challenge: Grocery Loyalty Classifier {.smaller}
+
+**Your turn — write this one from scratch.**
+
+**Business rules:**
+
+| Monthly Spend | Loyalty Status | Discount |
+|--------------|---------------|---------|
+| ≥ $500 | Gold | 10% |
+| ≥ $200 | Silver | 5% |
+| ≥ $50 | Bronze | 2% |
+| < $50 | No Status | 0% |
+
+:::: {.columns}
+::: {.column width="75%"}
+**Write code that:**
+
+1. Sets a `monthly_spend` variable
+2. Assigns `loyalty_status` and `discount` using `if/elif/else`
+3. Prints: `f"${monthly_spend}/month → {loyalty_status} ({discount:.0%} off)"`
+
+**Test with:** $650 → Gold, $275 → Silver, $75 → Bronze, $30 → No Status
+:::
+::: {.column width="25%"}
+<center>
+
+<div id="loyaltyChallenge"></div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("loyaltyChallenge", 300, "slide");
+    });
+</script>
+</center>
+:::
+::::
+
+## Solution: Grocery Loyalty Classifier {.smaller}
+
+```{python}
+monthly_spend = 650
+
+if monthly_spend >= 500:
+    loyalty_status = "Gold"
+    discount = 0.10
+elif monthly_spend >= 200:
+    loyalty_status = "Silver"
+    discount = 0.05
+elif monthly_spend >= 50:
+    loyalty_status = "Bronze"
+    discount = 0.02
+else:
+    loyalty_status = "No Status"
+    discount = 0.0
+
+print(f"${monthly_spend}/month → {loyalty_status} ({discount:.0%} off)")
+```
+
 ## Concept: Conditional Logic on DataFrames {.smaller}
 
 **Apply conditional logic to entire columns at once:**
@@ -347,6 +406,58 @@ customers['final_price'] = np.where(
 )
 
 customers
+```
+
+## Challenge: Flag Transactions with `np.where()` {.smaller}
+
+**Scenario:** Use the Complete Journey transactions data to classify purchases.
+
+```python
+from completejourney_py import get_data
+import numpy as np
+
+df = get_data()['transactions']
+```
+
+:::: {.columns}
+::: {.column width="65%"}
+**Your task:** Use `np.where()` to add two new columns:
+
+1. `'value_tier'` — `'premium'` if `sales_value > 10`, else `'standard'`
+2. `'disc_flag'` — `'discounted'` if `retail_disc > 0`, else `'full price'`
+
+Then use `.value_counts()` on each to see the split.
+:::
+::: {.column width="35%"}
+<center>
+
+<div id="npwhereChallenge"></div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("npwhereChallenge", 300, "slide");
+    });
+</script>
+</center>
+:::
+::::
+
+## Solution: Flag Transactions with `np.where()` {.smaller}
+
+```{python}
+from completejourney_py import get_data
+import numpy as np
+
+df = get_data()['transactions']
+
+df['value_tier'] = np.where(df['sales_value'] > 10, 'premium', 'standard')
+df['value_tier'].value_counts()
+```
+
+. . .
+
+```{python}
+df['disc_flag'] = np.where(df['retail_disc'] > 0, 'discounted', 'full price')
+df['disc_flag'].value_counts()
 ```
 
 # Iteration for Business Automation {background="#43464B"}
@@ -455,6 +566,59 @@ print(discounted)
 ## List comprehension is simply:
 
 `[expression for item in list]`
+:::
+
+## Challenge: Loyalty Classifier — Now With a Loop {.smaller}
+
+**Earlier** you classified one household's loyalty status with `if/elif/else`.
+
+**Now** use a `for` loop to classify all of them at once.
+
+:::: {.columns}
+::: {.column width="65%"}
+**Data:**
+```python
+households = [650, 275, 75, 30, 520, 190]
+```
+
+**Your task:** Loop over `households` and for each spending amount, print:
+
+`"$X/month → Status (Y% off)"`
+
+using the same Gold / Silver / Bronze / No Status rules from before.
+:::
+::: {.column width="35%"}
+<center>
+
+<div id="loyaltyLoopChallenge"></div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("loyaltyLoopChallenge", 300, "slide");
+    });
+</script>
+</center>
+:::
+::::
+
+## Solution: Loyalty Classifier — Now With a Loop {.smaller}
+
+```{python}
+households = [650, 275, 75, 30, 520, 190]
+
+for spend in households:
+    if spend >= 500:
+        status, disc = "Gold", 0.10
+    elif spend >= 200:
+        status, disc = "Silver", 0.05
+    elif spend >= 50:
+        status, disc = "Bronze", 0.02
+    else:
+        status, disc = "No Status", 0.0
+    print(f"${spend}/month → {status} ({disc:.0%} off)")
+```
+
+::: {.callout-tip}
+**The pattern:** Put your `if/elif/else` logic *inside* the loop body — Python runs the full conditional for each item in the list.
 :::
 
 ## Challenge: Temperature Converter {.smaller}
@@ -846,7 +1010,7 @@ customers_df
 
 - **Group size:** 2-4 students
 - **Must use pre-defined Canvas groups** (People → Mid-Term Project)
-- **Cannot create your own group** outside the Canvas list
+- **DO NOT create your own group** outside the Canvas list
 - **Peer evaluations** count toward 25% of engagement grade
 
 **If you need a group:** We'll solve this right now!
@@ -905,57 +1069,50 @@ customers_df
 
 ## Thursday Lab Planning {.smaller .scrollable}
 
-What your group should **start accomplishing** Thursday:
+Most of you should have a signed-off business problem and a plan for the analyses needed to answer it. **Use Thursday's lab to execute that work** — I'll be circulating to provide feedback as you go.
 
-**Setup & Planning**
+**If you don't yet have sign-off or an analysis plan, that's your first priority Thursday:**
 
-- Finalize group membership
-- Exchange contact information
-- Set up shared workspace (GitHub, Google Drive, etc.)
+- Get your business question approved by me or the TA
+- Map out the specific analyses needed to answer it (what data, what metric, what visualization?)
 
-**Dataset Exploration**
+**Once those are in place, start executing:**
 
-- Install and explore `completejourney_py` package
-- Identify 2-3 datasets you'll join
-- Start exploring data structure and quality
+- Work through your analyses in priority order
+- Ask for feedback early — don't wait until something is finished
+- Aim to have at least one complete analysis by end of lab
 
-**Business Question Development**
-
-- Brainstorm 3-5 potential business questions
-- Discuss feasibility with available data
-- Choose your primary question to pursue
-
-**Come prepared:** Laptop with Python environment ready!
+::: {.callout-important}
+**Come prepared:** Laptop ready, proposal open, and a clear sense of what you're working on Thursday.
+:::
 
 ## Project Timeline: Final Push! {.smaller}
 
-**Where we are now:**
-
-- **Week 6 Tuesday (Today):** Project setup and expectations
-- **Week 6 Thursday:** Dedicated lab work session
-- **Week 7:** Final development and submission
-
-**Key Milestones:**
-
 :::: {.columns}
 ::: {.column}
-**This Week:**
+**Week 5 (Done):**
 
-- ✅ Form groups (today!)
-- 🔄 Dataset exploration (Thursday)
-- 🔄 Finalize business question (Thursday)
+- ✅ Groups formed
+- ✅ Business problem identified
+- ✅ Project proposal submitted
+
+**Week 6 — This Week:**
+
+- ✅ Business question finalized & approved
+- 🔄 Analyses mapped out (Tuesday/Thursday)
+- 🔄 Begin executing analyses (Thursday lab)
 :::
 ::: {.column}
-**Next Week:**
+**Week 7 — Final Push:**
 
-- 📊 Complete analysis
-- 📝 Write report  
+- 📊 Complete all analyses
+- 📝 Write report
 - 🎥 Record presentation
-- 📤 **Submit by Sunday end of Week 7**
+- 📤 **Submit by end of Week 7**
 :::
 ::::
 
-**Bottom line:** You have **11 days** to complete this project!
+**Bottom line:** Your foundation is set — Week 6 is about locking in the plan and getting work done.
 
 ## Open floor for questions about:
 
