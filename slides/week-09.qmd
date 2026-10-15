@@ -34,24 +34,84 @@ execute:
   * From correlation to prediction with linear regression
   * Evaluating model performance for business decisions
 
-# Discussion: Homework & Questions {background="#43464B"}
+## 📓 Follow Along in the Notebook
 
-## Questions from Week 8? {.smaller}
+::: {.callout-tip}
+## Week 9 Lecture Notebook
 
-* Midterm project feedback?
-* Machine learning concepts and project planning?
-* Anything confusing in the quiz or class lab?
-* Time to ask!
+Open the companion notebook in Colab now and follow along as we work through today's examples on correlation, regression, and model evaluation.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-09-lecture.ipynb)
+:::
+
+# Week 8 Recap {background="#43464B"}
+
+## Last Week in 60 Seconds {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🎯 Supervised learning]{.card-title}
+
+We have a **target** to learn from (an "answer key")
+
+**Regression** — predict a *number*
+
+*How much will this customer spend next month?*
+
+**Classification** — predict a *category*
+
+*Will this customer cancel?*
+:::
+::: {.card}
+[🔍 Unsupervised learning]{.card-title}
+
+**No target**: the algorithm finds structure on its own
+
+**Clustering** — discover *groups*
+
+*What types of shoppers do we have?*
+:::
+:::
 
 . . .
 
-::: {.callout}
-## Activity
+::: {.callout-tip}
+This week we go deep on the first one: **regression**.
+:::
 
-Converse with your neighbor and identify...
+## Spot the Model {.smaller}
 
-* 1 concept from last week that you thought was well explained
-* 1 concept that is still confusing
+:::: {.columns}
+::: {.column width="70%"}
+
+**What's one regression or classification model you interacted with this past week?**
+
+What was it predicting? Was the output a number or a category?
+
+**A couple of mine:**
+
+* ⛳ **Arccos golf app** *(regression)*: predicts a "plays like" distance from the actual distance, wind, humidity, temperature, and slope
+* 🏈 **Yahoo Fantasy Football** *(classification)*: predicts who will win this week's matchup
+
+:::
+::: {.column width="30%"}
+
+<center>
+
+<div id="2minSpot"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("2minSpot", 120, "slide");
+    });
+</script>
+</center>
+
+:::
+::::
+
+::: {.notes}
+Give your two examples first if the room is quiet. Push students to name the target and the inputs (features) for each example. Also call out that Yahoo shows a win *probability*. Classification models often output probabilities, which previews week 10.
 :::
 
 # Understanding Relationships in Business {background="#43464B"}
@@ -111,12 +171,18 @@ Then we'll take a few responses...
 * **0**: No linear relationship  
 * **-1**: Perfect negative relationship
 
-**Key Insight:** Correlation is descriptive—it tells you variables move together, but **not why**.
+**Key Insight:** Correlation is descriptive, it tells you variables move together, but **not why**.
+
+::: {.callout-tip}
+## Your turn
+Give me a business or everyday example of a **positive**, a **negative**, and **no** correlation.
+:::
+
 :::
 ::: {.column}
 ```{python}
 #| echo: false
-#| fig-height: 8
+#| fig-height: 7
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -125,14 +191,14 @@ import pandas as pd
 np.random.seed(42)
 
 # Create figure with 3 subplots vertically
-fig, axes = plt.subplots(3, 1, figsize=(6, 8))
+fig, axes = plt.subplots(3, 1, figsize=(5,7))
 
 # Positive correlation (~0.7)
 n = 100
 x1 = np.random.randn(n)
 y1 = 0.7 * x1 + 0.5 * np.random.randn(n)
 axes[0].scatter(x1, y1, alpha=0.6, color='blue')
-axes[0].set_title('Positive Correlation (r ≈ 0.7)', fontsize=12, fontweight='bold')
+axes[0].set_title('Positive Correlation (r ≈ 0.7)', fontsize=10, fontweight='bold')
 axes[0].set_xlabel('Variable X')
 axes[0].set_ylabel('Variable Y')
 axes[0].grid(True, alpha=0.3)
@@ -141,7 +207,7 @@ axes[0].grid(True, alpha=0.3)
 x2 = np.random.randn(n)
 y2 = np.random.randn(n)
 axes[1].scatter(x2, y2, alpha=0.6, color='gray')
-axes[1].set_title('No Correlation (r ≈ 0)', fontsize=12, fontweight='bold')
+axes[1].set_title('No Correlation (r ≈ 0)', fontsize=10, fontweight='bold')
 axes[1].set_xlabel('Variable X')
 axes[1].set_ylabel('Variable Y')
 axes[1].grid(True, alpha=0.3)
@@ -150,7 +216,7 @@ axes[1].grid(True, alpha=0.3)
 x3 = np.random.randn(n)
 y3 = -0.7 * x3 + 0.5 * np.random.randn(n)
 axes[2].scatter(x3, y3, alpha=0.6, color='red')
-axes[2].set_title('Negative Correlation (r ≈ -0.7)', fontsize=12, fontweight='bold')
+axes[2].set_title('Negative Correlation (r ≈ -0.7)', fontsize=10, fontweight='bold')
 axes[2].set_xlabel('Variable X')
 axes[2].set_ylabel('Variable Y')
 axes[2].grid(True, alpha=0.3)
@@ -196,7 +262,7 @@ Emphasize that correlation ≠ causation. This is crucial for business decision-
 **Key Takeaways from the Challenge:**
 
 * **Visual patterns** help us estimate correlation strength
-* **Business intuition** often aligns with statistical relationships
+* **Intuition isn't enough**: sometimes it matches the data, sometimes it doesn't. Statistics help us test and refine our intuition
 * **Perfect correlations** (±1.0) are rare in real business data
 * **Direction matters**: Positive vs negative relationships tell different stories
 
@@ -236,7 +302,7 @@ plt.show()
 Let's see how close your guess was!
 
 ```{python}
-#| code-line-numbers: "7"
+#| code-line-numbers: "2,7"
 # Compute the correlation coefficient
 correlation = data["ad_spend"].corr(data["weekly_sales"])
 print(f"Correlation coefficient: {correlation:.3f}")
@@ -402,191 +468,473 @@ How would you assess prediction quality?
 
 # Evaluating Model Performance {background="#43464B"}
 
-## Why Model Evaluation Matters {.smaller .scrollable}
+## Which Forecaster Would You Hire? {.smaller}
 
 :::: {.columns}
-::: {.column}
-**Business Reality Check:**
+::: {.column width="65%"}
 
-* Building a model is only half the battle
-* The real question: *How good is your model?*
-* Without evaluation, you might deploy a model that makes terrible predictions!
+Two analysts forecast weekly sales for your store. Here's their track record:
 
-**Think about it:**
+| Week | Actual Sales | Forecaster A | Forecaster B |
+|:----:|:------:|:------:|:------:|
+| 1 | $6,100 | $5,900 | $6,100 |
+| 2 | $5,400 | $5,700 | $5,350 |
+| 3 | $6,800 | $6,600 | $6,850 |
+| 4 | $5,900 | $6,100 | $5,900 |
+| 5 | $7,200 | $6,900 | $8,300 |
 
-* Would you trust a sales forecast that's typically off by 50%?
-* How about one that's off by 5%?
 :::
-::: {.column}
-```{mermaid}
-%%| fig-align: center
-%%| echo: false
-flowchart TD
-    A[Build Model] --> B[Make Predictions]
-    B --> C[Compare with Actuals]
-    C --> D[Calculate Metrics]
-    D --> E{Good Performance?}
-    E -->|Yes| F[Deploy Model]
-    E -->|No| G[Improve Model]
-    G --> A
-    
-    style A fill:#e1f5fe
-    style D fill:#fff3e0
-    style F fill:#c8e6c9
-    style G fill:#ffcdd2
-```
+::: {.column width="35%"}
+
+**With your neighbor:**
+
+* Which forecaster would you hire?
+* *How* did you decide?
+
+<center>
+
+<div id="3minHire"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minHire", 180, "slide");
+    });
+</script>
+</center>
+
 :::
 ::::
 
-## Key Evaluation Metrics {.smaller}
-
-**R² (R-squared):** "What percentage of the variation does my model explain?"
-
-* Range: 0 to 1 (higher is better)
-* Example: R² = 0.85 means the model explains 85% of sales variation
-
-**RMSE (Root Mean Squared Error):** "How far off are my predictions, on average?"
-
-* Same units as your outcome (dollars, customers, etc.)
-* Example: RMSE = $347 means predictions are typically off by $347
-
-::: {.callout-note}
-## Additional Details in Readings
-
-The readings will go into more details about these metrics and also introduce additional metrics like MAE (Mean Absolute Error) and MAPE (Mean Absolute Percentage Error). 
-
-**Key takeaway:** All these metrics measure how our model's predicted values differ from the actual values.
+::: {.notes}
+Both forecasters miss by $240 per week on average, so there's no obvious right answer. A is consistently a little off. B is nearly perfect, except for one $1,100 miss in week 5, which could mean a lot of wasted inventory. Let students argue it out. The real point: to decide, they compared predictions to actual sales and summarized the misses somehow. That is model evaluation. We come back to these two on the RMSE slide.
 :::
 
-## Computing Metrics with Scikit-Learn {.smaller}
+## That's Model Evaluation {.smaller}
 
-Let's see how to calculate these evaluation metrics using our advertising model:
+To decide, you compared **predictions** with what **actually happened**, then summarized the misses. That's all model evaluation is.
+
+::: {.flow}
+::: {.card}
+[🔮 Predict]{.card-title}
+
+Have the model make predictions
+:::
+[➜]{.arrow}
+
+::: {.card}
+[⚖️ Compare]{.card-title}
+
+Line them up with the actual outcomes
+:::
+[➜]{.arrow}
+
+::: {.card}
+[📏 Summarize]{.card-title}
+
+Condense the misses into a single **metric**
+:::
+[➜]{.arrow}
+
+::: {.card}
+[✅ Decide]{.card-title}
+
+Deploy it, improve it, or pick a better model
+:::
+:::
+
+. . .
+
+<br>
+
+**Why bother?**
+
+* **Trust**: would you bet next month's inventory budget on a model you never checked?
+* **Comparison**: a metric lets us pick the better of two models objectively
+* **Communication**: "typically off by about $350" is something a manager can plan around
+
+## RMSE: How Far Off, Typically? {.smaller .scrollable}
+
+**Root Mean Squared Error** turns a list of misses into one number: **①** find each error (actual − forecast), **②** square it, **③** take the mean, **④** take the square root.
+
+|  |  | Forecaster A | | | Forecaster B | | |
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| **Week** | **Actual** | **Forecast** | **① Error** | **② Error²** | **Forecast** | **① Error** | **② Error²** |
+| 1 | $6,100 | $5,900 | +200 | 40,000 | $6,100 | 0 | 0 |
+| 2 | $5,400 | $5,700 | −300 | 90,000 | $5,350 | +50 | 2,500 |
+| 3 | $6,800 | $6,600 | +200 | 40,000 | $6,850 | −50 | 2,500 |
+| 4 | $5,900 | $6,100 | −200 | 40,000 | $5,900 | 0 | 0 |
+| 5 | $7,200 | $6,900 | +300 | 90,000 | $8,300 | −1,100 | 1,210,000 |
+| | | | **③ Mean** | **60,000** | | **③ Mean** | **243,000** |
+| | | | **④ RMSE** | **$245** | | **④ RMSE** | **$493** |
+
+
+::: {.callout-tip}
+Both forecasters miss by **\$240 per week on average**, but squaring makes B's one big miss count heavily. **Lower RMSE is better**, and the square root puts it back in the same units as what you're predicting ($).
+:::
+
+## R²: Better Than Just Guessing the Average? {.smaller}
 
 ```{python}
-#| code-line-numbers: "1,3-8"
-from sklearn.metrics import r2_score, root_mean_squared_error
+#| echo: false
+#| fig-width: 10
+#| fig-height: 3
+import numpy as np
 
-# Make predictions on our data
-predictions = model.predict(X)
+sales_mean = y.mean()
+fitted = model.predict(X)
+baseline_sse = ((y - sales_mean) ** 2).sum()
+model_sse = ((y - fitted) ** 2).sum()
 
-# Calculate evaluation metrics
-r2 = r2_score(y, predictions)
-rmse = root_mean_squared_error(y, predictions)
+fig, axes = plt.subplots(1, 2, figsize=(10, 3), sharey=True)
 
-print(f"R² Score: {r2:.3f}")
-print(f"RMSE: ${rmse:.0f}")
+# Baseline: always predict the average
+axes[0].vlines(data["ad_spend"], sales_mean, y, color="gray", alpha=0.6)
+axes[0].scatter(data["ad_spend"], y, s=30, zorder=3)
+axes[0].axhline(sales_mean, color="gray", linewidth=3, label="Average sales")
+axes[0].set_title("Baseline: always guess the average", fontweight="bold")
+
+# Our regression model
+axes[1].vlines(data["ad_spend"], fitted, y, color="red", alpha=0.6)
+axes[1].scatter(data["ad_spend"], y, s=30, zorder=3)
+axes[1].plot(data["ad_spend"], fitted, color="red", linewidth=3, label="Regression line")
+axes[1].set_title("Our model: use ad spend", fontweight="bold")
+
+for ax in axes:
+    ax.set_xlabel("Advertising Spend ($)")
+    ax.legend(loc="upper left")
+    ax.grid(True, alpha=0.3)
+axes[0].set_ylabel("Weekly Sales")
+
+plt.tight_layout()
+plt.show()
 ```
 
-**What do these numbers tell us about our model's performance?**
+. . .
 
-## The Problem: Training Data Evaluation {.smaller}
+$$ R^2 = 1 - \frac{\text{model's squared error}}{\text{baseline's squared error}} $$
+
+**Our model: R² ≈ 0.89.** Using ad spend removes about **89%** of the error we'd make by guessing the average every week. In other words, it *explains 89% of the variation* in weekly sales.
+
+::: {.notes}
+The vertical lines are the errors. Left: how wrong we'd be with no model at all. Right: how wrong we are with the model. R² compares the two. R² = 0 means the model is no better than guessing the average; R² = 1 means perfect predictions. Higher is better, but what counts as "good" depends on the domain. 0.3 can be great in noisy settings like stock returns.
+:::
+
+## Computing Both with Scikit-Learn {.smaller}
+
+You won't compute these by hand. Scikit-learn does it in one line each:
+
+```{python}
+#| code-line-numbers: "1,6-7"
+from sklearn.metrics import r2_score, root_mean_squared_error
+
+# Predictions from the model we fit on all 20 weeks
+fitted_sales = model.predict(X)
+
+r2 = r2_score(y, fitted_sales)
+rmse = root_mean_squared_error(y, fitted_sales)
+
+print(f"R²:   {r2:.2f}")
+print(f"RMSE: ${rmse:,.0f}")
+```
+
+::: {.callout-note}
+Both functions take the **actual values first**, then the **predictions**.
+:::
+
+## RMSE vs. R² at a Glance {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[📏 RMSE]{.card-title}
+
+**Asks:** How far off are my predictions, typically?
+
+**Units:** same as the target (dollars, units, minutes...)
+
+**Better:** lower (0 = perfect)
+
+**Our model:** "Forecasts are typically off by about **$347** per week"
+:::
+::: {.card}
+[📊 R²]{.card-title}
+
+**Asks:** How much better is my model than guessing the average?
+
+**Units:** none (a proportion, usually 0 to 1)
+
+**Better:** higher (1 = perfect)
+
+**Our model:** "Ad spend explains about **89%** of the week-to-week variation in sales"
+:::
+:::
+
+. . .
+
+::: {.callout-tip}
+Use **both**: R² tells you how much of the pattern you've captured; RMSE tells the business what size of miss to plan for. Your readings add two more: **MAE** and **MAPE**.
+:::
+
+## Explain It to the Manager {.smaller}
 
 :::: {.columns}
-::: {.column width="60%"}
+::: {.column width="70%"}
 
-**Wait a minute...** 🤔
+The store manager says: *"I can plan staffing and inventory as long as forecasts are within about **$500** a week."*
 
-We just evaluated our model on the **same data** we used to build it!
+Our model: **R² = 0.89**, **RMSE = $347**
 
-**This is like:**
+**With your neighbor:**
 
-- Grading your own homework
-- A teacher giving students the test questions beforehand
-- A chef only tasting their own cooking
+1. Translate each metric into one plain-English sentence the manager would understand
+2. Does our model meet the manager's bar?
+3. Which number would you lead with, and why?
 
 :::
-::: {.column width="40%"}
+::: {.column width="30%"}
 
-::: {.callout-warning}
-## Generalization Problem
+<center>
 
-Training data evaluation can be overly optimistic!
-
-We need to test on data the model has **never seen** before.
-:::
+<div id="3minManager"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("3minManager", 180, "slide");
+    });
+</script>
+</center>
 
 :::
 ::::
 
-::: {.callout-important}
-## The Real Question 🤔
-
-**Question**: How will our model perform on **new, unseen data**?
-
-**Solution:** Train/Test splits simulate real-world deployment!
+::: {.notes}
+Connects to box ⑤ on the week 8 ML Project Canvas: the business success metric ($500/week) versus the model metric (RMSE). Lead with RMSE: it's in dollars and maps directly onto the manager's bar. RMSE is a typical miss, not a maximum, so some weeks will still miss by more than $500. Then set up the catch: we graded this model on the same weeks it learned from...
 :::
 
-## The Solution: Train/Test Split {.smaller .scrollable}
+## But Wait... Who Graded That? {.smaller}
 
-**The golden rule:** Never evaluate on the same data you used to train!
+We just scored our model on the **same 20 weeks it learned from**.
 
-```{mermaid}
-%%| fig-align: center
-%%| fig-width: 5
-%%| echo: false
-flowchart TD
-    A[Complete Dataset] --> B[Training Set<br/>70-80%]
-    A --> C[Test Set<br/>20-30%]
-    
-    B --> D[Train Model]
-    D --> E[Trained Model]
-    
-    C --> F[Evaluate Performance]
-    E --> F
-    F --> G[Unbiased Performance<br/>Estimate]
-    
-    style A fill:#f0f8ff
-    style B fill:#e8f5e8
-    style C fill:#ffe6e6
-    style G fill:#fff2cc
+. . .
+
+::: {.callout-warning}
+## That's like...
+
+Getting the exact exam questions the night before. A perfect score proves you *memorized the answers*, not that you *learned the material*.
+:::
+
+. . .
+
+The manager doesn't care how well the model "predicts" weeks that already happened.
+
+The real question is: **how will it do on next week's sales, which it has never seen?**
+
+## Meet the Memorizer {.smaller}
+
+Suppose we **hide 6 of our 20 weeks** and train two models on the other 14:
+
+```{python}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 4.2
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import root_mean_squared_error
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=11
+)
+
+# Model 1: a straight line
+line_model = LinearRegression().fit(X_train, y_train)
+
+# Model 2: "connect the dots" through every training week
+order = np.argsort(X_train["ad_spend"].values)
+dots_x = X_train["ad_spend"].values[order]
+dots_y = y_train.values[order]
+
+def dots_predict(X_new):
+    return np.interp(X_new["ad_spend"].values, dots_x, dots_y)
+
+grid = pd.DataFrame({"ad_spend": np.linspace(400, 2300, 300)})
+models = [
+    ("Model 1: Straight line", line_model.predict),
+    ("Model 2: Connect the dots", dots_predict),
+]
+
+def memorizer_plot(show_test):
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.2), sharey=True)
+    for ax, (name, predict) in zip(axes, models):
+        ax.scatter(X_train["ad_spend"], y_train, s=50, label="Training weeks", zorder=3)
+        ax.plot(grid["ad_spend"], predict(grid), color="red", linewidth=2.5)
+        train_rmse = root_mean_squared_error(y_train, predict(X_train))
+        title = f"{name}\nTraining RMSE: \\${train_rmse:,.0f}"
+        if show_test:
+            test_rmse = root_mean_squared_error(y_test, predict(X_test))
+            ax.scatter(X_test["ad_spend"], y_test, s=120, color="orange",
+                       edgecolor="black", label="Hidden test weeks", zorder=4)
+            title += f"  |  Test RMSE: \\${test_rmse:,.0f}"
+        ax.set_title(title, fontweight="bold")
+        ax.set_xlabel("Advertising Spend ($)")
+        ax.legend(loc="upper left")
+        ax.grid(True, alpha=0.3)
+    axes[0].set_ylabel("Weekly Sales")
+    plt.tight_layout()
+    plt.show()
+
+memorizer_plot(show_test=False)
 ```
 
-**Key insight:** Test set simulates future, unseen data!
+**Based on training RMSE, which model would you deploy?**
+
+::: {.notes}
+Model 2 passes through every training point, so its training RMSE is exactly $0. A perfect score! Take a quick vote before advancing.
+:::
+
+## The Reveal {.smaller}
+
+Now let's bring back the 6 hidden weeks:
+
+```{python}
+#| echo: false
+#| fig-width: 11
+#| fig-height: 4.2
+memorizer_plot(show_test=True)
+```
+
+. . .
+
+The "perfect" model is **worse** on weeks it hasn't seen. Its $0 training score told us nothing about the future. **Only data the model never saw reveals what it actually learned.**
+
+## The Fix: Hold Some Data Back {.smaller}
+
+::: {.flow}
+::: {.card}
+[🗂️ Full dataset]{.card-title}
+
+All the historical data we have
+:::
+[➜]{.arrow}
+
+::: {.card}
+[🏋️ Training set (70–80%)]{.card-title}
+
+The model learns the pattern here
+:::
+[➜]{.arrow}
+
+::: {.card}
+[🔒 Test set (20–30%)]{.card-title}
+
+Locked away until the very end, then used once to score the model
+:::
+[➜]{.arrow}
+
+::: {.card}
+[🔮 Test score]{.card-title}
+
+Our best preview of how the model will do on *future* data
+:::
+:::
+
+. . .
+
+::: {.callout-important}
+## The golden rule
+
+The model **never sees the test set** while it's learning. The test set stands in for the future.
+:::
 
 ## Splitting Our Data {.smaller}
 
-Let's split our advertising data into training and test sets:
-
 ```{python}
-#| code-line-numbers: "1,3-6"
+#| code-line-numbers: "1,4-6"
 from sklearn.model_selection import train_test_split
 
-# Split data: 70% training, 30% testing
+# Hold out 30% of the weeks as a test set
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=30
+    X, y, test_size=0.3, random_state=11
 )
 
-# Check the sizes
-print(f"Total data points: {len(X)}")
-print(f"Training set: {len(X_train)} points ({len(X_train)/len(X):.1%})")
-print(f"Test set: {len(X_test)} points ({len(X_test)/len(X):.1%})")
+print(f"Training weeks: {len(X_train)}")
+print(f"Test weeks:     {len(X_test)}")
 ```
 
-**Important:** `random_state=30` ensures reproducible results!
+::: incremental
+* **Four outputs**: features and target for training, features and target for testing
+* **`test_size=0.3`**: hold out 30% of the rows for testing
+* **`random_state=11`**: rows are assigned randomly; fixing the seed gives the same split every time you run it
+:::
 
-## Training and Evaluation {.smaller}
-
-Now let's train on training data and evaluate on both sets:
+## Train on Train, Score on Test {.smaller}
 
 ```{python}
-#| code-line-numbers: "1-3,6-9"
-# Train on training data only
-model_honest = LinearRegression()
-model_honest.fit(X_train, y_train)
+#| code-line-numbers: "2-3,6-7"
+# Learn ONLY from the training weeks
+model = LinearRegression()
+model.fit(X_train, y_train)
 
-# Calculate RMSE on both sets
-from sklearn.metrics import root_mean_squared_error
-train_rmse = root_mean_squared_error(y_train, model_honest.predict(X_train))
-test_rmse = root_mean_squared_error(y_test, model_honest.predict(X_test))
+# Score the model on both sets
+train_preds = model.predict(X_train)
+test_preds = model.predict(X_test)
 
-print(f"Training RMSE: ${train_rmse:.0f}")
-print(f"Testing RMSE: ${test_rmse:.0f}")
-print(f"Difference: ${test_rmse - train_rmse:.0f}")
+print(f"Training → R²: {r2_score(y_train, train_preds):.2f} | RMSE: ${root_mean_squared_error(y_train, train_preds):,.0f}")
+print(f"Test     → R²: {r2_score(y_test, test_preds):.2f} | RMSE: ${root_mean_squared_error(y_test, test_preds):,.0f}")
 ```
 
-**Business Insight:** The difference tells us how well our model will generalize to future data!
+. . .
 
-**Notice:** Test RMSE ($403) > Training RMSE ($330) - this is normal! Our model performs slightly worse on new data because it was optimized for the training set. However, the larger this difference becomes the more concern we should have on whether we have a good model or not.
+The **test** numbers are the ones we report to the manager. A test score slightly worse than the training score is normal: the model was tuned to the training weeks.
+
+## Reading the Gap {.smaller}
+
+::: {.card-grid .cols-3}
+::: {.card}
+[✅ Train ≈ Test]{.card-title}
+
+The model **generalizes**: it learned a real pattern
+
+Trust the test score
+:::
+::: {.card}
+[⚠️ Train great, Test much worse]{.card-title}
+
+The model **memorized** the training data (*overfitting*)
+
+Like our connect-the-dots model
+:::
+::: {.card}
+[❌ Train poor, Test poor]{.card-title}
+
+The model is **too simple** or missing key information (*underfitting*)
+
+Try better features or a different model
+:::
+:::
+
+. . .
+
+::: {.callout-note}
+Overfitting and underfitting get a deeper treatment in your readings, and we'll keep coming back to them for the rest of the semester.
+:::
+
+## Same Model, Different Split {.smaller}
+
+What happens if we change only the `random_state`?
+
+```{python}
+#| code-line-numbers: "1-5"
+for seed in [1, 3, 5, 11, 21]:
+    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.3, random_state=seed)
+    seed_model = LinearRegression().fit(X_tr, y_tr)
+    test_rmse = root_mean_squared_error(y_te, seed_model.predict(X_te))
+    print(f"random_state={seed:>2} → Test RMSE: ${test_rmse:,.0f}")
+```
+
+. . .
+
+**Why does the test score bounce around?**
+
+With only **6 test weeks**, the score depends heavily on *which* weeks land in the test set. More data gives more stable estimates. In Week 12, **cross-validation** solves this by testing on several different splits and averaging the results.
 
 # Putting It All Together {background="#43464B"}
 
@@ -666,51 +1014,34 @@ print(f"Test R²: {test_r2:.3f} | Test RMSE: {test_rmse:.2f}")
 
 **Complete workflow achieved!** 🎉 We can now trust our model's performance estimates.
 
-# What Else? {background="#43464B"}
+# Looking Forward {background="#43464B"}
 
-## Additional Concepts You'll Learn {.smaller}
+## More in Your Readings {.smaller}
 
-**We covered the core concepts, but there's more to explore in your readings:**
+::: {.card-grid .cols-2}
+::: {.card}
+[📖 Multiple regression]{.card-title}
 
-:::: {.columns}
-::: {.column width="50%"}
-
-- 📖 **Simple vs. Multiple Linear Regression**
-   - When to use one predictor vs. many
-   - Interpreting coefficients with multiple variables
-- 📊 **Categorical Variables with Dummy Encoding**
-   - Converting categories (e.g., "Region") to numbers
-   - Understanding baseline/reference groups
-   
+Using many predictors at once
 :::
-::: {.column width="50%"}
+::: {.card}
+[📊 Categorical variables]{.card-title}
 
-- ⚖️ **Underfitting vs. Overfitting**
-   - Models that are too simple vs. too complex
-   - Finding the "Goldilocks zone" of model complexity
-- 💼 **Business-Aligned Evaluation Metrics**
-   - Choosing metrics that match business costs
-   - When RMSE vs. MAE vs. MAPE makes sense
-
+Turning categories like "Region" into numbers
 :::
-::::
+::: {.card}
+[⚖️ Overfitting vs. underfitting]{.card-title}
 
-::: {.callout-tip}
-**Bottom line:** Today gave you the foundation. The readings will deepen your understanding and show you more advanced techniques!
+Finding the right amount of model complexity
+:::
+::: {.card}
+[💼 MAE & MAPE]{.card-title}
+
+More metrics, and how to pick the one that fits the business
+:::
 :::
 
-# Key Takeaways {background="#43464B"}
-
-## Key Takeaways
-
-* **Correlation** – Measures relationship strength but doesn't prove causation
-* **Linear Regression** – Provides prediction equations for business planning  
-* **Model Evaluation** – Essential for trusting your predictions in real business decisions
-* **Train/Test Splits** – The honest way to evaluate how models will perform on new data
-
-**Remember:** A model that looks perfect on training data might be useless on new data!
-
-## Connection to Thursday's Lab
+## Thursday's Lab
 
 ::: {.callout-tip}
 ## This Week's Lab Preview
@@ -722,18 +1053,17 @@ In Thursday's lab, you'll get hands-on practice with:
 * Using train/test splits to honestly evaluate model performance
 * Connecting model results to actionable business recommendations
 
-Come prepared to become a regression modeling expert!
 :::
 
-# Questions & Next Steps {background="#43464B"}
+<br>
 
-## Looking Ahead
+::: {.callout-important}
+## Homework
 
-**Next Tuesday:** Advanced machine learning concepts and ensemble methods
+This week's Lab will serve as your homework!
 
-**Thursday Lab:** Hands-on regression modeling and evaluation practice
+:::
 
-**Homework:** This week's Lab will serve as your homework!
 
 ## Any Final Questions?
 
