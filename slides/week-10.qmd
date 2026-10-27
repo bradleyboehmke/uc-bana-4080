@@ -25,118 +25,101 @@ execute:
     echo: true
 ---
 
-## Welcome to Week 10 {.smaller}
+## Welcome to Week 10
 
 * Quick overview of today's plan:
 
-  * Understand the difference between regression and classification
-  * Introduction to logistic regression and why it works for categories
-  * How to interpret model results (coefficients and probabilities)
-  * Why accuracy isn't enough and what metrics actually matter
-  * Business scenarios: choosing the right evaluation approach
+  * From predicting numbers to predicting categories
+  * Logistic regression and the S-shaped curve
+  * Interpreting coefficients and probabilities
+  * Why 97% accuracy can be terrible
+  * Choosing the threshold and metric that fit the business
 
-# Discussion: Homework & Questions {background="#43464B"}
+## 📓 Follow Along in the Notebook
 
-## Questions from Week 9? {.smaller}
+::: {.callout-tip}
+## Week 10 Lecture Notebook
 
-* Machine learning fundamentals?
-* Supervised vs. unsupervised learning?
-* Correlation vs. linear regression?
-* Anything confusing in the quiz or readings?
-* Time to ask!
+Open the companion notebook in Colab now and follow along as we work through today's examples on logistic regression and classification evaluation.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-10-lecture.ipynb)
+:::
+
+# Week 9 Recap {background="#43464B"}
+
+## Last Week in 60 Seconds {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[📈 Linear regression]{.card-title}
+
+Fit a line $y = \beta_0 + \beta_1 x$ to predict a **number**
+
+*Ad spend → weekly sales*
+:::
+::: {.card}
+[📏 RMSE & R²]{.card-title}
+
+**RMSE:** how far off, typically (in $)
+
+**R²:** how much better than guessing the average
+:::
+::: {.card}
+[🔒 Train/test split]{.card-title}
+
+Score the model on data it **never saw** while learning
+:::
+::: {.card}
+[🧠 The memorizer]{.card-title}
+
+A perfect training score can hide a model that learned nothing useful
+:::
+:::
 
 . . .
 
-:::: {.columns}
-::: {.column width='70%'}
-::: {.callout}
-## Activity
-
-Converse with your neighbor and identify...
-
-* 1 concept from last week that you thought was well explained
-* 1 concept that is still confusing
+::: {.callout-tip}
+Today the **target is a category**, but the workflow (split → fit → predict → evaluate against a baseline) stays the same.
 :::
-:::
-::: {.column width='30%'}
-<center>
-
-<div id="2minWaiting"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("2minWaiting", 120, "slide"); 
-    });
-</script>
-</center>
-:::
-::::
 
 # Predicting ~~Numbers~~ Categories {background="#43464B"}
 
 ## Not Every Business Question is About Numbers {.smaller}
 
-**Week 9 Review:** We've been predicting continuous values...
+**Week 9:** We predicted continuous values...
 
 * *How much revenue will we generate?*
 * *What price should we set for this product?*
 * *What will our customer lifetime value be?*
 
-**Today's New Challenge:** Many critical decisions involve categories...
+**Today:** Many critical decisions involve categories...
 
 * *Will this customer default on their loan?* (Yes/No)
 * *Is this email spam?* (Spam/Not Spam)
 * *Should we approve this application?* (Approve/Deny)
 * *Will this marketing campaign succeed?* (Success/Failure)
 
-## Pop Quiz: Regression vs. Classification {.smaller}
-
-Rapid fire, classify each as **REGRESSION** or **CLASSIFICATION:**
-
-::: {.incremental}
-
-- Predicting how many units of a product will sell next month
-- Determining if a customer will purchase a premium subscription
-- Estimating insurance claim amounts in dollars
-- Deciding whether to show a promotional offer to a customer
-- Forecasting quarterly revenue
-- Classifying support tickets as "Technical" or "Billing"
-- Predicting employee salary based on experience and education
-- Determining if a loan application should be approved or denied
-- Estimating the number of website visitors next month
-- Classifying emails as "Spam", "Important", or "General"
-
-:::
-
-## Think-Pair-Share: Regression vs. Classification {.smaller}
+## Flip It: Regression → Classification {.smaller}
 
 :::: {.columns}
 ::: {.column width="70%"}
 
-**In your groups, discuss where classification models are already impacting your daily lives:**
+Each question below predicts a **number**. With your neighbor, rewrite it so the model predicts a **category** instead.
 
-Examples might include:
-
-- Netflix recommending movies you'll like, 
-- sports betting apps predicting which team will win, 
-- social media deciding what posts to show you,
-- your bank determining whether to approve a purchase.
-
-**Share 2-3 examples with your group and discuss:**
-
-- What categories is the model predicting?
-- How does this affect your experience as a user?
+1. 🛒 *How much will this customer spend next month?*
+2. 🏠 *What price will this house sell for?*
+3. 📦 *How many days late will this shipment arrive?*
 
 :::
 ::: {.column width="30%"}
 
 <center>
 
-<div id="5minClassify"></div>
+<div id="3minFlip"></div>
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("5minClassify", 300, "slide"); 
+        initializeTimer("3minFlip", 180, "slide");
     });
 </script>
 </center>
@@ -144,71 +127,125 @@ Examples might include:
 :::
 ::::
 
-## Why Linear Regression Fails{.smaller}
+. . .
 
-:::: {.columns}
-::: {.column width="60%"}
-**Problems with Linear Regression for Classification:**
+**One possible flip for each:**
 
-* **Invalid predictions**: Can predict values like -0.3 or 1.8 for Yes/No questions
-* **Straight line assumption**: Real classification relationships follow S-shaped curves
-* **No probability interpretation**: A prediction of 0.7 doesn't clearly mean 70% chance
+1. *Will this customer spend more than $100?* (Yes/No)
+2. *Will this house sell above asking price?* (Yes/No)
+3. *Will this shipment arrive late?* (On time/Late)
 
-**Example:** Credit default prediction
-
-* Linear regression might predict 1.3 for "will default" 
-* What does 1.3 mean? 130% chance of default? Impossible!
+::: {.callout-tip}
+Same business, same data. **The target decides** whether it's regression or classification.
 :::
 
-::: {.column width="40%"}
+::: {.notes}
+Take a few student flips before revealing ours; there are many valid answers. Then ask: what did you lose by flipping? (The exact amount.) What did you gain? (A simpler answer that maps directly to an action: send the coupon, list the house higher, warn the customer.) Notice that most flips are just a cutoff on the original number, which previews the threshold discussion later today.
+:::
+
+## Draw the Line {.smaller}
+
+Each dot is a customer: their **credit card balance** and whether they **defaulted** (1) or not (0).
+
 ```{python}
 #| echo: false
 #| fig-align: center
+#| fig-width: 10
+#| fig-height: 4.2
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
-# Create sample credit default data
+# Simulated credit default data: higher balances raise default risk
 np.random.seed(42)
 balances = np.linspace(0, 3000, 100)
-# Higher balances increase default probability
-probabilities = 1 / (1 + np.exp(-(balances - 1500) / 300))
-defaults = np.random.binomial(1, probabilities)
+true_probs = 1 / (1 + np.exp(-(balances - 1500) / 300))
+defaults = np.random.binomial(1, true_probs)
+sim = pd.DataFrame({'balance': balances, 'default': defaults})
 
-default_data = pd.DataFrame({
-    'balance': balances,
-    'default': defaults
-})
+line_fit = LinearRegression().fit(sim[['balance']], sim['default'])
+curve_fit = LogisticRegression().fit(sim[['balance']], sim['default'])
+grid = pd.DataFrame({'balance': np.linspace(0, 3000, 300)})
 
-# Try linear regression on classification data
-X = default_data[['balance']]
-y = default_data['default']
+def default_plot(show_line=False, show_curve=False):
+    fig, ax = plt.subplots(figsize=(10, 4.2))
+    ax.scatter(sim['balance'], sim['default'], s=40, alpha=0.6, zorder=3, label='Customers')
+    ax.axhline(0, color='black', linestyle='--', alpha=0.4)
+    ax.axhline(1, color='black', linestyle='--', alpha=0.4)
+    ax.set_xlim(-150, 3150)
+    ax.set_ylim(-0.45, 1.45)
+    if show_line:
+        ax.fill_between([-150, 3150], -0.45, 0, color='red', alpha=0.08, linewidth=0)
+        ax.fill_between([-150, 3150], 1, 1.45, color='red', alpha=0.08, linewidth=0)
+        ax.plot(grid['balance'], line_fit.predict(grid), color='red', linewidth=3,
+                alpha=0.35 if show_curve else 1, label='Linear regression')
+        callouts = [] if show_curve else [(0, (40, -35)), (3000, (-150, 25))]
+        for bal, offset in callouts:
+            pred = line_fit.predict(pd.DataFrame({'balance': [bal]}))[0]
+            ax.scatter(bal, pred, s=150, color='orange', edgecolor='black', zorder=5)
+            ax.annotate(f'${bal:,} balance → {pred:.2f}\nA {pred:.0%} chance of default?',
+                        xy=(bal, pred), xytext=offset, textcoords='offset points',
+                        fontsize=11, fontweight='bold',
+                        bbox=dict(boxstyle='round,pad=0.3', fc='yellow', alpha=0.8),
+                        arrowprops=dict(arrowstyle='->'))
+    if show_curve:
+        ax.plot(grid['balance'], curve_fit.predict_proba(grid)[:, 1], color='green',
+                linewidth=3, label='S-curve (logistic regression)')
+    ax.set_xlabel('Credit Card Balance ($)')
+    ax.set_ylabel('Default (0 = No, 1 = Yes)')
+    if show_line or show_curve:
+        ax.legend(loc='center left')
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
 
-linear_model = LinearRegression()
-linear_model.fit(X, y)
-linear_predictions = linear_model.predict(X)
-
-# Visualize the problem
-plt.figure(figsize=(6, 3))
-plt.scatter(default_data['balance'], default_data['default'], alpha=0.6, label='Actual data', s=20)
-plt.plot(default_data['balance'], linear_predictions, color='red', linewidth=2, label='Linear regression')
-plt.xlabel('Credit Card Balance ($)')
-plt.ylabel('Default (0=No, 1=Yes)')
-plt.title('Why Linear Regression Fails')
-plt.legend()
-plt.grid(True, alpha=0.3)
-
-# Highlight the problems
-plt.axhline(y=0, color='black', linestyle='--', alpha=0.5)
-plt.axhline(y=1, color='black', linestyle='--', alpha=0.5)
-plt.show()
+default_plot()
 ```
-:::
-::::
+
+**Using what you learned last week:** how would you draw a line to model this relationship?
 
 ::: {.notes}
-Show students that linear regression creates a straight line that can go beyond 0 and 1, while logistic regression creates an S-shaped curve that stays between valid probability bounds.
+Give students a moment to sketch it in the air or on paper before advancing. Most will draw a straight upward-sloping line, which is exactly what linear regression does.
+:::
+
+## Here's What Linear Regression Draws {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 4.2
+default_plot(show_line=True)
+```
+
+. . .
+
+* **Impossible predictions**: the line runs below 0 and above 1 (the shaded zones), so it can't be a probability
+* **Wrong shape**: risk stays near 0 at low balances, climbs fast in the middle, then levels off near 1. A straight line can't bend to follow that
+
+::: {.notes}
+The line predicts about -0.21 at a $0 balance and 1.17 at $3,000. Ask the room what a -21% chance of default means. Then point out that even inside the 0 to 1 range, the line is too high at low balances and too low in the middle, where risk is changing fastest.
+:::
+
+## What Shape Would You Draw Instead? {.smaller}
+
+If you could draw **any** shape through those points, one that stays between 0 and 1 and bends where risk changes fastest, what would it look like?
+
+. . .
+
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 4.2
+default_plot(show_line=True, show_curve=True)
+```
+
+An **S-curve**: flat near 0, a steep climb in the middle, then flat near 1. Every point on it is a valid probability. Building that curve is exactly what **logistic regression** does.
+
+::: {.notes}
+Let students describe or sketch the shape before advancing. The next section shows the equation behind the S-curve.
 :::
 
 # Logistic Regression: The S-Shaped Solution {background="#43464B"}
@@ -217,7 +254,7 @@ Show students that linear regression creates a straight line that can go beyond 
 
 **Key Innovation:** Transform linear predictions into probabilities using the logistic function:
 
-$$p = \frac{1}{1 + e^{-z}}$$ 
+$$p = \frac{1}{1 + e^{-z}}$$
 
 where $z = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + ...$
 
@@ -281,7 +318,7 @@ The S-shaped curve gives us **two powerful tools** for business decision-making:
 
 **1. Probability Estimates:** Get the exact chance an event will happen (0-100%)
 
-**2. Binary Classifications:** Make yes/no decisions using the 50% threshold
+**2. Binary Classifications:** Make yes/no decisions using a threshold (50% by default)
 
 ```{python}
 #| echo: false
@@ -330,23 +367,32 @@ plt.ylim(-0.05, 1.05)
 plt.show()
 ```
 
-**Key Insight:** Every prediction gives you a probability between 0-100%, but the 50% threshold determines the final yes/no decision.
+**Key Insight:** Every prediction gives you a probability between 0-100%. A **threshold** (50% unless we choose otherwise) turns it into a yes/no decision. Hold onto that "unless we choose otherwise"...
 
-## Business Context Activity {.smaller}
-
-Now that you understand logistic regression gives us both probability estimates AND classifications, let's think about when each is most valuable:
+## Probability or Decision? {.smaller}
 
 :::: {.columns}
 ::: {.column width="70%"}
 
-**In your groups, identify:**
+::: {.card-grid .cols-2}
+::: {.card}
+[🎲 Probability estimate]{.card-title}
 
-1. **2 business scenarios where you'd want PROBABILITY ESTIMATES** (exact percentages)
-2. **2 business scenarios where you'd want CLASSIFICATIONS** (yes/no decisions)
+*"This customer has a 12% chance of defaulting"*
+:::
+::: {.card}
+[✅ Classification]{.card-title}
 
-**Then discuss:** Why do you think probability estimates are better for some situations while classifications are better for others?
+*"Approve this application"*
+:::
+:::
 
-**Think about:** Risk assessment, decision automation, customer communication, regulatory requirements, etc.
+**With your neighbor, identify:**
+
+1. **2 business scenarios** where you'd want the **probability**
+2. **2 business scenarios** where you'd want just the **yes/no decision**
+
+**Then discuss:** What makes the probability more useful in some situations?
 
 :::
 ::: {.column width="30%"}
@@ -357,7 +403,7 @@ Now that you understand logistic regression gives us both probability estimates 
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minProbVsClass", 240, "slide"); 
+        initializeTimer("4minProbVsClass", 240, "slide");
     });
 </script>
 </center>
@@ -365,47 +411,61 @@ Now that you understand logistic regression gives us both probability estimates 
 :::
 ::::
 
-Then we'll share examples with the class...
+::: {.notes}
+Probabilities shine when you need to rank or price (risk-based interest rates, prioritizing which leads a sales team calls first, triage). Yes/no decisions shine when the action is automated and binary (block a transaction, route a ticket, approve/deny). Point out that even when you need a decision, someone has to pick the threshold, which is where we're headed.
+:::
 
-## Building a Logistic Regression Model {.smaller .scrollable}
+# Let's Build Our First Logistic Regression Model {background="#43464B"}
 
-**Step 1:** Load and explore the ISLP Default dataset
+## Meet the Default Data {.smaller .scrollable}
+
+**Step 1:** Load the ISLP `Default` data: 10,000 credit card customers
 
 ```{python}
+#| code-line-numbers: "1,4"
 from ISLP import load_data
-import pandas as pd
 
 # Load the Default dataset
 Default = load_data('Default')
-
 Default[['default', 'balance', 'income']].head()
 ```
 
 . . .
 
-**Step 2:** Fit the logistic regression model
+```{python}
+# What share of customers actually defaulted?
+Default['default'].value_counts(normalize=True)
+```
+
+**Only about 3% of customers default.** Remember this number. 👀
+
+## Split, Then Fit {.smaller}
+
+**Step 2:** Split the data the same way as last week, then fit on the training set only
 
 ```{python}
-#| code-line-numbers: "|1,5,8"
+#| code-line-numbers: "|1-2|5-6|8-10|13-14"
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 
-# Prepare features (balance and income) and target
+# Features and a 0/1 target (1 = defaulted)
 X = Default[['balance', 'income']]
 y = (Default['default'] == 'Yes').astype(int)
 
-# Fit logistic regression model
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+
+# Fit logistic regression on the training data
 model = LogisticRegression()
-model.fit(X, y)
+model.fit(X_train, y_train)
 
-# Extract the coefficients
-intercept = model.intercept_[0]
-balance_coef = model.coef_[0][0]
-income_coef = model.coef_[0][1]
-
-print(f"Intercept: {intercept:.6f}")
-print(f"Balance coefficient: {balance_coef:.6f}")
-print(f"Income coefficient: {income_coef:.6f}")
+print(f"Intercept:           {model.intercept_[0]:.4f}")
+print(f"Balance coefficient: {model.coef_[0][0]:.6f}")
+print(f"Income coefficient:  {model.coef_[0][1]:.6f}")
 ```
+
+`stratify=y` keeps the ~3% default rate the same in both the training and test sets.
 
 **So, what do these coefficients mean?** 🤔
 
@@ -431,93 +491,148 @@ To interpret logistic regression coefficients, we need three related concepts:
 Logistic regression coefficients represent changes in **log-odds**, not probability!
 :::
 
+## Reading a Coefficient: Sign and Size {.smaller}
 
-## Interpreting Our Coefficients {.smaller .scrollable}
+:::: {.columns}
+::: {.column width="55%"}
 
-Now we can understand what our coefficients mean:
+**① Sign = direction.** Both coefficients are positive, so a higher balance or a higher income means **higher** default risk.
 
-**Intercept (-11.540468):**
+**② Size = how far the log-odds move.** Each coefficient is the change in log-odds for **$1**. Multiply by a step that makes sense for the business:
 
-- When balance = $0 and income = $0, the log-odds of default = -11.54
-- This means very low baseline probability of default (~0.000973%)
+```{python}
+steps = {'balance': 1000, 'income': 10000}
 
-**Balance coefficient (0.005647):**
+for feature, coef in zip(X.columns, model.coef_[0]):
+    step = steps[feature]
+    print(f"+${step:,} {feature}: {coef:.6f} × {step:,} = {coef * step:+.2f} log-odds")
+```
 
-- For each $1 increase in balance, log-odds increase by 0.005647
-- For each $1,000 increase in balance, log-odds increase by ~5.6 
-  Probability increases ~95%
-- **Positive coefficient = higher balance increases default risk** ✓
+:::
+::: {.column width="45%"}
 
-**Income coefficient (0.000021):**
+```{python}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 3.6
+shifts = model.coef_[0] * np.array([1000, 10000])
 
-- For each $1 increase in income, log-odds increase by 0.000021
-- For each $10,000 increase in income, log-odds increase by ~0.21
-- Probability increases by only ~5%
-- **Tiny positive coefficient = income has minimal effect on default risk**
+fig, ax = plt.subplots(figsize=(5, 3.6))
+bars = ax.barh(['+$10,000\nincome', '+$1,000\nbalance'], shifts[::-1],
+               color=['gray', 'steelblue'])
+for bar, shift in zip(bars, shifts[::-1]):
+    ax.text(bar.get_width() + 0.1, bar.get_y() + bar.get_height() / 2,
+            f'+{shift:.2f}', va='center', fontsize=13, fontweight='bold')
+ax.set_xlim(0, 7)
+ax.set_xlabel('Change in log-odds (z)')
+ax.set_title('Balance moves the needle; income barely does', fontweight='bold', fontsize=11)
+ax.grid(True, axis='x', alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
 
-**Business Translation:**
+:::
+::::
 
-- **Balance is the primary driver** of default risk
-- **Income has almost no effect** once we account for balance
-- A customer with $2,000 balance is much riskier than one with $1,000 balance, regardless of income
+::: {.notes}
+Coefficients are tiny because they're per $1. Scaling to a realistic step makes them comparable. Note the steps differ ($1,000 vs. $10,000), and even with a 10x bigger step, income moves the log-odds about 30x less than balance. The intercept is the log-odds when balance and income are both $0, which isn't a realistic customer, so we skip it, just like a regression intercept at x = 0.
+:::
+
+## Moving Along the S-Curve {.smaller}
+
+What does **+5.75 log-odds** do to a real customer? Take one with a **$40,000 income**:
+
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 3.6
+b0 = model.intercept_[0]
+b_bal, b_inc = model.coef_[0]
+z_before = b0 + b_bal * 1000 + b_inc * 40000
+z_after = z_before + b_bal * 1000
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+zs = np.linspace(-8, 4, 300)
+fig, ax = plt.subplots(figsize=(10, 3.6))
+ax.plot(zs, sigmoid(zs), color='green', linewidth=3)
+ax.axvline(0, color='black', linestyle='--', alpha=0.4)
+ax.scatter(0, 0.5, s=50, color='black', zorder=4)
+ax.text(0.15, 0.45, 'z = 0 → 50%', fontsize=11, alpha=0.8)
+
+for z, label, offset in [(z_before, '$1,000 balance', (15, 25)),
+                         (z_after, '$2,000 balance', (-170, 10))]:
+    ax.scatter(z, sigmoid(z), s=160, color='orange', edgecolor='black', zorder=5)
+    ax.annotate(f'{label}\nz = {z:.2f} → {sigmoid(z):.1%}', xy=(z, sigmoid(z)),
+                xytext=offset, textcoords='offset points', fontsize=11, fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.3', fc='yellow', alpha=0.8))
+ax.annotate('', xy=(z_after, 0.88), xytext=(z_before, 0.88),
+            arrowprops=dict(arrowstyle='->', lw=2.5, color='steelblue'))
+ax.text((z_before + z_after) / 2, 0.92, f'+$1,000 balance = +{b_bal * 1000:.2f} in z',
+        ha='center', fontsize=12, fontweight='bold', color='steelblue')
+
+ax.set_xlabel('Log-odds (z)')
+ax.set_ylabel('Probability of default')
+ax.set_ylim(-0.05, 1.05)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+The coefficient tells us **how far we slide along z**. The S-curve turns that position into a probability: **0.6% → 66%**.
+
+. . .
+
+::: {.callout-tip}
+## Honestly? This is hard to interpret.
+
+Even experienced analysts don't think in log-odds. In practice, we read the coefficients for **direction** (sign) and **rough magnitude** (which features matter most), then **convert to probabilities** for real customers to explain the results.
+:::
+
+::: {.notes}
+Hand calculation: z = -11.60 + 0.00575(1,000) + 0.000019(40,000) = -11.60 + 5.75 + 0.74 = -5.11, which is about 0.6%. Add $1,000 of balance: -5.11 + 5.75 = +0.64, which is about 66%. Connect to the log-odds table: negative z means less likely than not, positive z means more likely than not. The same +5.75 slide starting from z = 0 would take you from 50% to 99.7%, so the probability jump depends on where you start.
+
+If a student asks about odds: adding 5.75 to the log-odds multiplies the odds by e^5.75 ≈ 314, so each +$1,000 of balance multiplies the odds of default by about 314x (odds go from 0.006 to 1.9 for this customer). For income, e^0.19 ≈ 1.2, about 20% higher odds per +$10,000.
+:::
 
 ## From Coefficients to Predictions {.smaller .scrollable}
 
-**Step 1:** Use coefficients in the logistic function
+So let's do that. Let scikit-learn convert three customers, each with a **$40,000 income**, into probabilities:
 
 ```{python}
-import numpy as np
+#| code-line-numbers: "1-4|6"
+customers = pd.DataFrame({
+    'balance': [1000, 1500, 2000],
+    'income':  [40000, 40000, 40000]
+})
 
-# Manual calculation for $1,500 balance, $50,000 income
-balance = 1500
-income = 50000
-log_odds = -11.540468 + 0.005647 * balance + 0.000021 * income
-probability_manual = 1 / (1 + np.exp(-log_odds))
-
-print(f"Manual calculation: {probability_manual:.4f}")
+customers.assign(prob_default=model.predict_proba(customers)[:, 1].round(3))
 ```
 
-**Step 2:** Compare with scikit-learn
+. . .
 
-```{python}
-# Scikit-learn prediction (must include both features)
-customer_df = pd.DataFrame({'balance': [1500], 'income': [50000]})
-probability_sklearn = model.predict_proba(customer_df)[:, 1]
-
-print(f"Scikit-learn prediction: {probability_sklearn[0]:.4f}")
-```
-
-**Both give similar results for a customer with $1,500 balance and $50,000 income**
+* $1,000 and $2,000 match our hand calculation: **0.6%** and **66%**
+* $1,000 → $1,500: probability rises by ~9 points
+* $1,500 → $2,000: probability rises by ~56 points
+* **Same $500 step, very different jumps.** That's the S-curve at work.
 
 ::: {.callout-note}
-## Small Differences Expected
-The manual calculation and scikit-learn prediction may differ slightly (e.g., 0.1171 vs 0.1162) due to rounding in the displayed coefficients. Scikit-learn uses the full precision coefficients internally.
+`predict_proba()` returns two columns: P(class 0) and P(class 1). `[:, 1]` grabs the probability of **default**.
 :::
 
-## Evaluating Model Performance {.smaller .scrollable}
-
-Now that we've built our model, let's evaluate how well it performs on new data:
+## How Good Is Our Model? {.smaller}
 
 ```{python}
-from sklearn.model_selection import train_test_split
+#| code-line-numbers: "1,4,6"
 from sklearn.metrics import accuracy_score
 
-# Split data into training and test sets
-X = Default[['balance', 'income']]
-y = (Default['default'] == 'Yes').astype(int)
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
-)
-
-# Train the model on training data
-model = LogisticRegression()
-model.fit(X_train, y_train)
-
-# Make predictions on test data
+# Predict a class (0 or 1) for each test customer using the 50% threshold
 y_pred = model.predict(X_test)
 
-# Calculate accuracy
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Model Accuracy: {accuracy:.1%}")
 ```
@@ -527,258 +642,202 @@ print(f"Model Accuracy: {accuracy:.1%}")
 ::: {.callout-important}
 ## Critical Question
 
-With an accuracy of **97%+**, should we base our model's performance solely on this metric?
+**97% accuracy!** Is this a good model for the bank?
 
-Is this a good model for our business needs?
+How would you know?
 :::
 
 # Beyond Accuracy: Why 97% Can Be Terrible {background="#43464B"}
 
-## The Accuracy Trap {.smaller}
+## Meet the Lazy Model {.smaller}
 
-**Shocking Example:** Credit card fraud detection with 100,000 transactions:
+Last week, we asked whether our model beat **guessing the average**. Let's ask the same thing here.
 
-- **Fraudulent transactions**: 1,000 (1%)
-- **Legitimate transactions**: 99,000 (99%)
-
-**Two models:**
-
-- **Model A (Lazy)**: Always predicts "legitimate" → **99.0% accuracy**
-- **Model B (Smart)**: Catches 80% of fraud, 2% false alarms → **97.8% accuracy**
-
-**Which would you choose for your business?**
+The **lazy model** ignores the data and predicts **"No default"** for every customer.
 
 . . .
 
-<br>
+::: {.callout}
+## Your guess?
 
-::: {.callout-important}
-**The Problem:** Model A provides ZERO business value but has higher accuracy!
+What accuracy would the lazy model get on our test set?
 :::
 
-## Understanding Classification Errors {.smaller .scrollable}
+. . .
 
-**The Confusion Matrix: Where Our Model Goes Wrong**
+```{python}
+import numpy as np
+
+lazy_pred = np.zeros(len(y_test))   # predict 0 ("No default") for everyone
+print(f"Lazy model accuracy: {accuracy_score(y_test, lazy_pred):.1%}")
+print(f"Our model accuracy:  {accuracy:.1%}")
+```
+
+. . .
+
+**Our model beats doing nothing by less than half a percentage point.** When one class is rare, accuracy hides how badly the model handles the class we actually care about.
+
+::: {.notes}
+The lazy model gets 96.7% because 96.7% of test customers didn't default. This is the classification equivalent of R² = 0: accuracy only means something compared to the baseline. Same trap shows up in fraud (1% of transactions), medical screening, churn, etc.
+:::
+
+## The Confusion Matrix: Four Possible Outcomes {.smaller}
 
 ```{python}
 #| echo: false
 #| fig-align: center
-# Create a conceptual confusion matrix diagram
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+#| fig-width: 10
+#| fig-height: 4.5
 from matplotlib.patches import Rectangle
 
-fig, ax = plt.subplots(figsize=(8, 6))
+fig, ax = plt.subplots(figsize=(10, 4.5))
 
-# Create the 2x2 grid
+# Each cell is 2 units wide and 1 unit tall
 quadrants = [
-    {'xy': (0, 1), 'width': 1, 'height': 1, 'color': 'lightgreen', 'label': 'True Negative (TN)', 'desc': 'Correctly predicted\nSAFE customer'},
-    {'xy': (1, 1), 'width': 1, 'height': 1, 'color': 'lightcoral', 'label': 'False Positive (FP)', 'desc': 'Incorrectly predicted\nRISKY customer\n(Lost customer)'},
-    {'xy': (0, 0), 'width': 1, 'height': 1, 'color': 'lightcoral', 'label': 'False Negative (FN)', 'desc': 'Incorrectly predicted\nSAFE customer\n(Financial loss)'},
-    {'xy': (1, 0), 'width': 1, 'height': 1, 'color': 'lightgreen', 'label': 'True Positive (TP)', 'desc': 'Correctly predicted\nRISKY customer'}
+    {'xy': (0, 1), 'color': 'lightgreen', 'label': 'True Negative (TN)', 'desc': 'Predicted no default,\ncustomer paid'},
+    {'xy': (2, 1), 'color': 'lightcoral', 'label': 'False Positive (FP)', 'desc': 'Flagged a good customer\n(lost business)'},
+    {'xy': (0, 0), 'color': 'lightcoral', 'label': 'False Negative (FN)', 'desc': 'Missed a defaulter\n(financial loss)'},
+    {'xy': (2, 0), 'color': 'lightgreen', 'label': 'True Positive (TP)', 'desc': 'Caught a defaulter'}
 ]
 
-# Draw quadrants
 for quad in quadrants:
-    rect = Rectangle(quad['xy'], quad['width'], quad['height'], 
-                    linewidth=2, edgecolor='black', facecolor=quad['color'], alpha=0.7)
-    ax.add_patch(rect)
-    
-    # Add labels
-    ax.text(quad['xy'][0] + 0.5, quad['xy'][1] + 0.7, quad['label'], 
-           ha='center', va='center', fontsize=12, fontweight='bold')
-    ax.text(quad['xy'][0] + 0.5, quad['xy'][1] + 0.3, quad['desc'], 
-           ha='center', va='center', fontsize=10)
+    ax.add_patch(Rectangle(quad['xy'], 2, 1, linewidth=2, edgecolor='black',
+                           facecolor=quad['color'], alpha=0.7))
+    ax.text(quad['xy'][0] + 1, quad['xy'][1] + 0.68, quad['label'],
+            ha='center', va='center', fontsize=14, fontweight='bold')
+    ax.text(quad['xy'][0] + 1, quad['xy'][1] + 0.35, quad['desc'],
+            ha='center', va='center', fontsize=12)
 
-# Add axis labels
-ax.text(0.5, -0.15, 'Predicted:\nSAFE', ha='center', va='center', fontsize=14, fontweight='bold')
-ax.text(1.5, -0.15, 'Predicted:\nRISKY', ha='center', va='center', fontsize=14, fontweight='bold')
+ax.text(1, -0.12, 'Predicted: No Default', ha='center', va='center', fontsize=13, fontweight='bold')
+ax.text(3, -0.12, 'Predicted: Default', ha='center', va='center', fontsize=13, fontweight='bold')
+ax.text(-0.12, 1.5, 'Actual:\nNo Default', ha='center', va='center', fontsize=13, fontweight='bold', rotation=90)
+ax.text(-0.12, 0.5, 'Actual:\nDefault', ha='center', va='center', fontsize=13, fontweight='bold', rotation=90)
 
-ax.text(-0.3, 1.5, 'Actually:\nSAFE', ha='center', va='center', fontsize=14, fontweight='bold', rotation=90)
-ax.text(-0.3, 0.5, 'Actually:\nRISKY', ha='center', va='center', fontsize=14, fontweight='bold', rotation=90)
-
-# Title and formatting
-ax.set_xlim(-0.4, 2.0)
-ax.set_ylim(-0.25, 2.1)
-ax.set_title('Confusion Matrix: The Four Possible Outcomes', fontsize=16, fontweight='bold', pad=15)
-ax.set_aspect('equal')
+ax.set_xlim(-0.3, 4.05)
+ax.set_ylim(-0.25, 2.05)
 ax.axis('off')
-
 plt.tight_layout()
 plt.show()
 ```
 
-**Why These Errors Matter:**
+Accuracy lumps the two kinds of mistakes together. The confusion matrix **separates them**, because they rarely cost the business the same amount.
 
-- **False Positives (FP) are harmful because:**
-  - Good customers get denied credit or charged higher rates
-  - Customer frustration leads to churn and lost revenue
-  - Wasted resources investigating "false alarms"
+## Our Model's Confusion Matrix {.smaller}
 
-- **False Negatives (FN) are harmful because:**
-  - Risky customers get approved and actually default
-  - Direct financial losses from unpaid debts
-  - Missed opportunities to offer risk-appropriate pricing
+```{python}
+#| code-line-numbers: "1,3"
+from sklearn.metrics import confusion_matrix
 
-**Key Insight:** Better performance metrics focus on the errors that matter most to your business!
+cm = confusion_matrix(y_test, y_pred)
+pd.DataFrame(
+    cm,
+    index=['Actual: No Default', 'Actual: Default'],
+    columns=['Predicted: No Default', 'Predicted: Default']
+)
+```
 
-## Scenario 1: Medical Cancer Screening {.smaller .scrollable}
+. . .
 
-**You work for a hospital developing an AI system to screen for early-stage cancer.**
+::: {.callout-warning}
+## Read the bottom row
 
-**Business Context:**
+Of the **100** customers who actually defaulted, the model caught only **33**. It **missed 67**, and every one of them is money the bank lent and won't get back.
+:::
 
-- System analyzes medical scans to flag potential cancer cases
-- Doctors use predictions to decide whether to order additional tests
-- Early detection dramatically improves patient outcomes
+## Precision and Recall {.smaller}
 
-**Error Costs:**
+Two questions that accuracy can't answer:
 
-- **False Positive**: Healthy patient flagged as having cancer → $1,500 in unnecessary follow-up tests, patient anxiety
-- **False Negative**: Cancer patient marked as healthy → $50,000+ in delayed treatment costs, potentially life-threatening
+::: {.card-grid .cols-2}
+::: {.card}
+[🎯 Precision = TP / (TP + FP)]{.card-title}
 
-::: {.callout}
-## Question?
+*When the model flags a customer, how often is it right?*
 
-Which error type should you prioritize minimizing? Why?
+**Ours:** 33 / (33 + 19) = **0.63**
+:::
+::: {.card}
+[🔍 Recall = TP / (TP + FN)]{.card-title}
+
+*Of the customers who default, how many does it catch?*
+
+**Ours:** 33 / (33 + 67) = **0.33**
+:::
 :::
 
 . . .
 
-**Answer:** Minimize **False Negatives** - Missing cancer cases is life-threatening and costs 30x more than unnecessary tests. Better to have some false alarms than miss actual cancer.
+```{python}
+from sklearn.metrics import precision_score, recall_score
 
-## Scenario 2: Credit Card Fraud Detection {.smaller .scrollable}
+print(f"Precision: {precision_score(y_test, y_pred):.2f}")
+print(f"Recall:    {recall_score(y_test, y_pred):.2f}")
+```
 
-**You work for a bank building a fraud detection system for credit card transactions.**
-
-**Business Context:**
-
-- System analyzes transactions in real-time to flag potential fraud
-- Flagged transactions are automatically blocked from processing
-- Customer satisfaction and transaction volume are key business metrics
-
-**Error Costs:**
-
-- **False Positive**: Legitimate transaction blocked → Angry customer at checkout, potential customer churn, lost transaction fees
-- **False Negative**: Fraudulent transaction approved → $200 average fraud loss (relatively small compared to transaction volume)
-
-::: {.callout}
-## Question?
-
-Which error type should you prioritize minimizing? Why?
+::: {.callout-note}
+Like last week's metric functions: **actual values first**, then the **predictions**.
 :::
 
+## The Threshold Is a Dial {.smaller .scrollable}
+
+`predict()` flags a customer when the probability is **≥ 50%**. But nothing forces us to use 50%:
+
+```{python}
+#| code-line-numbers: "1|4-6"
+probs = model.predict_proba(X_test)[:, 1]
+
+results = []
+for threshold in [0.3, 0.4, 0.5, 0.6, 0.7]:
+    preds = (probs >= threshold).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y_test, preds).ravel()
+    results.append({
+        'threshold': threshold,
+        'caught (TP)': tp,
+        'missed (FN)': fn,
+        'false alarms (FP)': fp,
+        'accuracy': accuracy_score(y_test, preds),
+        'precision': precision_score(y_test, preds),
+        'recall': recall_score(y_test, preds)
+    })
+
+pd.DataFrame(results).round(3)
+```
+
 . . .
-
-**Answer:** Minimize **False Positives** - Blocking legitimate customers causes immediate frustration and churn. $200 fraud loss is small compared to losing a customer relationship.
-
-## Scenario 3: Marketing Campaign Targeting {.smaller .scrollable}
-
-**You work for a company planning targeted email marketing campaigns for product promotions.**
-
-**Business Context:**
-
-- System predicts which customers are likely to purchase based on promotions
-- Marketing budget is limited, so targeting efficiency matters
-- Missing potential customers means lost sales opportunities
-
-**Error Costs:**
-
-- **False Positive**: Send promotion to non-buyer → $2 wasted marketing cost per customer
-- **False Negative**: Miss a potential buyer → $5 lost profit opportunity per customer
-
-::: {.callout}
-## Question?
-
-Should you focus on minimizing false positives, false negatives, or balance both equally? Why?
-:::
-
-. . .
-
-**Answer:** **Balance both errors** - False negatives cost 2.5x more ($5 vs $2), but both matter for campaign ROI. Need efficiency AND coverage for marketing success.
-
-## Essential Classification Metrics {.smaller}
-
-**Beyond accuracy, we need metrics that align with business priorities:**
-
-- **Precision**: Minimizes false positives (avoid angry customers)
-- **Recall**: Minimizes false negatives (catch critical cases)  
-- **F1-Score**: Balances precision and recall (marketing efficiency)
-- **ROC-AUC**: Measures ranking quality (risk-based pricing)
 
 ::: {.callout-tip}
-## Deep Dive in Your Reading
-Each metric involves important mathematical formulas and trade-offs. **Chapter 24** provides detailed explanations, examples, and business applications you'll need for Thursday's lab and upcoming assignments.
-
-Focus on: confusion matrices, the derivative error metrics, and when to use each metric.
+**Lower the threshold** → catch more defaulters (recall ↑) but flag more good customers (precision ↓). Notice that **accuracy barely moves** (96.5%–97.2%) while recall swings from 0.20 to 0.52. Accuracy can't see this trade-off; **the business decides which mistakes it can live with.**
 :::
 
-# Choosing the Right Metric for Your Business {background="#43464B"}
-
-## Metric Selection Framework {.smaller}
-
-**The key question:** What business outcome are you optimizing?
-
-:::: {.columns}
-::: {.column}
-
-- **Use PRECISION when:**
-  - False positives cost more than false negatives
-  - Customer experience is critical
-  - *Example: Credit card fraud (don't block legitimate purchases)*
-
-- **Use RECALL when:**
-  - False negatives cost more than false positives  
-  - Safety/compliance is critical
-  - *Example: Medical screening (don't miss diseases)*
-
-:::
-::: {.column}
-
-- **Use F1-SCORE when:**
-  - Both error types matter equally
-  - You need balanced performance
-  - *Example: Marketing targeting (efficiency + coverage)*
-
-- **Use ROC-AUC when:**
-  - You need to rank customers by risk
-  - Stratification and pricing decisions
-  - *Example: Insurance premium tiers*
-
-:::
-::::
-
-## Business Scenario Challenge {.smaller}
-
-**Your turn to be the expert!** For each scenario...
+## Pick the Threshold {.smaller}
 
 :::: {.columns}
 ::: {.column width="70%"}
 
-**Scenarios:**
+The bank estimates:
 
-1. **Airport Security**: TSA screening for dangerous items
-2. **Job Resume Screening**: Initial filter for qualified candidates  
-3. **Product Quality Control**: Detecting defective products
-4. **Customer Churn Prediction**: Identify customers likely to cancel
-5. **Medical Diagnosis**: AI system supporting doctor decisions
+* **Missed defaulter (FN):** lose **$5,000** on average
+* **False alarm (FP):** lose **$200** (a good customer gets a lower limit and takes their business elsewhere)
 
-::: {.callout}
-## For each:
+| Threshold | Missed (FN) | False alarms (FP) |
+|:---:|:---:|:---:|
+| 50% | 67 | 19 |
+| 30% | 48 | 56 |
+| 20% | 40 | 91 |
+| 10% | 23 | 183 |
 
-Think about which errors you would want to minimize (or the evaluation metrics you'd want to use) and why?
-:::
+**With your neighbor:** Which threshold costs the bank the least? Would your answer change if a false alarm cost $2,000?
 
 :::
 ::: {.column width="30%"}
 
 <center>
 
-<div id="6minScenarios"></div>
+<div id="3minThreshold"></div>
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("6minScenarios", 360, "slide"); 
+        initializeTimer("3minThreshold", 180, "slide");
     });
 </script>
 </center>
@@ -786,97 +845,251 @@ Think about which errors you would want to minimize (or the evaluation metrics y
 :::
 ::::
 
-## Scenario Challenge: Answers {.smaller .scrollable}
-
-**Business-aligned metric selection:**
-
-**1. Airport Security** → **Recall**
-
-- Missing dangerous items = catastrophic
-- False alarms inconvenient but acceptable
-
-. . .
-
-**2. Job Resume Screening** → **Precision**
-
-- Don't waste time interviewing unqualified candidates
-- Can always expand search if needed
-
-. . .
-
-**3. Product Quality Control** → **Recall**
-
-- Shipping defects damages brand reputation
-- Better to reject some good products than ship bad ones
-
-. . .
-
-**4. Customer Churn Prediction** → **F1-Score**
-
-- Need both efficiency (precision) and coverage (recall)
-- Balance retention costs with intervention effectiveness
-
-. . .
-
-
-**5. Medical Diagnosis** → **Recall**
-
-- Missing diseases can be life-threatening
-- Better to order unnecessary tests than miss conditions
-
-::: {.callout-tip}
-## Pattern:
-
-Safety/compliance scenarios prioritize recall, efficiency scenarios prioritize precision, business optimization balances both.
+::: {.notes}
+Let groups share their pick and how they got it before advancing. The next slide has the answer.
 :::
 
+## Pick the Threshold: The Answer {.smaller}
 
-## Key Takeaways
+**Total cost** = Missed × $5,000 + False alarms × (cost per false alarm)
 
-* **Classification vs. Regression** – Predicting categories requires different algorithms and evaluation approaches
-* **Logistic Regression** – The S-shaped logistic function transforms linear predictions into valid probabilities  
-* **Model Interpretation** – Positive coefficients increase odds; larger coefficients = stronger effects
-* **Beyond Accuracy** – Business-focused metrics (precision, recall, F1, ROC-AUC) align with real costs and priorities
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 11
+#| fig-height: 3.5
+cost_thresholds = [0.5, 0.3, 0.2, 0.1]
+fn_counts, fp_counts = [], []
+for threshold in cost_thresholds:
+    preds = (probs >= threshold).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y_test, preds).ravel()
+    fn_counts.append(fn)
+    fp_counts.append(fp)
 
-## Connection to Thursday's Lab
+labels = [f'{t:.0%}' for t in cost_thresholds]
+fig, axes = plt.subplots(1, 2, figsize=(11, 3.5), sharey=True)
+for ax, fp_cost in zip(axes, [200, 2000]):
+    costs = [fn * 5000 + fp * fp_cost for fn, fp in zip(fn_counts, fp_counts)]
+    best = int(np.argmin(costs))
+    colors = ['seagreen' if i == best else 'lightgray' for i in range(len(costs))]
+    bars = ax.bar(labels, costs, color=colors, edgecolor='black')
+    for bar, cost in zip(bars, costs):
+        ax.text(bar.get_x() + bar.get_width() / 2, cost + 8000, f'${cost / 1000:,.0f}K',
+                ha='center', fontsize=12, fontweight='bold')
+    ax.set_title(f'False alarm costs ${fp_cost:,}  →  best threshold: {labels[best]}',
+                 fontsize=13, fontweight='bold')
+    ax.set_xlabel('Threshold')
+    ax.grid(True, axis='y', alpha=0.3)
+axes[0].set_ylabel('Total cost to the bank')
+axes[0].set_ylim(0, 560000)
+axes[0].yaxis.set_major_formatter(lambda v, _: f'${v / 1000:,.0f}K')
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+::: {.callout-tip}
+## Same model, different costs, different best threshold
+
+When a missed defaulter costs 25× more than a false alarm, it pays to flag aggressively (**10%**, far from the default 50%). Make false alarms more expensive and the best threshold moves back up (**30%**). The model doesn't change; **the business costs decide where to set the dial.**
+:::
+
+::: {.notes}
+$200 per false alarm: 50% = $338,800, 30% = $251,200, 20% = $218,200, 10% = $151,600. $2,000 per false alarm: 50% = $373,000, 30% = $352,000, 20% = $382,000, 10% = $481,000. This is exactly the cost analysis students do in Part 3 of Thursday's lab.
+:::
+
+# Which Mistake Matters More? {background="#43464B"}
+
+## Which Mistake Costs More? {.smaller}
+
+For each model, which error hurts more, and which metric should we focus on?
+
+::: {.card-grid .cols-3}
+::: {.card}
+[🏥 Cancer screening]{.card-title}
+
+Flags scans for follow-up tests
+
+**FP:** healthy patient flagged → $1,500 in extra tests, anxiety
+
+**FN:** cancer missed → $50,000+, potentially life-threatening
+
+::: {.fragment}
+**→ Recall**
+
+*"Did I catch them all?"*
+
+Misses are far costlier than false alarms
+:::
+:::
+::: {.card}
+[💳 Fraud blocking]{.card-title}
+
+Auto-blocks suspicious card transactions
+
+**FP:** legitimate purchase blocked → ~$500 in lost future business when frustrated customers switch cards
+
+**FN:** fraud slips through → ~$200 loss (the bank reimburses it)
+
+::: {.fragment}
+**→ Precision**
+
+*"When I act, am I right?"*
+
+A false alarm costs more than the fraud itself
+:::
+:::
+::: {.card}
+[📧 Discount offers]{.card-title}
+
+Sends 20%-off offers to likely buyers
+
+**FP:** offer sent to a non-buyer → ~$4 wasted
+
+**FN:** likely buyer skipped → ~$4 lost profit
+
+::: {.fragment}
+**→ F1-score**
+
+*"Balance the two"*
+
+Both errors cost about the same
+:::
+:::
+:::
+
+::: {.notes}
+Pause on each card and let the room answer before revealing. The rule: false negatives costlier → recall; false positives costlier → precision; about equal → F1, which combines precision and recall into one number. Point back to Pick the Threshold: in practice, you get higher recall or higher precision by moving the threshold.
+:::
+
+## Your Turn: Interview the Business {.smaller}
+
+:::: {.columns}
+::: {.column width="70%"}
+
+A regional gym chain asks you to build a model that predicts **which members will cancel in the next 60 days**.
+
+Before you build anything, you need to decide **how to evaluate it**: accuracy, precision, recall, or F1?
+
+**With your neighbor:** What questions would you ask the gym's managers to help you decide? Aim for at least 3.
+
+::: {.callout-tip}
+## Hint
+Think about what happens *after* the model makes a prediction, and what each kind of mistake would cost.
+:::
+
+:::
+::: {.column width="30%"}
+
+<center>
+
+<div id="4minInterview"></div>
+<script src="_extensions/produnis/timer/timer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeTimer("4minInterview", 240, "slide");
+    });
+</script>
+</center>
+
+:::
+::::
+
+::: {.notes}
+Collect questions from a few pairs and write them on the board before advancing. Push for questions about actions and costs, not about the data or algorithm. Good prompts if the room stalls: "What will the gym do with the list?" "What does losing a member cost them?"
+:::
+
+## Questions Worth Asking {.smaller .scrollable}
+
+| Ask the business... | Why it matters |
+|:---|:---|
+| **How many members cancel?** | If it's rare (say 5%), accuracy is misleading. Compare to the lazy model. |
+| **What will you do with flagged members?** | The action (a call, a free month) determines what a **false positive** costs |
+| **What is a lost member worth?** | That's what a **false negative** costs |
+| **How many members can you act on?** | If staff can only call 50 a week, every flag needs to count → **precision** |
+| **Which mistake would hurt more?** | Misses → **recall**, false alarms → **precision**, about equal → **F1** |
+
+. . .
+
+::: {.callout-note}
+## Suppose the gym answers...
+
+About **5%** cancel. Flagged members get a **free month (\~\$40)**. A lost member is worth **\~\$600** a year. The front desk can reach everyone flagged.
+
+**→ Prioritize recall.** A miss costs 15× more than a wasted free month, and there's no limit on how many members they can contact. Then tune the threshold to the costs, just like we did for the bank.
+:::
+
+::: {.notes}
+Accuracy is only a good choice when the classes are roughly balanced and both errors cost about the same, which is rare in business problems. Point out that none of these questions are about the algorithm: choosing a metric is a business conversation. This connects back to the week 8 ML Project Canvas: the questions about what happens after a prediction are box ④ (Action), and the metric choice is box ⑤ (Success metrics).
+:::
+
+# Looking Forward {background="#43464B"}
+
+## Key Takeaways {.smaller}
+
+* **Classification vs. regression**: predicting a category needs a different model and different metrics
+* **Logistic regression**: the S-curve turns a linear score into a valid probability
+* **Interpretation**: a coefficient's sign gives the direction; to talk about probability, plug in real examples
+* **Compare to a baseline**: 97% accuracy means little when 97% of customers don't default
+* **Precision, recall, and the threshold**: the business's error costs decide which mistakes to minimize
+
+## More in Your Readings {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[📈 ROC curves & AUC]{.card-title}
+
+How well the model ranks customers by risk, across every threshold
+:::
+::: {.card}
+[⚖️ F1 & the harmonic mean]{.card-title}
+
+Why F1 punishes a model that is great at one metric and terrible at the other
+:::
+::: {.card}
+[💰 Business cost analysis]{.card-title}
+
+Putting a dollar value on each cell of the confusion matrix
+:::
+::: {.card}
+[🧩 Multiple predictors]{.card-title}
+
+Adding categorical features like `student` to a logistic regression
+:::
+:::
+
+## Thursday's Lab
 
 ::: {.callout-tip}
 ## This Week's Lab Preview
 
 In Thursday's lab, you'll get hands-on practice with:
 
-* Building logistic regression models using real medical data to predict cancer
-* Applying proper data preparation techniques for classification
-* Evaluating models using precision, recall, F1-score, and ROC-AUC
-* Making business-aligned evaluation decisions based on error costs
+* Building logistic regression models with real medical data to predict cancer
+* Comparing against a baseline and reading the confusion matrix
+* Evaluating models with precision, recall, F1-score, and ROC-AUC
+* Turning error costs into a business recommendation
 
-Come prepared to apply today's concepts in a medical diagnosis context!
 :::
 
-# Questions & Next Steps {background="#43464B"}
+<br>
 
-## Looking Ahead
+::: {.callout-important}
+## Homework
 
-**Thursday Lab:** Hands-On Classification with Medical Data
+This week's Lab will serve as your homework!
 
-**Homework:** Thursday's lab also serves as this week's homework assignment
+:::
 
 ## Any Final Questions?
 
 * About classification vs. regression?
-* About logistic regression interpretation?
-* About evaluation metrics?
+* About interpreting logistic regression?
+* About precision, recall, and thresholds?
 * About Thursday's lab?
 
-::: {.callout-note}
-## Office Hours & Resources
-
-* Office hours (aka Thursday lab): Available for additional support
-* Discussion board: Post questions about course topics
-* Lab materials: Available via Canvas
-:::
-
----
+<br><br>
 
 <center>
 **See you Thursday for hands-on classification analysis!**
