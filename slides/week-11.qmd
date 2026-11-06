@@ -29,57 +29,66 @@ execute:
 
 * Quick overview of today's plan:
 
-  * **Decision Trees**: Learning to ask yes/no questions
-  * **Random Forests**: Combining trees for better predictions
-  * **Feature Importance**: Understanding what drives predictions
-  * **Hands-on demos**: Build and interpret tree-based models
+  * Where linear models fall short
+  * Decision trees: learning to ask yes/no questions
+  * Why a single tree is fragile
+  * Random forests: combining many trees into one strong model
+  * Opening the black box with feature importance
 
 ::: {.notes}
-Today introduces Module 10 content - tree-based models. This is a gentle introduction before students read chapters 25-27. Thursday's lab will reinforce with hands-on practice.
+Today introduces Module 11 content - tree-based models. This is a gentle introduction before students read chapters 25-27. Thursday's lab will reinforce with hands-on practice.
 :::
 
-# Discussion: Homework & Questions {background="#43464B"}
+## 📓 Follow Along in the Notebook
 
-## Questions from Week 10? {.smaller}
+::: {.callout-tip}
+## Week 11 Lecture Notebook
 
-* Any questions about linear or logistic regression?
-* Model evaluation metrics clear?
-* Confusion about train/test splits?
-* Anything from the quiz or class lab?
-* Time to ask!
+Open the companion notebook in Colab now and follow along as we work through today's examples on decision trees, random forests, and feature importance.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-11-lecture.ipynb)
+:::
+
+# Week 10 Recap {background="#43464B"}
+
+## Last Week in 60 Seconds {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[📈 Logistic regression]{.card-title}
+
+The S-curve turns a linear score into a **probability** between 0 and 1
+:::
+::: {.card}
+[😴 The lazy model]{.card-title}
+
+Predicting "No default" for everyone scored **96.7%** accuracy. Always compare to a baseline
+:::
+::: {.card}
+[🧮 Precision & recall]{.card-title}
+
+**Precision:** when we flag, are we right?
+
+**Recall:** of the real defaulters, how many did we catch?
+:::
+::: {.card}
+[🎚️ The threshold dial]{.card-title}
+
+The business's error costs, not the default 50%, decide where to set it
+:::
+:::
 
 . . .
 
-:::: {.columns}
-::: {.column width='70%'}
-::: {.callout}
-## Activity
-
-Converse with your neighbor and identify...
-
-* 1 new thing you learned last week that you thought was clear and explained well
-* 1 thing we covered last week that is still confusing
+::: {.callout-tip}
+Today we change the **model**, not the workflow: split → fit → predict → evaluate against a baseline.
 :::
-:::
-::: {.column width='30%'}
-<center>
 
-<div id="3minReview"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minReview", 180, "slide");
-    });
-</script>
-</center>
-:::
-::::
+# All Models Are Wrong, But Some Are Useful {background="#43464B"}
 
 ::: {.notes}
-Give students 3 minutes to discuss. Then take 2-3 volunteers to share. This helps surface any lingering confusion before moving to new material. Transition: "Today we're moving beyond linear models to explore how trees make decisions."
+George Box's famous line. Linear and logistic regression are useful, but they are "wrong" in predictable ways. The next few slides show where they fall short, and why that motivates trees.
 :::
-
-# Decision Trees: Learning to Ask Questions {background="#43464B"}
 
 ## Linear Models Struggle with Non-Linear Patterns {.smaller}
 
@@ -87,8 +96,29 @@ Give students 3 minutes to discuss. Then take 2-3 volunteers to share. This help
 #| echo: false
 #| eval: true
 #| fig-align: center
-import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from ISLP import load_data
+from scipy.stats import linregress
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor, plot_tree
+
+# Shared settings for the interactive (Plotly) slides
+NO_COLOR, YES_COLOR = '#e58139', '#399de5'   # match plot_tree: orange = No default, blue = Default
+PLOTLY_CONFIG = {'displayModeBar': False}
+
+def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
+    """Build slider steps that show the fixed traces plus one group of traces per step."""
+    steps = []
+    for i in range(n_steps):
+        visible = [True] * n_fixed + [False] * (n_steps * traces_per_step)
+        for k in range(traces_per_step):
+            visible[n_fixed + i * traces_per_step + k] = True
+        steps.append(dict(method='update', label=labels[i],
+                          args=[{'visible': visible}, {'title.text': titles[i]}]))
+    return steps
 
 np.random.seed(42)
 marketing_spend = np.linspace(0, 100, 150)
@@ -97,7 +127,6 @@ sales = 50 + 50 * np.log1p(marketing_spend * 0.5) + np.random.normal(0, 8, len(m
 sales = np.clip(sales, 0, None)
 
 # Fit a linear regression line
-from scipy.stats import linregress
 slope, intercept, r_value, p_value, std_err = linregress(marketing_spend, sales)
 linear_fit = slope * marketing_spend + intercept
 
@@ -106,7 +135,6 @@ ax.scatter(marketing_spend, sales, alpha=0.6, color='steelblue', s=40, label='Ac
 ax.plot(marketing_spend, linear_fit, 'r--', linewidth=2.5, label='Linear model (misses the pattern)')
 ax.set_xlabel('Marketing Spend ($000s)', fontsize=14)
 ax.set_ylabel('Sales ($000s)', fontsize=14)
-#ax.legend(fontsize=10, loc='lower right')
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.show()
@@ -122,6 +150,8 @@ plt.show()
 
 ::: {.notes}
 Show this plot - no need for lengthy explanation. The visual tells the story: steep early gains, then plateau. This is diminishing returns in action.
+
+Throughout today, "linear models" includes logistic regression: its log-odds are a weighted sum of the features, so it inherits the same limitations.
 :::
 
 ## Linear Models Miss Interactions {.smaller}
@@ -202,560 +232,652 @@ $$P(\text{default}) = \frac{1}{1+e^{-(\beta_0 + 0.0032 \cdot \text{balance} - 0.
 </center>
 
 ::: {.notes}
-Left side shows the mathematical complexity of logistic regression. Right side shows a simple tree rule. Both models might have similar accuracy, but one is far easier to communicate and act upon.
+Left side shows the mathematical complexity of logistic regression. Right side shows a simple tree rule. Both models might have similar accuracy, but one is far easier to communicate and act upon. The numbers here are illustrative.
 :::
 
 ## What If There Was a Better Way? {.smaller}
 
-<br/><br/>
+**Decision trees** address each of these limitations:
 
-<center>
+::: {.card-grid .cols-2}
+::: {.card}
+[〰️ Non-linear patterns]{.card-title}
 
-**Decision trees offer:**
+Capture curves and plateaus naturally, with no transformations needed
+:::
+::: {.card}
+[🔀 Interactions]{.card-title}
 
-✓ Capture nonlinear patterns naturally
+Discover on their own that quality matters differently for premium and unknown brands
+:::
+::: {.card}
+[✂️ Thresholds]{.card-title}
 
-✓ Automatically discover thresholds
+Find the cutoffs that matter (*balance > $X*) directly from the data
+:::
+::: {.card}
+[🗣️ Clear rules]{.card-title}
 
-✓ Naturally handle interactions
-
-✓ Create clear if-then rules
-
-✓ Mirror human decision-making
-
-</center>
+Produce plain if-then rules that mirror how people make decisions
+:::
+:::
 
 ::: {.notes}
 Transition slide. We've seen the problems with linear models. Now we introduce the solution: decision trees are designed specifically to handle these challenges.
 :::
 
-## Think-Pair-Share: Your Decision Process {.smaller}
-
-Think about a decision you make regularly using yes/no questions...
-
-:::: {.columns}
-::: {.column width="70%"}
-
-**Examples:**
-
-- Deciding whether to approve a loan application
-- Choosing which restaurant to visit
-- Determining if a sales lead is worth pursuing
-- Diagnosing a technical problem
-
-**Discuss with your neighbor:**
-
-1. What's the first question you ask?
-2. How does the answer change your next question?
-3. How many questions until you reach a decision?
-
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minDecision"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minDecision", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-After 3 minutes, ask 2-3 students to share. Draw out the tree structure on the board if time permits. Key insight: "This sequential questioning is EXACTLY how decision trees work - but they learn the optimal questions from data!"
-:::
-
-
 # Decision Trees: The if-else of ML! {background="#43464B"}
 
 
-## How Decision Trees Work {.smaller}
+## Anatomy of a Decision Tree {.smaller}
 
 :::: {.columns}
-::: {.column width="50%"}
-**The Process:**
+::: {.column width="52%"}
 
-1. Start with all your data
-2. Ask a yes/no question that best separates the data
-3. Split data into two groups based on the answer
-4. Repeat for each group until you reach clear predictions
+A tree is a series of **yes/no questions**:
 
-**Example: Loan Approval**
-```
-Income > $50k?
-├─ YES → Credit Score > 700?
-│         ├─ YES → APPROVE
-│         └─ NO → REVIEW
-└─ NO → Has Co-signer?
-          ├─ YES → CONSIDER
-          └─ NO → DENY
-```
+* **Root node:** the first question, asked of everyone
+* **Internal nodes:** follow-up questions
+* **Leaves:** the final answer (the prediction)
+* **Depth:** how many questions deep it goes
+
+<br>
+
+The tree **learns** which questions to ask, and the cutoffs, from the data.
+
 :::
+::: {.column width="48%"}
 
-::: {.column width="50%"}
 ```{mermaid}
-%%| fig-width: 5
+%%| fig-width: 4.6
 %%| echo: false
 flowchart TD
-    A[Loan Application] --> B{"Income > 50K?"}
+    B{"<b>ROOT</b><br/>Income > 50K?"}
     B -->|Yes| C{"Credit Score > 700?"}
     B -->|No| D{"Has Co-signer?"}
-    C -->|Yes| E[Approve]
-    C -->|No| F[Review]
-    D -->|Yes| G[Consider]
-    D -->|No| H[Deny]
+    C -->|Yes| E["<b>LEAF</b><br/>Approve"]
+    C -->|No| F["<b>LEAF</b><br/>Deny"]
+    D -->|Yes| G["<b>LEAF</b><br/>Approve"]
+    D -->|No| H["<b>LEAF</b><br/>Deny"]
 
-    style A fill:#e1f5fe
-    style E fill:#c8e6c9
-    style G fill:#fff3c4
-    style F fill:#fff3c4
-    style H fill:#ffcdd2
-```
-:::
-::::
-
-::: {.notes}
-Emphasize: Trees learn these questions automatically from data. You don't specify the thresholds - the algorithm discovers them!
-:::
-
-## Tree Anatomy: Understanding the Parts {.smaller}
-
-:::: {.columns}
-::: {.column width="50%"}
-**Key Components:**
-
-* **Root Node**: Where all data starts
-* **Internal Nodes**: Decision points (yes/no questions)
-* **Branches**: Paths representing answers
-* **Leaf Nodes**: Final predictions
-* **Depth**: How many questions deep the tree goes
-
-**Reading a Tree:**
-
-- Follow the path from top to bottom
-- Each split asks about ONE feature
-- Leaves give you the final prediction
-:::
-
-::: {.column width="50%"}
-```{mermaid}
-%%| fig-width: 5
-%%| echo: false
-flowchart TD
-    A["ROOT NODE<br/>All Data"] --> B{"INTERNAL NODE<br/>Question 1"}
-    B -->|Yes| C{"INTERNAL NODE<br/>Question 2A"}
-    B -->|No| D{"INTERNAL NODE<br/>Question 2B"}
-    C -->|Yes| E["LEAF<br/>Prediction A"]
-    C -->|No| F["LEAF<br/>Prediction B"]
-    D -->|Yes| G["LEAF<br/>Prediction C"]
-    D -->|No| H["LEAF<br/>Prediction D"]
-
-    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
-    style B fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style B fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
     style C fill:#fff3e0,stroke:#f57c00,stroke-width:2px
     style D fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    style E fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
-    style F fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
-    style G fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
-    style H fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    style E fill:#c8e6c9
+    style F fill:#ffcdd2
+    style G fill:#c8e6c9
+    style H fill:#ffcdd2
 ```
+
 :::
 ::::
 
 ::: {.notes}
-Walk through the diagram. "Imagine a customer flowing through this tree. At each internal node, we ask a question. Eventually they reach a leaf, which gives our prediction."
+Walk one applicant through the tree: income $60K, credit score 650 → Deny. Emphasize that nobody hand-picked "50K" or "700": the algorithm discovers the questions and cutoffs from data. This tree has depth 2.
 :::
 
-## How Does the Tree Decide Which Question to Ask? {.smaller}
+## Which Question Is Better? {.smaller}
 
-**Imagine we're predicting credit card default. Which feature split is better?**
+Each jar holds 20 customers: <span style="color:#e58139">●</span> paid, <span style="color:#399de5">●</span> defaulted. A good question **sorts** them:
 
 ```{python}
 #| echo: false
-#| eval: true
 #| fig-align: center
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.tree import DecisionTreeClassifier, plot_tree
-from sklearn.datasets import make_classification
+#| fig-width: 11
+#| fig-height: 3.8
+from matplotlib.patches import FancyBboxPatch, Circle
 
-# Create synthetic data for visualization
-np.random.seed(42)
+def draw_jar(ax, x, n_no, n_yes, label, gini_text=None):
+    """Draw a jar of 20 dots (orange = paid, blue = defaulted) centered at x."""
+    ax.add_patch(FancyBboxPatch((x - 0.55, 0), 1.1, 1.5, boxstyle='round,pad=0.05,rounding_size=0.15',
+                                facecolor='white', edgecolor='gray', linewidth=2))
+    colors = [NO_COLOR] * n_no + [YES_COLOR] * n_yes
+    for k, color in enumerate(colors):
+        ax.add_patch(Circle((x - 0.4 + (k % 4) * 0.27, 0.15 + (k // 4) * 0.28), 0.11,
+                            facecolor=color, edgecolor='black', linewidth=0.5))
+    ax.text(x, -0.25, label, ha='center', va='top', fontsize=12, fontweight='bold')
+    if gini_text:
+        ax.text(x, -0.65, gini_text, ha='center', va='top', fontsize=12, color='dimgray')
 
-# Create figure with two subplots
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-
-# Split A: Balance > $1,200 (very pure - good split)
-# Create data that will split cleanly on feature 0 (balance)
-X_balance = np.random.randn(2000, 2)
-X_balance[:, 0] = np.concatenate([np.random.uniform(0, 1200, 1000),
-                                   np.random.uniform(1200, 3000, 1000)])
-y_balance = np.concatenate([np.zeros(950), np.ones(50),    # balance <= 1200: mostly no default
-                            np.zeros(50), np.ones(950)])    # balance > 1200: mostly default
-
-# Fit a decision tree that will split on feature 0
-tree_balance = DecisionTreeClassifier(max_depth=1, random_state=42)
-tree_balance.fit(X_balance, y_balance)
-
-plot_tree(tree_balance,
-          feature_names=['Balance', 'Other'],
-          class_names=['No Default', 'Default'],
-          filled=True,
-          rounded=True,
-          fontsize=10,
-          ax=ax1)
-ax1.set_title('Split A: Balance > $1,200\n(Clean split - pure leaf nodes!)',
-              fontsize=13, fontweight='bold', pad=20)
-
-# Split B: Age > 30 (messy - poor split)
-# Create data that splits poorly on feature 0 (age)
-X_age = np.random.randn(2000, 2)
-X_age[:, 0] = np.concatenate([np.random.uniform(18, 30, 1000),
-                              np.random.uniform(30, 65, 1000)])
-y_age = np.concatenate([np.zeros(450), np.ones(550),    # age <= 30: mixed
-                        np.zeros(550), np.ones(450)])    # age > 30: mixed
-
-tree_age = DecisionTreeClassifier(max_depth=1, random_state=42)
-tree_age.fit(X_age, y_age)
-
-plot_tree(tree_age,
-          feature_names=['Age', 'Other'],
-          class_names=['No Default', 'Default'],
-          filled=True,
-          rounded=True,
-          fontsize=10,
-          ax=ax2)
-ax2.set_title('Split B: Age > 30\n(Messy split - mixed leaf nodes)',
-              fontsize=13, fontweight='bold', pad=20)
-
+fig, axes = plt.subplots(1, 2, figsize=(11, 3.8))
+splits = [
+    ('Question A: Is balance > $1,200?', (19, 1), (1, 19)),
+    ('Question B: Is age > 30?', (9, 11), (11, 9)),
+]
+for ax, (question, left, right) in zip(axes, splits):
+    draw_jar(ax, 0, *left, 'No')
+    draw_jar(ax, 1.8, *right, 'Yes')
+    ax.set_title(question, fontsize=14, fontweight='bold')
+    ax.set_xlim(-0.9, 2.7)
+    ax.set_ylim(-0.7, 1.7)
+    ax.set_aspect('equal')
+    ax.axis('off')
 plt.tight_layout()
 plt.show()
 ```
 
-<center>
-**Which split creates cleaner, more organized groups?**
+. . .
 
-**Think about it... then we'll see how the algorithm decides!**
-</center>
+**Question A** produces two jars that are each almost one color. That's what the tree is looking for: **pure** groups.
 
 ::: {.notes}
-Give students 10-15 seconds to think. The answer is visually obvious: Split A shows deeply colored, pure leaf nodes (one orange for mostly default, one blue for mostly no default). Split B shows lightly colored, mixed leaf nodes (both are pale because they're 50/50 mixes). This color intensity represents purity - exactly what Gini impurity measures! Transition: "Your intuition is right - we want splits that create the purest, most organized groups. Let's see how the algorithm measures this..."
+Ask the room which question they'd rather ask before revealing. Question A's jars are nearly pure (19 of 20 one color); Question B's jars are basically coin flips, so knowing the answer barely helps you predict. Next slide: how the algorithm puts a number on "messy."
 :::
 
-## CART Algorithm: Finding the Best Splits {.smaller}
+## Measuring Messiness: Gini Impurity {.smaller}
 
-**The algorithm formalizes what we just intuitively understood!**
-
-:::: {.columns}
-::: {.column width="50%"}
-**The CART Algorithm:**
-
-1. **Test every possible split** for every feature
-2. **Measure "purity"** using Gini impurity
-   - Gini = 0: Perfect (all same class)
-   - Gini = 0.5: Mixed (50/50 split)
-3. **Choose the split** that creates the biggest purity improvement
-4. **Repeat** until stopping criteria met
-
-**Why this matters:**
-Trees automatically find the thresholds that matter most in your data!
-:::
-
-::: {.column width="50%"}
-**Gini Impurity: A "Messiness Meter"**
-
-* **Low Gini (0.0 - 0.1)**: Very organized, confident predictions
-* **Medium Gini (0.2 - 0.3)**: Somewhat mixed, less confident
-* **High Gini (0.4 - 0.5)**: Very messy, like flipping a coin
-
-**Business Translation:**
-Lower Gini = clearer business segments = more reliable rules
-
-*Example:* "If balance > $1,200, 95% default" (Gini ≈ 0.1) is much better than "If age > 30, 55% default" (Gini ≈ 0.5)
-:::
-::::
-
-::: {.notes}
-Connect back to the previous slide: "Split A had Gini ≈ 0.1 (very pure), Split B had Gini ≈ 0.5 (very messy). The algorithm would choose Split A! This is why trees are so good at finding natural thresholds in data."
-:::
-
-## Interactive Demo: Build Your First Tree {.smaller .scrollable}
-
-Let's build a decision tree to predict credit card defaults!
+**Gini** = if you pull two customers out of a jar, the chance they **don't match**.
 
 ```{python}
-#| echo: true
-#| eval: true
-#| code-line-numbers: "19-20,23-27"
-# Load data and prepare features
+#| echo: false
+#| fig-align: center
+#| fig-width: 11
+#| fig-height: 3
+fig, ax = plt.subplots(figsize=(11, 3))
+for x, (n_no, n_yes), label in [(0, (20, 0), 'Pure'), (2.2, (16, 4), 'Mostly one color'),
+                                (4.4, (10, 10), 'Coin flip')]:
+    p = n_yes / 20
+    draw_jar(ax, x, n_no, n_yes, label, f'Gini = {2 * p * (1 - p):.2f}')
+ax.set_xlim(-1, 5.4)
+ax.set_ylim(-1.1, 1.7)
+ax.set_aspect('equal')
+ax.axis('off')
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+**How the tree picks a question (the CART algorithm):**
+
+1. Try **every cutoff** for **every feature**
+2. Score each one by the (size-weighted) Gini of the two jars it creates
+3. Keep the **lowest**, then repeat inside each new jar
+
+::: {.notes}
+Question A from the last slide scores about 0.10; Question B about 0.50, so the algorithm picks A. The formula, if anyone asks, is 1 - sum of squared class shares, which for two classes is 2p(1-p). "Weighted" just means a big jar counts more than a small one. Next: let's run step 1-3 ourselves.
+:::
+
+## You Be the Algorithm {.smaller}
+
+40 real customers from the Default data (20 defaulted, 20 didn't). **Drag the slider** to try different balance cutoffs. Where is the weighted Gini lowest?
+
+```{python}
+#| echo: false
+default_raw = load_data('Default')
+scan = pd.concat([
+    default_raw[default_raw['default'] == 'Yes'].sample(20, random_state=1),
+    default_raw[default_raw['default'] == 'No'].sample(20, random_state=1)
+])
+scan_y = (scan['default'] == 'Yes').astype(int)
+
+def gini(labels):
+    p = labels.mean() if len(labels) else 0
+    return 2 * p * (1 - p)
+
+scan_rows = []
+for cutoff in np.arange(200, 2700, 100):
+    left = scan_y[scan['balance'] <= cutoff]
+    right = scan_y[scan['balance'] > cutoff]
+    scan_rows.append({
+        'cutoff': cutoff,
+        'left_no': (left == 0).sum(), 'left_yes': (left == 1).sum(),
+        'right_no': (right == 0).sum(), 'right_yes': (right == 1).sum(),
+        'weighted_gini': (len(left) * gini(left) + len(right) * gini(right)) / len(scan_y)
+    })
+scan_df = pd.DataFrame(scan_rows)
+
+jitter = np.random.default_rng(0).uniform(-0.2, 0.2, len(scan))
+fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.55, 0.45],
+                    vertical_spacing=0.08)
+
+# Fixed traces: the customers and the full Gini curve
+for label, value, color in [('No default', 0, NO_COLOR), ('Default', 1, YES_COLOR)]:
+    mask = scan_y == value
+    fig.add_trace(go.Scatter(x=scan['balance'][mask], y=value + jitter[mask], mode='markers',
+                             marker=dict(size=11, color=color, line=dict(width=1, color='black')),
+                             name=label, hoverinfo='skip'), row=1, col=1)
+fig.add_trace(go.Scatter(x=scan_df['cutoff'], y=scan_df['weighted_gini'], mode='lines',
+                         line=dict(color='lightgray', width=3), showlegend=False,
+                         hoverinfo='skip'), row=2, col=1)
+
+# One cutoff line + one curve marker per slider step
+titles = []
+for row in scan_df.itertuples():
+    fig.add_trace(go.Scatter(x=[row.cutoff, row.cutoff], y=[-0.5, 1.5], mode='lines',
+                             line=dict(color='black', width=3, dash='dash'),
+                             visible=False, showlegend=False, hoverinfo='skip'), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[row.cutoff], y=[row.weighted_gini], mode='markers',
+                             marker=dict(size=16, color='crimson'),
+                             visible=False, showlegend=False, hoverinfo='skip'), row=2, col=1)
+    titles.append(f'<b>Left:</b> {row.left_no} no / {row.left_yes} yes   |   '
+                  f'<b>Right:</b> {row.right_no} no / {row.right_yes} yes   |   '
+                  f'<b>Weighted Gini = {row.weighted_gini:.2f}</b>')
+
+start = 3   # start on a poor cutoff ($500) so the class can hunt for a better one
+steps = slider_steps(3, len(scan_df), 2, [f'${c:,}' for c in scan_df['cutoff']], titles)
+for i in (start * 2, start * 2 + 1):
+    fig.data[3 + i].visible = True
+
+fig.update_layout(
+    title=dict(text=titles[start], x=0.5, font=dict(size=15)),
+    height=470, margin=dict(l=60, r=20, t=50, b=10), template='plotly_white',
+    legend=dict(orientation='h', x=0, y=1.08),
+    sliders=[dict(active=start, steps=steps, pad=dict(t=30), font=dict(size=1, color='rgba(0,0,0,0)'),
+                  currentvalue=dict(prefix='Balance cutoff: ', font=dict(size=15)))]
+)
+fig.update_yaxes(tickvals=[0, 1], ticktext=['No default', 'Default'], range=[-0.5, 1.5], row=1, col=1)
+fig.update_yaxes(title_text='Weighted Gini', range=[0, 0.55], row=2, col=1)
+fig.update_xaxes(title_text='Credit card balance ($)', row=2, col=1)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+Let students call out "left" or "right" while you drag. The lowest weighted Gini is at a cutoff of about $1,400 (0.09), where each side is almost all one color. CART runs exactly this search for every feature at every node, then keeps the single best split.
+:::
+
+## Demo: Build Your First Tree {.smaller .scrollable}
+
+Let's build a decision tree to predict credit card defaults, using the same data and split as last week:
+
+```{python}
+#| code-line-numbers: "|2|5-8|10-11|13-15|18-19"
+#| output: false
 from ISLP import load_data
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 
-# Load Default dataset
+# Load the Default data and convert the Yes/No columns to 1/0
 Default = load_data('Default')
 Default['default'] = (Default['default'] == 'Yes').astype(int)
 Default['student'] = (Default['student'] == 'Yes').astype(int)
 
-# Prepare features and target
 X = Default[['student', 'balance', 'income']]
 y = Default['default']
 
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
 
-# Build a simple tree (max_depth=3 for interpretability)
+# Build a shallow tree (max_depth=3 keeps it readable)
 tree_model = DecisionTreeClassifier(max_depth=3, random_state=42)
 tree_model.fit(X_train, y_train)
+```
 
-# Visualize the tree
-plt.figure(figsize=(12, 6))
-plot_tree(tree_model, feature_names=['student', 'balance', 'income'], class_names=['No Default', 'Default'], filled=True, rounded=True)
-plt.title("Decision Tree: Credit Card Default Prediction")
+Same `.fit()` as every model so far. `max_depth` caps how many questions deep the tree can go.
+
+## Reading Our Tree {.smaller .scrollable}
+
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 12
+#| fig-height: 4.2
+plt.figure(figsize=(12, 4.2))
+plot_tree(tree_model, feature_names=list(X.columns), class_names=['No Default', 'Default'],
+          filled=True, rounded=True, precision=2, fontsize=8)
 plt.show()
+```
 
-# Check accuracy
-print(f"Training accuracy: {tree_model.score(X_train, y_train):.3f}")
-print(f"Test accuracy: {tree_model.score(X_test, y_test):.3f}")
+::: {.fragment}
+**How to read a node** (using the top box, drawn with `plot_tree()`):
+
+:::: {.columns}
+::: {.column width="50%"}
+* `balance <= 1800.0`: the **question**. True → go left, False → go right
+* `gini = 0.06`: how **mixed** the node is (0 = pure)
+* `samples = 7000`: training customers who **reach** this node
+:::
+::: {.column width="50%"}
+* `value = [6767, 233]`: how many **paid** vs. **defaulted**
+* `class = No Default`: the **majority**, which is what this node predicts
+* Color: orange = No Default, blue = Default; **darker = purer**
+:::
+::::
+:::
+
+::: {.notes}
+Walk through the tree. Point out:
+1. Which feature did it split on first? (balance, at about $1,800)
+2. Read the root node line by line using the decoder, then ask a student to read a leaf
+3. Notice the leaves: only two of the eight predict Default, and both have balance above $1,800
+Keep it under 3-4 minutes total.
+:::
+
+## How the Tree Makes a Prediction {.smaller}
+
+:::: {.columns}
+::: {.column width="45%"}
+A new customer: not a student, **$2,000** balance, **$40,000** income
+
+```{python}
+customer = pd.DataFrame({
+    'student': [0],
+    'balance': [2000],
+    'income': [40000]
+})
+tree_model.predict(customer)
+```
+
+```{python}
+tree_model.predict_proba(customer).round(2)
+```
+
+::: {.fragment}
+**Red path:** balance > 1,800 → balance ≤ 2,037 → income > 25,216 → a leaf with 18 paid / 40 defaulted → **Default** (69%)
+:::
+:::
+::: {.column width="55%"}
+
+```{python}
+#| echo: false
+#| fig-width: 8
+#| fig-height: 6
+path_nodes = set(tree_model.decision_path(customer).indices)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+annotations = plot_tree(tree_model, feature_names=list(X.columns),
+                        class_names=['No Default', 'Default'], filled=True, rounded=True,
+                        precision=0, impurity=False, label='root', fontsize=9, ax=ax)
+
+# plot_tree also returns the True/False edge labels; node boxes are the ones with a bbox
+node_boxes = [a for a in annotations if a.get_bbox_patch() is not None]
+for node, ann in enumerate(node_boxes):
+    box = ann.get_bbox_patch()
+    if node in path_nodes:
+        box.set_edgecolor('crimson')
+        box.set_linewidth(3.5)
+        if ann.arrow_patch is not None:
+            ann.arrow_patch.set_color('crimson')
+            ann.arrow_patch.set_linewidth(3)
+    else:
+        ann.set_alpha(0.3)
+        box.set_alpha(0.3)
+        if ann.arrow_patch is not None:
+            ann.arrow_patch.set_alpha(0.3)
+plt.tight_layout()
+plt.show()
+```
+
+:::
+::::
+
+::: {.notes}
+`predict()` returns 1 (Default). `predict_proba()` returns [0.31, 0.69]: the share of paid vs. defaulted training customers in that leaf. Every prediction is just "drop the customer in at the top, answer each question, read off the leaf." Only three questions were needed, and student status never came up for this customer.
+:::
+
+## Did the Tree Beat the Lazy Model? {.smaller}
+
+Last week, logistic regression barely beat predicting "No default" for everyone. Does a tree do better?
+
+```{python}
+#| code-line-numbers: "|3-4|6-8"
+from sklearn.metrics import accuracy_score, recall_score
+
+y_pred = tree_model.predict(X_test)
+lazy_pred = np.zeros(len(y_test))   # predict "No default" for everyone
+
+print(f"Lazy model accuracy: {accuracy_score(y_test, lazy_pred):.1%}")
+print(f"Tree accuracy:       {accuracy_score(y_test, y_pred):.1%}")
+print(f"Tree recall:         {recall_score(y_test, y_pred):.2f}")
+```
+
+. . .
+
+::: {.callout-warning}
+## Same trap as last week
+
+The tree beats doing nothing by less than half a percentage point and catches only **37 of the 100** defaulters. A new model doesn't change the rules: **compare to a baseline and pick metrics that fit the business.**
+:::
+
+::: {.notes}
+Last week's logistic regression caught 33 of 100. Trees also have predict_proba(), so the threshold dial from week 10 works exactly the same way here.
+:::
+
+## What the Tree Sees: Boxes {.smaller}
+
+Every question draws a line, so every leaf is a **box** (shaded by its **share of defaulters**). More depth = more questions = **smaller boxes**. **Drag the slider:**
+
+```{python}
+#| echo: false
+carve = pd.concat([
+    default_raw[default_raw['default'] == 'Yes'],
+    default_raw[default_raw['default'] == 'No'].sample(333, random_state=42)
+])
+carve_X = carve[['balance', 'income']]
+carve_y = (carve['default'] == 'Yes').astype(int)
+cx_tr, cx_te, cy_tr, cy_te = train_test_split(carve_X, carve_y, test_size=0.3,
+                                              random_state=42, stratify=carve_y)
+BAL_RANGE, INC_RANGE = (0, 2700), (0, 75000)
+
+def leaf_boxes(tree):
+    """Return (x0, x1, y0, y1, share of defaulters) for every leaf."""
+    t = tree.tree_
+    boxes = []
+    def walk(node, x0, x1, y0, y1):
+        if t.children_left[node] < 0:
+            boxes.append((x0, x1, y0, y1, t.value[node][0][1]))
+            return
+        cut = t.threshold[node]
+        if t.feature[node] == 0:   # balance → vertical line
+            walk(t.children_left[node], x0, min(cut, x1), y0, y1)
+            walk(t.children_right[node], max(cut, x0), x1, y0, y1)
+        else:                      # income → horizontal line
+            walk(t.children_left[node], x0, x1, y0, min(cut, y1))
+            walk(t.children_right[node], x0, x1, max(cut, y0), y1)
+    walk(0, *BAL_RANGE, *INC_RANGE)
+    return boxes
+
+def box_color(share):
+    """Blend from light orange (all paid) through white to light blue (all defaulted)."""
+    orange, white, blue = np.array([246, 201, 168]), np.array([250, 250, 250]), np.array([169, 211, 245])
+    rgb = orange + (white - orange) * share * 2 if share < 0.5 else white + (blue - white) * (share - 0.5) * 2
+    return f'rgb({rgb[0]:.0f},{rgb[1]:.0f},{rgb[2]:.0f})'
+
+fig = go.Figure()
+depths = [1, 2, 3, 4, 6, 10, None]
+titles, n_traces = [], []
+for depth in depths:
+    carve_tree = DecisionTreeClassifier(max_depth=depth, random_state=42).fit(cx_tr, cy_tr)
+    boxes = leaf_boxes(carve_tree)
+    for x0, x1, y0, y1, share in boxes:
+        fig.add_trace(go.Scatter(x=[x0, x1, x1, x0, x0], y=[y0, y0, y1, y1, y0], mode='lines',
+                                 fill='toself', fillcolor=box_color(share),
+                                 line=dict(color='black', width=1.5 if len(boxes) < 20 else 0.6),
+                                 visible=False,
+                                 showlegend=False, hoverinfo='skip'))
+    n_traces.append(len(boxes))
+    box_label = (f'<b>{len(boxes)} boxes, every one 100% pure</b>' if depth is None
+                 else f'<b>{len(boxes)} boxes</b>')
+    titles.append(f'{box_label}   |   '
+                  f'Train accuracy: <b>{carve_tree.score(cx_tr, cy_tr):.0%}</b>   |   '
+                  f'Test accuracy: <b>{carve_tree.score(cx_te, cy_te):.0%}</b>')
+
+# Customers drawn on top of the boxes
+for label, value, color in [('Paid', 0, NO_COLOR), ('Defaulted', 1, YES_COLOR)]:
+    mask = cy_tr == value
+    fig.add_trace(go.Scatter(x=cx_tr['balance'][mask], y=cx_tr['income'][mask], mode='markers',
+                             marker=dict(size=5, color=color, line=dict(width=0.5, color='black')),
+                             name=label, hoverinfo='skip'))
+
+steps = []
+for i, depth in enumerate(depths):
+    visible = []
+    for j, n in enumerate(n_traces):
+        visible += [i == j] * n
+    steps.append(dict(method='update', label=str(depth) if depth else 'no limit',
+                      args=[{'visible': visible + [True, True]}, {'title.text': titles[i]}]))
+for trace, show in zip(fig.data, steps[0]['args'][0]['visible']):
+    trace.visible = show
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=15)),
+    height=470, margin=dict(l=70, r=20, t=50, b=10), template='plotly_white',
+    legend=dict(orientation='h', x=0, y=1.08),
+    xaxis=dict(title='Credit card balance ($)', range=BAL_RANGE),
+    yaxis=dict(title='Income ($)', range=INC_RANGE),
+    sliders=[dict(active=0, steps=steps, pad=dict(t=40),
+                  currentvalue=dict(prefix='max_depth = ', font=dict(size=15)))]
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-LIVE DEMO: Run this code and show the tree visualization. Point out:
-1. Which feature did it split on first? (likely balance)
-2. What threshold did it choose?
-3. How many customers are in each leaf?
-4. Can we trace through a prediction together?
-Keep it under 3-4 minutes total.
+To keep the picture readable, this uses all 333 defaulters plus 333 randomly chosen non-defaulters. Depth 1: one line on balance, two boxes. Depth 2-3: the boxes split again, and the shading shows the tree getting more confident at the extremes. Keep going: by depth 10 the boxes are tiny. At "no limit" the tree grows 14 levels deep and carves 69 boxes, every one pure, many drawn around a single customer. Training accuracy hits 100% while test accuracy slides from 90% to 84%. Ask: is that box around one orange dot in a sea of blue a real pattern, or one unusual customer?
+:::
+
+## Trees Predict Numbers Too {.smaller}
+
+For a number, each leaf predicts the **average** of its training rows, so the tree draws a **staircase**. More depth = **more, smaller steps**. **Drag the slider:**
+
+```{python}
+#| echo: false
+spend = marketing_spend.reshape(-1, 1)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=marketing_spend, y=sales, mode='markers', name='Weekly sales',
+                         marker=dict(color='steelblue', size=6, opacity=0.45), hoverinfo='skip'))
+fig.add_trace(go.Scatter(x=marketing_spend, y=linear_fit, mode='lines', name='Linear model',
+                         line=dict(color='red', dash='dash', width=2), hoverinfo='skip'))
+
+depths = [1, 2, 3, 4, 6, None]
+titles = []
+for depth in depths:
+    step_tree = DecisionTreeRegressor(max_depth=depth, random_state=42).fit(spend, sales)
+    fig.add_trace(go.Scatter(x=marketing_spend, y=step_tree.predict(spend), mode='lines',
+                             line=dict(color='darkorange', width=4, shape='hv'), visible=False,
+                             name='Regression tree', hoverinfo='skip'))
+    leaves = step_tree.get_n_leaves()
+    titles.append(f'<b>{leaves} leaves → {leaves} steps</b>' +
+                  ('   (one step per data point: memorized!)' if depth is None else ''))
+
+steps = slider_steps(2, len(depths), 1, [str(d) if d else 'no limit' for d in depths], titles)
+for trace, show in zip(fig.data, steps[0]['args'][0]['visible']):
+    trace.visible = show
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=15)),
+    height=440, margin=dict(l=60, r=20, t=50, b=10), template='plotly_white',
+    legend=dict(orientation='h', x=0, y=1.1),
+    xaxis=dict(title='Marketing spend ($000s)'), yaxis=dict(title='Sales ($000s)'),
+    sliders=[dict(active=0, steps=steps, pad=dict(t=40),
+                  currentvalue=dict(prefix='max_depth = ', font=dict(size=15)))]
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+Same idea, two changes: splits minimize **squared error** instead of Gini, and you use `DecisionTreeRegressor`.
+
+::: {.notes}
+This is the diminishing-returns data from the first slide. Depth 1 = 2 steps, depth 2 = 4 steps; unlike the straight red line, the steps bend to follow the plateau. At "no limit" the tree gives every data point its own step: that's the memorizer again. Next slide: how deep is too deep?
+:::
+
+## How Deep Should a Tree Go? {.smaller}
+
+**Too shallow misses the pattern; too deep memorizes the noise**
+
+```{python}
+#| echo: false
+#| eval: true
+#| fig-align: center
+np.random.seed(42)
+
+# Training data: a sine wave plus noise
+of_x = np.sort(np.random.uniform(0, 10, 100)).reshape(-1, 1)
+of_y = np.sin(of_x).ravel() + np.random.normal(0, 0.4, len(of_x))
+
+# New data from the same process, used to score each tree
+of_test_x = np.random.uniform(0, 10, 500).reshape(-1, 1)
+of_test_y = np.sin(of_test_x).ravel() + np.random.normal(0, 0.4, len(of_test_x))
+
+of_grid = np.linspace(0, 10, 300).reshape(-1, 1)
+of_true = np.sin(of_grid).ravel()
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 3.75))
+panels = [
+    (3, 'b', 'Too Simple (max_depth=3)'),
+    (None, 'r', 'Too Complex (no depth limit)')
+]
+
+for ax, (depth, color, label) in zip(axes, panels):
+    of_tree = DecisionTreeRegressor(max_depth=depth, random_state=42).fit(of_x, of_y)
+    train_r2 = of_tree.score(of_x, of_y)
+    test_r2 = of_tree.score(of_test_x, of_test_y)
+
+    ax.plot(of_grid, of_true, 'g--', linewidth=2.5, alpha=0.8)
+    ax.scatter(of_x, of_y, alpha=0.6, s=30, color='gray', zorder=3)
+    ax.plot(of_grid, of_tree.predict(of_grid), color=color, linewidth=2.5, alpha=0.8)
+    ax.set_xlabel('X', fontsize=12)
+    ax.set_ylabel('Y', fontsize=12)
+    ax.set_title(f'{label}\nTrain R² = {train_r2:.2f}  |  Test R² = {test_r2:.2f}',
+                 fontsize=13, fontweight='bold')
+    ax.grid(alpha=0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+::: {.callout-warning}
+## Depth cuts both ways
+Deeper trees capture **finer patterns**, but past a point they **memorize individual training points** (week 9's memorizer). Too shallow misses the pattern; too deep chases noise. A single tree forces us to pick one spot on that dial.
+:::
+
+::: {.notes}
+Left tree (depth 3): train R² 0.74, test 0.57. It roughly follows the wave but cuts off the peaks, so it underfits. Right tree (no limit): train R² 1.00, test 0.45. It passes through every training point and chases noise. For reference, the best any model could do on this noisy data is a test R² of about 0.71. This is the same story as the two sliders: depth buys flexibility, and too much of it memorizes. You could tune max_depth to land in between (week 12), but a single tree has a second weakness too. Transition: "Let's look at that second weakness, and then at how random forests fix both."
 :::
 
 # Random Forests: Wisdom of Crowds {background="#43464B"}
 
-## The Problem with Single Trees {.smaller}
+## Another Weakness: Instability {.smaller}
 
-<br/><br/>
+**Small changes in data → a different rule book**
+
+Three depth-2 trees predicting Boston home values (in $1,000s), each trained on a slightly different random sample of the **same** data:
+
+```{python}
+#| echo: false
+#| output: asis
+Boston = load_data('Boston')
+boston_features = Boston.drop(columns='medv')
+
+def tree_rules(tree, names):
+    """Return each leaf's path as (list of conditions, predicted value)."""
+    t = tree.tree_
+    rules = []
+    def walk(node, conditions):
+        if t.feature[node] < 0:
+            rules.append((conditions, t.value[node][0][0]))
+            return
+        name, cut = names[t.feature[node]], t.threshold[node]
+        walk(t.children_left[node], conditions + [f'{name} ≤ {cut:.1f}'])
+        walk(t.children_right[node], conditions + [f'{name} > {cut:.1f}'])
+    walk(0, [])
+    return rules
+
+print('::: {.card-grid .cols-3}\n')
+for i, seed in enumerate([1, 0, 5]):
+    rows = np.random.default_rng(seed).choice(len(Boston), len(Boston), replace=True)
+    rule_tree = DecisionTreeRegressor(max_depth=2, random_state=0).fit(
+        boston_features.iloc[rows], Boston['medv'].iloc[rows])
+    root = rule_tree.tree_
+    print('::: {.card}\n')
+    print(f'[📖 Tree {i + 1}]{{.card-title}}\n')
+    print(f'**First question:** is `{boston_features.columns[root.feature[0]]}` '
+          f'≤ {root.threshold[0]:.1f}?\n')
+    for conditions, value in tree_rules(rule_tree, boston_features.columns):
+        print(f'* {" and ".join(conditions)} → **${value:.0f}K**')
+    print('\n:::\n')
+print(':::\n')
+```
 
 ::: {.callout-warning}
-Decision trees are interpretable, but they have two critical weaknesses:
+## Same data, different rule books
 
-1. **Instability**
-2. **Overfitting** 
-
+The **first question**, the **cutoffs**, and the **predictions** all change. Which tree would you use to explain home prices to a client, and what happens to your story when the data is refreshed next month?
 :::
-
-<br/><br/>
-
-Let's see what these problems look like...
-
 
 ::: {.notes}
-Simple introduction slide. Use fragments to reveal one at a time. Transition: "Let's visualize these problems to understand why they matter..."
-:::
-
-## Problem #1: Instability {.smaller}
-
-**Small changes in data → completely different trees**
-
-```{python}
-#| echo: false
-#| eval: true
-#| fig-align: center
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.tree import DecisionTreeRegressor
-
-np.random.seed(100)
-
-# Create cosine-shaped data with noise
-X_train = np.sort(np.random.uniform(0, 10, 100)).reshape(-1, 1)
-y_train = np.cos(X_train).ravel() + np.random.normal(0, 0.35, len(X_train))
-
-# Create fine grid for predictions
-X_test = np.linspace(0, 10, 300).reshape(-1, 1)
-y_true = np.cos(X_test).ravel()
-
-# Train 5 trees on slightly different bootstrap samples
-fig, ax = plt.subplots(figsize=(8, 3.5))
-
-# Plot true function
-ax.plot(X_test, y_true, 'g--', linewidth=2.5, label='True Pattern', alpha=0.8)
-
-# Plot training data
-ax.scatter(X_train, y_train, alpha=0.4, s=20, color='gray', label='Training Data', zorder=3)
-
-# Train multiple trees on bootstrap samples
-colors = ['red', 'blue', 'orange', 'purple', 'brown']
-for i in range(5):
-    # Bootstrap sample
-    indices = np.random.choice(len(X_train), size=len(X_train), replace=True)
-    X_boot = X_train[indices]
-    y_boot = y_train[indices]
-
-    # Train tree
-    tree = DecisionTreeRegressor(max_depth=4, random_state=i)
-    tree.fit(X_boot, y_boot)
-
-    # Predict
-    y_pred = tree.predict(X_test)
-    ax.plot(X_test, y_pred, color=colors[i], linewidth=1.5, alpha=0.6,
-            label=f'Tree {i+1}' if i == 0 else '')
-
-ax.set_xlabel('X', fontsize=12)
-ax.set_ylabel('Y', fontsize=12)
-ax.set_title('Multiple Trees on Slightly Different Data Samples', fontsize=14, fontweight='bold')
-ax.legend(['True Pattern', 'Training Data', 'Individual Trees'], fontsize=10)
-ax.grid(alpha=0.3)
-plt.tight_layout()
-plt.show()
-```
-
-:::: {.columns}
-::: {.column width="50%"}
-**The Problem:**
-
-- Each colored line is a different tree
-- Same data, just sampled differently
-- Trees make very different predictions!
-:::
-
-::: {.column width="50%"}
-**Business Impact:**
-
-- Unreliable predictions
-- Inconsistent insights
-- Hard to trust for decisions
-:::
-::::
-
-::: {.notes}
-Point out how the trees (colored lines) disagree wildly, especially in regions with sparse data. This is high variance - small data changes cause big prediction changes. Transition: "Instability is one problem. The second problem is overfitting..."
-:::
-
-## Problem #2: Overfitting {.smaller}
-
-**Trees memorize training data instead of learning patterns**
-
-```{python}
-#| echo: false
-#| eval: true
-#| fig-align: center
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.tree import DecisionTreeRegressor
-
-np.random.seed(42)
-
-# Create simple data with noise
-X_train = np.sort(np.random.uniform(0, 10, 50)).reshape(-1, 1)
-y_train = np.sin(X_train).ravel() + np.random.normal(0, 0.3, len(X_train))
-
-X_test = np.linspace(0, 10, 300).reshape(-1, 1)
-y_true = np.sin(X_test).ravel()
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 3.75))
-
-# Left: Reasonable tree (max_depth=3)
-tree_good = DecisionTreeRegressor(max_depth=3, random_state=42)
-tree_good.fit(X_train, y_train)
-y_pred_good = tree_good.predict(X_test)
-
-ax1.plot(X_test, y_true, 'g--', linewidth=2.5, label='True Pattern', alpha=0.8)
-ax1.scatter(X_train, y_train, alpha=0.6, s=40, color='gray', label='Training Data', zorder=3)
-ax1.plot(X_test, y_pred_good, 'b-', linewidth=2.5, label='Tree Prediction', alpha=0.8)
-ax1.set_xlabel('X', fontsize=12)
-ax1.set_ylabel('Y', fontsize=12)
-ax1.set_title('Reasonable Tree (max_depth=3)\nLearns the pattern', fontsize=13, fontweight='bold')
-#ax1.legend(fontsize=10)
-ax1.grid(alpha=0.3)
-
-# Right: Overfit tree (no depth limit)
-tree_overfit = DecisionTreeRegressor(random_state=42)
-tree_overfit.fit(X_train, y_train)
-y_pred_overfit = tree_overfit.predict(X_test)
-
-ax2.plot(X_test, y_true, 'g--', linewidth=2.5, label='True Pattern', alpha=0.8)
-ax2.scatter(X_train, y_train, alpha=0.6, s=40, color='gray', label='Training Data', zorder=3)
-ax2.plot(X_test, y_pred_overfit, 'r-', linewidth=2.5, label='Tree Prediction', alpha=0.8)
-ax2.set_xlabel('X', fontsize=12)
-ax2.set_ylabel('Y', fontsize=12)
-ax2.set_title('Overfit Tree (no depth limit)\nMemorizes noise!', fontsize=13, fontweight='bold')
-#ax2.legend(fontsize=10)
-ax2.grid(alpha=0.3)
-
-plt.tight_layout()
-plt.show()
-```
-
-:::: {.columns}
-::: {.column width="50%"}
-**The Problem:**
-
-- Left tree captures the pattern ✓
-- Right tree memorizes every point
-- Wildly jagged - chasing noise, not signal
-:::
-
-::: {.column width="50%"}
-**Business Impact:**
-
-- Perfect training accuracy (1.00)
-- Poor test accuracy (0.75)
-- Unreliable on new data
-:::
-::::
-
-::: {.notes}
-The overfit tree (right) perfectly fits training points but creates a jagged, unreliable function. It's learning noise, not patterns. Transition: "So we have unstable trees that overfit. How do we fix this? Enter Random Forests..."
-:::
-
-## Think-Pair-Share: Why Consult Multiple Experts? {.smaller}
-
-When making important decisions, we rarely trust just one opinion...
-
-:::: {.columns}
-::: {.column width="70%"}
-
-**Real-world examples:**
-
-- Hiring: Interview panel (not just one person)
-- Medical diagnosis: Second opinions for serious conditions
-- Restaurant choice: Check multiple review sites
-- Investment decisions: Consult multiple analysts
-
-**Discuss with your neighbor:**
-
-1. Why is averaging multiple opinions more reliable than trusting one expert?
-2. What makes a good "panel of experts" (rather than just asking the same person twice)?
-3. How might this apply to machine learning?
-
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minExperts"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minExperts", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-After discussion, make the connection: "Random Forests apply this exact principle - build many diverse trees and let them vote! The key is making them diverse so they make different errors that cancel out."
+`rm` is the average number of rooms; `lstat` is the percent of lower-status residents. Each tree is a perfectly reasonable model on its own, yet they disagree about what matters first and where the cutoffs are. This is high variance: small data changes cause big changes in the model. Transition: "So single trees overfit when deep and are unstable even when tuned. Random forests fix both..."
 :::
 
 ## Random Forests: Two Key Ingredients {.smaller}
@@ -791,331 +913,455 @@ Each tree considers only a random subset of features at each split
 Simple framing slide. These two innovations transform unstable, overfitting trees into a robust, accurate ensemble. Let's explore each one visually.
 :::
 
+## Let's Build Bootstrap Samples {.smaller}
+
+Each student picks a customer at random, **with replacement**: the same customer can be picked again. **Click** the customer each student calls out:
+
+```{=html}
+<div class="boot-game" id="boot-game">
+  <div class="bg-row bg-original">
+    <div class="bg-label">Original data</div>
+    <div class="bg-tokens" data-row="original"></div>
+    <div class="bg-status">click a customer to draw them</div>
+  </div>
+  <div class="bg-row" data-sample="0">
+    <div class="bg-label">Bootstrap sample 1</div>
+    <div class="bg-tokens"></div>
+    <div class="bg-status"></div>
+  </div>
+  <div class="bg-row" data-sample="1">
+    <div class="bg-label">Bootstrap sample 2</div>
+    <div class="bg-tokens"></div>
+    <div class="bg-status"></div>
+  </div>
+  <div class="bg-row" data-sample="2">
+    <div class="bg-label">Bootstrap sample 3</div>
+    <div class="bg-tokens"></div>
+    <div class="bg-status"></div>
+  </div>
+  <div class="bg-controls">
+    <button type="button" data-action="random">🎲 Random draw</button>
+    <button type="button" data-action="fill">Fill the rest</button>
+    <button type="button" data-action="undo">↩ Undo</button>
+    <button type="button" data-action="reset">Reset</button>
+    <span class="bg-summary"></span>
+  </div>
+</div>
+
+<style>
+.boot-game { margin-top: 0.4em; font-size: 0.85em; }
+.boot-game .bg-row { display: flex; align-items: center; gap: 0.6em; padding: 0.25em 0.5em;
+  border-radius: 10px; border: 2px solid transparent; }
+.boot-game .bg-row.active { border-color: #e58139; background: #fff6ee; }
+.boot-game .bg-label { width: 8.5em; font-weight: bold; text-align: right; flex-shrink: 0; }
+.boot-game .bg-tokens { display: flex; gap: 0.35em; }
+.boot-game .bg-token { position: relative; width: 1.9em; height: 1.9em; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-weight: bold;
+  border: 2px dashed lightgray; color: lightgray; background: white; user-select: none; }
+.boot-game .bg-token.picked { background: steelblue; border: 2px solid steelblue; color: white; }
+.boot-game .bg-original .bg-token { cursor: pointer; background: steelblue; border: 2px solid steelblue;
+  color: white; transition: transform 0.1s; }
+.boot-game .bg-original .bg-token:hover { transform: scale(1.12); }
+.boot-game .bg-badge { position: absolute; top: -0.55em; right: -0.65em; font-size: 0.6em;
+  color: crimson; background: white; border: 1.5px solid crimson; border-radius: 6px;
+  padding: 0 0.2em; line-height: 1.3; }
+.boot-game .bg-status { font-size: 0.6em; color: #555; min-width: 13em; }
+.boot-game .bg-status b { color: #333; }
+.boot-game .bg-controls { display: flex; align-items: center; gap: 0.5em; margin: 0.5em 0 0 9.1em; }
+.boot-game button { font-size: 0.6em; padding: 0.25em 0.7em; border-radius: 6px;
+  border: 1px solid #999; background: #f4f4f4; cursor: pointer; }
+.boot-game button:hover { background: #e8e8e8; }
+.boot-game .bg-summary { font-size: 0.6em; color: #333; margin-left: 0.5em; }
+</style>
+
+<script>
+(function () {
+  const N = 10, S = 3;
+  const root = document.getElementById('boot-game');
+  const samples = [[], [], []];
+  let active = 0;
+
+  const originalTokens = root.querySelector('[data-row="original"]');
+  for (let i = 0; i < N; i++) {
+    const token = document.createElement('div');
+    token.className = 'bg-token';
+    token.textContent = i + 1;
+    token.title = 'Draw customer ' + (i + 1);
+    token.addEventListener('click', () => draw(i));
+    originalTokens.appendChild(token);
+  }
+
+  function nextIncomplete() {
+    const idx = samples.findIndex(s => s.length < N);
+    return idx === -1 ? S : idx;
+  }
+
+  function draw(i) {
+    if (active >= S) return;
+    samples[active].push(i);
+    if (samples[active].length === N) active = nextIncomplete();
+    render();
+  }
+
+  function render() {
+    root.querySelectorAll('[data-sample]').forEach(row => {
+      const k = Number(row.dataset.sample);
+      const picks = samples[k];
+      const counts = Array(N).fill(0);
+      picks.forEach(i => counts[i]++);
+      const tokens = row.querySelector('.bg-tokens');
+      tokens.innerHTML = '';
+      for (let i = 0; i < N; i++) {
+        const token = document.createElement('div');
+        token.className = 'bg-token' + (counts[i] > 0 ? ' picked' : '');
+        token.textContent = i + 1;
+        if (counts[i] > 1) {
+          const badge = document.createElement('span');
+          badge.className = 'bg-badge';
+          badge.textContent = '×' + counts[i];
+          token.appendChild(badge);
+        }
+        tokens.appendChild(token);
+      }
+      const leftOut = counts.filter(c => c === 0).length;
+      const status = row.querySelector('.bg-status');
+      if (picks.length === 0) {
+        status.innerHTML = k === active ? 'waiting for draws…' : '';
+      } else if (picks.length < N) {
+        status.innerHTML = 'Draw ' + picks.length + ' of ' + N + ': ' + picks.map(i => i + 1).join(', ');
+      } else {
+        status.innerHTML = 'Draws: ' + picks.map(i => i + 1).join(', ') + '<br><b>' + leftOut + ' left out</b>';
+      }
+      row.classList.toggle('active', k === active);
+    });
+
+    const done = samples.filter(s => s.length === N);
+    const summary = root.querySelector('.bg-summary');
+    if (done.length === S) {
+      const leftOut = done.map(s => N - new Set(s).size);
+      const share = leftOut.reduce((a, b) => a + b, 0) / (N * S);
+      summary.innerHTML = 'Left out: ' + leftOut.join(', ') + ' → <b>' + Math.round(share * 100) +
+        '%</b> of customers (on average, about 37%)';
+    } else {
+      summary.innerHTML = '';
+    }
+  }
+
+  root.querySelector('.bg-controls').addEventListener('click', event => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    button.blur();   // keep the space bar for advancing slides
+    const action = button.dataset.action;
+    if (action === 'random') {
+      draw(Math.floor(Math.random() * N));
+    } else if (action === 'fill') {
+      const k = active;
+      while (active === k && active < S) draw(Math.floor(Math.random() * N));
+    } else if (action === 'undo') {
+      const last = [...samples.keys()].reverse().find(k => samples[k].length > 0);
+      if (last !== undefined) {
+        samples[last].pop();
+        active = nextIncomplete();
+        render();
+      }
+    } else if (action === 'reset') {
+      samples.forEach(s => (s.length = 0));
+      active = 0;
+      render();
+    }
+  });
+
+  render();
+})();
+</script>
+```
+
+* Some customers get picked **twice or more**; others are **left out** entirely
+* Every tree trains on its own sample, so every tree sees a slightly different version of the data
+
+::: {.notes}
+Ask 10 students in turn to call out a number from 1 to 10 (no peeking at what's been picked), and click each one. The row moves on automatically after 10 draws; repeat for samples 2 and 3 with new students. If time is short, use "Fill the rest". Point out the repeats (×2, ×3) and the gray left-out customers. When all three are done, the summary shows the share left out: on average about 37% (1 in 3) of customers are left out of any bootstrap sample. "Undo" removes the last draw if you mis-click.
+:::
+
 ## Bootstrap Aggregating (Bagging) {.smaller}
 
-**Creating diversity through random sampling**
+1,000 noisy points. Each tree is fully grown on its own random draw of **100 points** (with replacement), then we **average** the trees. Start at **0 trees**, then **drag the slider**:
 
 ```{python}
 #| echo: false
-#| eval: true
-#| fig-align: center
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.tree import DecisionTreeRegressor
-
 np.random.seed(42)
+X_original = np.sort(np.random.uniform(0, 10, 1000)).reshape(-1, 1)
+y_original = np.sin(X_original).ravel() + np.random.normal(0, 0.5, len(X_original))
+bag_grid = np.linspace(0, 10, 300).reshape(-1, 1)
+bag_true = np.sin(bag_grid).ravel()
 
-# Create original training data (sin wave with noise)
-X_original = np.sort(np.random.uniform(0, 10, 100)).reshape(-1, 1)
-y_original = np.sin(X_original).ravel() + np.random.normal(0, 0.25, len(X_original))
+# 100 fully grown trees, each on its own random draw of 100 points (with replacement)
+bag_preds = []
+for i in range(100):
+    rows = np.random.choice(len(X_original), size=100, replace=True)
+    bag_tree = DecisionTreeRegressor(random_state=i).fit(X_original[rows], y_original[rows])
+    bag_preds.append(bag_tree.predict(bag_grid))
+bag_preds = np.array(bag_preds)
 
-# Create test grid for smooth predictions
-X_test = np.linspace(0, 10, 300).reshape(-1, 1)
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=X_original.ravel(), y=y_original, mode='markers', name='Training data',
+                         marker=dict(color='gray', size=3, opacity=0.3), hoverinfo='skip'))
+fig.add_trace(go.Scatter(x=bag_grid.ravel(), y=bag_true, mode='lines', name='True pattern',
+                         line=dict(color='green', dash='dash', width=3), hoverinfo='skip'))
 
-# Create 3 bootstrap samples and train trees
-fig, axes = plt.subplots(1, 4, figsize=(14, 3))
-colors = ['steelblue', 'coral', 'gold']
-tree_predictions = []
+tree_counts = [0, 1, 2, 3, 5, 10, 25, 50, 100]
+titles = []
+for n in tree_counts:
+    if n == 0:   # starting point: just the data and the pattern we want to recover
+        titles.append('<b>0 trees</b>   |   The noisy data and the true pattern we want to recover')
+        continue
+    average = bag_preds[:n].mean(axis=0)
+    for k, pred in enumerate(bag_preds[:n]):
+        fig.add_trace(go.Scatter(x=bag_grid.ravel(), y=pred, mode='lines', visible=False,
+                                 line=dict(color='steelblue', width=1), opacity=min(0.7, 3 / n),
+                                 name='Individual trees', showlegend=(k == 0), hoverinfo='skip'))
+    fig.add_trace(go.Scatter(x=bag_grid.ravel(), y=average, mode='lines', visible=False,
+                             line=dict(color='crimson', width=4), name='Average of the trees',
+                             hoverinfo='skip'))
+    rmse = np.sqrt(np.mean((average - bag_true) ** 2))
+    titles.append(f'<b>{n} tree{"s" if n > 1 else ""}</b>   |   '
+                  f'Error vs. the true pattern (RMSE): <b>{rmse:.2f}</b>')
 
-# Original data plot
-axes[0].scatter(X_original, y_original, alpha=0.5, s=30, color='gray')
-axes[0].set_title('Original Training Data\n(100 customers)', fontsize=11, fontweight='bold')
-axes[0].set_xlabel('X')
-axes[0].set_ylabel('Y')
-axes[0].grid(alpha=0.3)
+# Each step shows a different number of traces, so build the visibility lists directly
+steps = []
+for i, n in enumerate(tree_counts):
+    visible = [True, True]
+    for j, m in enumerate(tree_counts):
+        visible += [j == i] * (m + 1 if m > 0 else 0)   # m trees + their average
+    steps.append(dict(method='update', label=str(n),
+                      args=[{'visible': visible}, {'title.text': titles[i]}]))
+for trace, show in zip(fig.data, steps[0]['args'][0]['visible']):
+    trace.visible = show
 
-# Bootstrap samples and individual trees
-for i in range(3):
-    # Create bootstrap sample
-    indices = np.random.choice(len(X_original), size=len(X_original), replace=True)
-    X_boot = X_original[indices]
-    y_boot = y_original[indices]
-
-    # Train tree
-    tree = DecisionTreeRegressor(max_depth=4, random_state=i)
-    tree.fit(X_boot, y_boot)
-    y_pred = tree.predict(X_test)
-    tree_predictions.append(y_pred)
-
-    # Plot bootstrap sample
-    axes[i+1].scatter(X_boot, y_boot, alpha=0.4, s=20, color=colors[i])
-    axes[i+1].plot(X_test, y_pred, color=colors[i], linewidth=2.5, label=f'Tree {i+1}')
-    axes[i+1].set_title(f'Bootstrap Sample {i+1}\n→ Train Tree {i+1}', fontsize=11, fontweight='bold')
-    axes[i+1].set_xlabel('X')
-    axes[i+1].grid(alpha=0.3)
-    axes[i+1].legend(fontsize=9)
-
-plt.tight_layout()
-plt.show()
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=15)),
+    height=450, margin=dict(l=50, r=20, t=50, b=10), template='plotly_white',
+    legend=dict(orientation='h', x=0, y=1.1),
+    xaxis=dict(title='X'), yaxis=dict(title='Y', range=[-2.5, 2.5]),
+    sliders=[dict(active=0, steps=steps, pad=dict(t=40),
+                  currentvalue=dict(prefix='Number of trees: ', font=dict(size=15)))]
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
-**The Process:** Original data → 3 bootstrap samples → Train 3 different trees → Aggregate predictions!
-
 ::: {.notes}
-Show how each bootstrap sample is slightly different (some points appear multiple times, others not at all), leading to different tree predictions. This diversity is the foundation of Random Forests.
+Start at 0 trees: ask the class to trace the pattern they'd hope a model finds (the green dashed line). Then add 1 tree: it has no depth limit, so it memorizes the noise in its sample (very jagged line). Step up: each tree is wrong in its own way, the red average gets smoother and settles onto the green pattern, and the error drops from about 0.51 with 1 tree to 0.20 with 10 and 0.13 with 100. Why 100-point samples instead of full-size ones? Smaller samples overlap less, so the trees disagree more and the averaging effect is easy to see. Random forests use full-size bootstrap samples by default; scikit-learn's `max_samples` lets you shrink them. No single tree got better; averaging many different trees did the work.
 :::
 
 ## The Problem with Bagging Alone {.smaller}
 
-**What if one feature is much stronger than the others?**
+**What if one or two features are much stronger than the others?**
+
+We bagged 100 trees on the Boston data and recorded the **first question** each tree asks:
 
 ```{python}
 #| echo: false
-#| eval: true
 #| fig-align: center
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.tree import DecisionTreeClassifier, plot_tree
+#| fig-width: 10
+#| fig-height: 3.6
+from sklearn.ensemble import RandomForestRegressor
 
-np.random.seed(42)
+cx_train, cx_test, cy_train, cy_test = train_test_split(
+    boston_features, Boston['medv'], test_size=0.3, random_state=42)
 
-# Create synthetic data where balance is dominant but not perfect
-n_samples = 200
-balance = np.random.uniform(0, 10, n_samples)
-income = np.random.uniform(20, 100, n_samples)
-student = np.random.choice([0, 1], n_samples)
-X = np.column_stack([balance, income, student])
+# max_features=1.0 → every split may use every feature (plain bagging)
+bagged_forest = RandomForestRegressor(n_estimators=100, max_features=1.0,
+                                      random_state=42).fit(cx_train, cy_train)
+# max_features=1/3 → each split sees a random third of the features (a random forest)
+census_rf = RandomForestRegressor(n_estimators=100, max_features=1/3,
+                                  random_state=42).fit(cx_train, cy_train)
 
-# Create target where balance is primary driver, but income and student also matter
-# This ensures trees need multiple splits
-default_prob = 0.1 + 0.08 * balance + 0.005 * (income < 50) + 0.05 * student
-default_prob = np.clip(default_prob, 0, 1)
-y = (np.random.random(n_samples) < default_prob).astype(int)
+def first_questions(forest):
+    roots = [cx_train.columns[t.tree_.feature[0]] for t in forest.estimators_]
+    return pd.Series(roots).value_counts().reindex(cx_train.columns, fill_value=0)
 
-# Create figure with 3 trees
-fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+census = pd.DataFrame({'Bagged trees': first_questions(bagged_forest),
+                       'Random forest': first_questions(census_rf)})
+census = census.sort_values(['Bagged trees', 'Random forest'])
 
-for i in range(3):
-    # Create bootstrap sample
-    indices = np.random.choice(n_samples, size=n_samples, replace=True)
-    X_boot = X[indices]
-    y_boot = y[indices]
+def plot_census(ax, column, color):
+    bars = ax.barh(census.index, census[column],
+                   color=[color if v > 0 else 'lightgray' for v in census[column]])
+    for bar, v in zip(bars, census[column]):
+        ax.text(v + 1, bar.get_y() + bar.get_height() / 2, str(v), va='center', fontsize=10,
+                color='black' if v > 0 else 'gray')
+    used = (census[column] > 0).sum()
+    ax.set_title(f'{column}: {used} of {len(census)} features ever go first',
+                 fontsize=12, fontweight='bold')
+    ax.set_xlabel('Number of trees (out of 100) that ask this first')
+    ax.set_xlim(0, 75)
+    ax.grid(True, axis='x', alpha=0.3)
 
-    # Train shallow tree (max_depth=2 to keep it simple and ensure same structure)
-    tree = DecisionTreeClassifier(max_depth=2, random_state=42)
-    tree.fit(X_boot, y_boot)
-
-    # Plot tree
-    plot_tree(tree,
-              feature_names=['balance', 'income', 'student'],
-              class_names=['No Default', 'Default'],
-              filled=True,
-              rounded=True,
-              fontsize=7,
-              ax=axes[i])
-    axes[i].set_title(f'Tree {i+1}\n(Bootstrap Sample {i+1})',
-                      fontsize=11, fontweight='bold')
-
+fig, ax = plt.subplots(figsize=(10, 3.6))
+plot_census(ax, 'Bagged trees', 'darkorange')
 plt.tight_layout()
 plt.show()
 ```
 
 ::: {.callout-warning}
 ## Problem: Tree Correlation
-All trees have nearly identical structure (balance → income → student)
-
-**Solution:** Force trees to use different features through **feature randomness**
+Every tree opens with `rm` or `lstat`. Trees that ask the same questions **look alike and make the same mistakes**, so averaging them doesn't cancel much out.
 :::
-
 
 ::: {.notes}
-Point out how all three trees split on the same features in the same order, despite being trained on different bootstrap samples. This is what happens when one feature (balance) is much stronger than others - all trees naturally gravitate toward it. The trees become correlated, which means their predictions are similar, so averaging doesn't provide much benefit. We need to decorrelate the trees by forcing them to consider different feature subsets at each split. That's where feature randomness comes in - it's the secret sauce that transforms bagged trees into Random Forests.
+`rm` is average rooms and `lstat` is the percent of lower-status residents, the two strongest predictors. Ten of the twelve features never get to ask the first question. Correlated trees means correlated errors, and averaging can't cancel errors that all point the same way. We need to decorrelate the trees by forcing them to consider different features. That's feature randomness, the secret sauce that turns bagged trees into a random forest.
 :::
 
-## Feature Randomness: Secret Sauce {.smaller}
+## The Fix: Feature Randomness {.smaller}
 
-**At each split, consider only a random subset of features**
+Before **every** split, draw a random **4 of the 12** features from a hat. The tree may only ask about those.
 
 ```{python}
 #| echo: false
-#| eval: true
 #| fig-align: center
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.patches import Rectangle
-import matplotlib.patches as mpatches
+#| fig-width: 12
+#| fig-height: 2.9
+example_draws = [['crim', 'rm', 'tax', 'age'],
+                 ['zn', 'lstat', 'nox', 'chas'],
+                 ['indus', 'dis', 'ptratio', 'rad']]
 
-# Create a visualization showing feature selection at different nodes
-np.random.seed(42)
-
-n_features = 8
-n_trees = 3
-n_nodes_per_tree = 3
-
-fig, axes = plt.subplots(1, n_trees, figsize=(12, 3))
-feature_names = [f'F{i+1}' for i in range(n_features)]
-colors = plt.cm.Set3(np.linspace(0, 1, n_features))
-
-for tree_idx in range(n_trees):
-    ax = axes[tree_idx]
-
-    # For each node in this tree, randomly select features to consider
-    for node_idx in range(n_nodes_per_tree):
-        # Random subset of features (using sqrt(p) ~ 3 features for this example)
-        n_selected = 3
-        selected_features = np.random.choice(n_features, size=n_selected, replace=False)
-
-        y_pos = n_nodes_per_tree - node_idx - 1
-
-        # Draw all features as light gray (not selected)
-        for feat_idx in range(n_features):
-            x_pos = feat_idx * 0.12
-            if feat_idx in selected_features:
-                # Selected features are colored
-                rect = Rectangle((x_pos, y_pos*0.3), 0.1, 0.25,
-                               facecolor=colors[feat_idx], edgecolor='black', linewidth=2)
-            else:
-                # Not selected features are gray and faded
-                rect = Rectangle((x_pos, y_pos*0.3), 0.1, 0.25,
-                               facecolor='lightgray', edgecolor='gray',
-                               linewidth=0.5, alpha=0.3)
-            ax.add_patch(rect)
-
-            # Add feature labels only on bottom row
-            if node_idx == n_nodes_per_tree - 1:
-                ax.text(x_pos + 0.05, -0.15, feature_names[feat_idx],
-                       ha='center', fontsize=9)
-
-        # Add node label
-        ax.text(-0.15, y_pos*0.3 + 0.125, f'Node {node_idx+1}',
-               ha='right', va='center', fontsize=9, fontweight='bold')
-
-    ax.set_xlim(-0.2, n_features * 0.12)
-    ax.set_ylim(-0.25, n_nodes_per_tree * 0.3 + 0.1)
-    ax.axis('off')
-    ax.set_title(f'Tree {tree_idx + 1}', fontsize=12, fontweight='bold')
-
-# Add legend
-legend_elements = [
-    mpatches.Patch(facecolor='lightgray', edgecolor='gray', label='Not selected', alpha=0.3)
-]
-fig.legend(handles=legend_elements, loc='lower center', fontsize=10,
-          bbox_to_anchor=(0.5, -0.05))
-
-plt.suptitle('Feature Randomness: Different Trees Consider Different Features at Each Node',
-            fontsize=13, fontweight='bold', y=0.98)
+fig, ax = plt.subplots(figsize=(12, 2.9))
+for r, allowed in enumerate(example_draws):
+    # Which allowed feature would the tree actually pick? Fit a one-split tree to find out.
+    stump = DecisionTreeRegressor(max_depth=1).fit(cx_train[allowed], cy_train)
+    picked = allowed[stump.tree_.feature[0]]
+    y_pos = 2 - r
+    ax.text(-0.7, y_pos, f'Tree {r + 1}', ha='right', va='center', fontsize=12, fontweight='bold')
+    for c, feature in enumerate(cx_train.columns):
+        is_allowed, is_picked = feature in allowed, feature == picked
+        ax.add_patch(FancyBboxPatch((c - 0.42, y_pos - 0.28), 0.84, 0.56,
+                                    boxstyle='round,pad=0.02,rounding_size=0.1',
+                                    facecolor='seagreen' if is_picked else ('#d8f0e0' if is_allowed else '#f2f2f2'),
+                                    edgecolor='seagreen' if is_allowed else 'lightgray',
+                                    linewidth=2.5 if is_allowed else 1))
+        ax.text(c, y_pos, feature, ha='center', va='center', fontsize=10,
+                fontweight='bold' if is_allowed else 'normal',
+                color='white' if is_picked else ('black' if is_allowed else 'darkgray'))
+    ax.text(12.0, y_pos, f'→ asks about {picked}', va='center', fontsize=12, fontweight='bold',
+            color='seagreen')
+ax.set_xlim(-2.0, 14.4)
+ax.set_ylim(-0.5, 2.5)
+ax.axis('off')
 plt.tight_layout()
 plt.show()
 ```
 
-:::: {.columns}
-::: {.column width="50%"}
-**How It Works:**
-
-- At each split, randomly select subset of features
-- **Classification**: √p features
-- **Regression**: p/3 features
-- Tree only considers these for that split
-:::
-
-::: {.column width="50%"}
-**The Result:**
-
-- Different trees explore different features
-- No single feature dominates all trees
-- Trees become decorrelated
-- More diverse predictions
-:::
-::::
+<span style="background:#d8f0e0;padding:0 4px">Light green</span> = drawn from the hat; <span style="background:seagreen;color:white;padding:0 4px">dark green</span> = the best of those. No `rm`? The tree **has to** ask something else, so the trees end up different.
 
 ::: {.notes}
-This visualization shows three trees, each with three decision nodes. At each node, only a random subset of features (colored boxes) are available for splitting - the gray boxes show features that are not considered. Notice how each tree gets different random subsets at each node. This forces trees to explore different feature combinations even if one feature (like balance) is very strong. Some trees will split on the dominant feature, others will be forced to use alternatives, creating the diversity we need.
+These are three example draws for the first split; the green "pick" is computed by fitting a one-split tree on just the allowed features. Tree 1 drew rm, so it uses rm. Tree 2 didn't draw rm but drew lstat. Tree 3 drew neither, so it settles for ptratio. Every split in every tree gets a fresh draw. Rule of thumb for how many to draw: about p/3 features for regression and √p for classification (`max_features` in scikit-learn).
 :::
 
-## Impact of Feature Randomness {.smaller}
+## More Features Get a Turn {.smaller}
 
+Same census, but each split may only use a **random 4 of the 12** features:
 
 ```{python}
 #| echo: false
-#| eval: true
 #| fig-align: center
-import matplotlib.pyplot as plt
-import numpy as np
-
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 3.5))
-
-# Left: Without feature randomness (all trees use balance)
-x = np.arange(10)
-for i in range(10):
-    y = 50 + 5 * x + np.random.normal(0, 2, 10)
-    ax1.plot(x, y, alpha=0.4, linewidth=2, color='steelblue')
-
-ax1.set_xlabel('Input', fontsize=12)
-ax1.set_ylabel('Prediction', fontsize=12)
-ax1.set_title('Without Feature Randomness\n(Correlated predictions)',
-              fontsize=12, fontweight='bold')
-ax1.grid(alpha=0.3)
-
-# Right: With feature randomness (diverse trees)
-np.random.seed(42)
-for i in range(10):
-    # Much more variation - trees explore different feature combos
-    slope = np.random.uniform(3, 7)
-    intercept = np.random.uniform(40, 60)
-    y = intercept + slope * x + np.random.normal(0, 5, 10)
-    ax2.plot(x, y, alpha=0.4, linewidth=2, color='coral')
-
-ax2.set_xlabel('Input', fontsize=12)
-ax2.set_ylabel('Prediction', fontsize=12)
-ax2.set_title('With Feature Randomness\n(Diverse predictions)',
-              fontsize=12, fontweight='bold')
-ax2.grid(alpha=0.3)
-
+#| fig-width: 12
+#| fig-height: 3.2
+fig, axes = plt.subplots(1, 2, figsize=(12, 3.2), sharey=True)
+plot_census(axes[0], 'Bagged trees', 'darkorange')
+plot_census(axes[1], 'Random forest', 'seagreen')
 plt.tight_layout()
 plt.show()
 ```
 
-:::: {.columns}
-::: {.column width="50%"}
-**Without Feature Randomness:**
-
-- All trees use same dominant features
-- Similar tree structures
-- Correlated predictions (similar slopes)
-- Limited benefit from averaging
+::: {.callout-tip}
+No `rm` or `lstat` on the menu? The tree opens with something else. **Different first questions → different trees → different mistakes.**
 :::
-
-::: {.column width="50%"}
-**With Feature Randomness:**
-
-- Trees forced to use different features
-- Diverse tree structures
-- Decorrelated predictions (varied slopes)
-- Errors cancel out when averaged!
-:::
-::::
 
 ::: {.notes}
-Left plot shows what happens with bagging alone - all 10 trees make similar predictions because they all split on the same strong features. The predictions are correlated. Right plot shows random forests - the trees make much more diverse predictions because they're forced to consider different feature subsets. This diversity is powerful: when we average diverse predictions, individual errors cancel out, leaving more accurate results. This is why feature randomness is the "secret sauce" that makes random forests superior to simple bagged trees.
+`rm` still goes first most often, because it's usually in the random subset and it's the strongest feature when it is. But now 8 of 12 features get a turn. Ask: why might a tree that opens with `indus` or `ptratio` still be useful? (It captures different structure, and its mistakes differ from the `rm` trees' mistakes.)
 :::
 
-## The Power of Feature Randomness {.smaller}
+## Why the Forest Works {.smaller}
 
-**Random forests outperform bagged trees through decorrelation**
+Think of each tree as a **home appraiser**. Our forest's 100 appraisers value 3 homes they've never seen, colored by the **first question** each tree asks:
 
-::: {.columns}
-::: {.column width="65%"}
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 11
+#| fig-height: 3
+houses = cx_test.iloc[:3]
+appraisals = np.array([t.predict(houses.to_numpy()) for t in census_rf.estimators_])
+first_question = np.array([cx_train.columns[t.tree_.feature[0]] for t in census_rf.estimators_])
+opener = np.where(np.isin(first_question, ['rm', 'lstat']), first_question, 'other')
+n_other = int((opener == 'other').sum())
+house_jitter = np.random.default_rng(0).uniform(-0.15, 0.15, appraisals.shape[0])
+openers = [('rm', '#1f77b4', 'asks rm first'), ('lstat', '#ff7f0e', 'asks lstat first'),
+           ('other', '#2ca02c', 'asks something else first')]
+
+fig, ax = plt.subplots(figsize=(11, 3))
+for h in range(len(houses)):
+    for group, color, label in openers:
+        mask = opener == group
+        ax.scatter(appraisals[mask, h], h + house_jitter[mask], s=22, color=color, alpha=0.6,
+                   label=label if h == 0 else None)
+    avg, actual = appraisals[:, h].mean(), cy_test.iloc[h]
+    ax.scatter(avg, h, marker='D', s=140, color='black', zorder=4,
+               label='Forest average' if h == 0 else None)
+    ax.scatter(actual, h, marker='*', s=320, color='crimson', zorder=5,
+               label='Actual value' if h == 0 else None)
+    ax.text(51, h, f'trees: \\${appraisals[:, h].min():.0f}K–\\${appraisals[:, h].max():.0f}K\n'
+                   f'average: \\${avg:.1f}K   actual: \\${actual:.1f}K',
+            va='center', fontsize=10)
+ax.set_yticks(range(len(houses)), [f'Home {h + 1}' for h in range(len(houses))], fontsize=11)
+ax.set_xlim(0, 70)
+ax.set_xlabel('Predicted home value ($1,000s)')
+ax.legend(loc='upper left', ncol=5, fontsize=9, bbox_to_anchor=(0, 1.25))
+ax.grid(True, axis='x', alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🌳🌳🌳 Ingredient 1: Averaging]{.card-title}
+
+Each tree misses by a lot, in **both directions**. Averaging 100 of them cancels most of those misses.
+:::
+::: {.card}
+[🎲 Ingredient 2: Feature randomness]{.card-title}
+
+Averaging only cancels mistakes that **differ**. Here `{python} n_other` of 100 trees open with something other than `rm` or `lstat`, so their mistakes differ more.
+:::
+:::
+
+::: {.notes}
+Pause on Home 1: individual trees range from the high teens to the mid-40s, yet the average lands within a few hundred dollars of the actual value. Then point at the colors: the green trees never got to ask about rm or lstat first, yet they're still scattered around the truth, just from different angles.
+
+If asked for numbers: across the test homes, the trees' mistakes move together less with feature randomness (error correlation about 0.41 vs. 0.47 for plain bagging). The trade-off is that each tree is a bit weaker on its own, so the overall gain varies by dataset; the next slide shows it on this data. For classification, the trees vote instead of averaging (scikit-learn averages their predicted probabilities).
+:::
+
+## Does It Pay Off? {.smaller}
+
+Test error on the Boston data as we add trees:
+
 ```{python}
 #| echo: false
 #| eval: true
 #| fig-align: center
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.model_selection import train_test_split
+#| fig-width: 10
+#| fig-height: 3.8
 from sklearn.metrics import mean_squared_error
-from ISLP import load_data
 
 np.random.seed(42)
 
 # Load Boston housing data
 Boston = load_data('Boston')
-X = Boston.drop('medv', axis=1).values
-y = Boston['medv'].values
+boston_X = Boston.drop('medv', axis=1).values
+boston_y = Boston['medv'].values
 
 # Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+bx_train, bx_test, by_train, by_test = train_test_split(boston_X, boston_y, test_size=0.3, random_state=42)
 
 # Track performance as we add trees
 max_trees = 100
@@ -1127,50 +1373,41 @@ bagged_mse = []
 
 for i in range(max_trees):
     # Bootstrap sample
-    indices = np.random.choice(len(X_train), size=len(X_train), replace=True)
-    X_bootstrap = X_train[indices]
-    y_bootstrap = y_train[indices]
+    indices = np.random.choice(len(bx_train), size=len(bx_train), replace=True)
 
     # Train tree with ALL features at each split
-    tree = DecisionTreeRegressor(min_samples_split=10, min_samples_leaf=4, random_state=i)
-    tree.fit(X_bootstrap, y_bootstrap)
+    bag_tree = DecisionTreeRegressor(min_samples_split=10, min_samples_leaf=4, random_state=i)
+    bag_tree.fit(bx_train[indices], by_train[indices])
 
-    # Predict on test set
-    y_pred = tree.predict(X_test)
-    bagged_predictions.append(y_pred)
-
-    # Calculate ensemble MSE
-    avg_prediction = np.mean(bagged_predictions, axis=0)
-    mse = mean_squared_error(y_test, avg_prediction)
-    bagged_mse.append(mse)
+    # Calculate ensemble MSE on the test set
+    bagged_predictions.append(bag_tree.predict(bx_test))
+    bagged_mse.append(mean_squared_error(by_test, np.mean(bagged_predictions, axis=0)))
 
 # Random forest (random feature subset at each split)
 rf_predictions = []
 rf_mse = []
-max_features = X_train.shape[1] // 3  # p/3 for regression
+max_features = bx_train.shape[1] // 3  # p/3 for regression
 
 for i in range(max_trees):
     # Bootstrap sample
-    indices = np.random.choice(len(X_train), size=len(X_train), replace=True)
-    X_bootstrap = X_train[indices]
-    y_bootstrap = y_train[indices]
+    indices = np.random.choice(len(bx_train), size=len(bx_train), replace=True)
 
     # Train tree with RANDOM SUBSET of features at each split
-    tree = DecisionTreeRegressor(max_features=max_features, min_samples_split=10,
-                                 min_samples_leaf=4, random_state=i)
-    tree.fit(X_bootstrap, y_bootstrap)
+    rf_tree = DecisionTreeRegressor(max_features=max_features, min_samples_split=10,
+                                    min_samples_leaf=4, random_state=i)
+    rf_tree.fit(bx_train[indices], by_train[indices])
 
-    # Predict on test set
-    y_pred = tree.predict(X_test)
-    rf_predictions.append(y_pred)
+    # Calculate ensemble MSE on the test set
+    rf_predictions.append(rf_tree.predict(bx_test))
+    rf_mse.append(mean_squared_error(by_test, np.mean(rf_predictions, axis=0)))
 
-    # Calculate ensemble MSE
-    avg_prediction = np.mean(rf_predictions, axis=0)
-    mse = mean_squared_error(y_test, avg_prediction)
-    rf_mse.append(mse)
+# Reference: how a typical individual tree does on its own
+single_mse = np.mean([mean_squared_error(by_test, pred) for pred in bagged_predictions])
 
 # Plot comparison
-fig, ax = plt.subplots(figsize=(8, 3.5))
+fig, ax = plt.subplots(figsize=(10, 3.8))
+ax.axhline(single_mse, color='gray', linestyle='--', linewidth=2,
+           label=f'Typical single tree (MSE {single_mse:.1f})')
 
 ax.plot(tree_range, bagged_mse, linewidth=2.5, color='orange',
         label='Bagged Trees (all features)', alpha=0.8)
@@ -1179,546 +1416,538 @@ ax.plot(tree_range, rf_mse, linewidth=2.5, color='darkgreen',
 
 ax.set_xlabel('Number of Trees', fontsize=12)
 ax.set_ylabel('Test MSE', fontsize=12)
-ax.set_title('Random Forest vs. Bagged Trees: Boston Housing Data',
-            fontsize=14, fontweight='bold')
 ax.legend(fontsize=11)
 ax.grid(alpha=0.3)
 
 plt.tight_layout()
 plt.show()
 ```
-:::
 
-::: {.column width="35%"}
-```{python}
-#| echo: false
-#| eval: true
-
-print(f"\nFinal Performance ({max_trees} trees):")
-print(f"Bagged Trees MSE:  {bagged_mse[-1]:.4f}")
-print(f"Random Forest MSE: {rf_mse[-1]:.4f}")
-print(f"Improvement: {((bagged_mse[-1] - rf_mse[-1]) / bagged_mse[-1] * 100):.1f}%")
-```
-:::
-:::
-
-
-::: {.callout-important}
-## Key Insight
-Feature randomness **decorrelates** trees, allowing their errors to cancel out more effectively when averaged. This is why random forests consistently outperform simple bagged trees!
+::: {.callout-tip}
+**Averaging** delivers the big drop (gray → orange). **Feature randomness** adds an extra gain on top (orange → green). Random forests get both.
 :::
 
 ::: {.notes}
-This plot demonstrates the power of feature randomness on real data. Both approaches use bootstrap sampling, but random forests add feature randomness at each split. The green line (random forests) achieves consistently lower error than the orange line (bagged trees). The improvement comes from decorrelating the trees - when trees are forced to consider different feature subsets, they make more independent errors that cancel out when averaged. This is especially powerful in datasets with strong dominant features or many correlated features. The combination of bootstrap sampling AND feature randomness is what makes random forests one of the most effective machine learning algorithms available.
+Be honest about the sizes: most of the improvement over a single tree comes from averaging, and feature randomness adds a smaller but consistent extra improvement. This plot demonstrates the power of feature randomness on real data. Both approaches use bootstrap sampling, but random forests add feature randomness at each split. The green line (random forests) achieves consistently lower error than the orange line (bagged trees). The improvement comes from decorrelating the trees - when trees are forced to consider different feature subsets, they make more independent errors that cancel out when averaged. This is especially powerful in datasets with strong dominant features or many correlated features. The combination of bootstrap sampling AND feature randomness is what makes random forests one of the most effective machine learning algorithms available.
 :::
 
-::: {.notes}
-Left plot shows correlated predictions when all trees use the same features. Right plot shows diverse predictions when feature randomness forces different tree structures. Averaging diverse predictions is much more powerful!
-:::
+## Demo: Single Tree vs Random Forest {.smaller}
 
-## Demo: Single Tree vs Random Forest {.smaller .scrollable}
-
-Let's compare performance on the Boston housing dataset!
+Let's compare one tree to a forest on the Boston housing data:
 
 ```{python}
-#| echo: true
-#| eval: true
-#| code-line-numbers: "15-16,19-20"
+#| code-line-numbers: "|1-2|11-12|14-15"
+#| output: false
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import root_mean_squared_error, r2_score
 
-# Load Boston data (if not already loaded)
-from ISLP import load_data
+# Boston housing: predict median home value (medv, in $1,000s)
 Boston = load_data('Boston')
-X = Boston.drop('medv', axis=1)
+X = Boston.drop(columns='medv')
 y = Boston['medv']
-
-# Split data
-from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-# Build Single Decision Tree
+# One tree vs. a forest of 100 trees (both kept shallow for illustration)
 single_tree = DecisionTreeRegressor(max_depth=3, random_state=42)
 single_tree.fit(X_train, y_train)
 
-# Build Random Forest (100 trees)
 rf_model = RandomForestRegressor(n_estimators=100, max_depth=3, random_state=42)
 rf_model.fit(X_train, y_train)
-
-# Compare performance
-print("=== Single Decision Tree ===")
-print(f"Training R²: {single_tree.score(X_train, y_train):.3f}")
-print(f"Test R²: {single_tree.score(X_test, y_test):.3f}")
-print(f"Test RMSE: ${root_mean_squared_error(y_test, single_tree.predict(X_test)):.2f}k")
-
-print("\n=== Random Forest (100 trees) ===")
-print(f"Training R²: {rf_model.score(X_train, y_train):.3f}")
-print(f"Test R²: {rf_model.score(X_test, y_test):.3f}")
-print(f"Test RMSE: ${root_mean_squared_error(y_test, rf_model.predict(X_test)):.2f}k")
-
-print("\n=== Improvement ===")
-r2_improvement = (rf_model.score(X_test, y_test) - single_tree.score(X_test, y_test)) / single_tree.score(X_test, y_test)
-rmse_improvement = (root_mean_squared_error(y_test, single_tree.predict(X_test)) - root_mean_squared_error(y_test, rf_model.predict(X_test))) / root_mean_squared_error(y_test, single_tree.predict(X_test))
-print(f"Test R² improvement: {r2_improvement*100:.2f}%")
-print(f"Test RMSE improvement: {rmse_improvement*100:.2f}%")
 ```
 
-::: {.notes}
-LIVE DEMO: Run this and highlight:
-1. Random Forest typically has better test R² (more stable)
-2. Lower RMSE means better predictions
-3. The gap between train/test is smaller (less overfitting)
-4. This demonstrates both DecisionTreeRegressor and RandomForestRegressor!
-Keep demo to 2-3 minutes.
-:::
+`n_estimators` sets how many trees are in the forest. Everything else works like the models you already know.
 
-## Key Insight: Errors Cancel, Signal Remains {.smaller}
+## Evaluate Them the Same Way {.smaller}
 
-:::: {.columns}
-::: {.column width="50%"}
-```{mermaid}
-%%| fig-width: 5
-%%| echo: false
-flowchart LR
-    A[Tree 1<br/>Prediction] --> D[Average]
-    B[Tree 2<br/>Prediction] --> D
-    C[Tree 3<br/>Prediction] --> D
-    E[Tree ...<br/>Prediction] --> D
-    F[Tree 100<br/>Prediction] --> D
-    D --> G[Final<br/>Prediction]
+```{python}
+from sklearn.metrics import root_mean_squared_error
 
-    style D fill:#ffd700,stroke:#ff8c00,stroke-width:3px
-    style G fill:#90ee90,stroke:#228b22,stroke-width:3px
+results = []
+for name, model in [('Single tree', single_tree), ('Random forest', rf_model)]:
+    results.append({
+        'model': name,
+        'train R²': model.score(X_train, y_train),
+        'test R²': model.score(X_test, y_test),
+        'test RMSE ($K)': root_mean_squared_error(y_test, model.predict(X_test))
+    })
+
+pd.DataFrame(results).round(3)
 ```
+
+. . .
+
+::: {.callout-tip}
+## Nothing new here
+
+Same train/test split and same metrics as week 9 (RMSE, R²). For a classification forest, we'd use week 10's tools: the lazy-model baseline, confusion matrix, precision, and recall. **Only the model changed.**
 :::
-
-::: {.column width="50%"}
-**The Mathematics of Wisdom:**
-
-* Each tree makes some errors
-* But errors are **uncorrelated** (thanks to bootstrap + feature randomness)
-* Tree 1 might overestimate, Tree 2 underestimate
-* When averaged, errors tend to cancel out
-* True patterns appear in most trees → reinforced
-* Random noise appears in few trees → averaged away
-
-**Result:** More accurate and stable predictions!
-:::
-::::
 
 ::: {.notes}
-This is the fundamental insight of ensemble learning. Diversity is key - if all trees made the same errors, averaging wouldn't help!
+The forest improves test R² from about 0.77 to 0.81 and cuts test RMSE from about $4.1K to $3.8K. Both models are capped at depth 3 for illustration; with no depth limit, the single tree hits a perfect training R² (the memorizer again) while the forest still generalizes better.
 :::
 
 # Feature Importance: Opening the Black Box {background="#43464B"}
 
-## The Interpretability Challenge {.smaller}
+## Accurate, But Can You Explain It? {.smaller}
 
-**The Problem:** Your model is accurate, but can you explain *why*?
+::: {.card-grid .cols-3}
+::: {.card}
+[📈 Linear & logistic regression]{.card-title}
 
-:::: {.columns}
-::: {.column width="50%"}
-**The Trade-Off:**
+**Read the coefficients** ✅
 
-```{mermaid}
-%%| fig-width: 5
-%%| echo: false
-flowchart LR
-    A[Linear<br/>Regression] --> B[Decision<br/>Tree]
-    B --> C[Random<br/>Forest]
-    C --> D[Deep<br/>Learning]
+*"Each extra $1,000 of balance raises default risk"*
+:::
+::: {.card}
+[🌳 Decision tree]{.card-title}
 
-    style A fill:#90EE90
-    style B fill:#FFD700
-    style C fill:#FFA07A
-    style D fill:#FF6347
+**Follow the rules** ✅
+
+*"Balance over $1,800 → much higher risk"*
+:::
+::: {.card}
+[🌲🌲🌲 Random forest]{.card-title}
+
+**Hundreds of trees** ❌
+
+No coefficients, no single path to follow
+:::
+:::
+
+. . .
+
+::: {.callout-warning}
+## The VP's question
+
+*"Your forest flags 500 customers who are likely to churn. Great. **Why** are they at risk, and what should we do about it?"*
+:::
+
+::: {.notes}
+As models get more accurate, they usually get harder to explain. A random forest averages hundreds of trees, each with different rules, so there's nothing simple to read off. But stakeholders still need explanations to trust the model and act on it.
+:::
+
+## Two Questions We Can Answer {.smaller}
+
+Even without coefficients, we can answer two questions about **any** model:
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🏆 Which features matter most?]{.card-title}
+
+**Feature importance** ranks the inputs the model relies on
+:::
+::: {.card}
+[📈 How do they move the prediction?]{.card-title}
+
+**Partial dependence plots (PDPs)** show how the prediction changes as one feature changes
+:::
+:::
+
+**⬇ What each one lets you tell the VP** (churn example):
+
+::: {.card-grid .cols-2}
+::: {.card style="background:#fff6ee; border-color:#e58139; border-style:dashed"}
+**Answers "*Why* are they at risk?"**
+
+*"The model leans most on **service calls** and **contract type**. That's where the risk comes from."*
+:::
+::: {.card style="background:#fff6ee; border-color:#e58139; border-style:dashed"}
+**Answers "*What* should we do?"**
+
+*"Risk **jumps after the 3rd service call**, so reach out before the 4th."*
+:::
+:::
+
+::: {.notes}
+The churn quotes are illustrative, tying back to the VP's question on the previous slide: importance explains *why* the model flags customers; a PDP shows *where* the risk changes, which suggests an action. Caution students that importance shows what the model relies on, not what causes churn (more in the readings). First identify what matters, then understand how it matters. Checking that the top features make sense also catches data leakage early. In regulated settings like lending, being able to explain a decision isn't optional.
+:::
+
+## Two Ways to Measure Importance {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🌳 Gini importance]{.card-title}
+
+*How much did this feature help the trees split during training?*
+
+Built in: `.feature_importances_`
+
+⚡ Fast, but only looks at **training** data
+:::
+::: {.card}
+[🔀 Permutation importance]{.card-title}
+
+*How much worse does the model do on test data when we scramble this feature?*
+
+`permutation_importance()`
+
+🐢 Slower, but measures what matters on **new** data
+:::
+:::
+
+::: {.callout-tip}
+Take a quick look with Gini, then **confirm with permutation importance**.
+:::
+
+::: {.notes}
+Gini importance asks "what did the trees use during training?" Permutation importance asks "what actually helps predictions on new data?" The second question is usually the one stakeholders care about. Gini importance can also be biased toward features with many unique values.
+:::
+
+## How Gini Importance Is Computed {.smaller .scrollable}
+
+Back to our credit-default tree. Every split makes its groups **purer**; that drop in Gini is **credited to the feature** the split used:
+
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 12
+#| fig-height: 3.5
+from matplotlib.gridspec import GridSpec
+
+t = tree_model.tree_
+tree_features = list(tree_model.feature_names_in_)   # the Default tree's columns
+n_total = t.weighted_n_node_samples[0]
+credit = {}
+for node in range(t.node_count):
+    left, right = t.children_left[node], t.children_right[node]
+    if left < 0:
+        continue
+    # Gini drop from this split, weighted by how many customers reach it
+    credit[node] = (t.weighted_n_node_samples[node] * t.impurity[node]
+                    - t.weighted_n_node_samples[left] * t.impurity[left]
+                    - t.weighted_n_node_samples[right] * t.impurity[right]) / n_total
+total_credit = sum(credit.values())
+feature_colors = {'balance': '#9ecae1', 'income': '#a1d99b', 'student': '#fdd0a2'}
+
+fig = plt.figure(figsize=(12, 3.5))
+grid = GridSpec(1, 4, figure=fig)
+ax_tree, ax_bar = fig.add_subplot(grid[0, :3]), fig.add_subplot(grid[0, 3])
+
+annotations = plot_tree(tree_model, feature_names=tree_features, filled=False, rounded=True,
+                        fontsize=9, ax=ax_tree)
+node_boxes = [a for a in annotations if a.get_bbox_patch() is not None]
+for node, ann in enumerate(node_boxes):
+    box = ann.get_bbox_patch()
+    if node in credit:
+        feature = tree_features[t.feature[node]]
+        ann.set_text(f'{feature} ≤ {t.threshold[node]:,.0f}\ncredit: {credit[node] / total_credit:.0%}')
+        box.set_facecolor(feature_colors[feature])
+        ann.set_fontweight('bold')
+    else:
+        ann.set_text('leaf')
+        ann.set_alpha(0.4)
+        box.set_alpha(0.4)
+ax_tree.set_title('Each split earns a share of the total Gini drop', fontsize=12, fontweight='bold')
+
+shares = pd.Series(tree_model.feature_importances_, index=tree_features).sort_values()
+bars = ax_bar.barh(shares.index, shares.values, color=[feature_colors[f] for f in shares.index],
+                   edgecolor='black')
+for bar, v in zip(bars, shares.values):
+    ax_bar.text(v + 0.02, bar.get_y() + bar.get_height() / 2, f'{v:.0%}', va='center',
+                fontsize=11, fontweight='bold')
+ax_bar.set_xlim(0, 1.2)
+ax_bar.set_xticks([])
+ax_bar.set_title('Add up by feature', fontsize=12, fontweight='bold')
+for side in ['top', 'right', 'bottom']:
+    ax_bar.spines[side].set_visible(False)
+plt.tight_layout()
+plt.show()
 ```
 
-**As we move right:**
+**Recipe:** ① measure each split's **Gini drop** (bigger groups count more) → ② **credit** it to the split's feature → ③ **add up** by feature. For a **forest**, average across all the trees.
 
-- Accuracy ↑ (Better predictions)
-- Interpretability ↓ (Harder to explain)
-
+::: {.notes}
+The root split on balance earns 74% of all the credit by itself: it separates most of the defaulters. The two income splits sit deep in the tree and touch few customers, so income only earns 6%. Student never gets used, so it earns 0%. These totals are exactly what `tree_model.feature_importances_` returns (94% / 6% / 0%). Regression trees (like the Boston forest next) use the drop in squared error instead of Gini. Key limitation: this only measures how useful a feature was for splitting the **training** data, which is why we confirm with permutation importance on test data.
 :::
 
-::: {.column width="5%"}
+## Demo: Gini Importance {.smaller}
+
+What drives our random forest's housing price predictions? Start with the built-in importance:
+
+```{python}
+gini_importance = (
+    pd.DataFrame({'feature': X_train.columns, 'importance': rf_model.feature_importances_})
+    .sort_values('importance', ascending=False)
+    .reset_index(drop=True)
+)
+
+gini_importance.head()
+```
+
+::: {.callout-note}
+Same recipe as the last slide, averaged across all 100 trees. Each value is that feature's **share** of the total impurity drop.
 :::
 
-::: {.column width="45%"}
-**How We Interpret Each:**
+## Permutation importance {.smaller}
 
-**Linear Regression:**
+```{python}
+#| echo: false
+scrambled = X_test.copy()
+scrambled['rm'] = np.random.default_rng(0).permutation(scrambled['rm'].to_numpy())
 
-- Coefficients tell the story
-- "Each $1k income increases price by $45"
-- Simple, direct interpretation ✓
+def preview(data):
+    return (data[['rm', 'lstat']].head(6)
+            .assign(predicted=rf_model.predict(data.head(6)))
+            .rename(columns={'predicted': 'predicted value ($K)'}))
 
-**Decision Tree:**
+r2_before = rf_model.score(X_test, y_test)
+r2_after = rf_model.score(scrambled, y_test)
+```
 
-- Visualize the tree structure
-- Follow the if-then rules
-- Trace individual predictions ✓
+**The Idea: Scramble a Column**: Shuffle the `rm` column of the test set (so each home gets some *other* home's room count) and watch the predictions change:
 
-**Random Forest:**
+:::: {.columns}
+::: {.column width="48%"}
+**Original test data**
 
-- Aggregating 100-1000 trees
-- Can't visualize all trees
-- No single path to trace ❌
+```{python}
+#| echo: false
+preview(X_test).style.format(precision=1).hide(axis='index')
+```
+:::
+::: {.column width="4%"}
+:::
+::: {.column width="48%"}
+**`rm` scrambled**
+
+```{python}
+#| echo: false
+(preview(scrambled).style.format(precision=1).hide(axis='index')
+ .set_properties(subset=['rm'], **{'background-color': '#ffe0b2', 'font-weight': 'bold'}))
+```
 :::
 ::::
 
-::: {.notes}
-Emphasize the progression: linear models give you coefficients, trees give you visual paths, but random forests combine hundreds of trees making direct interpretation impossible. This is why we need feature importance techniques!
+. . .
+
+::: {.callout-tip}
+Scrambling `rm` breaks its link to price, so test R² drops from **`{python} f"{r2_before:.2f}"`** to **`{python} f"{r2_after:.2f}"`**. **Permutation importance** repeats this for every feature: the bigger the drop, the more the model relied on that feature.
 :::
 
-## The Business Reality {.smaller}
+::: {.notes}
+`lstat` is untouched, so any change in a row's prediction comes from its new room count. This is "what if an input suddenly became useless?" made concrete.
+:::
 
-**A Common Business Conversation:**
+## Demo: Permutation Importance {.smaller .scrollable}
 
-**You:** "Our Random Forest predicts customer churn with 94% accuracy!"
+Each value = the average **drop in test R²** when that column is shuffled (10 times):
 
-**VP:** "Excellent! So which customers are at risk and why?"
+```{python}
+#| code-line-numbers: "|3-5|6-9"
+from sklearn.inspection import permutation_importance
 
-**You:** "Here's a list of 500 high-risk customers."
+perm_result = permutation_importance(
+    rf_model, X_test, y_test, n_repeats=10, random_state=42, scoring='r2'
+)
+perm_importance = (
+    pd.DataFrame({'feature': X_test.columns, 'importance': perm_result.importances_mean})
+    .sort_values('importance', ascending=False)
+    .reset_index(drop=True)
+)
+perm_importance.head()
+```
 
-**VP:** "Great! What should we do to retain them?"
 
-**You:** “Well… the model doesn’t exactly tell us that in a straightforward way…”
+## Do the Two Methods Agree? {.smaller}
 
-**VP:** “What do you mean? How can it predict churn without knowing what causes churn?”
+```{python}
+#| echo: false
+#| fig-align: center
+#| fig-width: 11
+#| fig-height: 3.8
+comparison = (
+    gini_importance.set_index('feature')['importance'].rename('Gini').to_frame()
+    .join(perm_importance.set_index('feature')['importance'].rename('Permutation'))
+)
 
-**You:** “It does know—sort of. The patterns are just… distributed across hundreds of decision trees…”
+fig, axes = plt.subplots(1, 2, figsize=(11, 3.8))
+for ax, method, color in zip(axes, ['Gini', 'Permutation'], ['steelblue', 'coral']):
+    comparison[method].sort_values().tail(6).plot(kind='barh', ax=ax, color=color)
+    ax.set_title(f'{method} Importance (Top 6)', fontsize=13, fontweight='bold')
+    ax.set_ylabel('')
+    ax.grid(True, axis='x', alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
 
-**VP:** 🤔 “So you’re telling me to spend $200,000 on retention campaigns, but you can’t explain why these specific customers are at risk?”
+
+::: {.callout-tip}
+Both methods agree that **`rm`** (average rooms) and **`lstat`** (% lower-status residents) dominate, but they **swap the order**. Gini reflects what the trees used during training; permutation reflects what helps on new data. That's why we validate with permutation importance.
+:::
+
+::: {.notes}
+Point out:
+1. The top two features carry nearly all the importance; everything else is a rounding error
+2. The ranking flip is the reason for the best practice on the previous slide
+3. Ask: do these make sense for housing prices? (Bigger homes cost more; poorer neighborhoods have lower values.)
+:::
+
+## What-If: Change Only the Rooms {.smaller}
+
+Importance told us `rm` matters. **How** does it move the prediction? Take 50 real homes, set **every** home's `rm` to the same value (keep everything else), and ask the forest. **Drag the slider:**
+
+```{python}
+#| echo: false
+whatif_homes = X_train.sample(50, random_state=42)
+rm_values = np.round(np.arange(5.0, 8.01, 0.25), 2)
+ice = np.array([rf_model.predict(whatif_homes.assign(rm=v)) for v in rm_values]).T   # homes × rm values
+pdp_line = ice.mean(axis=0)
+
+fig = go.Figure()
+for k, home in enumerate(ice):
+    fig.add_trace(go.Scatter(x=rm_values, y=home, mode='lines', hoverinfo='skip',
+                             line=dict(color='lightgray', width=1),
+                             name='One home', showlegend=(k == 0)))
+
+titles = []
+for i, v in enumerate(rm_values):
+    fig.add_trace(go.Scatter(x=[v] * len(ice), y=ice[:, i], mode='markers', visible=False,
+                             marker=dict(color='steelblue', size=8, opacity=0.6),
+                             name='Each home at this rm', hoverinfo='skip'))
+    fig.add_trace(go.Scatter(x=rm_values[:i + 1], y=pdp_line[:i + 1], mode='lines+markers',
+                             visible=False, line=dict(color='crimson', width=4),
+                             marker=dict(size=[6] * i + [16], color='crimson'),
+                             name='Average = the PDP', hoverinfo='skip'))
+    titles.append(f'Every home set to <b>rm = {v:.2f}</b>  →  average prediction <b>${pdp_line[i]:.1f}K</b>')
+
+steps = slider_steps(len(ice), len(rm_values), 2, [f'{v:.2f}' for v in rm_values], titles)
+for trace, show in zip(fig.data, steps[0]['args'][0]['visible']):
+    trace.visible = show
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=15)),
+    height=460, margin=dict(l=60, r=20, t=50, b=10), template='plotly_white',
+    legend=dict(orientation='h', x=0, y=1.1),
+    xaxis=dict(title='rm (average rooms per home)', range=[4.9, 8.1]),
+    yaxis=dict(title='Predicted value ($1,000s)'),
+    sliders=[dict(active=0, steps=steps, pad=dict(t=40),
+                  currentvalue=dict(prefix='rm = ', font=dict(size=15)))]
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+Each gray line is one home's "what-if" curve (called an ICE line). The blue dots are all 50 homes at the current rm; the red line is their average, traced out one step at a time. That red line IS the partial dependence plot. Notice the gray lines are mostly parallel: rooms move every home's value by about the same amount.
+:::
+
+## Demo: Partial Dependence Plot {.smaller}
+
+```{python}
+#| code-line-numbers: "|1|4-7"
+from sklearn.inspection import PartialDependenceDisplay
+
+fig, ax = plt.subplots(figsize=(8, 3))
+pdp = PartialDependenceDisplay.from_estimator(
+    rf_model, X_train, features=['rm'], kind='both',
+    subsample=50, random_state=42, ax=ax
+)
+pdp.axes_[0, 0].set_ylabel('Predicted value ($1,000s)')
+plt.show()
+```
+
+. . .
+
+::: {.callout-tip}
+## Reading it
+
+Thin lines = individual homes; dashed line = their **average** (the PDP). Flat near **$21K** until about **6.5 rooms**, then a steep climb: a **tipping point** a linear model would miss.
+:::
+
+::: {.notes}
+This is the slider from the previous slide, in two lines of code. The tick marks along the bottom show where the training data falls (deciles). Trust the plot more where there's more data. The staircase shape comes from the trees' splits.
+:::
+
+## PDPs for the Top Features {.smaller}
+
+```{python}
+#| fig-align: center
+fig, axes = plt.subplots(1, 4, figsize=(14, 3.5))
+pdp = PartialDependenceDisplay.from_estimator(
+    rf_model, X_train, features=['rm', 'lstat', 'dis', 'crim'], ax=axes
+)
+for i, panel in enumerate(pdp.axes_.ravel()):
+    panel.set_ylabel('Predicted value ($1,000s)' if i == 0 else '')
+plt.tight_layout()
+plt.show()
+```
+
+. . .
+
+* **`lstat`**: predicted value falls from about $31K to $16K, then **levels off** past ~20%
+* **`dis`** and **`crim`**: nearly flat. Low importance shows up as a **flat PDP**
+
+::: {.notes}
+Compare shapes across features - threshold effects, plateaus, and flat lines. Ask: which of these would you mention to a city planner? Keep to 3 minutes max.
+:::
+
+# Looking Forward {background="#43464B"}
+
+## Key Takeaways {.smaller}
+
+* **Linear models have limits**: they miss curves, thresholds, and interactions unless we build them in by hand
+* **Decision trees**: learn if-then rules from data, choosing each split to make the groups as pure as possible
+* **Single trees are fragile**: small data changes reshape them, and unlimited trees memorize noise
+* **Random forests**: bootstrap samples + feature randomness create diverse trees whose errors cancel out
+* **Same evaluation workflow**: train/test split, compare against a baseline, pick metrics that fit the business
+* **Interpreting without coefficients**: feature importance shows *which* features matter; PDPs show *how*
+
+## More in Your Readings {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🌳 Regression trees & SSE]{.card-title}
+
+How trees choose splits when the target is a number
+:::
+::: {.card}
+[🎛️ Hyperparameters]{.card-title}
+
+`max_depth`, `n_estimators`, and `max_features`, and how they trade off accuracy and stability
+:::
+::: {.card}
+[⚠️ Importance pitfalls]{.card-title}
+
+Correlated features, the cardinality trap, and why *important* doesn't mean *causal*
+:::
+::: {.card}
+[🔬 Beyond importance]{.card-title}
+
+SHAP, LIME, and other explainable AI tools
+:::
+:::
+
+## Thursday's Lab
+
+::: {.callout-tip}
+## This Week's Lab Preview
+
+In Thursday's lab, you'll get hands-on practice with:
+
+* Walking through decision trees, random forests, feature importance, and PDPs on the Boston housing data
+* Building trees and forests with different settings to classify breast cancer tumors
+* Comparing models and selecting the best one
+* Identifying the most important features and interpreting a partial dependence plot
+
+:::
 
 <br>
 
-::: {.callout-warning}
-## The Challenge
-Your model is accurate, but stakeholders need more than predictions—they need **explanations** and **actionable insights**.
-:::
-
-::: {.notes}
-This is where many data scientists realize accuracy alone isn't enough. Stakeholders need to understand WHY to trust the model and take action. This leads us to feature importance as a solution.
-:::
-
-## Why Feature Importance Matters {.smaller}
-
-Feature importance helps us answer the critical business questions:
-
-:::: {.columns}
-::: {.column width="47%"}
-**Building Trust:**
-
-- "Show me which factors drive your predictions"
-- Stakeholders can validate against domain knowledge
-- Catches data leakage and model errors early
-
-**Supporting Decisions:**
-
-- Translate predictions into strategy
-- "Customers with 4+ service calls are at high churn risk → proactive outreach"
-- Focus resources on what actually matters
-
-:::
-
-::: {.column width="6%"}
-:::
-
-::: {.column width="47%"}
-**Feature Selection:**
-
-- Out of 50 features, maybe only 8 drive meaningful predictions
-- Simplify data collection
-- Reduce noise, improve performance
-
-**Regulatory Compliance:**
-
-- Finance: Must explain why credit was denied
-- Healthcare: Medical decisions must be explainable
-- GDPR: "Right to explanation" for automated decisions
-:::
-::::
-
-::: {.notes}
-Feature importance bridges the gap between statistical patterns and business action. It's often the difference between a model that sits on a shelf and one that drives real value.
-:::
-
-## Understanding Our Random Forest {.smaller}
-
-**Two critical questions about our model:**
-
-<br/>
-
-:::: {.columns}
-::: {.column width="47%"}
-::: {.callout-note}
-## Question 1: Which Features Matter Most?
-
-**Feature Importance** tells us which variables are driving our model's predictions.
-
-*Example:* "Balance is responsible for 70% of the model's decision-making, while income contributes only 15%"
-
-:::
-:::
-
-::: {.column width="6%"}
-:::
-
-::: {.column width="47%"}
-::: {.callout-note}
-## Question 2: How Do They Influence Predictions?
-
-**Partial Dependence Plots** show us how predictions change as we vary an influential feature.
-
-*Example:* "As balance increases from $0 to $2,000, default probability rises from 5% to 85%"
-
-:::
-:::
-::::
-
-<br/>
-
-::: {.callout-tip}
-## Our Approach
-**First**, identify what matters → **Then**, understand how it matters
-:::
-
-::: {.notes}
-Set up the two-step approach: (1) Feature importance tells us WHICH features are most influential across all predictions, (2) Partial dependence plots show us HOW these features influence predictions. This creates a natural progression from identifying important features to understanding their behavior.
-:::
-
-
-## Measuring What Matters {.smaller}
-
-**Two approaches to identify influential features:**
-
-:::: {.columns}
-::: {.column width="50%"}
-**1. Gini/MSE Importance**
-
-*How it works:*
-
-- Tracks which features create the best splits
-- Aggregates across all trees
-
-*Pros:*
-
-- Fast, built into scikit-learn
-- Easy: `.feature_importances_`
-
-*Cons:*
-
-- Biased toward continuous features
-- Uses training data only
-
-:::
-
-::: {.column width="50%"}
-**2. Permutation Importance**
-
-*How it works:*
-
-- Shuffle one feature at a time
-- Measure performance drop
-
-*Pros:*
-
-- Works with any model
-- More reliable rankings
-- Uses test data
-
-*Cons:*
-
-- Slower computation
-- Needs separate calculation
-
-:::
-::::
-
-::: {.callout-tip}
-## Best Practice:
-
-Use Gini for quick checks → validate with permutation importance
-:::
-
-::: {.notes}
-Think of it this way: Gini importance asks "What did the trees use during training?" Permutation importance asks "What actually helps predictions on new data?" The second question is usually more important!
-:::
-
-## Demo: Extracting Feature Importance {.smaller .scrollable}
-
-Let's see what drives housing price predictions in our Random Forest!
-
-```{python}
-#| echo: true
-#| eval: true
-import pandas as pd
-from sklearn.inspection import permutation_importance
-import matplotlib.pyplot as plt
-
-# We already have our trained rf_model from the Boston housing demo
-# Extract Gini-based importance
-feature_names = X_train.columns
-gini_importance = pd.DataFrame({
-    'feature': feature_names,
-    'gini_importance': rf_model.feature_importances_
-}).sort_values('gini_importance', ascending=False)
-
-print("=== Top 5 Features (Gini Importance) ===")
-print(gini_importance.head())
-
-# Calculate Permutation Importance on test set
-perm_result = permutation_importance(
-    rf_model, X_test, y_test,
-    n_repeats=10, random_state=42, scoring='r2'
-)
-
-perm_importance = pd.DataFrame({
-    'feature': feature_names,
-    'perm_importance': perm_result.importances_mean
-}).sort_values('perm_importance', ascending=False)
-
-print("\n=== Top 5 Features (Permutation Importance) ===")
-print(perm_importance.head())
-
-# Visualize top 8 features
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-gini_importance.head(8).sort_values('gini_importance').set_index('feature')['gini_importance'].plot(
-    kind='barh', ax=ax1, color='steelblue', title='Gini Importance (Top 8)'
-)
-perm_importance.head(8).sort_values('perm_importance').set_index('feature')['perm_importance'].plot(
-    kind='barh', ax=ax2, color='coral', title='Permutation Importance (Top 8)'
-)
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-LIVE DEMO: Run and point out:
-1. Which features dominate? (likely lstat, rm)
-2. Do both methods agree on the top features?
-3. What does this tell us about what drives housing prices?
-Keep to 3 minutes max.
-:::
-
-## Understanding How Features Influence Predictions {.smaller}
-
-**Feature importance tells us WHICH features matter, but not HOW they matter**
-
-**What We Know:**
-
-- `lstat` is the most important feature (35% importance)
-- It drives predictions more than any other variable
-
-**What We Don't Know:**
-
-- Does increasing `lstat` increase or decrease price?
-- Is the relationship linear or non-linear?
-- Are there threshold effects?
-- At what point does the effect saturate?
-
-
 ::: {.callout-important}
-## Enter: Partial Dependence Plots (PDPs)
+## Homework
 
-PDPs show **how predictions change** as we vary one feature while holding all others constant.
+Thursday's lab will lead into this week's homework assignment.
 
-**The insight:** "As `lstat` increases from 5% to 30%, median home value decreases from $35k to $15k"
-
-This is actionable intelligence!
 :::
-
-
-::: {.notes}
-Feature importance answered "which features?" Now we need PDPs to answer "how do they work?" This is the bridge from identifying important variables to understanding their behavior and making business decisions.
-:::
-
-## Demo: Creating Partial Dependence Plots {.smaller .scrollable}
-
-Let's visualize how `lstat` affects housing prices!
-
-```{python}
-#| echo: true
-#| eval: true
-from sklearn.inspection import PartialDependenceDisplay
-
-# Create PDP for lstat (our most important feature)
-fig, ax = plt.subplots(figsize=(8, 5))
-PartialDependenceDisplay.from_estimator(
-    rf_model,
-    X_train,
-    features=['lstat'],
-    grid_resolution=50,
-    ax=ax
-)
-plt.title('How lstat Affects Housing Price Predictions', fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.show()
-
-# Create PDPs for multiple top features
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-axes = axes.ravel()
-
-top_features = ['lstat', 'rm', 'dis', 'crim']  # Top 4 features
-PartialDependenceDisplay.from_estimator(
-    rf_model,
-    X_train,
-    features=top_features,
-    grid_resolution=50,
-    ax=axes
-)
-plt.suptitle('Partial Dependence Plots: Top 4 Features', fontsize=14, fontweight='bold')
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-LIVE DEMO: Run this and point out:
-1. PDP for lstat shows clear negative relationship - as % lower status increases, prices decrease
-2. Look for threshold effects - does the relationship change at certain values?
-3. Compare shapes across features - linear vs non-linear relationships
-4. The vertical lines at the bottom show data density - trust the plot more where there's more data
-Keep to 3 minutes max.
-:::
-
-# Wrap-Up & Looking Ahead {background="#43464B"}
-
-## Key Takeaways
-
-* **Decision Trees** – Learn patterns through sequential yes/no questions, automatically discovering thresholds and interactions, but can be unstable and prone to overfitting.
-
-* **Random Forests** – Combine hundreds of diverse trees (via bootstrap sampling and feature randomness) to create stable, accurate predictions through voting or averaging.
-
-* **Feature Importance** – Bridges the gap between accuracy and interpretability, revealing which features drive predictions and enabling stakeholder trust and actionable insights.
-
-* **The Big Picture** – Tree-based models offer a powerful middle ground between simple linear models and complex black boxes, delivering strong performance with reasonable interpretability.
-
-## Looking Ahead
-
-**Between now and Thursday:**
-
-* Read Chapters 25-27 (Decision Trees, Random Forests, Feature Importance)
-
-**Thursday's Lab:**
-
-* Hands-on applications with decision trees, random forests, and feature importance
-
-**Homework:**
-
-* Thursday's lab will feed into the homework assignment
 
 ## Any Final Questions?
 
-* About today's concepts?
+* About decision trees and how they choose splits?
+* About random forests?
+* About feature importance and partial dependence plots?
 * About Thursday's lab?
-* About the readings?
 
----
+<br><br>
 
 <center>
-**See you Thursday for hands-on practice!**
-
-*"The best way to learn tree-based models is to build them yourself."*
+**See you Thursday for hands-on tree-based modeling!**
 </center>
