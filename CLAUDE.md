@@ -161,3 +161,17 @@ When adding a new lab:
 - Do not commit instructor materials or answer keys to student-facing directories
 - Do not generate content for graded assignments without explicit instruction
 - Do not manually publish the book — let GitHub Actions deploy to `gh-pages`
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `bradleyboehmke/uc-bana-4080` (use `gh`). See `agent-docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `agent-docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` at the repo root plus ADRs in `agent-docs/adr/` (not `docs/`, which is Quarto build output). See `agent-docs/agents/domain.md`.
