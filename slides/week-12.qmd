@@ -135,9 +135,9 @@ Remember the golden rule from Module 8?
 . . .
 
 ::: {.callout-warning}
-## The consequence
+## The consequence: an optimism gap
 
-Test scores become optimistically biased and untrustworthy.
+Each time we tweak the model based on test results, we fit it a little more to **those particular test rows**. Once the model is deployed, we can't peek at new data, so none of that tweaking helps there. The test score ends up **better than what the model will actually deliver**. That difference is the *optimism gap*.
 :::
 
 
@@ -150,9 +150,9 @@ Framing: this isn't their fault! The simple train/test split was the right found
 
 **Analogy (from the textbook):** You study with a practice exam, adjust your studying based on it, retake it again and again, and then that same exam is your final. Your score would be inflated, and not because you learned more.
 
-Don't argue the consequence here. The next slide *shows* it.
+**Land the callout:** the key asymmetry is that we get to look at the test set as often as we like, but we never get to look at next year's data. Every tweak that "helped" on the test set might only have helped on those rows.
 
-**Transition:** "That warning is easy to nod along to. Let's watch it happen."
+**Transition:** "So how big is that gap? Let's watch it open up."
 :::
 
 ## The Optimism Gap {.smaller}
@@ -293,45 +293,153 @@ print(f"What you get (new-home RMSE):   ${new_rmse:,.0f}")
 ```
 
 ::: {.notes}
-**Timing: ~4 minutes.** Live code. Every number here is computed at render time.
+**Timing: ~3 minutes.** Live code. Every number here is computed at render time.
 
 **Walk the highlighted lines:**
 
-1. **Lines 9–10:** Three pieces this time: 60% to train, a small 100-home **test set** (the one we keep checking), and the remaining 484 homes as **new homes** that stand in for the future.
+1. **Lines 9–10:** Three pieces this time: 60% to train, a small 100-home **test set** (the one we keep checking), and the remaining 484 homes as **new homes**. In real life we would *not* have these. They stand in for the future so we can see what peeking costs.
 2. **Lines 12–16:** Exactly last week's habit. Try depths 1–20, score each on the test set, keep the winner.
 3. **Lines 18–20:** Score the winner on the new homes, which played no part in choosing it.
 4. **Lines 22–24:** The test RMSE we'd report is lower (better) than the RMSE on new homes. Same story as the Optimism Gap, now on real data.
 
 **Why `random_state=0` for the split:** with Ames's handful of very expensive homes, a 100-home test set can be noticeably easier or harder than average just by luck. On this split, the test set and the new homes are equally hard on average across all 20 depths, so the gap you see comes from *choosing the best*, not from a lucky test set. If a student asks: across many random splits, the reported RMSE comes in optimistic most of the time.
 
-**Extra point if time allows:** the depth chosen by the test set isn't even the depth that does best on new homes. Peeking inflates the score *and* can pick the wrong model.
+**Transition:** "Two numbers don't show *why* this happened. Let's look at all 20 depths."
+:::
 
-**Transition:** "Let's put this into words, because you'll need to explain it to someone who's never heard of a test set."
+## What the Test Set Hid {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
+depths = np.arange(1, 21)
+test_curve = np.array([test_rmse[d] for d in depths])
+new_curve = np.array([
+    root_mean_squared_error(
+        y_new,
+        DecisionTreeRegressor(max_depth=d, random_state=42).fit(X_train, y_train).predict(X_new))
+    for d in depths
+])
+truly_best = depths[new_curve.argmin()]
+chosen_test, chosen_new = test_rmse[best_depth], new_curve[best_depth - 1]
+
+fig = go.Figure()
+# Fixed: what you can see, the test RMSE at every depth, plus the depth you'd pick
+fig.add_trace(go.Scatter(
+    x=depths, y=test_curve, mode='lines+markers', line=dict(color=ORANGE, width=3),
+    marker=dict(size=7), name='Test set (what you see)',
+    hovertemplate='Depth %{x}: $%{y:,.0f} on test<extra></extra>'))
+fig.add_trace(go.Scatter(
+    x=[best_depth], y=[chosen_test], mode='markers+text',
+    marker=dict(size=16, color='white', line=dict(color=ORANGE, width=3)),
+    text=[f'You pick depth {best_depth}'], textposition='bottom center',
+    textfont=dict(size=14), showlegend=False, hoverinfo='skip'))
+# Revealed: the new homes, which you never get to see in real life
+fig.add_trace(go.Scatter(
+    x=depths, y=new_curve, mode='lines+markers', line=dict(color=BLUE, width=3),
+    marker=dict(size=7), name='New homes (hidden in real life)', visible=False,
+    hovertemplate='Depth %{x}: $%{y:,.0f} on new homes<extra></extra>'))
+fig.add_trace(go.Scatter(
+    x=[best_depth, best_depth], y=[chosen_test, chosen_new], mode='lines+text',
+    line=dict(color='black', width=2, dash='dot'),
+    text=['', f'  +${chosen_new - chosen_test:,.0f} worse  '], textposition='middle right',
+    textfont=dict(size=15), showlegend=False, visible=False, hoverinfo='skip'))
+fig.add_trace(go.Scatter(
+    x=[truly_best], y=[new_curve.min()], mode='markers+text',
+    marker=dict(size=16, color='white', line=dict(color=BLUE, width=3)),
+    text=[f'Actually best: depth {truly_best}'], textposition='bottom center',
+    textfont=dict(size=14), showlegend=False, visible=False, hoverinfo='skip'))
+
+reveal_titles = [
+    f'You only see the test set: depth {best_depth} looks best (${chosen_test:,.0f})',
+    f'The new homes disagree: depth {best_depth} gets ${chosen_new:,.0f}; depth {truly_best} was the better choice',
+]
+fig.update_layout(
+    title=dict(text=reveal_titles[0], x=0.5),
+    sliders=[dict(active=0, currentvalue=dict(visible=False), pad=dict(t=40), steps=[
+        dict(method='update', label='What you see',
+             args=[{'visible': [True, True, False, False, False]}, {'title.text': reveal_titles[0]}]),
+        dict(method='update', label='What you get',
+             args=[{'visible': [True, True, True, True, True]}, {'title.text': reveal_titles[1]}]),
+    ])],
+    xaxis=dict(title='Tree max_depth', dtick=1),
+    yaxis=dict(title='RMSE ($, lower is better)', tickformat='$,.0f'),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=480, margin=dict(l=80, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~3 minutes.** The same 20 trees from the last slide. Nothing here is new modeling, it's just every depth instead of only the winner.
+
+**Start on "What you see".** "This is all the information you have in real life: the test RMSE at each depth. Like last week, you pick the lowest point, depth 9."
+
+**Ask:** "How confident are you in depth 9?" (Most will be fairly confident. It's the lowest point.)
+
+**Slide to "What you get".** The blue line is the same 20 trees on the 484 new homes, which you *never* see in practice.
+
+- At depth 9 the new homes are thousands of dollars worse than the test score promised. That's the optimism gap, on real data.
+- The blue line's best depth is a different one. Depth 9 only looked best because its errors happened to be small on those 100 test homes.
+
+**Important framing:** we can draw the blue line only because this is a demo. In a real project it doesn't exist; that's exactly the problem. Peeking at the test set doesn't just inflate the score, it can also steer you to the wrong model.
+
+**Transition:** "So what do we do about it?"
+:::
+
+## Lock the Test Set Away {.smaller}
+
+::: {.callout-important}
+## The takeaway
+
+The test set can't be used to make modeling decisions. Set it aside for one job: the **final generalization assessment**, run once, after every choice is made.
+:::
+
+. . .
+
+**But that leaves a gap.** We still need to:
+
+* Compare models (linear regression vs. tree vs. forest?)
+* Pick hyperparameters (which `max_depth`?)
+* Estimate how well the final model will do
+
+. . .
+
+... using **only the training data**, and getting a score we can trust.
+
+::: {.notes}
+**Timing: ~2 minutes.**
+
+State the rule plainly: the test set gets used exactly once, at the end. Its job is to tell us how the finished model generalizes, not to help us build it.
+
+Then name the gap. Every decision we made last week still has to be made somehow. We just can't use the test set to make it.
+
+**Transition:** "Before I show you the professional answer, see if you can come up with it yourselves."
 :::
 
 ## Think-Pair-Share {.smaller}
 
-**Scenario:** You're a data scientist at a retail company building a customer churn model. Just like the Optimism Gap chart, you try 10 model configurations, check each one on your test set, and keep the best (test accuracy: 87%). You present 87% to management.
+**Your test set is locked away.** You have 876 training homes and need to choose between `max_depth=6` and `max_depth=9`, the two depths from the last chart.
 
 :::: {.columns}
 ::: {.column width="70%"}
 
 **Discuss with your neighbor:**
 
-- Which line on the Optimism Gap chart is the 87%: what you *report* or what you *get*?
-- What will management see once the model runs on next quarter's customers?
-- How would you explain this problem to a non-technical manager?
+- How could you score each depth using **only the training homes**?
+- Why can't you just use each tree's score on the data it was trained on?
+- Your idea gives you one score per depth. How could you tell whether that score was just luck?
 
 :::
 ::: {.column width="30%"}
 
 <center>
 
-<div id="4minPeek"></div>
+<div id="3minLock"></div>
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minPeek", 240, "slide");
+        initializeTimer("3minLock", 180, "slide");
     });
 </script>
 </center>
@@ -342,23 +450,19 @@ print(f"What you get (new-home RMSE):   ${new_rmse:,.0f}")
 Then we'll take a few responses...
 
 ::: {.notes}
-**Timing: ~6 minutes** (4-minute timer + 2 minutes of responses).
+**Timing: ~5 minutes** (3-minute timer + 2 minutes of responses).
 
-**After the timer expires, cold-call 2–3 pairs.**
+**After the timer expires, cold-call 2–3 pairs.** The goal is for students to invent the pieces of cross-validation before they see it.
 
 Expected student responses:
 
-1. **Which line?** "The orange one: it's the best test score after trying 10 things, so it's the luckiest, not the truest."
-2. **What will management see?** "Lower accuracy than 87%. Probably a few points lower, like the blue line."
-3. **Manager explanation:** "We used our final exam as a practice test, so the grade is inflated." Or: "We tried 10 lottery tickets and are reporting the winning one as if it were typical."
+1. **Score using only training homes:** "Hold some of the training homes back, train on the rest, and score on the ones we held back." That's a **validation set**. Write it on the board.
+2. **Why not the training score?** "A deep tree memorizes its training data, so its training score always looks great." (Callback to week 11's depth slider.)
+3. **Was it luck?** "Hold back a *different* chunk and do it again, then average." That's the idea behind cross-validation.
 
-**Key points to emphasize:**
+If no one gets to #3, prompt: "What did we learn about a single 100-home test set today? Would a single validation set have the same problem?"
 
-- Each check on the test set is one more chance to fit its noise.
-- The more decisions you make on the test set, the less its score means.
-- It's subtle and easy to do by accident. We did it all of last week.
-
-**Transition to solution:** "So we need a way to make all these decisions, comparing models and tuning hyperparameters, without ever looking at the test set. That's exactly what cross-validation does."
+**Transition to solution:** "You just invented cross-validation. Hold out a piece of the training data, score on it, repeat with a different piece, and average. Let's see how it works."
 :::
 
 # Solution: Cross-Validation {background="#43464B"}
