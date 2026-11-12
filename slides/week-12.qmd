@@ -117,7 +117,7 @@ Walk the four cards left to right, top to bottom. One sentence each.
 
 # The Problem: We've Been Peeking {background="#43464B"}
 
-## The Test Set Contamination Issue {.smaller}
+## How We've Been Peeking {.smaller}
 
 Remember the golden rule from Module 8?
 
@@ -142,32 +142,184 @@ Test scores become optimistically biased and untrustworthy.
 
 
 ::: {.notes}
-This slide addresses the "uncomfortable truth" from Chapter 28. Students have been unknowingly contaminating their test sets throughout Chapters 25-27.
+**Timing: ~3 minutes.**
 
-Important framing: This isn't their fault! The simple train/test split was the right pedagogical foundation. Now they're ready for the professional approach.
+This is the "uncomfortable truth" from Chapter 28: students have been quietly reusing their test sets throughout Modules 9–11.
 
-**Key analogy from the textbook:** It's like studying with a practice test, adjusting your studying based on the practice test, taking it again and again, and then having that same test be your final exam. Your score would be artificially inflated.
+Framing: this isn't their fault! The simple train/test split was the right foundation. Now they're ready for the professional approach.
 
-**Real-world impact:**
-- Report test accuracy of 91% to stakeholders
-- Deploy to production
-- Actual performance: 85%
-- That 6-point drop erodes trust
+**Analogy (from the textbook):** You study with a practice exam, adjust your studying based on it, retake it again and again, and then that same exam is your final. Your score would be inflated, and not because you learned more.
 
-**Transition:** "So how do we make decisions about models and tune hyperparameters WITHOUT contaminating our test set? That's where cross-validation comes in."
+Don't argue the consequence here. The next slide *shows* it.
+
+**Transition:** "That warning is easy to nod along to. Let's watch it happen."
+:::
+
+## The Optimism Gap {.smaller}
+
+**Try 50 churn-model settings, keep whichever scores best on the test set**
+
+```{python}
+#| echo: false
+#| fig-align: center
+from sklearn.tree import DecisionTreeClassifier
+
+rng = np.random.default_rng(42)
+
+def make_customers(n):
+    """Churn depends weakly on two of ten features; the rest is noise."""
+    X = rng.normal(size=(n, 10))
+    y = (X[:, 0] + X[:, 1] + rng.normal(0, 1.6, n) > 0).astype(int)
+    return X, y
+
+gap_X_tr, gap_y_tr = make_customers(300)        # training customers
+gap_X_te, gap_y_te = make_customers(100)        # the test set we keep peeking at
+gap_X_new, gap_y_new = make_customers(20000)    # next year's customers (never seen)
+
+n_configs = 50
+test_acc, new_acc = [], []
+for i in range(n_configs):
+    gap_model = DecisionTreeClassifier(
+        max_depth=int(rng.integers(1, 10)),
+        max_features=int(rng.integers(1, 11)),
+        random_state=i,
+    ).fit(gap_X_tr, gap_y_tr)
+    test_acc.append(gap_model.score(gap_X_te, gap_y_te))
+    new_acc.append(gap_model.score(gap_X_new, gap_y_new))
+test_acc, new_acc = np.array(test_acc) * 100, np.array(new_acc) * 100
+
+settings_tried = np.arange(1, n_configs + 1)
+best_idx = np.array([test_acc[:n].argmax() for n in settings_tried])   # best-so-far on the test set
+reported = test_acc[best_idx]
+reality = new_acc[best_idx]
+
+fig = go.Figure()
+for n in settings_tried:
+    # every setting tried so far, scored on the test set
+    fig.add_trace(go.Scatter(
+        x=settings_tried[:n], y=test_acc[:n], mode='markers',
+        marker=dict(color='lightgray', size=8, line=dict(color='gray', width=1)),
+        name='Each setting (test score)', visible=False,
+        hovertemplate='Setting %{x}: %{y:.0f}% on test<extra></extra>'))
+    # what you would report: the best test score so far
+    fig.add_trace(go.Scatter(
+        x=settings_tried[:n], y=reported[:n], mode='lines', line=dict(color=ORANGE, width=3, shape='hv'),
+        name='Best test score (what you report)', visible=False, hoverinfo='skip'))
+    # what that same model actually does on new customers
+    fig.add_trace(go.Scatter(
+        x=settings_tried[:n], y=reality[:n], mode='lines', line=dict(color=BLUE, width=3, shape='hv'),
+        name='Same model on new customers (what you get)', visible=False, hoverinfo='skip'))
+    # the gap at the current step
+    fig.add_trace(go.Scatter(
+        x=[n, n], y=[reality[n-1], reported[n-1]], mode='lines+markers+text',
+        line=dict(color='black', width=2, dash='dot'),
+        marker=dict(color=['white', 'white'], size=10, line=dict(color=[BLUE, ORANGE], width=3)),
+        text=['', f'  {reported[n-1] - reality[n-1]:+.0f} pts'], textposition='middle right',
+        textfont=dict(size=16, color='black'), showlegend=False, visible=False, hoverinfo='skip'))
+
+titles = [f'Settings tried: {n}  |  Report {reported[n-1]:.0f}%  vs.  reality {reality[n-1]:.0f}%'
+          for n in settings_tried]
+steps = slider_steps(0, n_configs, 4, [str(n) for n in settings_tried], titles)
+for trace in fig.data[:4]:
+    trace.visible = True
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Settings tried: '),
+                  pad=dict(t=40))],
+    xaxis=dict(title='Settings tried (each one checked on the test set)', range=[0, 53]),
+    yaxis=dict(title='Accuracy (%)', range=[40, 90]),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=480, margin=dict(l=60, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+[Nothing about the model got better. We just found the setting that got luckiest on these 100 test customers.]{.fragment style="font-size: 0.85em;"}
+
+::: {.notes}
+**Timing: ~5 minutes.** This is the slide that turns "we've been peeking" from a warning into something students can see.
+
+**Setup (say this before touching the slider):** "Simulated churn data: 300 training customers, a 100-customer test set, and 20,000 customers we'll pretend arrive next year. We try 50 decision-tree settings (random depth and features) and score every one on the same 100 test customers."
+
+**How to read it:**
+
+- **Gray dots:** each setting's score on the test set.
+- **Orange line:** the score you would *report*, meaning the best test score so far. It can only go up.
+- **Blue line:** that same chosen model on the 20,000 new customers, which is what you actually *get*.
+
+**Drag the slider slowly from 1 to 50.**
+
+- At 1–2 settings the gap is *negative*: one test score is just a noisy estimate, so it can come in low as easily as high. With one try there's no bias, only noise.
+- As you keep trying settings and keeping the winner, orange climbs far faster than blue (about +23 points vs. +7). The extra climb is luck on the test set, not a better model. By 50 settings you'd report roughly 78% when reality is roughly 69%.
+
+**Click to reveal the caption.** Read it aloud: nothing got better; we found the luckiest setting.
+
+**Ask:** "Which line would you put in the slide deck for your manager? Which line will your manager actually experience?"
+
+**Transition:** "That's simulated data. Does it happen on real data, with the exact habit we used last week? Let's try it on Ames."
+:::
+
+## Peeking on Real Data {.smaller}
+
+Pick the tree depth that scores best on the test set, then check that choice on homes we never looked at:
+
+```{python}
+#| code-line-numbers: "|9-10|12-16|18-20|22-24"
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import root_mean_squared_error
+
+ames = pd.read_csv('../data/ames_clean.csv')
+features = ['GrLivArea', 'LotArea', 'YearRemodAdd', 'TotRmsAbvGrd', 'GarageArea', 'Fireplaces']
+X, y = ames[features], ames['SalePrice']
+
+X_train, X_rest, y_train, y_rest = train_test_split(X, y, train_size=0.6, random_state=0)
+X_test, X_new, y_test, y_new = train_test_split(X_rest, y_rest, train_size=100, random_state=0)
+
+test_rmse = {}   # try 20 depths, scoring each on the same 100 test homes
+for depth in range(1, 21):
+    tree = DecisionTreeRegressor(max_depth=depth, random_state=42).fit(X_train, y_train)
+    test_rmse[depth] = root_mean_squared_error(y_test, tree.predict(X_test))
+best_depth = min(test_rmse, key=test_rmse.get)
+
+# score the chosen depth on homes that played no part in the choice
+best_tree = DecisionTreeRegressor(max_depth=best_depth, random_state=42).fit(X_train, y_train)
+new_rmse = root_mean_squared_error(y_new, best_tree.predict(X_new))
+
+print(f"Depth chosen by the test set:   {best_depth}")
+print(f"What you report (test RMSE):    ${test_rmse[best_depth]:,.0f}")
+print(f"What you get (new-home RMSE):   ${new_rmse:,.0f}")
+```
+
+::: {.notes}
+**Timing: ~4 minutes.** Live code. Every number here is computed at render time.
+
+**Walk the highlighted lines:**
+
+1. **Lines 9–10:** Three pieces this time: 60% to train, a small 100-home **test set** (the one we keep checking), and the remaining 484 homes as **new homes** that stand in for the future.
+2. **Lines 12–16:** Exactly last week's habit. Try depths 1–20, score each on the test set, keep the winner.
+3. **Lines 18–20:** Score the winner on the new homes, which played no part in choosing it.
+4. **Lines 22–24:** The test RMSE we'd report is lower (better) than the RMSE on new homes. Same story as the Optimism Gap, now on real data.
+
+**Why `random_state=0` for the split:** with Ames's handful of very expensive homes, a 100-home test set can be noticeably easier or harder than average just by luck. On this split, the test set and the new homes are equally hard on average across all 20 depths, so the gap you see comes from *choosing the best*, not from a lucky test set. If a student asks: across many random splits, the reported RMSE comes in optimistic most of the time.
+
+**Extra point if time allows:** the depth chosen by the test set isn't even the depth that does best on new homes. Peeking inflates the score *and* can pick the wrong model.
+
+**Transition:** "Let's put this into words, because you'll need to explain it to someone who's never heard of a test set."
 :::
 
 ## Think-Pair-Share {.smaller}
 
-**Scenario:** You're a data scientist at a retail company. You build a customer churn prediction model. During development, you try 10 different model configurations, evaluating each on your test set. You pick the best one (test accuracy: 87%) and present it to management.
+**Scenario:** You're a data scientist at a retail company building a customer churn model. Just like the Optimism Gap chart, you try 10 model configurations, check each one on your test set, and keep the best (test accuracy: 87%). You present 87% to management.
 
 :::: {.columns}
 ::: {.column width="70%"}
 
 **Discuss with your neighbor:**
 
-- Why might the 87% test accuracy be misleading?
-- What could happen when you deploy this model to production?
+- Which line on the Optimism Gap chart is the 87%: what you *report* or what you *get*?
+- What will management see once the model runs on next quarter's customers?
 - How would you explain this problem to a non-technical manager?
 
 :::
@@ -190,19 +342,23 @@ Important framing: This isn't their fault! The simple train/test split was the r
 Then we'll take a few responses...
 
 ::: {.notes}
-**After timer expires, cold-call 2-3 groups to share.**
+**Timing: ~6 minutes** (4-minute timer + 2 minutes of responses).
+
+**After the timer expires, cold-call 2–3 pairs.**
 
 Expected student responses:
-1. **Why misleading?** - "We optimized for that specific test set, so the score is inflated"
-2. **Production impact** - "The real-world accuracy will probably be lower"
-3. **Manager explanation** - "We accidentally used our final exam as practice"
+
+1. **Which line?** "The orange one: it's the best test score after trying 10 things, so it's the luckiest, not the truest."
+2. **What will management see?** "Lower accuracy than 87%. Probably a few points lower, like the blue line."
+3. **Manager explanation:** "We used our final exam as a practice test, so the grade is inflated." Or: "We tried 10 lottery tickets and are reporting the winning one as if it were typical."
 
 **Key points to emphasize:**
-- Each peek = one opportunity to overfit to test set
-- The more decisions you make based on test set, the less trustworthy it becomes
-- This is a subtle, insidious problem - easy to do accidentally
 
-**Transition to solution:** "So we need a way to make all these decisions - comparing models, tuning hyperparameters - WITHOUT ever looking at the test set. That's exactly what cross-validation solves."
+- Each check on the test set is one more chance to fit its noise.
+- The more decisions you make on the test set, the less its score means.
+- It's subtle and easy to do by accident. We did it all of last week.
+
+**Transition to solution:** "So we need a way to make all these decisions, comparing models and tuning hyperparameters, without ever looking at the test set. That's exactly what cross-validation does."
 :::
 
 # Solution: Cross-Validation {background="#43464B"}
