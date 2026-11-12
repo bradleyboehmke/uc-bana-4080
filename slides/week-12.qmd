@@ -29,14 +29,34 @@ execute:
 
 * Quick overview of today's plan:
 
-  * Why the simple train/test split isn't enough
-  * How cross-validation solves the "peeking problem"
-  * Finding optimal model settings systematically
-  * Turning raw data into powerful features
+  * The peeking problem: why our test scores have been too optimistic
+  * Cross-validation: honest scores without touching the test set
+  * Hyperparameter tuning: finding the best settings systematically
+  * Feature engineering: turning raw data into model-ready inputs
+  * Putting it all together in one leak-free workflow
 
-::: {.callout-important}
-This week is all about trying to optimize model performance!
-:::
+```{python}
+#| include: false
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+# Shared settings for the interactive (Plotly) slides
+ORANGE, BLUE = '#e58139', '#399de5'   # same color pair as week 11
+PLOTLY_CONFIG = {'displayModeBar': False}
+
+def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
+    """Build slider steps that show the fixed traces plus one group of traces per step."""
+    steps = []
+    for i in range(n_steps):
+        visible = [True] * n_fixed + [False] * (n_steps * traces_per_step)
+        for k in range(traces_per_step):
+            visible[n_fixed + i * traces_per_step + k] = True
+        steps.append(dict(method='update', label=labels[i],
+                          args=[{'visible': visible}, {'title.text': titles[i]}]))
+    return steps
+```
 
 ::: {.notes}
 This week ties together everything students have learned about modeling. We're moving from "textbook simple" to "production ready." These three topics (CV, hyperparameter tuning, feature engineering) are what separate beginner data scientists from professionals.
@@ -44,56 +64,55 @@ This week ties together everything students have learned about modeling. We're m
 Key message: The techniques from previous weeks were pedagogically useful, but now we're learning the proper workflow that ensures honest, reliable model performance.
 :::
 
-# Discussion: Homework & Questions {background="#43464B"}
+## 📓 Follow Along in the Notebook
 
-## Questions from Week 11? {.smaller}
+::: {.callout-tip}
+## Week 12 Lecture Notebook
 
-* Random Forests and ensemble methods?
-* Feature importance interpretation?
-* When to use trees vs. other models?
-* Anything confusing in the quiz or class lab?
-* Time to ask!
+Open the Lecture notebook in Colab now and follow along as we work through today's examples on cross-validation, hyperparameter tuning, and feature engineering pipelines.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-12-lecture.ipynb)
+:::
+
+# Week 11 Recap {background="#43464B"}
+
+## Last Week in 60 Seconds {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🌳 Decision trees]{.card-title}
+
+Learn **if-then rules** from data, choosing each split to make the groups as pure as possible
+:::
+::: {.card}
+[🎲 Instability]{.card-title}
+
+Small changes to the data reshape a single tree, and an unlimited tree **memorizes noise**
+:::
+::: {.card}
+[🌲 Random forests]{.card-title}
+
+**Bootstrap samples + feature randomness** create diverse trees whose errors cancel out
+:::
+::: {.card}
+[🔍 Importance & PDPs]{.card-title}
+
+Feature importance shows **which** features matter; partial dependence plots show **how**
+:::
+:::
 
 . . .
 
-:::: {.columns}
-::: {.column width='70%'}
-::: {.callout}
-## Activity
-
-Converse with your neighbor and identify...
-
-* 1 new thing you learned last week that was clear and well explained
-* 1 thing we covered last week that is still confusing
+::: {.callout-tip}
+Last week we kept choosing settings like `max_depth` by checking the test set. Today we learn why that's a problem, and the professional way to make those choices.
 :::
-:::
-::: {.column width='30%'}
-<center>
-
-<div id="3minWaiting"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minWaiting", 180, "slide");
-    });
-</script>
-</center>
-:::
-::::
 
 ::: {.notes}
-Use this time to surface any lingering questions from Week 11 (Random Forests, gradient boosting).
+**Timing: ~2 minutes.** A quick reconnect, not a re-teach.
 
-After the pair discussion, ask 2-3 students to share:
-- What concept clicked for them?
-- What still needs clarification?
+Walk the four cards left to right, top to bottom. One sentence each.
 
-Common confusions from Week 11:
-- How feature importance is calculated
-- When to use Random Forest vs. single decision tree
-- Understanding out-of-bag (OOB) error
-
-Bridge to today: "Last week you learned powerful tree-based models. This week, we learn how to tune them properly, evaluate them honestly, and prepare data to maximize their effectiveness."
+**Transition:** "Every one of those models had settings we had to choose. Think about how we chose them last week... we tried a few and looked at the test score. That habit has a name, and it's today's first problem."
 :::
 
 # The Problem: We've Been Peeking {background="#43464B"}
@@ -493,7 +512,7 @@ Mean CV Accuracy: 0.852 (+/- 0.008)
 
 **Why this matters:**
 
-* **Test set contamination** is subtle and easy to do accidentally
+* **Test-set peeking** is subtle and easy to do accidentally
 * Every peek at the test set makes your performance estimates **less trustworthy**
 * Cross-validation gives you **unlimited practice exams** while keeping your final exam pristine
 * This is the difference between **amateur** and **professional** data science
@@ -507,7 +526,7 @@ Mean CV Accuracy: 0.852 (+/- 0.008)
 - Test set = final evaluation only
 
 **Emphasize the examples:**
-- "Want to compare Random Forest vs. Gradient Boosting? Use CV!"
+- "Want to compare a single tree vs. a random forest? Use CV!"
 - "Want to find best max_depth? Use CV!"
 - "Want to see if feature scaling helps? Use CV!"
 - "Want to try different imputation strategies? Use CV!"
@@ -681,7 +700,7 @@ plt.show()
 ```
 
 ::: {.callout-caution}
-More advanced models (i.e. Decision Trees, Random Forests, Gradient Boosted Machines) are more flexible to align with data patterns; however, it is up to us to tune these models to balance the bias-variance tradeoff!
+More flexible models (e.g., Decision Trees, Random Forests, KNN with a small K) can align more closely with data patterns; however, it is up to us to tune these models to balance the bias-variance tradeoff!
 :::
 
 ::: {.notes}
@@ -1041,7 +1060,7 @@ print(f"Best CV score: {grid_search.best_score_:.3f}")
 
 ## Think-Pair-Share: Spotting Overfitting {.smaller}
 
-**Scenario:** You've tuned a gradient boosting model and see these results:
+**Scenario:** You've tried two random forest configurations and see these results:
 
 ```
 Configuration A:
@@ -1603,7 +1622,7 @@ flowchart TD
 - "Test set stays pristine"
 
 Examples of decisions in Stage 2:
-- Should I use Random Forest or Gradient Boosting?
+- Should I use a single decision tree or a random forest?
 - What max_depth works best?
 - Should I scale my features?
 - Should I add polynomial features?
@@ -1655,233 +1674,88 @@ Examples of decisions in Stage 2:
 **Transition:** "Let's see what you'll practice with this in Thursday's lab."
 :::
 
-# Looking Ahead {background="#43464B"}
+# Looking Forward {background="#43464B"}
 
-## Key Takeaways
+## Key Takeaways {.smaller}
 
-* **Cross-validation** prevents test set contamination and gives reliable performance estimates
-* **Hyperparameter tuning** finds the sweet spot in the bias-variance tradeoff
-* **Feature engineering** turns raw data into powerful inputs (often matters more than algorithms!)
-* **Pipelines** ensure reproducible, leak-free workflows
-* **The 5-stage workflow** is how professionals build trustworthy models
+* **Test-set peeking**: every decision made by checking the test set makes its score more optimistic
+* **Cross-validation**: compare models and settings on the training set only, and get a mean *and* a spread
+* **Hyperparameter tuning**: `GridSearchCV` searches settings with CV to balance underfitting and overfitting
+* **Feature engineering**: impute, encode, scale, and create features so models can use the data
+* **Pipelines**: put preprocessing inside the CV loop so nothing leaks from validation or test data
+* **The workflow**: split once, make every decision with CV, retrain, then touch the test set **once**
 
 ::: {.notes}
-**Reinforce the big picture:**
+**Timing: ~2 minutes.** Read each takeaway and connect it to the slide where students saw it.
 
-**1. Cross-Validation**
-- "This is how you make unlimited decisions without peeking at test set"
-- "5-fold or 10-fold is standard"
-- "Built into GridSearchCV"
-- "Gives you mean AND variance of performance"
-
-**2. Hyperparameter Tuning**
-- "Every model has knobs to turn"
-- "GridSearchCV systematically searches combinations"
-- "Watch for overfitting (big train/validation gap)"
-- "Balance between training and validation performance"
-
-**3. Feature Engineering**
-- "Often the highest-leverage activity in ML"
-- "Domain knowledge is key"
-- "Four main categories: encoding, scaling, creating, handling missing"
-- "Talk to experts in the problem domain!"
-
-**4. Pipelines**
-- "Non-negotiable for production ML"
-- "Prevents data leakage"
-- "Makes deployment easier"
-- "One object, entire workflow"
-
-**5. The Complete Workflow**
-- "5 stages: Split, CV, Select, Retrain, Test"
-- "Test set touched ONCE"
-- "Everything else uses CV on training set"
-- "This is what separates beginners from professionals"
-
-**Connecting to previous weeks:**
-- "You've learned great models: linear regression, trees, forests"
-- "This week: How to tune them properly and prepare data right"
-- "Next week: More advanced topics building on this foundation"
-
-**The meta-lesson:**
-"Data science isn't just about knowing algorithms. It's about having a disciplined workflow that produces trustworthy results. These three techniques form the foundation of professional ML practice."
-
-**Motivate Thursday lab:**
-"Reading about this is one thing. Doing it is another. Thursday you'll practice the full workflow with real data. You'll see common mistakes and how to avoid them. Come ready to code!"
+**The meta-lesson:** "Data science isn't just knowing algorithms. It's having a disciplined workflow that produces numbers you can trust."
 :::
 
-## Connection to Thursday's Lab
+## More in Your Readings {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[📊 Multiple metrics at once]{.card-title}
+
+`cross_validate()` scores a model on several metrics in one pass, and reports training scores too
+:::
+::: {.card}
+[🎲 Smarter searches]{.card-title}
+
+Random search and Bayesian optimization, for when a full grid is too expensive
+:::
+::: {.card}
+[🕳️ Missing-data strategies]{.card-title}
+
+When to drop vs. impute, which imputation to use, and missingness indicators
+:::
+::: {.card}
+[🔤 Beyond-the-basics encodings]{.card-title}
+
+Ordinal encoding for ordered categories, and options like target encoding for categories with many levels
+:::
+:::
+
+::: {.notes}
+Chapters 28-30 go further than today's lecture. Point out that these are all variations on the same workflow: CV still drives every decision.
+:::
+
+## Thursday's Lab
 
 ::: {.callout-tip}
 ## This Week's Lab Preview
 
 In Thursday's lab, you'll get hands-on practice with:
 
-* Implementing the 5-stage workflow from scratch
-* Using GridSearchCV to tune a Random Forest
-* Building feature engineering pipelines
-* Comparing performance with and without proper CV
-* Seeing what happens when you peek at the test set (spoiler: bad things!)
+* Walking through cross-validation, `GridSearchCV`, scaling, and a `ColumnTransformer` pipeline on the Ames housing data
+* Comparing models with cross-validation instead of the test set
+* Tuning a random forest with `GridSearchCV`
+* Building a feature engineering pipeline and checking which features matter most
 
-Come prepared to apply today's concepts!
 :::
-
-::: {.notes}
-**Set expectations for Thursday:**
-
-**What students will do:**
-
-1. **Start with the "wrong" way:**
-   - Split data
-   - Try different hyperparameters, checking test set each time
-   - See how test score becomes unreliable
-   - Experience the peeking problem firsthand
-
-2. **Then do it the right way:**
-   - Split data
-   - Use cross-validation for all decisions
-   - Tune with GridSearchCV
-   - Evaluate on test set ONCE
-   - Compare: Which test score is trustworthy?
-
-3. **Feature engineering practice:**
-   - Encode categorical variables
-   - Scale numerical features
-   - Create new features (interactions, polynomials)
-   - Handle missing data
-   - Build pipelines to prevent leakage
-
-4. **Full workflow integration:**
-   - Combine CV + GridSearchCV + Pipelines
-   - Complete end-to-end ML project
-   - Report final, honest performance
-
-**Lab structure:**
-- Part 1: Cross-validation basics
-- Part 2: GridSearchCV hyperparameter tuning
-- Part 3: Feature engineering and pipelines
-- Part 4: Complete workflow on a new dataset
-
-**What to bring:**
-- Laptop with Python environment
-- Course materials (slides, chapter notes)
-- Questions from today's lecture
-- Willingness to make mistakes and learn!
-
-**Time allocation:**
-- Expect to spend 2-3 hours
-- Work in pairs (encouraged)
-- TAs available for questions
-
-**Common lab challenges to preview:**
-
-1. **Forgetting to split before CV:**
-   - Students try to CV on full dataset
-   - Remind: Split first, CV on training set
-
-2. **Pipeline syntax:**
-   - Double underscore for nested parameters
-   - `model__n_estimators` not `n_estimators`
-
-3. **Interpreting CV scores:**
-   - Understanding mean and std
-   - What's "good enough" variance?
-
-4. **GridSearchCV taking forever:**
-   - Remind about computational cost
-   - Start with coarse grid, then refine
-   - Use n_jobs=-1 for parallelization
-
-**Transition:** "Any questions before we wrap up?"
-:::
-
-# Questions & Next Steps {background="#43464B"}
-
-## Looking Ahead
-
-**Btwn now & Thursday:** Complete reading Chapters 28-30
-
-**Thursday Lab:** Hands-on practice with CV, hyperparameter tuning, and feature engineering
-
-**This weekend:** Week 12 quiz & homework (based on lab)
-
-. . .
 
 <br>
 
-**Next Week:** Move into the world of unsupervised ML
+::: {.callout-important}
+## Homework
 
-**Next next week:** Advanced topics & Final project prep!
+Thursday's lab will lead into this week's homework assignment.
+
+:::
 
 ::: {.notes}
-**Homework reminders:**
-
-**Readings:**
-- Chapter 28: Cross-Validation (focus on the 5-stage workflow)
-- Chapter 29: Hyperparameter Tuning (understand bias-variance tradeoff)
-- Chapter 30: Feature Engineering (the four main techniques)
-
-**Quiz:**
-- Covers all three chapters
-- Due before next Tuesday
-- Tests conceptual understanding
-- 10 questions, multiple choice and scenarios
-
-**What to review before Thursday:**
-1. How k-fold cross-validation splits data
-2. The difference between overfitting and underfitting
-3. When to scale features (which algorithms care)
-4. Why pipelines prevent data leakage
-
-**Office hours:**
-- Tuesday/Thursday 2-3pm
-- Or by appointment
-- Come with specific questions
-
-**TA sessions:**
-- Wednesday evenings
-- Great for lab prep
-
-**Resources:**
-- Scikit-learn documentation for GridSearchCV
-- Chapter companion notebooks
-- Previous lab solutions (for reference)
+Remind students to read Chapters 28-30 before Thursday. Grid searches in the lab take a few minutes to run, so they should start the Challenges early rather than wait for the last one.
 :::
 
 ## Any Final Questions?
 
-* About today's concepts?
+* About cross-validation and why we stop peeking at the test set?
+* About hyperparameter tuning and `GridSearchCV`?
+* About feature engineering and pipelines?
 * About Thursday's lab?
-* About upcoming assignments?
-* About rest of the term?
 
-::: {.notes}
-**Common final questions:**
-
-**Q: "Do I need to memorize the GridSearchCV syntax?"**
-A: "No, but understand what it does. You can always look up syntax. Focus on when and why to use it."
-
-**Q: "Will the quiz cover all three chapters equally?"**
-A: "Yes, roughly equal coverage. Some questions integrate concepts (like 'when to scale AND use CV')."
-
-**Q: "How long will Thursday's lab take?"**
-A: "Plan for 2-3 hours. Some finish faster, some take longer. No rush - learning matters more than speed."
-
-**Q: "Can I use GridSearchCV on the midterm project?"**
-A: "Absolutely! In fact, I encourage it. Shows you understand proper workflow."
-
-**Q: "What if my CV scores are really different across folds?"**
-A: "High variance in CV scores suggests model instability. Might need more data, simpler model, or different features. We'll discuss in lab."
-
-**Q: "Do I always need to use pipelines?"**
-A: "For any real project: yes. Only exception is exploratory analysis with no preprocessing. When in doubt, use a pipeline."
-
-**Closing message:**
-"This week's topics - CV, hyperparameter tuning, feature engineering - are what separate textbook ML from production ML. Master these, and you'll be doing professional-quality data science. See you Thursday!"
-:::
-
----
+<br><br>
 
 <center>
-**See you Thursday for hands-on practice!**
+**See you Thursday for hands-on model tuning!**
 </center>
