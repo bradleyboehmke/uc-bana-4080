@@ -56,6 +56,10 @@ def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
         steps.append(dict(method='update', label=labels[i],
                           args=[{'visible': visible}, {'title.text': titles[i]}]))
     return steps
+
+def usd(value):
+    """Dollar label for Plotly text. Plotly reads a pair of '$' signs as LaTeX, so use the HTML entity."""
+    return f'&#36;{value:,.0f}'
 ```
 
 ::: {.notes}
@@ -499,7 +503,7 @@ flowchart TD
     style K fill:#ff6b6b
 ```
 
-**Problem:** Multiple peeks contaminate test set!
+**Problem:** every peek inflates the test score!
 
 :::
 ::: {.column width="50%"}
@@ -539,7 +543,7 @@ flowchart TD
 - Train model → evaluate on test → not good? → try again
 - Each arrow to "Evaluate on Test" is another peek
 - The test set (red) is being used repeatedly
-- This is what we've been doing in Chapters 25-27
+- This is what we've been doing in Modules 9–11
 
 **Right side (Right Way):**
 - Test set is locked away (green - safe)
@@ -559,7 +563,7 @@ flowchart TD
    - Right way: Decisions based on CV scores
 
 3. **Test set purpose:**
-   - Wrong way: Used as validation set (contaminated)
+   - Wrong way: Used as a validation set (peeked at over and over)
    - Right way: Used only for final honest evaluation
 
 **Key message:** "The difference between these approaches is the difference between amateur and professional data science."
@@ -570,187 +574,231 @@ flowchart TD
 **Transition:** "Let's zoom in on the right side - how does cross-validation actually work in practice?"
 :::
 
-## How K-Fold Cross-Validation Works {.smaller}
+## K-Fold, One Round at a Time {.smaller}
 
-:::: {.columns}
-::: {.column width="45%"}
-
-**The idea:**
-
-* Split **training data** into K equal parts (folds)
-* Rotate which fold is used for validation
-* Average results across all K iterations
-
-**Benefits:**
-
-* Test set stays completely untouched
-* Every training point gets validated once
-* More reliable performance estimates
-* Can make unlimited decisions without peeking
-
-:::
-::: {.column width="55%"}
+Each round, one fold of the **training data** sits out for validation. **CV score** = average of the rounds.
 
 ```{python}
 #| echo: false
-#| fig-width: 7
-#| fig-height: 5
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+#| fig-align: center
+# Same split and tree as the code on the next slide
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+from sklearn.model_selection import cross_val_score
 
-fig, ax = plt.subplots(figsize=(7, 5))
+K = 5
+# The exact call from the next slide, so the bars always match its printed scores
+fold_rmse = -cross_val_score(DecisionTreeRegressor(max_depth=6, random_state=42), X_train, y_train,
+                             cv=K, scoring='neg_root_mean_squared_error')
+running_avg = np.cumsum(fold_rmse) / np.arange(1, K + 1)
+fold_size = len(X_train) // K
 
-# Define colors
-train_color = '#51cf66'  # Green
-validate_color = '#ffd43b'  # Yellow/Orange
+rows = [f'Round {r}' for r in range(1, K + 1)]
+cols = [f'Fold {c}' for c in range(1, K + 1)]
+fig = make_subplots(rows=1, cols=2, column_widths=[0.55, 0.45], shared_yaxes=True,
+                    horizontal_spacing=0.04,
+                    subplot_titles=[f'Training homes in {K} folds (~{fold_size} each)',
+                                    'Validation RMSE each round (◇ = running average)'])
+for step in range(K):
+    # Grid: rounds 1..step+1 drawn; validation fold = 1, training folds = 0, not yet = blank
+    fold_roles = np.full((K, K), np.nan)
+    for r in range(step + 1):
+        fold_roles[r] = 0
+        fold_roles[r, r] = 1
+    labels = [['' if np.isnan(v) else ('Validate' if v == 1 else 'Train') for v in row]
+              for row in fold_roles]
+    fig.add_trace(go.Heatmap(
+        z=fold_roles, x=cols, y=rows, text=labels, texttemplate='%{text}', textfont=dict(size=13),
+        colorscale=[[0, '#d6e9f8'], [1, ORANGE]], zmin=0, zmax=1, showscale=False,
+        xgap=3, ygap=3, hoverinfo='skip', visible=False), row=1, col=1)
+    # Bars: each round's validation score, current round highlighted
+    fig.add_trace(go.Bar(
+        x=fold_rmse[:step + 1], y=rows[:step + 1], orientation='h',
+        marker_color=[BLUE] * step + [ORANGE],
+        text=[usd(v) for v in fold_rmse[:step + 1]], textposition='inside',
+        insidetextanchor='start', textfont=dict(color='white', size=13),
+        hoverinfo='skip', showlegend=False, visible=False), row=1, col=2)
+    # Running average after each round
+    fig.add_trace(go.Scatter(
+        x=running_avg[:step + 1], y=rows[:step + 1], mode='lines+markers',
+        line=dict(color='black', width=2, dash='dot'),
+        marker=dict(symbol='diamond', size=11, color='white', line=dict(color='black', width=2)),
+        showlegend=False, visible=False, hoverinfo='skip'), row=1, col=2)
 
-# 5 iterations
-iterations = 5
-folds = 5
+titles = [f'Round {i + 1}: validate on fold {i + 1} → RMSE {usd(fold_rmse[i])}'
+          f'  |  Running average: <b>{usd(running_avg[i])}</b>' for i in range(K - 1)]
+titles.append(f'CV score = average of {K} rounds: <b>{usd(running_avg[-1])}</b>'
+              f'  (std {usd(fold_rmse.std())})')
+steps = slider_steps(0, K, 3, [f'Round {i}' for i in range(1, K + 1)], titles)
+for trace in fig.data[:3]:
+    trace.visible = True
 
-for i in range(iterations):
-    y_pos = iterations - i - 0.5
-    # Draw each fold
-    for j in range(folds):
-        if j == i:
-            # This fold is validation
-            rect = mpatches.Rectangle((j, y_pos - 0.35), 1, 0.7,
-                                     facecolor=validate_color,
-                                     edgecolor='black', linewidth=2)
-        else:
-            # This fold is training
-            rect = mpatches.Rectangle((j, y_pos - 0.35), 1, 0.7,
-                                     facecolor=train_color,
-                                     edgecolor='black', linewidth=1.5)
-        ax.add_patch(rect)
-
-        # Add text
-        if j == i:
-            ax.text(j + 0.5, y_pos, 'Validate', ha='center', va='center',
-                   fontsize=10, fontweight='bold')
-        else:
-            ax.text(j + 0.5, y_pos, 'Train', ha='center', va='center',
-                   fontsize=10)
-
-    # Add iteration label and score arrow
-    ax.text(-0.7, y_pos, f'Iteration {i+1}', ha='right', va='center',
-           fontsize=11, fontweight='bold')
-    ax.annotate('', xy=(5.5, y_pos), xytext=(5.2, y_pos),
-               arrowprops=dict(arrowstyle='->', lw=1.5))
-    ax.text(5.8, y_pos, f'Score {i+1}', ha='left', va='center',
-           fontsize=9, style='italic')
-
-# Add fold labels at top
-for j in range(folds):
-    ax.text(j + 0.5, iterations + 0.3, f'Fold {j+1}', ha='center',
-           fontsize=11, fontweight='bold')
-
-# Add final averaging box
-ax.text(2.5, -0.8, 'Final CV Score = Average of 5 scores',
-       ha='center', fontsize=12, fontweight='bold',
-       bbox=dict(boxstyle='round', facecolor='lightblue', edgecolor='black', linewidth=2))
-
-# Set axis limits and remove axes
-ax.set_xlim(-1.2, 6.5)
-ax.set_ylim(-1.3, iterations + 0.6)
-ax.axis('off')
-
-plt.title('5-Fold Cross-Validation: Each Fold Takes a Turn as Validation Set',
-         fontsize=13, fontweight='bold', pad=10)
-plt.tight_layout()
-plt.show()
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=30))],
+    yaxis=dict(autorange='reversed'),
+    xaxis2=dict(range=[0, fold_rmse.max() * 1.1], tickformat='$,.0f'),
+    height=440, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.update_xaxes(showgrid=False, row=1, col=1)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
-:::
-::::
-
 ::: {.notes}
-**This is the key slide - take time here.**
+**Timing: ~5 minutes.** This is the idea students just invented in the Think-Pair-Share, made concrete.
 
-**Walk through the diagram:**
-1. First, split data into train (80%) and test (20%)
-2. Lock the test set away - don't touch it!
-3. Take the training set and split into K folds (5 shown here)
-4. In each iteration, use 1 fold for validation, rest for training
-5. After 5 iterations, every point has been validated exactly once
-6. Average the 5 validation scores
+**Heads-up on the numbers:** from here on we use the usual 80/20 split (about 1,170 training homes). The peeking demo used 60% for training only because it also held back "new homes" to show the gap.
 
-**Important clarifications:**
-- K=5 is common, but K=10 is also popular
-- Each data point is in exactly ONE fold
-- Each point gets validated ONCE (when its fold is the validation set)
-- The model is retrained K times (5 times here)
+**Start at Round 1.** "We take only the training homes, about 1,170 of them, and cut them into 5 folds of about 233. In round 1, fold 1 sits out (orange). We train a depth-6 tree on the other four folds and score it on fold 1. That score drops into the bar on the right."
 
-**Why this solves the peeking problem:**
-- We're only using training data for all decisions
-- Test set remains pristine
-- We get K different validation scores, so we see variance/stability
+**Slide through Rounds 2–5.** Each round a different fold sits out, the tree is retrained from scratch, and a new bar appears. The diamond is the running average.
 
-**Common student question:** "Isn't this expensive computationally?"
-**Answer:** "Yes - if K=5, you train 5 models instead of 1. But it's worth it for honest performance estimates. And computers are fast!"
+**At Round 5, point out:**
 
-**Transition:** "Now let's see how this works in code with sklearn."
+- Every training home was used for validation exactly once, and for training four times.
+- The five fold scores differ a lot (roughly 39k to 62k). Any one of them could have been "the" validation score if we'd held out just one chunk. Averaging smooths that out.
+- The test set never appears on this slide. It's still locked away.
+- We trained 5 models to get one score. K=5 and K=10 are the common choices.
+
+**Common question:** "Which of the 5 models do we keep?" None of them. CV is for *scoring a choice* (here, depth 6). Once the choice is made, you retrain on the full training set.
+
+**Transition:** "That final number is exactly what scikit-learn's `cross_val_score` gives you in one line."
 :::
 
 ## Cross-Validation in Scikit-Learn {.smaller}
 
-```{python}
-#| eval: false
-#| code-line-numbers: "1,10"
-from sklearn.model_selection import cross_val_score
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+Same Ames features and depth-6 tree, in two steps:
 
-# Step 1: Split data (test set locked away)
+```{python}
+#| code-line-numbers: "|3-4|6-10|12-13"
+from sklearn.model_selection import train_test_split, cross_val_score
+
+# Step 1: split first, then lock the test set away
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Step 2: Use CV to evaluate on TRAINING SET ONLY
-dt = DecisionTreeClassifier(max_depth=5)
-cv_scores = cross_val_score(dt, X_train, y_train, cv=5, scoring='accuracy')
+# Step 2: 5-fold CV on the TRAINING set only
+tree = DecisionTreeRegressor(max_depth=6, random_state=42)
+cv_scores = cross_val_score(tree, X_train, y_train, cv=5,
+                            scoring='neg_root_mean_squared_error')
+cv_rmse = -cv_scores   # scikit-learn reports negative RMSE so that higher is always better
 
-print(f"CV Scores: {cv_scores}")
-print(f"Mean CV Accuracy: {cv_scores.mean():.3f} (+/- {cv_scores.std():.3f})")
+print("RMSE by fold:", ", ".join(f"${v:,.0f}" for v in cv_rmse))
+print(f"CV RMSE: ${cv_rmse.mean():,.0f} ± ${cv_rmse.std():,.0f}")
 ```
 
-**Output:**
-```
-CV Scores: [0.847, 0.853, 0.862, 0.841, 0.858]
-Mean CV Accuracy: 0.852 (+/- 0.008)
-```
-
-**Notice:** We never touched `X_test` or `y_test`!
+**Notice:** `X_test` and `y_test` never appear after line 4.
 
 ::: {.notes}
-**Walk through the code step by step:**
+**Timing: ~4 minutes.** Live code; every number is computed at render time.
 
-1. **Line 1-3:** Import what we need
-2. **Line 5-6:** First, split into train/test. Test set is now locked away.
-3. **Line 8-10:** Create model and run 5-fold CV on TRAINING data only
-4. **Line 12-13:** Print results
+**Walk the highlighted lines:**
 
-**Key points to emphasize:**
+1. **Lines 3–4:** Split first. From here on, the test set is locked away.
+2. **Lines 6–10:** One call runs all 5 rounds from the last slide. `cv=5` is the number of folds.
+3. **Lines 12–13:** The five fold scores, then their mean ± std. These are the same five numbers as the bars on the previous slide.
 
-**The cv_scores array:**
-- Contains 5 numbers (one per fold)
-- Shows the validation accuracy for each iteration
-- Notice they're similar but not identical (0.841 to 0.862)
-- This variance tells us about model stability
+**The negative sign:** scikit-learn's scorers always treat *higher as better*, so error metrics come back negative (`neg_root_mean_squared_error`). We flip the sign to get ordinary RMSE. Students will trip on this in the Lab, so say it out loud.
 
-**The mean and standard deviation:**
-- Mean (0.852) is our best estimate of true performance
-- Std (0.008) tells us how consistent the model is
-- Low std = stable, reliable model
-- High std = might be sensitive to which data it sees
+**Mean vs. std:**
 
-**What we achieved:**
-- Made a decision (max_depth=5) without peeking at test set
-- Got 5 different validation checks instead of 1
-- Still have our pristine test set for final evaluation
+- The **mean** is our estimate of how a depth-6 tree will do on new homes.
+- The **std** tells us how much that score moves depending on which homes are held out. A big std means one validation score alone could be misleading.
 
-**Common student question:** "When do we use the test set?"
-**Answer:** "Only ONCE at the very end after ALL decisions are made. We'll see the full workflow in a moment."
+**Common question:** "When do we use the test set?" Once, at the very end, after every decision is made. We'll see the full workflow at the end of class.
 
-**Transition:** "Now that we understand CV, let's see how to use it for hyperparameter tuning."
+**Transition:** "How much could one score move? Let's find out by trying 50 different splits."
+:::
+
+## How Lucky Was Your Split? {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
+n_seeds = 50
+split_rmse = []
+for seed in range(n_seeds):
+    seed_X_train, seed_X_test, seed_y_train, seed_y_test = train_test_split(
+        X, y, test_size=0.2, random_state=seed)
+    split_tree = DecisionTreeRegressor(max_depth=6, random_state=42).fit(seed_X_train, seed_y_train)
+    split_rmse.append(root_mean_squared_error(seed_y_test, split_tree.predict(seed_X_test)))
+split_rmse = np.array(split_rmse)
+jitter = np.random.default_rng(0).uniform(-0.3, 0.3, n_seeds)   # spread dots vertically
+cv_mean, cv_std = cv_rmse.mean(), cv_rmse.std()   # from the code slide
+
+fig = go.Figure()
+titles = []
+for n in range(1, n_seeds + 1):
+    # splits seen so far
+    fig.add_trace(go.Scatter(
+        x=split_rmse[:n], y=jitter[:n], mode='markers',
+        marker=dict(size=11, color='lightgray', line=dict(color='gray', width=1)),
+        name='One train/test split', visible=False,
+        hovertemplate='Test RMSE: $%{x:,.0f}<extra></extra>'))
+    # the split you happened to get this time
+    fig.add_trace(go.Scatter(
+        x=[split_rmse[n - 1]], y=[jitter[n - 1]], mode='markers+text',
+        marker=dict(size=15, color=ORANGE, line=dict(color='black', width=1)),
+        text=[usd(split_rmse[n - 1])], textposition='top center', textfont=dict(size=14),
+        name='The split you got', visible=False, hoverinfo='skip'))
+    titles.append(f'Split #{n}: you would report <b>{usd(split_rmse[n - 1])}</b>'
+                  f'  |  so far: {usd(split_rmse[:n].min())} to {usd(split_rmse[:n].max())}')
+
+# Final state: every split, plus the CV mean ± std from ONE training set
+fig.add_trace(go.Scatter(
+    x=split_rmse, y=jitter, mode='markers',
+    marker=dict(size=11, color='lightgray', line=dict(color='gray', width=1)),
+    name='One train/test split', visible=False, hoverinfo='skip'))
+fig.add_trace(go.Scatter(
+    x=[cv_mean - cv_std, cv_mean + cv_std, cv_mean + cv_std, cv_mean - cv_std, cv_mean - cv_std],
+    y=[-0.5, -0.5, 0.5, 0.5, -0.5], mode='lines', fill='toself',
+    fillcolor='rgba(57, 157, 229, 0.18)', line=dict(color=BLUE, width=1),
+    name='CV mean ± std', visible=False, hoverinfo='skip'))
+fig.add_trace(go.Scatter(
+    x=[cv_mean, cv_mean], y=[-0.5, 0.5], mode='lines+text', line=dict(color=BLUE, width=3),
+    text=['', f'CV: {usd(cv_mean)} ± {usd(cv_std)}'], textposition='top center',
+    textfont=dict(size=14, color=BLUE), showlegend=False, visible=False, hoverinfo='skip'))
+titles.append(f'One 5-fold CV run: <b>{usd(cv_mean)} ± {usd(cv_std)}</b>'
+              f'  |  {n_seeds} single splits ranged {usd(split_rmse.min())} to {usd(split_rmse.max())}')
+
+n_traces = len(fig.data)
+steps = []
+for i in range(n_seeds):
+    visible = [False] * n_traces
+    visible[2 * i] = visible[2 * i + 1] = True
+    steps.append(dict(method='update', label=str(i + 1),
+                      args=[{'visible': visible}, {'title.text': titles[i]}]))
+steps.append(dict(method='update', label='+ CV',
+                  args=[{'visible': [False] * (2 * n_seeds) + [True] * 3},
+                        {'title.text': titles[-1]}]))
+fig.data[0].visible = fig.data[1].visible = True
+
+x_pad = 3000   # a little room so the end dots aren't cut off
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Splits tried: '), pad=dict(t=40))],
+    xaxis=dict(title='Test RMSE on that split ($, lower is better)', tickformat='$,.0f',
+               range=[split_rmse.min() - x_pad, split_rmse.max() + x_pad]),
+    yaxis=dict(visible=False, range=[-0.7, 0.8]),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=420, margin=dict(l=40, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~4 minutes.** If you're running long, this is the third thing to cut, after The Fake Order figure and the Overfitting Think-Pair-Share. Students can still do it as the "How Lucky Was Your Split?" Your Turn in the Lecture notebook.
+
+**Setup:** Same depth-6 tree, same Ames data. Each dot is one random 80/20 train/test split (seeds 0–49), placed at its test RMSE.
+
+**Slide slowly through the first 10 or so, then jump to 50.** Each step, the orange dot is the one number you would have reported if that had been your split. Watch the range in the title grow. Same model, same data, yet the score lands anywhere from the mid-30s to the high-60s (thousands), depending only on which homes ended up in the test set.
+
+**Step to "+ CV".** One 5-fold CV run, from the code on the last slide.
+
+- Its mean lands inside the cloud of dots, a little right of center.
+- Its std (about $7.9k) is almost exactly the std of the 50 single-split scores (about $7.8k), even though it came from just one training set. About 6 in 10 dots fall inside the band.
+
+**The point:** one split gives you one number and no idea how lucky it was. CV gives you a score *and* a good read on how much a single score can wobble. That's why we make decisions on CV scores, not on a single split.
+
+**Transition:** "So here's the rule we'll follow for the rest of the course."
 :::
 
 ## Cross-Validation: Key Takeaway {.smaller}
