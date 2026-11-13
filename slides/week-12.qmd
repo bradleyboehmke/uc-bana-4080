@@ -949,460 +949,336 @@ Use the student analogy from Chapter 29:
 
 **The goal:** Find the hyperparameter value that minimizes the GAP between training and validation performance while maximizing validation performance.
 
-**Visual aid:** Draw a U-shaped curve on the board:
-- X-axis: Model complexity (simple → complex)
-- Y-axis: Error
-- Two curves: Training error (decreases) and Validation error (U-shaped)
-- Sweet spot: Bottom of validation curve
+**Timing: ~3 minutes.** Keep it brief; the next slide shows it.
 
-**Transition:** "Let me show you what this looks like visually with a real example."
+**Transition:** "Let's watch the tradeoff happen. Same noisy sine wave as last week's tree-depth slide, but now with KNN."
 :::
 
-## Visualizing Bias-Variance with KNN {.smaller}
+## Bias–Variance, One K at a Time {.smaller}
 
 ```{python}
 #| echo: false
-#| fig-width: 12
-#| fig-height: 4
-import matplotlib.pyplot as plt
-import numpy as np
+#| fig-align: center
+from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsRegressor
 
-# Generate synthetic data with non-linear pattern
+# Same noisy sine wave as week 11's "How Deep Should a Tree Go?"
 np.random.seed(42)
-X = np.linspace(0, 10, 100)
-y_true = np.sin(X) + 0.5 * X  # True pattern
-y = y_true + np.random.normal(0, 0.4, 100)  # Add noise
+bv_x = np.sort(np.random.uniform(0, 10, 100)).reshape(-1, 1)
+bv_y = np.sin(bv_x).ravel() + np.random.normal(0, 0.4, len(bv_x))
+bv_grid = np.linspace(0, 10, 300).reshape(-1, 1)
+bv_true = np.sin(bv_grid).ravel()
 
-X_reshaped = X.reshape(-1, 1)
-X_plot = np.linspace(0, 10, 300).reshape(-1, 1)
+k_values = [50, 40, 30, 20, 15, 10, 7, 5, 3, 2, 1]          # slider runs simple → flexible
+bv_folds = KFold(n_splits=5, shuffle=True, random_state=42)  # x is sorted, so shuffle the folds
+train_err, cv_err, fits = [], [], []
+for k in k_values:
+    knn = KNeighborsRegressor(n_neighbors=k).fit(bv_x, bv_y)
+    fits.append(knn.predict(bv_grid))
+    train_err.append(root_mean_squared_error(bv_y, knn.predict(bv_x)))
+    cv_err.append(-cross_val_score(KNeighborsRegressor(n_neighbors=k), bv_x, bv_y, cv=bv_folds,
+                                   scoring='neg_root_mean_squared_error').mean())
+best_k = k_values[int(np.argmin(cv_err))]
 
-# Three models with different K values
-fig, axes = plt.subplots(1, 3, figsize=(18, 4))
+fig = make_subplots(rows=1, cols=2, column_widths=[0.55, 0.45], horizontal_spacing=0.1,
+                    subplot_titles=['The fitted curve', 'Error vs. K (lower is better)'])
+# Fixed traces: data, true pattern, and both error curves
+fig.add_trace(go.Scatter(x=bv_x.ravel(), y=bv_y, mode='markers', name='Training data',
+                         marker=dict(color='lightgray', size=7, line=dict(color='gray', width=1)),
+                         hoverinfo='skip'), row=1, col=1)
+fig.add_trace(go.Scatter(x=bv_grid.ravel(), y=bv_true, mode='lines', name='True pattern',
+                         line=dict(color='green', dash='dash', width=2), hoverinfo='skip'), row=1, col=1)
+fig.add_trace(go.Scatter(x=k_values, y=train_err, mode='lines+markers', name='Training error',
+                         line=dict(color=ORANGE, width=3), marker=dict(size=6),
+                         hovertemplate='K=%{x}: train RMSE %{y:.2f}<extra></extra>'), row=1, col=2)
+fig.add_trace(go.Scatter(x=k_values, y=cv_err, mode='lines+markers', name='CV error',
+                         line=dict(color=BLUE, width=3), marker=dict(size=6),
+                         hovertemplate='K=%{x}: CV RMSE %{y:.2f}<extra></extra>'), row=1, col=2)
+n_fixed = len(fig.data)
 
-# High Bias (K=75)
-knn_bias = KNeighborsRegressor(n_neighbors=75)
-knn_bias.fit(X_reshaped, y)
-y_bias = knn_bias.predict(X_plot)
+titles = []
+for i, k in enumerate(k_values):
+    fig.add_trace(go.Scatter(x=bv_grid.ravel(), y=fits[i], mode='lines', showlegend=False,
+                             line=dict(color='#2c3e50', width=3), visible=False, hoverinfo='skip'),
+                  row=1, col=1)
+    fig.add_trace(go.Scatter(x=[k, k], y=[train_err[i], cv_err[i]], mode='markers+lines',
+                             line=dict(color='black', width=1.5, dash='dot'),
+                             marker=dict(size=13, color='white', line=dict(color=[ORANGE, BLUE], width=3)),
+                             showlegend=False, visible=False, hoverinfo='skip'), row=1, col=2)
+    if k == best_k:
+        verdict = 'lowest CV error'
+    elif cv_err[i] <= 1.05 * min(cv_err):
+        verdict = 'close to the bottom of the U'
+    elif k > best_k:
+        verdict = 'too simple: misses the wave (high bias)'
+    else:
+        verdict = 'too flexible: chases the noise (high variance)'
+    titles.append(f'K = {k}: train RMSE <b>{train_err[i]:.2f}</b>, CV RMSE <b>{cv_err[i]:.2f}</b>  ·  {verdict}')
 
-axes[0].scatter(X, y, alpha=0.6, s=30, color='gray', label='Training data')
-axes[0].plot(X_plot, y_bias, 'r-', linewidth=3, label='Bias model')
-axes[0].set_title('High Bias (K=75)', fontsize=14, fontweight='bold')
-axes[0].set_xlabel('X', fontsize=12)
-axes[0].set_ylabel('y', fontsize=12)
-axes[0].legend(fontsize=10)
-axes[0].grid(True, alpha=0.3)
-axes[0].text(0.5, 0.95, 'Too simple - misses pattern',
-            transform=axes[0].transAxes, fontsize=10,
-            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+steps = slider_steps(n_fixed, len(k_values), 2, [str(k) for k in k_values], titles)
+for trace in fig.data[n_fixed:n_fixed + 2]:
+    trace.visible = True
 
-# Balanced (K=5)
-knn_good = KNeighborsRegressor(n_neighbors=5)
-knn_good.fit(X_reshaped, y)
-y_good = knn_good.predict(X_plot)
-
-axes[1].scatter(X, y, alpha=0.6, s=30, color='gray', label='Training data')
-axes[1].plot(X_plot, y_good, 'g-', linewidth=3, label='Just right model')
-axes[1].set_title('Balanced (K=5)', fontsize=14, fontweight='bold')
-axes[1].set_xlabel('X', fontsize=12)
-axes[1].set_ylabel('y', fontsize=12)
-axes[1].legend(fontsize=10)
-axes[1].grid(True, alpha=0.3)
-axes[1].text(0.5, 0.95, 'Sweet spot!',
-            transform=axes[1].transAxes, fontsize=10,
-            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5))
-
-# High Variance (K=1)
-knn_variance = KNeighborsRegressor(n_neighbors=1)
-knn_variance.fit(X_reshaped, y)
-y_variance = knn_variance.predict(X_plot)
-
-axes[2].scatter(X, y, alpha=0.6, s=30, color='gray', label='Training data')
-axes[2].plot(X_plot, y_variance, 'b-', linewidth=3, label='Variance model')
-axes[2].set_title('High Variance (K=1)', fontsize=14, fontweight='bold')
-axes[2].set_xlabel('X', fontsize=12)
-axes[2].set_ylabel('y', fontsize=12)
-axes[2].legend(fontsize=10)
-axes[2].grid(True, alpha=0.3)
-axes[2].text(0.5, 0.95, 'Too complex - memorizes noise',
-            transform=axes[2].transAxes, fontsize=10,
-            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.5))
-
-plt.tight_layout()
-plt.show()
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='K (neighbors averaged): '),
+                  pad=dict(t=90))],
+    xaxis=dict(title='x'), yaxis=dict(title='y', range=[-2.2, 2.2]),
+    xaxis2=dict(title='K  (← simpler · more flexible →)', type='log', autorange='reversed',
+                tickvals=[50, 20, 10, 5, 2, 1]),
+    yaxis2=dict(title='RMSE', rangemode='tozero'),
+    legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center', yanchor='top'),
+    height=500, margin=dict(l=60, r=20, t=80, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
-
-::: {.callout-caution}
-More flexible models (e.g., Decision Trees, Random Forests, KNN with a small K) can align more closely with data patterns; however, it is up to us to tune these models to balance the bias-variance tradeoff!
-:::
 
 ::: {.notes}
-**This visualization makes the bias-variance tradeoff concrete.**
+**Timing: ~5 minutes.** Same noisy sine wave as week 11's "How Deep Should a Tree Go?" slide, now fit with KNN. Recall KNN predicts by averaging the K nearest training points.
 
-**Walk through each panel:**
+**Start at K = 50.** The curve averages 50 neighbors, so it's nearly flat and misses the wave. Training *and* CV error are both high. That's **high bias** (underfitting).
 
-**Left: High Bias (K=75)**
-- Model averages 75 neighbors - very smooth
-- Completely misses the curved pattern
-- Too simple - underfits the data
-- Red line is nearly straight
-- Consistent errors (always wrong in the same way)
+**Drag slowly toward K = 1.** The curve bends to follow the wave, and both errors fall.
 
-**Middle: Balanced (K=5)**
-- Model averages 5 neighbors - just right
-- Captures the general curve without memorizing noise
-- Green line follows the pattern nicely
-- This is what we want!
+**Keep going past K = 7.** Training error keeps falling, all the way to 0 at K = 1, because every point is its own nearest neighbor. But CV error turns back up. The curve is now chasing noise. That's **high variance** (overfitting).
 
-**Right: High Variance (K=1)**
-- Model only uses 1 neighbor - exact match
-- Blue line zigzags through every training point
-- Memorizes noise instead of learning the pattern
-- Will perform poorly on new data
+**Point at the right panel:**
 
-**Key teaching points:**
+- The orange curve (training error) always says "more flexible is better". It can't see overfitting.
+- The blue curve (CV error) is a U. Its bottom, K = 7 here, is the setting we'd pick.
+- We found it without touching a test set.
 
-1. **Hyperparameters control complexity:**
-   - Large K = simpler model (high bias)
-   - Small K = complex model (high variance)
-   - Need to find the sweet spot
+**Key message:** flexible models (small K, deep trees, big forests) *can* fit the pattern closely, but it's up to us to tune them to the bottom of the U.
 
-2. **Training vs. validation performance:**
-   - K=1: Perfect on training (100% accuracy), poor on validation
-   - K=75: Poor on training, poor on validation
-   - K=5: Good on both - balanced
-
-3. **Generalization is the goal:**
-   - We don't want to memorize training data
-   - We want to learn patterns that work on new data
-   - The balanced model (K=5) will generalize best
-
-**Student engagement:**
-Ask: "Which model would you deploy to production?"
-Expected answer: "The balanced one (K=5)"
-Follow-up: "How do we find the right K value systematically? GridSearchCV!"
-
-**Transition:** "So we can see the problem. But how have we been finding these values so far?"
+**Transition:** "So how have we been finding the bottom of the U so far?"
 :::
 
-## The Manual Approach (What We've Been Doing) {.smaller}
+## Tuning by Hand {.smaller}
 
 :::: {.columns}
-::: {.column width="50%"}
+::: {.column width="55%"}
 
-**In previous chapters, we manually tried different values:**
+**Even with CV, tuning by hand looks like this:**
 
 ```python
-# Try max_depth = 5
-dt1 = DecisionTreeClassifier(max_depth=5)
-score1 = cross_val_score(dt1, X_train, y_train)
-print(f"max_depth=5: {score1.mean()}")
+# Try max_depth = 4
+tree4 = DecisionTreeRegressor(max_depth=4)
+cv4 = cross_val_score(tree4, X_train, y_train, cv=5)
 
-# Try max_depth = 10
-dt2 = DecisionTreeClassifier(max_depth=10)
-score2 = cross_val_score(dt2, X_train, y_train)
-print(f"max_depth=10: {score2.mean()}")
+# Try max_depth = 6
+tree6 = DecisionTreeRegressor(max_depth=6)
+cv6 = cross_val_score(tree6, X_train, y_train, cv=5)
 
-# Try max_depth = 15
-dt3 = DecisionTreeClassifier(max_depth=15)
-score3 = cross_val_score(dt3, X_train, y_train)
-print(f"max_depth=15: {score3.mean()}")
-
-# ... keep trying values manually
+# Try max_depth = 8 ... and min_samples_leaf?
+# ... keep copying and pasting
 ```
 
 :::
-::: {.column width="50%"}
+::: {.column width="45%"}
 
-**Problems with this approach:**
+**Problems:**
 
-* ⏱️ **Time-consuming** - Repetitive code for each value
-* 🐛 **Error-prone** - Easy to make copy-paste mistakes
-* 📊 **Limited exploration** - Only try a few values
-* 🔄 **Not systematic** - What about combinations of parameters?
-* 📝 **Hard to track** - Which combination was best?
-
-. . .
-
-::: {.callout-tip}
-## A Better Way Exists!
-
-We need an **automated, systematic approach** to search through hyperparameter combinations efficiently.
-:::
+* ⏱️ **Repetitive:** same code for every value
+* 🐛 **Error-prone:** easy copy-paste mistakes
+* 📊 **Limited:** we only try a few values
+* 🔄 **Combinations explode:** 6 depths × 5 leaf sizes = 30 settings
 
 :::
 ::::
 
-::: {.notes}
-**This slide bridges previous chapters to GridSearchCV.**
+. . .
 
-**Left side - What students have been doing:**
+::: {.callout-tip}
+## A better way exists
 
-**Walk through the code:**
-- "Remember doing this in Chapters 25-27?"
-- "You tried max_depth=5, then 10, then 15..."
-- "Lots of copying and pasting, changing one number each time"
-- "Tedious and error-prone!"
-
-**Point out the pattern:**
-- Same code structure repeated 3 times
-- Only difference is the max_depth value
-- What if you want to try 10 values? 20 values?
-- What if you want to tune multiple parameters simultaneously?
-
-**Right side - Problems:**
-
-**Go through each problem:**
-
-1. **Time-consuming:**
-   - "You spend more time writing repetitive code than thinking about the problem"
-   - "What if you need to try 50 different combinations?"
-
-2. **Error-prone:**
-   - "Easy to copy-paste and forget to change the variable name"
-   - "Or forget to change the max_depth value"
-   - "I've done this myself - very frustrating!"
-
-3. **Limited exploration:**
-   - "Realistically, you only try 3-5 values manually"
-   - "But the optimal value might be max_depth=12, not 5, 10, or 15!"
-   - "You're only sampling a small part of the space"
-
-4. **Not systematic:**
-   - "What if you want to tune BOTH max_depth AND n_estimators?"
-   - "That's 3 × 3 = 9 combinations to try manually"
-   - "Add min_samples_split? Now it's 3 × 3 × 3 = 27 combinations!"
-   - "This gets out of hand quickly"
-
-5. **Hard to track:**
-   - "Which combination gave the best score?"
-   - "Did max_depth=10 with n_estimators=100 do better than max_depth=15 with n_estimators=200?"
-   - "You need to keep notes or save results somehow"
-
-**The callout box:**
-- "There's a better way - let the computer do the tedious work!"
-- "That's what GridSearchCV does"
-
-**Student engagement:**
-Ask: "How many of you have done something like this and thought 'there must be a better way'?"
-Show of hands usually gets good response.
-
-**Transition:** "Let me show you GridSearchCV, which automates all of this and makes hyperparameter tuning systematic, reproducible, and efficient."
+Let the computer try **every combination** in a grid, score each with CV, and keep track of the best.
 :::
 
-## What is Grid Search? {.smaller}
+::: {.notes}
+**Timing: ~2 minutes.** A quick bridge to GridSearchCV. Don't linger; students already feel this pain.
 
-**Grid Search = Systematically trying ALL combinations of hyperparameters**
+**Left: the code.**
 
-. . .
+- "Remember doing this in Modules 9–11?" (Then it was scored on the test set; now at least it's CV.)
+- Two tries, each a copy-paste with one number changed: `max_depth=4`, then `max_depth=6`.
+- "What about 8? 10? And what about `min_samples_leaf` at the same time?"
+
+**Right: the problems.** One line each:
+
+1. **Repetitive:** more time writing the same code than thinking about the problem.
+2. **Error-prone:** easy to copy a block and forget to change the variable name or the value.
+3. **Limited:** by hand, we try 3–5 values. The best one might be one we never tried.
+4. **Combinations explode:** two hyperparameters, 6 depths × 5 leaf sizes, is already 30 settings.
+
+Also say (it's not on the slide): it's hard to keep track of which combination won.
+
+**Click: the callout.** "Let the computer do the tedious part. That's GridSearchCV."
+
+**Transition:** "Here's what that search looks like, cell by cell."
+:::
+
+## What GridSearchCV Does {.smaller}
+
+Each cell is one setting, scored with 5-fold CV on the training set. **Darker = lower CV RMSE.** ★ = best so far.
 
 ```{python}
 #| echo: false
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
+#| fig-align: center
+from sklearn.model_selection import GridSearchCV
 
-fig, ax = plt.subplots(figsize=(10, 4))
+param_grid = {'max_depth': [2, 4, 6, 8, 10, None], 'min_samples_leaf': [1, 5, 10, 20, 40]}
+grid_search = GridSearchCV(DecisionTreeRegressor(random_state=42), param_grid, cv=5,
+                           scoring='neg_root_mean_squared_error').fit(X_train, y_train)
+results = (pd.DataFrame(grid_search.cv_results_)     # one row per cell, in search order
+           .assign(cv_rmse=lambda df: -df['mean_test_score']))
 
-# Define parameter values
-max_depths = [5, 10, 15, 20]
-n_estimators = [100, 200, 300]
+depth_labels = [str(d) for d in param_grid['max_depth']]          # 'None' = no limit
+leaf_labels = [str(l) for l in param_grid['min_samples_leaf']]
+n_cells, n_folds = len(results), grid_search.n_splits_
 
-# Create grid
-for i, depth in enumerate(max_depths):
-    for j, est in enumerate(n_estimators):
-        # Create rectangles for each combination
-        rect = mpatches.Rectangle((j, i), 0.9, 0.9,
-                                 facecolor='#3498db',
-                                 edgecolor='white',
-                                 linewidth=3,
-                                 alpha=0.7)
-        ax.add_patch(rect)
+def cell_position(row):
+    return depth_labels.index(str(row['param_max_depth'])), leaf_labels.index(str(row['param_min_samples_leaf']))
 
-        # Add text showing the combination
-        ax.text(j + 0.45, i + 0.45,
-                f'max_depth={depth}\nn_estimators={est}',
-                ha='center', va='center',
-                fontsize=11, fontweight='bold',
-                color='white')
+fig = go.Figure()
+titles = []
+for n in range(1, n_cells + 1):
+    rmse_grid = np.full((len(depth_labels), len(leaf_labels)), np.nan)
+    text_grid = [[''] * len(leaf_labels) for _ in depth_labels]
+    for _, row in results.iloc[:n].iterrows():
+        r, c = cell_position(row)
+        rmse_grid[r, c] = row['cv_rmse']
+        text_grid[r][c] = usd(row['cv_rmse'])
+    best_row = results.iloc[:n]['cv_rmse'].idxmin()
+    br, bc = cell_position(results.loc[best_row])
+    text_grid[br][bc] = f'★ {text_grid[br][bc]}'
+    cr, cc = cell_position(results.iloc[n - 1])
+    fig.add_trace(go.Heatmap(
+        z=rmse_grid, x=list(range(len(leaf_labels))), y=list(range(len(depth_labels))), text=text_grid, texttemplate='%{text}',
+        textfont=dict(size=13), colorscale=[[0, BLUE], [1, '#eef5fc']],
+        zmin=results['cv_rmse'].min(), zmax=results['cv_rmse'].max(), showscale=False,
+        xgap=3, ygap=3, hoverinfo='skip', visible=False))
+    # orange outline on the cell just tried
+    fig.add_trace(go.Scatter(x=[cc - 0.47, cc + 0.47, cc + 0.47, cc - 0.47, cc - 0.47],
+                             y=[cr - 0.45, cr - 0.45, cr + 0.45, cr + 0.45, cr - 0.45], mode='lines',
+                             line=dict(color=ORANGE, width=4), showlegend=False, visible=False,
+                             hoverinfo='skip'))
+    best = results.loc[best_row]
+    if n < n_cells:
+        titles.append(f'Cell {n} of {n_cells}: depth {depth_labels[cr]}, '
+                      f'leaf {leaf_labels[cc]} → {usd(results.iloc[n - 1]["cv_rmse"])}'
+                      f'  |  models trained: {n} × {n_folds} = <b>{n * n_folds}</b>')
+    else:
+        titles.append(f'★ Best: max_depth={depth_labels[br]}, min_samples_leaf={leaf_labels[bc]} '
+                      f'→ CV RMSE <b>{usd(best["cv_rmse"])}</b>'
+                      f'  |  {n_cells} cells × {n_folds} folds = <b>{n_cells * n_folds} models</b>')
 
-# Set axis properties
-ax.set_xlim(-0.1, 3)
-ax.set_ylim(-0.1, 4)
-ax.set_xticks(np.arange(3) + 0.45)
-ax.set_xticklabels([100, 200, 300], fontsize=12, fontweight='bold')
-ax.set_yticks(np.arange(4) + 0.45)
-ax.set_yticklabels([5, 10, 15, 20], fontsize=12, fontweight='bold')
-ax.set_xlabel('n_estimators', fontsize=14, fontweight='bold')
-ax.set_ylabel('max_depth', fontsize=14, fontweight='bold')
-ax.set_title('Grid Search: 4 × 3 = 12 Combinations to Try',
-             fontsize=16, fontweight='bold', pad=20)
+steps = slider_steps(0, n_cells, 2, [str(n) for n in range(1, n_cells + 1)], titles)
+for trace in fig.data[:2]:
+    trace.visible = True
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Cells tried: '), pad=dict(t=40))],
+    xaxis=dict(title='min_samples_leaf', side='top', tickvals=list(range(len(leaf_labels))),
+               ticktext=leaf_labels, range=[-0.5, len(leaf_labels) - 0.5], showgrid=False, zeroline=False),
+    yaxis=dict(title='max_depth', tickvals=list(range(len(depth_labels))), ticktext=depth_labels,
+               range=[len(depth_labels) - 0.5, -0.5], showgrid=False, zeroline=False),
+    height=470, margin=dict(l=80, r=20, t=110, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
 
-# Add arrows and annotation
-ax.annotate('Each cell = one model configuration',
-           xy=(1.5, -0.5), fontsize=12, ha='center',
-           bbox=dict(boxstyle='round,pad=0.5', facecolor='#f39c12', alpha=0.8),
-           fontweight='bold')
+::: {.notes}
+**Timing: ~4 minutes.** This replaces "copy, paste, change one number" with a grid.
 
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['bottom'].set_visible(False)
-ax.spines['left'].set_visible(False)
+**The grid:** 6 values of `max_depth` (None = no limit) × 5 values of `min_samples_leaf` = 30 settings for a decision tree on Ames. Every cell is scored with 5-fold CV on the training set, exactly like the last section.
 
-plt.tight_layout()
-plt.show()
+**Slide forward slowly for the first row, then faster.** Cells fill in the order GridSearchCV tries them: every leaf size for depth 2, then depth 4, and so on.
+
+- The **orange box** is the setting just tried.
+- The **★** is the best so far. It moves as better cells appear.
+- The **title** counts the cost: each cell is 5 models, so the full grid is 30 × 5 = **150 models**.
+
+**Things to point out at the end:**
+
+- Depth 2 is equally bad everywhere (too simple, so leaf size can't help).
+- `min_samples_leaf=1` is bad at every depth past 4. Tiny leaves let the tree memorize, which is the bias–variance story again.
+- The best cell isn't at an edge of the grid, which is a good sign the grid was wide enough.
+
+**Cost question:** "If we added a third hyperparameter with 4 values, how many models?" 30 × 4 × 5 = 600. Grids grow fast. Your readings cover random search for big grids.
+
+**Transition:** "Every number on that grid came from one scikit-learn call."
+:::
+
+## GridSearchCV in Scikit-Learn {.smaller}
+
+```{python}
+#| code-line-numbers: "|3-6|7-13|14|16-17"
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'max_depth': [2, 4, 6, 8, 10, None],
+    'min_samples_leaf': [1, 5, 10, 20, 40],
+}
+grid_search = GridSearchCV(
+    DecisionTreeRegressor(random_state=42),
+    param_grid,
+    cv=5,
+    scoring='neg_root_mean_squared_error',
+    n_jobs=-1,                       # use all CPU cores
+)
+grid_search.fit(X_train, y_train)    # 30 settings × 5 folds = 150 models
+
+print("Best settings:", grid_search.best_params_)
+print(f"Best CV RMSE: ${-grid_search.best_score_:,.0f}")
 ```
 
 . . .
 
-::: {.callout-note icon=false}
-## 🔍 The Grid Search Process
-**For each combination:** Train model → Evaluate with cross-validation → Record score
+::: {.callout-tip}
+## The refit is built in
 
-**After trying all combinations:** Pick the one with the best CV score!
+After the search, `grid_search.best_estimator_` is the winning setting **refit on all of `X_train`**: the `fit(best, train)` step from our workflow. It's ready to test once.
 :::
 
 ::: {.notes}
-**This slide introduces the grid search concept visually.**
+**Timing: ~4 minutes.** Live code; this is the exact search from the heatmap.
 
-**Key teaching points:**
+**Walk the highlighted lines:**
 
-**The visual grid:**
-- Each blue box represents ONE complete hyperparameter configuration
-- In this example: 4 max_depth values × 3 n_estimators values = 12 total combinations
-- Grid search will try EVERY single one of these
+1. **Lines 3–6:** The grid is a dictionary: hyperparameter name → list of values to try. Names must match the model's arguments exactly.
+2. **Lines 7–13:** The model, the grid, and the same CV settings as before. `n_jobs=-1` runs folds in parallel on every CPU core. Students will want this in the Lab.
+3. **Line 14:** One `.fit()` runs all 150 models. Only `X_train` goes in; the test set stays locked away.
+4. **Lines 16–17:** The winning cell, and its CV RMSE (flip the sign again).
 
-**The systematic approach:**
-- Unlike our manual approach where we tried a few values
-- Grid search is exhaustive - it tries ALL combinations
-- Nothing gets missed
+**Click: the callout.** By default (`refit=True`) GridSearchCV refits the best setting on the full training set when the search finishes. That's the "refit once" line from our pseudo code. The test set gets used exactly once, on that model, at the very end.
 
-**The name "Grid Search":**
-- It literally comes from this grid visualization
-- We're searching through a grid of parameter combinations
-- In higher dimensions (3+ parameters), it's harder to visualize but same concept
+**Also worth knowing:** `grid_search.cv_results_` holds the score of every cell. The Lecture notebook's "Tune a Tree" Your Turn plots it.
 
-**The process:**
-1. Define the grid (which parameters and which values to try)
-2. For each cell in the grid:
-   - Train a model with those parameter values
-   - Evaluate it using cross-validation
-   - Record the CV score
-3. After trying everything, select the combination with the best score
-
-**Example walkthrough:**
-"Look at this grid. We have max_depth on one axis and n_estimators on the other. Each blue box is a unique combination. For example, the top-left box is max_depth=5 and n_estimators=100. Grid search will train and evaluate a model for EACH of these 12 boxes."
-
-**Why this matters:**
-- Removes human bias (we might not try certain combinations)
-- Systematic and reproducible
-- Can find surprising optimal combinations
-- But can be computationally expensive (more parameters = more combinations)
-
-**The 'curse of dimensionality':**
-- 2 parameters with 4 values each = 4 × 4 = 16 combinations
-- 3 parameters with 4 values each = 4 × 4 × 4 = 64 combinations
-- 4 parameters with 4 values each = 4 × 4 × 4 × 4 = 256 combinations
-- This is why RandomizedSearchCV exists (for very large grids)
-
-**Engagement question:**
-"If we added a third parameter, min_samples_split, with 3 possible values, how many total combinations would we have? ... That's right, 12 × 3 = 36 combinations!"
-
-**Transition:** "Now that we understand WHAT grid search does conceptually, let's see HOW to do it in scikit-learn with GridSearchCV."
-:::
-
-## GridSearchCV: Automated Hyperparameter Search {.smaller}
-
-```{python}
-#| eval: false
-from sklearn.model_selection import GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
-
-# Define parameter grid to search
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [5, 10, 15, 20],
-    'min_samples_split': [2, 5, 10]
-}
-
-# Create GridSearchCV (uses cross-validation internally!)
-grid_search = GridSearchCV(
-    RandomForestClassifier(random_state=42),
-    param_grid,
-    cv=5,
-    scoring='accuracy',
-    n_jobs=-1  # Use all CPU cores
-)
-
-# Fit on training data (will try 3 × 4 × 3 = 36 configs, each with 5-fold CV = 180 models!)
-grid_search.fit(X_train, y_train)
-
-print(f"Best parameters: {grid_search.best_params_}")
-print(f"Best CV score: {grid_search.best_score_:.3f}")
-```
-
-::: {.notes}
-**This is where the magic happens - systematic hyperparameter search.**
-
-**Walk through the code:**
-
-**Lines 4-9: Define search space**
-- We're trying 3 values for n_estimators
-- 4 values for max_depth
-- 3 values for min_samples_split
-- Total combinations: 3 × 4 × 3 = 36 different configurations
-
-**Lines 12-18: Create GridSearchCV**
-- Wraps a RandomForestClassifier
-- Will try all 36 configurations
-- Each with 5-fold CV
-- Uses accuracy as the metric
-- n_jobs=-1 means "use all CPU cores" (runs in parallel)
-
-**Line 21: The computational reality**
-- 36 configurations × 5 folds = 180 models trained!
-- Sounds expensive, but computers are fast
-- Usually takes seconds to minutes, not hours
-- Worth it for finding optimal settings
-
-**Lines 23-24: Results**
-- `best_params_`: The winning hyperparameter combination
-- `best_score_`: The CV accuracy of the best configuration
-
-**Key insight:** GridSearchCV uses CV internally, so we NEVER touch the test set during this entire search!
-
-**Common student questions:**
-
-1. **"Do I have to try all combinations?"**
-   - GridSearchCV: Yes (exhaustive search)
-   - RandomizedSearchCV: No (random sampling, faster for large grids)
-   - Bayesian optimization: Smart search based on previous results
-
-2. **"How do I know which parameters to tune?"**
-   - Read documentation for your model
-   - Most important usually: complexity parameters (max_depth, n_estimators, etc.)
-   - Less important: random_state, n_jobs (these don't affect performance)
-
-3. **"What ranges should I try?"**
-   - Start broad: [10, 100, 1000]
-   - Then narrow in: [80, 90, 100, 110, 120]
-   - Trade-off between thoroughness and computation time
-
-**Transition:** "So we can now find optimal hyperparameters. But we still need to prepare our data properly first. That's feature engineering."
+**Transition:** "One more look at the train/CV gap before we move on."
 :::
 
 ## Think-Pair-Share: Spotting Overfitting {.smaller}
 
-**Scenario:** You've tried two random forest configurations and see these results:
+**Scenario:** You tried two random forest configurations on the Ames training set:
 
-```
-Configuration A:
-  Training Accuracy: 92.3%
-  CV Accuracy: 88.7%
+```{python}
+#| echo: false
+#| output: asis
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import cross_validate
 
-Configuration B:
-  Training Accuracy: 99.8%
-  CV Accuracy: 85.1%
+rf_configs = {
+    'A: `max_depth=6, min_samples_leaf=10`': dict(max_depth=6, min_samples_leaf=10),
+    'B: default settings (no limits)': dict(),
+}
+print('| Configuration | Training RMSE | CV RMSE |')
+print('|---|---:|---:|')
+for label, settings in rf_configs.items():
+    rf_scores = cross_validate(
+        RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1, **settings),
+        X_train, y_train, cv=5, scoring='neg_root_mean_squared_error', return_train_score=True)
+    print(f"| {label} | ${-rf_scores['train_score'].mean():,.0f} "
+          f"| ${-rf_scores['test_score'].mean():,.0f} |")
 ```
 
 :::: {.columns}
@@ -1410,9 +1286,9 @@ Configuration B:
 
 **Discuss:**
 
-- Which configuration is overfitting more?
-- Which would you deploy to production?
-- What does the gap between training and CV tell you?
+- Which configuration has the bigger gap between training and CV RMSE? What does that gap tell you?
+- Which configuration would you deploy? Why?
+- Last week an unlimited *single tree* overfit badly. Why might an unlimited *forest* get away with it?
 
 :::
 ::: {.column width="30%"}
@@ -1432,35 +1308,21 @@ Configuration B:
 ::::
 
 ::: {.notes}
-**After timer, facilitate discussion:**
+**Timing: ~5 minutes** (3-minute timer + 2 minutes of responses). Second in the cut order: drop it if running long.
 
-**Question 1: Which is overfitting more?**
-- **Configuration B** is clearly overfitting
-- 99.8% training but only 85.1% CV = massive gap (14.7 points!)
-- It memorized the training data
-- Configuration A has smaller gap (3.6 points)
+The numbers are live: 5-fold CV on the same training set, with training RMSE averaged across the folds.
 
-**Question 2: Which to deploy?**
-- **Configuration A** for sure
-- Higher CV score (88.7% vs 85.1%)
-- Smaller gap suggests better generalization
-- CV score is what matters for production performance
+**After the timer, cold-call 2–3 pairs.**
 
-**Question 3: What does the gap tell you?**
-- **Small gap** (Config A): Model generalizes well
-- **Large gap** (Config B): Model memorizes training data, won't generalize
-- The gap is a direct measure of overfitting severity
+1. **Bigger gap?** B, by far. Its training RMSE is less than half its CV RMSE. Every tree in B grows until its leaves are nearly pure, so the forest has largely memorized the training homes.
+2. **Deploy?** B. Its **CV RMSE is lower**, and CV RMSE is our estimate of performance on new homes. Many students will say A "because it overfits less". That's the trap: the gap is a *warning sign* to investigate, but the decision is made on the CV score.
+3. **Why does the forest get away with it?** Week 11: each deep tree memorizes *differently* (bootstrap samples + feature randomness), and averaging 100 of them cancels much of that noise. The training score looks wildly optimistic, but the CV score stays good.
 
-**Teaching moment:**
-Students often think "higher training score = better model"
+**Key takeaway:** "The train/CV gap tells you *how much* a model memorized. The CV score tells you whether that hurt. Choose on CV."
 
-**Key insight:** High training score is easy (just memorize!). The hard part is generalizing to new data. That's why we care about CV score and the train/CV gap.
+**If someone asks "so is a gap ever bad?":** yes, when CV gets worse as the gap grows. That's what we saw with K = 1 in the bias–variance slider.
 
-**Real-world parallel:**
-- Config B = student who memorized practice test (99.8%) but bombs actual exam (85.1%)
-- Config A = student who understood concepts (92.3%) and does well on actual exam (88.7%)
-
-**Transition:** "Now let's talk about preparing data properly - feature engineering."
+**Transition:** "We've tuned the model. Now let's give it better inputs: feature engineering."
 :::
 
 # Feature Engineering {background="#43464B"}
