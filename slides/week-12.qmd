@@ -1657,107 +1657,7 @@ Imputing missing values, creating new features, and more: you'll see several in 
 
 **Click: the callout.** Point students to Chapter 30 for imputation and new features. Everything they do there drops into the same `ColumnTransformer`.
 
-**Transition:** "Let's put the whole professional workflow on one page."
-:::
-
-# Putting It All Together {background="#43464B"}
-
-## The Complete Professional Workflow {.smaller .scrollable}
-
-```{mermaid}
-%%| fig-width: 8
-%%| echo: false
-flowchart TD
-    A[Full Dataset] --> B[Stage 1:<br/>Train/Test Split]
-    B --> C[Training Set 80%]
-    B --> D[Test Set 20%<br/>🔒 LOCKED]
-
-    C --> E[Stage 2:<br/>Cross-Validation]
-    E --> F[Try different models<br/>Tune hyperparameters<br/>Engineer features]
-    F --> G[Stage 3:<br/>Select Best Approach]
-
-    G --> H[Stage 4:<br/>Retrain on Full<br/>Training Set]
-
-    H --> I[Stage 5:<br/>Evaluate on Test Set<br/>ONCE]
-    D --> I
-    I --> J[Report Final<br/>Performance]
-
-    style D fill:#ff6b6b
-    style E fill:#51cf66
-    style I fill:#ffd43b
-    style J fill:#51cf66
-```
-
-::: {.notes}
-**This is the culmination - the proper professional workflow.**
-
-**Walk through each stage deliberately:**
-
-**Stage 1: Train/Test Split**
-- "Before doing ANYTHING else, split data"
-- "Lock test set away - don't even look at it"
-- "Everything from now on uses training set only"
-- Typical: 80/20 or 70/30 split
-
-**Stage 2: Cross-Validation for All Decisions**
-- "This is where you spend most of your time"
-- "Try different models, compare them with CV"
-- "Tune hyperparameters with GridSearchCV (which uses CV)"
-- "Engineer features, check impact with CV"
-- "You can make UNLIMITED decisions here"
-- "Test set stays pristine"
-
-Examples of decisions in Stage 2:
-- Should I use a single decision tree or a random forest?
-- What max_depth works best?
-- Should I scale my features?
-- Should I add polynomial features?
-- How should I handle missing data?
-
-**ALL answered using cross-validation on training set!**
-
-**Stage 3: Select Best Approach**
-- "Based on CV scores, pick your winner"
-- "Maybe it's Random Forest with n_estimators=200, max_depth=15"
-- "Maybe you decided to scale features and add interactions"
-- "This is your final model configuration"
-
-**Stage 4: Retrain on Full Training Set**
-- "Up until now, in CV, we trained on 80% of training set (4/5 folds)"
-- "Now we want to use ALL training data"
-- "Retrain your best model on the entire training set"
-- "This gives it maximum data to learn from"
-
-**Stage 5: Final Evaluation on Test Set**
-- "Now and ONLY now, evaluate on test set"
-- "This is done ONCE"
-- "This is your honest, unbiased performance estimate"
-- "This is what you report to stakeholders"
-
-**Key principle:** Test set is like your final exam - you only get to take it once. All practice and preparation (Stages 2-4) use the training set.
-
-**Common student misconceptions:**
-
-❌ "Can I try a few final models on the test set and pick the best?"
-✓ "No! That defeats the purpose. Pick best model using CV, then test ONCE."
-
-❌ "My CV score was 85% but test score was 82%. Did I do something wrong?"
-✓ "Not necessarily. Some variation is expected. If gap is large (>5%), investigate."
-
-❌ "Can I go back and tune more if test score is disappointing?"
-✓ "Technically yes, but then you need a NEW test set. Don't iteratively peek."
-
-**Real-world context:**
-"In industry, your 'test set' is production. You deploy once and see how it performs. You don't get to keep redeploying and testing. That's why this workflow is critical."
-
-**Example timeline:**
-- Stage 1: 5 minutes (split data)
-- Stage 2: Hours to days (try things, tune, engineer)
-- Stage 3: 5 minutes (pick winner)
-- Stage 4: Minutes (retrain)
-- Stage 5: Seconds (evaluate)
-
-**Transition:** "Let's see what you'll practice with this in Thursday's lab."
+**Transition:** "Let's wrap up with the big ideas, then put the whole workflow on one page."
 :::
 
 # Looking Forward {background="#43464B"}
@@ -1767,7 +1667,7 @@ Examples of decisions in Stage 2:
 * **Test-set peeking**: each test-set decision inflates its score
 * **Cross-validation**: honest scores without touching the test set
 * **Hyperparameter tuning**: `GridSearchCV` searches settings with CV
-* **Feature engineering**: impute, encode, scale, and create features
+* **Feature engineering**: scale numeric features, encode categorical ones
 * **Pipelines**: preprocessing inside CV, so nothing leaks
 * **The workflow**: decide with CV, touch the test set **once**
 
@@ -1775,6 +1675,47 @@ Examples of decisions in Stage 2:
 **Timing: ~2 minutes.** Read each takeaway and connect it to the slide where students saw it.
 
 **The meta-lesson:** "Data science isn't just knowing algorithms. It's having a disciplined workflow that produces numbers you can trust."
+
+**Transition:** "Here's that workflow on one page."
+:::
+
+## This Week's Full Workflow {.smaller}
+
+```{.python code-line-numbers="|1|3-7|9|11-13|15-16"}
+train, test = split(data)                       # 1. lock the test set away
+
+prep = preprocess(                              # 2. feature engineering
+    scale(numeric_cols),
+    one_hot(categorical_cols),
+    ordinal(quality_cols, order=[...]),
+)
+
+pipeline = Pipeline(prep, model)                # 3. preprocessing + model, one unit
+
+search = grid_search(pipeline, settings, cv=5)  # 4. tune with CV
+fit(search, train)                              #    every setting scored on train only
+best = search.best_model                        #    best settings, refit on all of train
+
+score = evaluate(best, test)                    # 5. test once
+report(score)                                   #    the number you can trust
+```
+
+::: {.notes}
+**Timing: ~3 minutes.** Step through the five stages, one click each. Each line maps to a section of today's lecture.
+
+**Line 1, split:** the first thing we do, before looking at anything. The test set stays locked away (peeking section).
+
+**Lines 3–7, feature engineering:** scale the numeric columns, one-hot the categorical ones, ordinal-encode the ordered ones. Just a recipe so far: nothing has been learned from the data yet.
+
+**Line 9, pipeline:** bundle the preprocessing with the model so they always travel together. That's what keeps CV honest: each fold re-learns the scaling and encoding from its own training folds.
+
+**Lines 11–13, tune with CV:** grid search scores every setting with 5-fold CV on the training set only, then refits the winner on all of the training set (`best_estimator_` in scikit-learn).
+
+**Lines 15–16, test once:** the first and only time the test set is used. That's the number we report.
+
+**Contrast with weeks 9–11:** back then, line 15 happened after every model we tried. Now everything above it uses the training set only.
+
+**Transition:** "Chapters 28–30 go further on each of these steps."
 :::
 
 ## More in Your Readings {.smaller}
