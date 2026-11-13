@@ -1289,446 +1289,375 @@ This is the **final generalization assessment**. If it disappoints, don't go bac
 
 # Feature Engineering {background="#43464B"}
 
-## What is Feature Engineering? {.smaller}
+## What Is Feature Engineering? {.smaller}
 
-**The process of creating, transforming, and selecting features to help ML models learn better.**
+**Turning raw columns into inputs a model can learn from.** You've already done it: in weeks 10–11 we turned Yes/No into 1/0.
 
-. . .
+```{python}
+#| output: false
+from ISLP import load_data
+
+Default = load_data('Default')
+before = Default[['student']].head(3)
+Default['student'] = (Default['student'] == 'Yes').astype(int)
+```
 
 :::: {.columns}
-::: {.column width="50%"}
+::: {.column width="35%"}
 
-**Raw data:**
+::: {style="font-size: 0.8em;"}
+```{python}
+#| echo: false
+pd.concat([before, Default[['student']].head(3)], axis=1, keys=['Before', 'After'])
 ```
-YearBuilt: 1995
-YearRemodel: 2015
-```
-
-**Engineered feature:**
-```python
-RelativeAge = 2025 - max(YearBuilt, YearRemodel)
-            = 2025 - 2015 = 10 years
-```
-
-*An older home (1995) with recent remodel (2015) has a younger relative age than a newer home (2010) without remodeling!*
+:::
 
 :::
-::: {.column width="50%"}
-
-**Raw features:**
-```
-GrLivArea: 2000 sq ft
-OverallQual: 8/10
-```
-
-**Engineered interaction:**
-```
-Size_x_Quality: 16,000
-```
-
-*Captures combined effect!*
-
-:::
-::::
+::: {.column width="65%"}
 
 . . .
 
-<br>
+::: {.callout-warning}
+## It works, but it's not the best way
 
-::: {.callout-important}
-## **Why it matters** 
+* It lives **outside the model**: new data needs the exact same line, or predictions break
+* A surprise value (`"yes"`, `"Y"`) silently becomes **0**
+* It doesn't scale to columns with **many categories**
 
-Good features often matter more than fancy algorithms!
+**Better:** let scikit-learn learn the encoding *inside a pipeline*. That's where we're headed.
 :::
 
-::: {.notes}
-**Feature engineering is where data science becomes an art.**
-
-**The central message:**
-> "Garbage in, garbage out. Feature engineering is how we turn raw data into high-quality input that models need."
-
-**Key concepts to emphasize:**
-
-**1. Raw data often doesn't directly represent what we want to learn**
-
-Example: YearBuilt
-- Raw: 1995
-- What matters: How OLD is the house? (Age = current year - year built)
-- Models learn better from age than year built
-
-**2. Domain knowledge is critical**
-
-Real estate examples:
-- Total bathrooms = FullBath + 0.5×HalfBath + BsmtFullBath + 0.5×BsmtHalfBath
-- Square feet per bathroom = GrLivArea / Total bathrooms
-- Was renovated? = (YearRemodAdd > YearBuilt)
-
-These features come from understanding what makes houses valuable, not from algorithms.
-
-**3. The 80/20 rule in data science:**
-Data scientists spend:
-- 80% of time on data prep and feature engineering
-- 20% on model selection and tuning
-
-This isn't inefficiency - it's because good features make a BIGGER difference than fancy algorithms!
-
-**Show impact with example:**
-- Simple linear regression + good features > Neural network + raw features
-- Feature engineering is the high-leverage activity
-
-**Types of feature engineering (preview):**
-1. Encoding categorical variables
-2. Scaling numerical features
-3. Creating new features (like examples shown)
-4. Handling missing data
-5. Building pipelines to do this systematically
-
-**Transition:** "Let's see the most common feature engineering techniques in action."
 :::
-
-## Four Essential Techniques {.smaller}
-
-::::: {.columns}
-:::: {.column width="50%"}
-
-**1. Encoding Categorical Variables**
-
-* Dummy encoding: One column per category
-* Label encoding: Single numerical column
-* Ordinal: Preserve ordering
-
-**2. Scaling Numerical Features**
-
-* StandardScaler: Mean=0, Std=1
-* MinMaxScaler: Range [0, 1]
-* Crucial for distance-based algorithms
-
 ::::
-:::: {.column width="50%"}
-
-**3. Creating New Features**
-
-* Polynomial: Square, cube terms
-* Interactions: Feature × Feature
-* Domain-specific: Age, ratios, etc.
-
-**4. Handling Missing Data**
-
-* Imputation: Fill with median/mode
-* Missingness indicators
-* Know when to drop vs. impute
-
-::::
-:::::
 
 ::: {.notes}
-**Brief overview of the four main categories from Chapter 30.**
+**Timing: ~3 minutes.**
 
-**1. Encoding Categorical Variables**
+Feature engineering sounds new, but students have done it. Week 10's `Default` data had Yes/No columns; models need numbers, so we converted them to 1/0. The table shows the same three customers' `student` column before and after.
 
-**The problem:** ML algorithms need numbers, not text
+**Click: the callout.** That one-liner did the job, but it has real problems once a model leaves the notebook:
 
-**Solutions:**
-- **Dummy/One-hot:** Create binary columns (0/1) for each category
-  - Example: BldgType → BldgType_SingleFamily, BldgType_Condo, etc.
-  - Use for: Nominal variables (no order)
-  - Watch out: Drop one column for linear regression (dummy variable trap)
+- **Outside the model:** the conversion isn't part of the model, so whoever scores new customers must remember to repeat it exactly. Forget it, and the model gets text it can't use.
+- **Silent errors:** `== 'Yes'` turns anything that isn't exactly "Yes" into 0. A new file with "yes" or "Y" would mislabel every student, with no error.
+- **Doesn't scale:** fine for two values, painful for a column with 25 neighborhoods.
 
-- **Label encoding:** Assign integers (1, 2, 3, ...)
-  - Example: Neighborhoods → 1, 2, 3, ..., 28
-  - Use for: High-cardinality + tree models
-  - Never use: With linear models for nominal variables!
+scikit-learn's encoders fix all three: they *learn* the categories from the training data, they travel with the model inside a pipeline, and they can be told what to do with values they've never seen.
 
-- **Ordinal encoding:** Custom mapping preserving order
-  - Example: Quality (Poor=1, Fair=2, Good=3, Excellent=4)
-  - Use for: Variables with natural ordering
-
-**2. Scaling Numerical Features**
-
-**The problem:** Features on different scales (sq ft: 1000-4000, bedrooms: 1-6)
-
-**When it matters:**
-- k-NN, SVM: YES (distance-based)
-- Linear regression with regularization: YES
-- Decision trees, Random Forests: NO (threshold-based)
-
-**Methods:**
-- **StandardScaler:** Transforms to mean=0, std=1 (most common)
-- **MinMaxScaler:** Transforms to range [0, 1]
-
-**3. Creating New Features**
-
-**The power move in feature engineering:**
-
-- **Polynomial features:** Capture non-linear relationships (x²,  x³)
-- **Interactions:** Feature A × Feature B (size × quality)
-- **Domain-specific:** Requires expertise in the problem domain
-  - Best source: Talk to domain experts!
-  - They know what really matters
-
-**4. Handling Missing Data**
-
-**The reality:** Real-world data always has gaps
-
-**Strategies:**
-- **Imputation:** Fill with median (numerical) or mode (categorical)
-- **Missingness indicators:** Create binary flag "was_missing"
-  - Important when missingness is informative!
-  - Example: High earners often don't report income
-- **Drop data:** Only when < 5% missing and it's random
-
-**Key decision:** Drop vs. Impute?
-- < 5% missing + random: Drop
-- > 5% missing or informative: Impute + indicator
-
-**Transition:** "Let's see some of these techniques in action with the Ames data."
+**Transition:** "There are a handful of common feature engineering moves. Today we'll focus on two of them."
 :::
 
-## Hands-On Demo: Encoding & Scaling {.smaller .scrollable}
+## Common Approaches {.smaller}
 
-**Original Features:**
-```{python}
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+::: {.card-grid .cols-2}
+::: {.card}
+[📏 Scale numeric features]{.card-title}
 
-# Load Ames data
-ames = pd.read_csv('../data/ames_clean.csv')
+Put features on comparable scales: **standardize** (mean 0, std 1) or **normalize** (0 to 1)
 
-# Look at original features
-features_to_eng = ['Neighborhood', 'GrLivArea', 'YearBuilt', 'TotalBsmtSF']
-print(ames[features_to_eng])
-```
+[Today]{.card-lesson}
+:::
+::: {.card}
+[🏷️ Encode categorical features]{.card-title}
 
+Turn text categories into numbers: **one-hot** for unordered categories, **ordinal** for ordered ones
 
-**Engineered Features:**
-```{python}
-# 1. Encode Neighborhood: 28 categories → integers
-le = LabelEncoder()
-ames['Neighborhood_Encoded'] = le.fit_transform(ames['Neighborhood'])
+[Today]{.card-lesson}
+:::
+::: {.card}
+[🧩 Handle missing values]{.card-title}
 
-# 2. Scale numerical features: mean=0, std=1
-scaler = StandardScaler()
-features_to_scale = ['Neighborhood_Encoded', 'GrLivArea', 'YearBuilt', 'TotalBsmtSF']
-ames[features_to_scale] = scaler.fit_transform(ames[features_to_scale])
+Fill gaps (**impute**) with the median or most common value, or flag that a value was missing
 
-# Look at engineered features
-print(ames[features_to_scale])
-```
+[In your reading]{.card-lesson}
+:::
+::: {.card}
+[✨ Create new features]{.card-title}
+
+Ages, ratios, totals, and interactions built from existing columns
+
+[In your reading]{.card-lesson}
+:::
+:::
 
 ::: {.notes}
-**This is a live coding demo - type it out!**
+**Timing: ~2 minutes.** One sentence per card.
 
-**Setup:**
-- Make sure ames_clean.csv is in ../data/
-- Import statements first
+We'll go deep on the top two today, because nearly every model needs them: scaling (for distance-based models like KNN) and encoding categorical columns (every scikit-learn model needs numbers). The bottom two are in Chapter 30.
 
-**Walk through step by step:**
-
-**Step 1: Label Encoding (Lines 8-10)**
-
-Before running:
-- "We have 28 unique neighborhoods - that's too many for dummy encoding"
-- "Label encoding creates one column with integers 0-27"
-- "This works well for tree-based models"
-
-Run the code:
-```python
-le = LabelEncoder()
-ames['Neighborhood_Encoded'] = le.fit_transform(ames['Neighborhood'])
-print(f"Encoded 28 neighborhoods into: {ames['Neighborhood_Encoded'].unique()}")
-```
-
-Point out:
-- Went from text labels to integers
-- Each neighborhood gets a unique number
-- Compressed 28 potential dummy columns into 1 column
-
-**Warning to students:**
-"Never use label encoding for nominal variables with LINEAR models! The model will think Neighborhood 27 is 'bigger than' Neighborhood 1, which is meaningless."
-
-**Step 2: Scaling (Lines 12-18)**
-
-Before running:
-- "These three features are on very different scales"
-- "GrLivArea ranges from 800-4000"
-- "YearBuilt ranges from 1900-2010"
-- "If we use these in KNN, GrLivArea dominates!"
-
-Run the code:
-```python
-scaler = StandardScaler()
-features_to_scale = ['GrLivArea', 'YearBuilt', 'TotalBsmtSF']
-ames[features_to_scale] = scaler.fit_transform(ames[features_to_scale])
-print("\nAfter StandardScaler:")
-print(ames[features_to_scale].describe())
-```
-
-Point out the output:
-- Mean is now ≈ 0 for each feature (might be 1e-15, basically 0)
-- Std is now ≈ 1.0 for each feature
-- All features on same scale now!
-
-**Key teaching points:**
-
-1. **When to scale:**
-   - "About to use KNN, SVM, or regularized regression? Scale!"
-   - "Using Random Forest or decision trees? Don't bother scaling"
-
-2. **Fit vs Transform:**
-   - "We fit on training data, transform both train and test"
-   - "This prevents data leakage - we'll see more on that next"
-
-3. **StandardScaler vs MinMaxScaler:**
-   - "StandardScaler is default choice (mean=0, std=1)"
-   - "MinMaxScaler when you need [0, 1] range (like neural nets)"
-
-**Common student mistakes to address:**
-
-❌ Scaling before train/test split
-✓ Split first, then fit scaler on train only
-
-❌ Using label encoding for nominal variables with linear models
-✓ Use dummy encoding instead
-
-❌ Scaling when using tree-based models
-✓ Trees don't care about scale - save the computation!
-
-**Transition:** "These techniques are powerful, but there's a dangerous pitfall: data leakage. Pipelines solve this."
+**Transition:** "Why does scaling matter? Let's look at one house and ask KNN who its neighbors are."
 :::
 
-## Preventing Data Leakage with Pipelines {.smaller}
+## Scaling: Who Are My Neighbors? {.smaller}
 
-**The problem:** If you fit a scaler on the entire dataset (train + test), test set information "leaks" into training.
-
-**The solution:** Pipelines ensure transformations fit on training data only.
+KNN measures distance. Slide to **Scaled**: each column becomes *standard deviations from its mean*, `(value − mean) / std`, so both axes share one unit.
 
 ```{python}
-#| eval: false
-from sklearn.pipeline import Pipeline
+#| echo: false
+#| fig-align: center
+from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
 
-# Create pipeline: scaling → model
-pipeline = Pipeline([
-    ('scaler', StandardScaler()),
-    ('model', RandomForestClassifier(n_estimators=100))
-])
+size_quality = ames[['GrLivArea', 'OverallQual']].to_numpy(dtype=float)
+size_scaler = StandardScaler().fit(size_quality)
+size_quality_scaled = size_scaler.transform(size_quality)
+home = 174                                    # 1,651 sq ft, quality 6, sold for $184,000
+actual = ames.loc[home, 'SalePrice']
+sd_area, sd_qual = size_scaler.scale_
 
-# Fit on training data (scaler learns from X_train only!)
-pipeline.fit(X_train, y_train)
+def five_nearest(features):
+    """Row numbers of the 5 homes closest to `home` (skipping the home itself)."""
+    finder = NearestNeighbors(n_neighbors=6).fit(features)
+    return finder.kneighbors(features[[home]], return_distance=False)[0][1:]
 
-# Predict on test data (scaler uses training stats to transform X_test)
-predictions = pipeline.predict(X_test)
+raw_nearest, scaled_nearest = five_nearest(size_quality), five_nearest(size_quality_scaled)
+jitter = np.random.default_rng(1).uniform(-0.18, 0.18, len(ames))   # spread the quality rows
+coords = {   # where every home sits in each view (jitter scaled to match)
+    'raw': (size_quality[:, 0], size_quality[:, 1] + jitter),
+    'scaled': (size_quality_scaled[:, 0], size_quality_scaled[:, 1] + jitter / sd_qual),
+}
+
+fig = go.Figure()
+for view in ['raw', 'scaled']:
+    x, y = coords[view]
+    fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='Other homes',
+                             marker=dict(color='lightgray', size=6), visible=view == 'raw', hoverinfo='skip'))
+    fig.add_trace(go.Scatter(x=[x[home]], y=[y[home]], mode='markers', name='Our home', visible=view == 'raw', hoverinfo='skip',
+                             marker=dict(symbol='star', color='black', size=24)))
+titles = []
+for view, nearest in [('raw', raw_nearest), ('scaled', scaled_nearest)]:
+    x, y = coords[view]
+    if view == 'scaled':   # ghost the old (raw) neighbors so students see how far away they really are
+        fig.add_trace(go.Scatter(x=x[raw_nearest], y=y[raw_nearest], mode='markers', name='Old neighbors',
+                                 marker=dict(symbol='circle-open', color='gray', size=12, line=dict(width=2)),
+                                 visible=False, hoverinfo='skip'))
+    for j in nearest:
+        fig.add_trace(go.Scatter(x=[x[home], x[j]], y=[y[home], y[j]], mode='lines', showlegend=False,
+                                 line=dict(color=ORANGE, width=1.5), visible=view == 'raw', hoverinfo='skip'))
+    fig.add_trace(go.Scatter(x=x[nearest], y=y[nearest], mode='markers', name='Its 5 nearest neighbors', visible=view == 'raw',
+                             marker=dict(color=ORANGE, size=12, line=dict(color='black', width=1)),
+                             customdata=ames.loc[nearest, 'SalePrice'],
+                             hovertemplate='Sold for $%{customdata:,}<extra></extra>'))
+    sizes, quals = ames.loc[nearest, 'GrLivArea'], ames.loc[nearest, 'OverallQual']
+    qual_text = (f'all quality {quals.min()}' if quals.min() == quals.max()
+                 else f'quality {quals.min()}–{quals.max()}')
+    titles.append(f'{"Raw units" if view == "raw" else "Scaled"}: neighbors are {sizes.min():,}–{sizes.max():,} '
+                  f'sq ft, {qual_text}  |  KNN predicts <b>{usd(ames.loc[nearest, "SalePrice"].mean())}</b> '
+                  f'(actual {usd(actual)})')
+
+# Which traces belong to which view: raw = homes, star, spokes + neighbors (0, 1, 4-9);
+# scaled = homes, star, ghosted old neighbors, spokes + neighbors (2, 3, 10-16)
+raw_on = [i in (0, 1) or 4 <= i <= 9 for i in range(len(fig.data))]
+scaled_on = [i in (2, 3) or i >= 10 for i in range(len(fig.data))]
+raw_layout = {'title.text': titles[0],
+              'xaxis.title.text': 'Above-ground living area (sq ft)', 'xaxis.range': [1250, 2050],
+              'yaxis.title.text': 'Overall quality (1–10)', 'yaxis.range': [2.5, 10.5], 'yaxis.dtick': 1}
+scaled_layout = {'title.text': titles[1],
+                 'xaxis.title.text': f'Living area, in std devs (1 std ≈ {sd_area:,.0f} sq ft)',
+                 'xaxis.range': [-1.5, 2.0],
+                 'yaxis.title.text': f'Quality, in std devs (1 std ≈ {sd_qual:.1f} points)',
+                 'yaxis.range': [-2.8, 3.2], 'yaxis.dtick': 1}
+steps = [dict(method='update', label='Raw units', args=[{'visible': raw_on}, raw_layout]),
+         dict(method='update', label='Scaled', args=[{'visible': scaled_on}, scaled_layout])]
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40), len=0.4, x=0.3)],
+    xaxis=dict(title='Above-ground living area (sq ft)', range=[1250, 2050]),
+    yaxis=dict(title='Overall quality (1–10)', range=[2.5, 10.5], dtick=1),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=430, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
-::: {.callout-important}
-**Pipelines = reproducible, leak-free workflows!**
+::: {.notes}
+**Timing: ~5 minutes.**
+
+Our home (★): 1,651 sq ft, quality 6, sold for $184,000. KNN predicts its price by averaging the prices of the 5 closest homes.
+
+**Raw units (start here):** distance adds up square-foot differences and quality differences as-is. A 100 sq ft difference counts as much as 100 quality points, and quality only runs 1–10. So size swamps quality. The 5 "nearest" homes are almost exactly the same size but range from quality 5 to 9, and the prediction is way off.
+
+**Slide to Scaled. Watch the axis labels change.** Every value is now "how many standard deviations from the average". For living area, 1 std is about 525 sq ft; for quality, about 1.4 points. The points don't move relative to each other within a column; the *units* change, so both axes now measure the same thing.
+
+- The gray rings are the old raw-unit neighbors. On the common scale, they're 1–2 std away vertically: not close at all.
+- The new orange neighbors are close on both axes, and the prediction lands close to the actual price.
+
+**Point to make:** scaling didn't change the data's shape. It changed what "close" means, and so who counts as a neighbor.
+
+**Standardize vs. normalize:** `StandardScaler` (mean 0, std 1) is the usual default; `MinMaxScaler` squeezes each feature into 0–1. Either way, features count equally. Distance-based models (KNN) and regularized linear models need scaling; trees and forests split one feature at a time, so they don't care.
+
+**Transition:** "Numbers need scaling. Text categories need encoding."
+:::
+
+## One-Hot Encoding {.smaller}
+
+For categories with **no natural order**, like house style:
+
+::: {style="font-size: 0.85em;"}
+```{python}
+from sklearn.preprocessing import OneHotEncoder
+
+homes = ames.loc[[1, 0, 275], ['Id', 'HouseStyle']].set_index('Id')   # three actual homes
+one_hot = OneHotEncoder(sparse_output=False)
+encoded = one_hot.fit_transform(homes)
+
+homes.join(pd.DataFrame(encoded, index=homes.index,
+                        columns=one_hot.get_feature_names_out()).astype(int))
+```
+:::
+
+. . .
+
+**Why not number them** (1.5Fin = 0, 1Story = 1, 2Story = 2)? That invents an order: 2Story would be "twice" 1Story. **One-hot** gives each style its own 0/1 column, so all styles are equally different.
+
+::: {.notes}
+**Timing: ~3 minutes.** Live code.
+
+**Walk the output:** three actual homes (by `Id`). The original `HouseStyle` column is on the left. The encoder learned three categories and made one 0/1 column per category, named `HouseStyle_<category>`. Each home has exactly one 1, in its own style's column.
+
+**Click: the reasoning.** Numbering categories is tempting because it's one column, but the model reads numbers as quantities. House styles have no order, so one-hot avoids inventing one.
+
+**Transition:** "But some categories *do* have an order."
+:::
+
+## Ordinal Encoding {.smaller}
+
+For categories with a **real order**, like kitchen quality: Fair < Typical < Good < Excellent
+
+::: {style="font-size: 0.85em;"}
+```{python}
+from sklearn.preprocessing import OrdinalEncoder
+
+quality_order = ['Fa', 'TA', 'Gd', 'Ex']                       # Fair < Typical < Good < Excellent
+homes = ames.loc[[1, 0, 275], ['Id', 'KitchenQual']].set_index('Id')
+ordinal = OrdinalEncoder(categories=[quality_order])
+
+homes.assign(KitchenQual_encoded=ordinal.fit_transform(homes).ravel().astype(int))
+```
+:::
+
+. . .
+
+::: {.callout-warning}
+## You must give the order
+
+Without `categories=`, scikit-learn sorts alphabetically: Ex = 0, Fa = 1, Gd = 2, TA = 3. That's a fake order again, with Excellent at the bottom.
 :::
 
 ::: {.notes}
-**This is the most important slide for production ML.**
+**Timing: ~2 minutes.** Live code. Same three homes.
 
-**The Data Leakage Problem:**
+**Walk the output:** one column in, one column out. Typical → 1, Good → 2, Excellent → 3 (Fair would be 0). Here a single number column is *right*, because the order is real: an Excellent kitchen really is better than a Good one.
 
-**Wrong approach (causes leakage):**
-```python
-# ❌ WRONG: Fitting scaler on ALL data
-scaler = StandardScaler()
-X_all_scaled = scaler.fit_transform(X)  # Includes both train and test!
+**Click: the warning.** This is the classic mistake. `OrdinalEncoder()` with no `categories=` still runs, but it orders the levels alphabetically, which scrambles quality. Always pass the order explicitly.
 
-# Now split
-X_train, X_test, y_train, y_test = train_test_split(X_all_scaled, y)
+**Rule of thumb:** order is real (quality, size bins, ratings) → ordinal. No order (neighborhood, style, zoning) → one-hot.
+
+**Transition:** "Now let's put scaling, one-hot, and ordinal encoding into the workflow we've built today."
+:::
+
+## Feature Engineering Inside a Pipeline {.smaller}
+
+```{python}
+#| code-line-numbers: "|5-7|9-13|14-15|17-20"
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsRegressor
+
+numeric = ['GrLivArea', 'LotArea', 'YearRemodAdd', 'TotRmsAbvGrd', 'GarageArea', 'Fireplaces']
+categorical = ['HouseStyle', 'MSZoning']
+quality = ['KitchenQual', 'ExterQual']
+
+preprocess = ColumnTransformer([
+    ('scale', StandardScaler(), numeric),                                       # numbers → scaled
+    ('one_hot', OneHotEncoder(handle_unknown='ignore'), categorical),           # no order → 0/1 columns
+    ('ordinal', OrdinalEncoder(categories=[quality_order] * 2), quality),      # real order → 0, 1, 2, 3
+])
+knn_pipeline = Pipeline([('prep', preprocess),
+                         ('model', KNeighborsRegressor(n_neighbors=10))])
+
+X_train, X_test, y_train, y_test = train_test_split(
+    ames[numeric + categorical + quality], ames['SalePrice'], test_size=0.2, random_state=42)
+cv_rmse = -cross_val_score(knn_pipeline, X_train, y_train, cv=5, scoring='neg_root_mean_squared_error')
+print(f"CV RMSE: ${cv_rmse.mean():,.0f}")
 ```
 
-**Why this is wrong:**
-- Scaler learned mean/std from ENTIRE dataset
-- Including test set!
-- Test set information influenced the preprocessing
-- This is data leakage
+. . .
 
-**Impact:**
-- Overly optimistic performance estimates
-- Model performs worse in production
-- Stakeholders lose trust
+::: {.callout-tip}
+## Why inside the pipeline?
 
-**The Right Approach: Pipelines**
+`cross_val_score` refits the **whole pipeline** in every fold, so the scaler and encoders learn only from that fold's training rows: no leakage from the validation fold or the test set.
+:::
 
-```python
-# ✓ CORRECT: Pipeline ensures proper fit/transform
-pipeline = Pipeline([
-    ('scaler', StandardScaler()),
-    ('model', RandomForestClassifier())
-])
+::: {.notes}
+**Timing: ~4 minutes.** Live code.
 
-# First split, THEN fit pipeline
-X_train, X_test, y_train, y_test = train_test_split(X, y)
-pipeline.fit(X_train, y_train)  # Scaler fits on X_train only
-```
+**Walk the highlighted lines:**
 
-**What happens internally:**
+1. **Lines 5–7: the columns.** Three groups, each needing different treatment: numeric columns, unordered categories (house style, zoning), and ordered quality ratings.
+2. **Lines 9–13: `ColumnTransformer`.** Each group of columns gets its own treatment: numeric columns are scaled, unordered categories are one-hot encoded, and the two quality columns are ordinal-encoded with the Fair < Typical < Good < Excellent order (one order per column, so `[quality_order] * 2` repeats it for both). `handle_unknown='ignore'` means a category that only shows up in new data becomes all zeros instead of crashing.
+3. **Lines 14–15: `Pipeline`.** Preprocessing and model glued into one object, with `.fit()` and `.predict()` like any model. Note the step names, `'prep'` and `'model'`; they matter on the next slide.
+4. **Lines 17–20:** split first, then hand the *pipeline* to `cross_val_score`, exactly like a plain tree.
 
-When you call `pipeline.fit(X_train, y_train)`:
-1. Scaler fits on X_train (learns mean, std)
-2. Scaler transforms X_train using those stats
-3. Model trains on the scaled X_train
+**Click: the callout.** This is the leak-free part. Scaling the whole dataset up front would let the validation and test homes shape the scaler's mean and std. Inside the pipeline, each fold's scaler and encoders only see that fold's training rows. It also fixes the problems from the Yes/No slide: the encoding travels with the model.
 
-When you call `pipeline.predict(X_test)`:
-1. Scaler transforms X_test using training mean/std (NOT test mean/std!)
-2. Model predicts on the scaled X_test
+**If asked "does scaling actually matter here?":** the same pipeline with the scaler swapped out scores a CV RMSE of about $51k, versus about $36k with it.
 
-**Key Benefits of Pipelines:**
+**Transition:** "And because the pipeline acts like a model, we can tune it with GridSearchCV. There's just one naming trick."
+:::
 
-1. **Prevents data leakage** - Transformations fit on train only
-2. **Less code** - One `.fit()` call instead of multiple steps
-3. **Easier deployment** - Entire workflow in one object
-4. **Prevents mistakes** - Can't forget to scale test data
+## Tuning the Whole Pipeline {.smaller}
 
-**Real-World Workflow:**
+To tune a setting **inside** a pipeline, name the step and the parameter:
 
-```python
-# Step 1: Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y)
+::: {.param-decoder}
+::: {.part .step}
+`model`
 
-# Step 2: Create pipeline
-pipeline = Pipeline([
-    ('imputer', SimpleImputer(strategy='median')),
-    ('scaler', StandardScaler()),
-    ('model', RandomForestClassifier())
-])
+[the name we gave the step:<br>`('model', KNeighborsRegressor(...))`]{}
+:::
+::: {.part .sep}
+`__`
 
-# Step 3: Use GridSearchCV with pipeline
-param_grid = {'model__n_estimators': [100, 200, 300]}
-grid_search = GridSearchCV(pipeline, param_grid, cv=5)
+[two underscores<br>= "inside"]{}
+:::
+::: {.part .param}
+`n_neighbors`
 
-# Step 4: Fit on training data
+[a hyperparameter of<br>that step's model]{}
+:::
+:::
+
+```{python}
+param_grid = {'model__n_neighbors': [3, 5, 7, 10, 15, 25]}
+grid_search = GridSearchCV(knn_pipeline, param_grid, cv=5,
+                           scoring='neg_root_mean_squared_error', n_jobs=-1)
 grid_search.fit(X_train, y_train)
-
-# Step 5: Evaluate on test set ONCE
-test_score = grid_search.score(X_test, y_test)
+print("Best settings:", grid_search.best_params_)
+print(f"Best CV RMSE: ${-grid_search.best_score_:,.0f}")
 ```
 
-**Notice:**
-- Imputation, scaling, and modeling all in one pipeline
-- GridSearchCV works with pipelines
-- Test set only touched ONCE at the end
+. . .
 
-**Common student questions:**
+::: {.callout-important}
+## There's a lot more to feature engineering
 
-1. **"Do I always need pipelines?"**
-   - If you're doing ANY preprocessing: YES
-   - Even if just scaling: YES
-   - Only exception: No preprocessing at all
+Imputing missing values, creating new features, and more: you'll see several in this week's reading (Chapter 30). They all plug into the same pipeline.
+:::
 
-2. **"Can I put multiple preprocessing steps in a pipeline?"**
-   - Absolutely! That's the power of pipelines
-   - Imputation → Scaling → PCA → Model
-   - All as one reproducible unit
+::: {.notes}
+**Timing: ~3 minutes.** Live code.
 
-3. **"How do I tune hyperparameters in a pipeline?"**
-   - Use double underscore: `'model__n_estimators'`
-   - Format: `'step_name__parameter_name'`
+**The decoder:** a plain model takes `n_neighbors` directly. Inside a pipeline, GridSearchCV needs to know *which step* the setting belongs to, because a pipeline can hold a scaler, encoders, and a model. So the name is the step's name (`model`, which we chose on the last slide), two underscores, then the parameter. If we'd named the step `'knn'`, it would be `knn__n_neighbors`.
 
-**Transition:** "Now let's tie everything together - CV + hyperparameter tuning + feature engineering."
+**Handy trick if asked:** `knn_pipeline.get_params().keys()` lists every name you can tune, including `model__n_neighbors` and `model__weights`.
+
+**Walk the code:** each of the 6 values × 5 folds refits the whole pipeline, scaler and encoders included. Fit on the training set only, then read off the best K and its CV RMSE. The refit-then-test-once step from earlier applies unchanged.
+
+**Click: the callout.** Point students to Chapter 30 for imputation and new features. Everything they do there drops into the same `ColumnTransformer`.
+
+**Transition:** "Let's put the whole professional workflow on one page."
 :::
 
 # Putting It All Together {background="#43464B"}
