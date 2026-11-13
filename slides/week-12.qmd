@@ -1232,14 +1232,6 @@ print("Best settings:", grid_search.best_params_)
 print(f"Best CV RMSE: ${-grid_search.best_score_:,.0f}")
 ```
 
-. . .
-
-::: {.callout-tip}
-## The refit is built in
-
-After the search, `grid_search.best_estimator_` is the winning setting **refit on all of `X_train`**: the `fit(best, train)` step from our workflow. It's ready to test once.
-:::
-
 ::: {.notes}
 **Timing: ~4 minutes.** Live code; this is the exact search from the heatmap.
 
@@ -1250,77 +1242,47 @@ After the search, `grid_search.best_estimator_` is the winning setting **refit o
 3. **Line 14:** One `.fit()` runs all 150 models. Only `X_train` goes in; the test set stays locked away.
 4. **Lines 16–17:** The winning cell, and its CV RMSE (flip the sign again).
 
-**Click: the callout.** By default (`refit=True`) GridSearchCV refits the best setting on the full training set when the search finishes. That's the "refit once" line from our pseudo code. The test set gets used exactly once, on that model, at the very end.
-
 **Also worth knowing:** `grid_search.cv_results_` holds the score of every cell. The Lecture notebook's "Tune a Tree" Your Turn plots it.
 
-**Transition:** "One more look at the train/CV gap before we move on."
+**Transition:** "We have a winner. So what do we do with it?"
 :::
 
-## Think-Pair-Share: Spotting Overfitting {.smaller}
-
-**Scenario:** You tried two random forest configurations on the Ames training set:
+## Refit, Then Test Once {.smaller}
 
 ```{python}
-#| echo: false
-#| output: asis
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import cross_validate
+#| code-line-numbers: "|1-3|5|7-10"
+# Step 1: refit the winning settings on ALL of the training data
+final_tree = DecisionTreeRegressor(random_state=42, **grid_search.best_params_)
+final_tree.fit(X_train, y_train)     # GridSearchCV already did this: grid_search.best_estimator_
 
-rf_configs = {
-    'A: `max_depth=6, min_samples_leaf=10`': dict(max_depth=6, min_samples_leaf=10),
-    'B: default settings (no limits)': dict(),
-}
-print('| Configuration | Training RMSE | CV RMSE |')
-print('|---|---:|---:|')
-for label, settings in rf_configs.items():
-    rf_scores = cross_validate(
-        RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1, **settings),
-        X_train, y_train, cv=5, scoring='neg_root_mean_squared_error', return_train_score=True)
-    print(f"| {label} | ${-rf_scores['train_score'].mean():,.0f} "
-          f"| ${-rf_scores['test_score'].mean():,.0f} |")
+# ... more decisions to make? Keep using CV. The test set stays locked. 🔒
+
+# Step 2: ONLY when every decision is final, test once
+test_rmse = root_mean_squared_error(y_test, final_tree.predict(X_test))
+print(f"CV RMSE (our estimate):      ${-grid_search.best_score_:,.0f}")
+print(f"Test RMSE (final, one time): ${test_rmse:,.0f}")
 ```
 
-:::: {.columns}
-::: {.column width="70%"}
+. . .
 
-**Discuss:**
+::: {.callout-warning}
+## The test score is the final word
 
-- Which configuration has the bigger gap between training and CV RMSE? What does that gap tell you?
-- Which configuration would you deploy? Why?
-- Last week an unlimited *single tree* overfit badly. Why might an unlimited *forest* get away with it?
-
+This is the **final generalization assessment**. If it disappoints, don't go back and re-tune against it. That's peeking again, and the score stops being honest.
 :::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minOverfit"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minOverfit", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
 
 ::: {.notes}
-**Timing: ~5 minutes** (3-minute timer + 2 minutes of responses). Second in the cut order: drop it if running long.
+**Timing: ~3 minutes.** This closes the loop on the pseudo code from the CV takeaway slide: `fit(best, train)`, then `report(evaluate(best, test))`.
 
-The numbers are live: 5-fold CV on the same training set, with training RMSE averaged across the folds.
+**Walk the highlighted lines:**
 
-**After the timer, cold-call 2–3 pairs.**
+1. **Lines 1–3: refit.** CV trained 5 copies of each setting on 4/5 of the training data, only to *score* them. Now that we've chosen, we train one model with the winning settings on *all* 1,168 training homes. `**grid_search.best_params_` unpacks the winning dictionary into the model's arguments. GridSearchCV does this for you by default (`refit=True`), and `grid_search.best_estimator_` is that same refit model. We write it out once so students see the step.
+2. **Line 5: the pause.** In a real project there are usually more decisions: other models, features, preprocessing. Every one of them still goes through CV. The test set stays locked.
+3. **Lines 7–10: test once.** Only when every decision is final do we score on `X_test`, one time. The CV estimate and the test score land close together, which is what an honest workflow looks like. The CV score was a fair preview.
 
-1. **Bigger gap?** B, by far. Its training RMSE is less than half its CV RMSE. Every tree in B grows until its leaves are nearly pure, so the forest has largely memorized the training homes.
-2. **Deploy?** B. Its **CV RMSE is lower**, and CV RMSE is our estimate of performance on new homes. Many students will say A "because it overfits less". That's the trap: the gap is a *warning sign* to investigate, but the decision is made on the CV score.
-3. **Why does the forest get away with it?** Week 11: each deep tree memorizes *differently* (bootstrap samples + feature randomness), and averaging 100 of them cancels much of that noise. The training score looks wildly optimistic, but the CV score stays good.
+**Click: the callout.** The hard part is discipline. If the test score disappoints, the temptation is to tweak and re-test. That turns the test set back into a validation set, and we're back in the Optimism Gap.
 
-**Key takeaway:** "The train/CV gap tells you *how much* a model memorized. The CV score tells you whether that hurt. Choose on CV."
-
-**If someone asks "so is a gap ever bad?":** yes, when CV gets worse as the gap grows. That's what we saw with K = 1 in the bias–variance slider.
+**If asked "what about all of X?":** we refit on all of `X_train`, not all of `X`, because `X` includes the test homes. Some teams do one last refit on *all* the data after the final test, just before deployment. That's fine, but the reported score is still the one from this slide.
 
 **Transition:** "We've tuned the model. Now let's give it better inputs: feature engineering."
 :::
