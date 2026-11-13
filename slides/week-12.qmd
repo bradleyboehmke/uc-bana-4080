@@ -471,107 +471,98 @@ If no one gets to #3, prompt: "What did we learn about a single 100-home test se
 
 # Solution: Cross-Validation {background="#43464B"}
 
-## Wrong Way vs. Right Way {.smaller .scrollable}
+## Where Each Decision Gets Scored {.smaller}
 
-:::: {.columns}
-::: {.column width="50%"}
+[❌ What we've been doing]{.lane-label}
 
-**❌ What we've been doing:**
+:::: {.flow}
+::: {.card}
+[Try a model]{.card-title}
 
-```{mermaid}
-%%| fig-width: 4.5
-%%| echo: false
-flowchart TD
-    A[Full Dataset] --> B[Train 80%]
-    A --> C[Test 20%]
-    B --> D[Train Model 1]
-    D --> E[Evaluate on Test]
-    C --> E
-    E --> F{Good?}
-    F -->|No| G[Try Model 2]
-    G --> H[Evaluate on Test]
-    C --> H
-    H --> I{Good?}
-    I -->|No| J[Try Model 3]
-    J --> K[Evaluate on Test]
-    C --> K
-    K -->|Yes| L[Report Score]
-
-    style C fill:#ff6b6b
-    style E fill:#ff6b6b
-    style H fill:#ff6b6b
-    style K fill:#ff6b6b
-```
-
-**Problem:** every peek inflates the test score!
-
+[Test set · peek 1]{.scored-on .test}
 :::
-::: {.column width="50%"}
 
-**✓ What we should do:**
+[→]{.arrow}
 
-```{mermaid}
-%%| fig-width: 4.5
-%%| echo: false
-flowchart TD
-    A[Full Dataset] --> B[Train 80%]
-    A --> C[Test 20%<br/>LOCKED]
-    B --> D[5-Fold CV<br/>on Training]
-    D --> E[Try Models]
-    D --> F[Tune Params]
-    D --> G[Engineer Features]
-    E & F & G --> H[Select Best]
-    H --> I[Retrain on<br/>Full Training]
-    I --> J[Test ONCE]
-    C --> J
+::: {.card}
+[Try a depth]{.card-title}
 
-    style C fill:#51cf66
-    style D fill:#51cf66
-    style J fill:#ffd43b
-```
+[Test set · peek 2]{.scored-on .test}
+:::
 
-**Solution:** Use CV, keep test pristine!
+[→]{.arrow}
 
+::: {.card}
+[Try features]{.card-title}
+
+[Test set · peek 3]{.scored-on .test}
+:::
+
+[→]{.arrow}
+
+::: {.card}
+[Report the best]{.card-title}
+
+The luckiest test score
 :::
 ::::
 
+::::: {.fragment}
+[✅ What we'll do now]{.lane-label}
+
+:::: {.flow}
+::: {.card}
+[Try a model]{.card-title}
+
+[CV on training data]{.scored-on .cv}
+:::
+
+[→]{.arrow}
+
+::: {.card}
+[Try a depth]{.card-title}
+
+[CV on training data]{.scored-on .cv}
+:::
+
+[→]{.arrow}
+
+::: {.card}
+[Try features]{.card-title}
+
+[CV on training data]{.scored-on .cv}
+:::
+
+[→]{.arrow}
+
+::: {.card .answer-card}
+[🔒 Test once]{.card-title}
+
+The final generalization assessment
+:::
+::::
+:::::
+
+::::: {.fragment}
+::: {.callout-tip}
+## Same decisions, different referee
+
+CV scores every choice using only the training data, so the test set stays untouched until the very end.
+:::
+:::::
+
 ::: {.notes}
-**This slide makes the contrast crystal clear.**
+**Timing: ~2 minutes.** A quick bridge from "you just invented cross-validation" to how it works.
 
-**Left side (Wrong Way):**
-- Shows the peeking problem visually
-- Train model → evaluate on test → not good? → try again
-- Each arrow to "Evaluate on Test" is another peek
-- The test set (red) is being used repeatedly
-- This is what we've been doing in Modules 9–11
+**Top lane:** this is last week. Every decision, whether model, depth or features, got scored on the test set. Three decisions means three peeks, and the number we reported was the winner of all of them. That's the Optimism Gap again.
 
-**Right side (Right Way):**
-- Test set is locked away (green - safe)
-- All experimentation happens with CV on training set
-- Try different models, tune parameters, engineer features
-- ALL using cross-validation
-- Only after ALL decisions are made → test once
+**Click: bottom lane.** Exactly the same decisions, but each one is scored with cross-validation on the training data. The test set doesn't appear until the last box, once, after every choice is made.
 
-**Teaching points:**
+**Click: the takeaway line.** "We're not making fewer decisions. We're changing who referees them."
 
-1. **Count the peeks:**
-   - Wrong way: 3 peeks shown (could be many more!)
-   - Right way: 0 peeks until the very end
+We'll see the full end-to-end workflow, including retraining on the full training set, at the end of class.
 
-2. **Where decisions are made:**
-   - Wrong way: Decisions based on test set
-   - Right way: Decisions based on CV scores
-
-3. **Test set purpose:**
-   - Wrong way: Used as a validation set (peeked at over and over)
-   - Right way: Used only for final honest evaluation
-
-**Key message:** "The difference between these approaches is the difference between amateur and professional data science."
-
-**Common student reaction:** "Wait, we've been doing it wrong this whole time?"
-**Answer:** "Not 'wrong' - it was the right pedagogical sequence. Simple first, then proper. Now you know both!"
-
-**Transition:** "Let's zoom in on the right side - how does cross-validation actually work in practice?"
+**Transition:** "So what does 'CV on training data' actually do? Let's step through it."
 :::
 
 ## K-Fold, One Round at a Time {.smaller}
@@ -681,11 +672,19 @@ cv_scores = cross_val_score(tree, X_train, y_train, cv=5,
                             scoring='neg_root_mean_squared_error')
 cv_rmse = -cv_scores   # scikit-learn reports negative RMSE so that higher is always better
 
-print("RMSE by fold:", ", ".join(f"${v:,.0f}" for v in cv_rmse))
+print(cv_rmse.round())   # one RMSE per fold
 print(f"CV RMSE: ${cv_rmse.mean():,.0f} ± ${cv_rmse.std():,.0f}")
 ```
 
 **Notice:** `X_test` and `y_test` never appear after line 4.
+
+. . .
+
+::: {.callout-tip}
+## How many folds?
+
+**K = 5 or 10** is the norm. More folds means more models to train (K× the work) and smaller validation folds. 5 or 10 balances a steady average against compute time.
+:::
 
 ::: {.notes}
 **Timing: ~4 minutes.** Live code; every number is computed at render time.
@@ -694,7 +693,7 @@ print(f"CV RMSE: ${cv_rmse.mean():,.0f} ± ${cv_rmse.std():,.0f}")
 
 1. **Lines 3–4:** Split first. From here on, the test set is locked away.
 2. **Lines 6–10:** One call runs all 5 rounds from the last slide. `cv=5` is the number of folds.
-3. **Lines 12–13:** The five fold scores, then their mean ± std. These are the same five numbers as the bars on the previous slide.
+3. **Lines 12–13:** `cv_rmse` is just a NumPy array with one RMSE per fold. These are the same five numbers as the bars on the previous slide. Then the mean ± std, which is the number we'd report.
 
 **The negative sign:** scikit-learn's scorers always treat *higher as better*, so error metrics come back negative (`neg_root_mean_squared_error`). We flip the sign to get ordinary RMSE. Students will trip on this in the Lab, so say it out loud.
 
@@ -705,7 +704,9 @@ print(f"CV RMSE: ${cv_rmse.mean():,.0f} ± ${cv_rmse.std():,.0f}")
 
 **Common question:** "When do we use the test set?" Once, at the very end, after every decision is made. We'll see the full workflow at the end of class.
 
-**Transition:** "How much could one score move? Let's find out by trying 50 different splits."
+**The callout:** K = 5 or 10 is the convention. Each extra fold is another model to train, and each fold gets smaller, so its score gets noisier. 5 is a good default; 10 when the data is small and training is cheap.
+
+**Transition:** "Is one 5-fold run enough? Let's check it against 50 random splits of the same data."
 :::
 
 ## How Lucky Was Your Split? {.smaller}
@@ -806,32 +807,56 @@ fig.show(config=PLOTLY_CONFIG)
 ::: {.callout-important}
 ## The Golden Rule of Cross-Validation
 
-**Split your data FIRST, then use cross-validation on the training set for ALL modeling decisions.**
-
-- ✅ Compare different models
-- ✅ Tune hyperparameters
-- ✅ Select features
-- ✅ Evaluate preprocessing choices
-
-**Your test set should be touched ONCE at the very end.**
+**Split first.** Use cross-validation on the training set for **every** modeling decision: models, hyperparameters, features, preprocessing. Touch the test set **once**, at the very end.
 :::
 
 . . .
 
-**Why this matters:**
+:::: {.columns}
+::: {.column width="50%"}
+**❌ Weeks 9–11**
 
-* **Test-set peeking** is subtle and easy to do accidentally
-* Every peek at the test set makes your performance estimates **less trustworthy**
-* Cross-validation gives you **unlimited practice exams** while keeping your final exam pristine
-* This is the difference between **amateur** and **professional** data science
+```python
+train, test = split(data)
+model1 = tree(depth=3)
+model2 = tree(depth=8)
+
+fit(model1, train)
+fit(model2, train)
+score1 = evaluate(model1, test)  # peek!
+score2 = evaluate(model2, test)  # peek!
+
+report(best score)               # optimistic
+```
+:::
+::: {.column width="50%"}
+**✅ From now on**
+
+```python
+train, test = split(data)        # lock test away
+model1 = tree(depth=3)
+model2 = tree(depth=8)
+
+score1 = cross_validate(model1, train, k=5)
+score2 = cross_validate(model2, train, k=5)
+
+best = model with best CV score
+fit(best, train)                 # refit once
+report(evaluate(best, test))     # test once
+```
+:::
+::::
 
 ::: {.notes}
-**This slide crystallizes the main lesson from the CV section.**
+**Timing: ~3 minutes.** This slide pulls the CV section together.
 
-**The callout box contains the core message:**
-- Split first (train/test split is step 1)
-- Use CV on training set for all decisions
-- Test set = final evaluation only
+**The callout:** split first, use CV on the training set for every decision, and use the test set once.
+
+**Click: the pseudo code.** Same two candidate models on both sides, a depth-3 and a depth-8 tree. Walk them side by side.
+
+- **Left (weeks 9–11):** both models are scored on the test set, so the test set picks the winner, and the score we report is the winner's luckiest score.
+- **Right (from now on):** both models are scored with CV on the training set. The test set doesn't appear until the last line.
+- **One new step on the right:** `fit(best, train)`. CV trained 5 copies of each model only to *score* them. Once we've chosen, we refit the winner on all the training data, then test it once.
 
 **Emphasize the examples:**
 - "Want to compare a single tree vs. a random forest? Use CV!"
