@@ -63,6 +63,22 @@ def usd(value):
 ```
 
 ::: {.notes}
+**Timing: ~1 minute.**
+
+**Timing plan** (each slide's notes carry its own estimate):
+
+| Section | Time |
+|---|---|
+| Opening: welcome, notebook, Week 11 recap | ~4 min |
+| The peeking problem | ~17 min |
+| Cross-validation | ~18 min |
+| Hyperparameter tuning | ~21 min |
+| Feature engineering | ~22 min |
+| Looking forward: takeaways, workflow, readings, lab, questions | ~9 min |
+| **Total** | **~91 min** |
+
+The per-slide estimates are generous and add up to more than the 75-minute class. Check the clock when you reach "How Lucky Was Your Split?" (~32 minutes in on this plan): if you're behind, skip it (~4 min). It's the first cut, and students still get it as a Your Turn in the Lecture notebook.
+
 This week ties together everything students have learned about modeling. We're moving from "textbook simple" to "production ready." These three topics (CV, hyperparameter tuning, feature engineering) are what separate beginner data scientists from professionals.
 
 Key message: The techniques from previous weeks were pedagogically useful, but now we're learning the proper workflow that ensures honest, reliable model performance.
@@ -76,6 +92,10 @@ Key message: The techniques from previous weeks were pedagogically useful, but n
 Open the Lecture notebook in Colab now and follow along as we work through today's examples on cross-validation, hyperparameter tuning, and feature engineering pipelines.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-12-lecture.ipynb)
+:::
+
+::: {.notes}
+**Timing: ~1 minute.** Give students a moment to open the notebook in Colab, then move on. They can catch up while you do the recap.
 :::
 
 # Week 11 Recap {background="#43464B"}
@@ -412,61 +432,15 @@ The test set can't be used to make modeling decisions. Set it aside for one job:
 ... using **only the training data**, and getting a score we can trust.
 
 ::: {.notes}
-**Timing: ~2 minutes.**
+**Timing: ~3 minutes.**
 
 State the rule plainly: the test set gets used exactly once, at the end. Its job is to tell us how the finished model generalizes, not to help us build it.
 
 Then name the gap. Every decision we made last week still has to be made somehow. We just can't use the test set to make it.
 
-**Transition:** "Before I show you the professional answer, see if you can come up with it yourselves."
-:::
+**Quick ask:** "How could you score a depth using only the training homes?" Take one or two answers. If someone says "hold some back and score on those," that's a validation set, and it's where we're headed.
 
-## Think-Pair-Share {.smaller}
-
-**Your test set is locked away.** You have 876 training homes and need to choose between `max_depth=6` and `max_depth=9`, the two depths from the last chart.
-
-:::: {.columns}
-::: {.column width="70%"}
-
-**Discuss with your neighbor:**
-
-- How could you score each depth using **only the training homes**?
-- Why can't you just use each tree's score on the data it was trained on?
-- Your idea gives you one score per depth. How could you tell whether that score was just luck?
-
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minLock"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minLock", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-**Timing: ~5 minutes** (3-minute timer + 2 minutes of responses).
-
-**After the timer expires, cold-call 2–3 pairs.** The goal is for students to invent the pieces of cross-validation before they see it.
-
-Expected student responses:
-
-1. **Score using only training homes:** "Hold some of the training homes back, train on the rest, and score on the ones we held back." That's a **validation set**. Write it on the board.
-2. **Why not the training score?** "A deep tree memorizes its training data, so its training score always looks great." (Callback to week 11's depth slider.)
-3. **Was it luck?** "Hold back a *different* chunk and do it again, then average." That's the idea behind cross-validation.
-
-If no one gets to #3, prompt: "What did we learn about a single 100-home test set today? Would a single validation set have the same problem?"
-
-**Transition to solution:** "You just invented cross-validation. Hold out a piece of the training data, score on it, repeat with a different piece, and average. Let's see how it works."
+**Transition:** "The professional answer is cross-validation: hold out a piece of the training data, score on it, repeat with a different piece, and average."
 :::
 
 # Solution: Cross-Validation {background="#43464B"}
@@ -552,7 +526,7 @@ CV scores every choice using only the training data, so the test set stays untou
 :::::
 
 ::: {.notes}
-**Timing: ~2 minutes.** A quick bridge from "you just invented cross-validation" to how it works.
+**Timing: ~2 minutes.** A quick bridge from "the test set can't make decisions" to what does.
 
 **Top lane:** this is last week. Every decision, whether model, depth or features, got scored on the test set. Three decisions means three peeks, and the number we reported was the winner of all of them. That's the Optimism Gap again.
 
@@ -635,7 +609,7 @@ fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-**Timing: ~5 minutes.** This is the idea students just invented in the Think-Pair-Share, made concrete.
+**Timing: ~5 minutes.** This is "hold some training data back, repeat, average," made concrete.
 
 **Heads-up on the numbers:** from here on we use the usual 80/20 split (about 1,170 training homes). The peeking demo used 60% for training only because it also held back "new homes" to show the gap.
 
@@ -786,7 +760,7 @@ fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-**Timing: ~4 minutes.** If you're running long, this is the third thing to cut, after The Fake Order figure and the Overfitting Think-Pair-Share. Students can still do it as the "How Lucky Was Your Split?" Your Turn in the Lecture notebook.
+**Timing: ~4 minutes.** If you're running long, this is the first slide to cut. Students can still do it as the "How Lucky Was Your Split?" Your Turn in the Lecture notebook.
 
 **Setup:** Same depth-6 tree, same Ames data. Each dot is one random 80/20 train/test split (seeds 0–49), placed at its test RMSE.
 
@@ -1744,6 +1718,8 @@ Ordinal encoding for ordered categories, and options like target encoding for ca
 :::
 
 ::: {.notes}
+**Timing: ~1 minute.**
+
 Chapters 28-30 go further than today's lecture. Point out that these are all variations on the same workflow: CV still drives every decision.
 :::
 
@@ -1771,6 +1747,8 @@ Thursday's lab will lead into this week's homework assignment.
 :::
 
 ::: {.notes}
+**Timing: ~1 minute.**
+
 Remind students to read Chapters 28-30 before Thursday. Grid searches in the lab take a few minutes to run, so they should start the Challenges early rather than wait for the last one.
 :::
 
@@ -1786,3 +1764,7 @@ Remind students to read Chapters 28-30 before Thursday. Grid searches in the lab
 <center>
 **See you Thursday for hands-on model tuning!**
 </center>
+
+::: {.notes}
+**Timing: ~2 minutes.** Open Q&A on anything from today, then send students to Thursday's Lab.
+:::
