@@ -29,76 +29,119 @@ execute:
 
 * Quick overview of today's plan:
 
-  * Why the simple train/test split isn't enough
-  * How cross-validation solves the "peeking problem"
-  * Finding optimal model settings systematically
-  * Turning raw data into powerful features
+  * The peeking problem: why test scores mislead
+  * Cross-validation: honest model scores
+  * Hyperparameter tuning: a systematic search
+  * Feature engineering: model-ready inputs
+  * Putting it together: one leak-free workflow
 
-::: {.callout-important}
-This week is all about trying to optimize model performance!
-:::
+```{python}
+#| include: false
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+# Shared settings for the interactive (Plotly) slides
+ORANGE, BLUE = '#e58139', '#399de5'   # same color pair as week 11
+PLOTLY_CONFIG = {'displayModeBar': False}
+
+def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
+    """Build slider steps that show the fixed traces plus one group of traces per step."""
+    steps = []
+    for i in range(n_steps):
+        visible = [True] * n_fixed + [False] * (n_steps * traces_per_step)
+        for k in range(traces_per_step):
+            visible[n_fixed + i * traces_per_step + k] = True
+        steps.append(dict(method='update', label=labels[i],
+                          args=[{'visible': visible}, {'title.text': titles[i]}]))
+    return steps
+
+def usd(value):
+    """Dollar label for Plotly text. Plotly reads a pair of '$' signs as LaTeX, so use the HTML entity."""
+    return f'&#36;{value:,.0f}'
+```
 
 ::: {.notes}
+**Timing: ~1 minute.**
+
+**Timing plan** (each slide's notes carry its own estimate):
+
+| Section | Time |
+|---|---|
+| Opening: welcome, notebook, Week 11 recap | ~4 min |
+| The peeking problem | ~17 min |
+| Cross-validation | ~18 min |
+| Hyperparameter tuning | ~21 min |
+| Feature engineering | ~22 min |
+| Looking forward: takeaways, workflow, readings, lab, questions | ~9 min |
+| **Total** | **~91 min** |
+
+The per-slide estimates are generous and add up to more than the 75-minute class. Check the clock when you reach "How Lucky Was Your Split?" (~32 minutes in on this plan): if you're behind, skip it (~4 min). It's the first cut, and students still get it as a Your Turn in the Lecture notebook.
+
 This week ties together everything students have learned about modeling. We're moving from "textbook simple" to "production ready." These three topics (CV, hyperparameter tuning, feature engineering) are what separate beginner data scientists from professionals.
 
 Key message: The techniques from previous weeks were pedagogically useful, but now we're learning the proper workflow that ensures honest, reliable model performance.
 :::
 
-# Discussion: Homework & Questions {background="#43464B"}
+## 📓 Follow Along in the Notebook
 
-## Questions from Week 11? {.smaller}
+::: {.callout-tip}
+## Week 12 Lecture Notebook
 
-* Random Forests and ensemble methods?
-* Feature importance interpretation?
-* When to use trees vs. other models?
-* Anything confusing in the quiz or class lab?
-* Time to ask!
+Open the Lecture notebook in Colab now and follow along as we work through today's examples on cross-validation, hyperparameter tuning, and feature engineering pipelines.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-12-lecture.ipynb)
+:::
+
+::: {.notes}
+**Timing: ~1 minute.** Give students a moment to open the notebook in Colab, then move on. They can catch up while you do the recap.
+:::
+
+# Week 11 Recap {background="#43464B"}
+
+## Last Week in 60 Seconds {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🌳 Decision trees]{.card-title}
+
+Learn **if-then rules** from data, choosing each split to make the groups as pure as possible
+:::
+::: {.card}
+[🎲 Instability]{.card-title}
+
+Small changes to the data reshape a single tree, and an unlimited tree **memorizes noise**
+:::
+::: {.card}
+[🌲 Random forests]{.card-title}
+
+**Bootstrap samples + feature randomness** create diverse trees whose errors cancel out
+:::
+::: {.card}
+[🔍 Importance & PDPs]{.card-title}
+
+Feature importance shows **which** features matter; partial dependence plots show **how**
+:::
+:::
 
 . . .
 
-:::: {.columns}
-::: {.column width='70%'}
-::: {.callout}
-## Activity
-
-Converse with your neighbor and identify...
-
-* 1 new thing you learned last week that was clear and well explained
-* 1 thing we covered last week that is still confusing
+::: {.callout-tip}
+Last week we tried hyperparameters like `max_depth` and `n_estimators` by hand, one combination at a time, and checked each on the test set. Today we learn why that's a problem, how cross-validation fixes it, and how to search hyperparameter combinations systematically.
 :::
-:::
-::: {.column width='30%'}
-<center>
-
-<div id="3minWaiting"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minWaiting", 180, "slide");
-    });
-</script>
-</center>
-:::
-::::
 
 ::: {.notes}
-Use this time to surface any lingering questions from Week 11 (Random Forests, gradient boosting).
+**Timing: ~2 minutes.** A quick reconnect, not a re-teach.
 
-After the pair discussion, ask 2-3 students to share:
-- What concept clicked for them?
-- What still needs clarification?
+Walk the four cards left to right, top to bottom. One sentence each.
 
-Common confusions from Week 11:
-- How feature importance is calculated
-- When to use Random Forest vs. single decision tree
-- Understanding out-of-bag (OOB) error
-
-Bridge to today: "Last week you learned powerful tree-based models. This week, we learn how to tune them properly, evaluate them honestly, and prepare data to maximize their effectiveness."
+**Transition:** "Every one of those models had settings we had to choose. Think about how we chose them last week... we tried a few and looked at the test score. That habit has a name, and it's today's first problem."
 :::
 
 # The Problem: We've Been Peeking {background="#43464B"}
 
-## The Test Set Contamination Issue {.smaller}
+## How We've Been Peeking {.smaller}
 
 Remember the golden rule from Module 8?
 
@@ -116,362 +159,621 @@ Remember the golden rule from Module 8?
 . . .
 
 ::: {.callout-warning}
-## The consequence
+## The consequence: an optimism gap
 
-Test scores become optimistically biased and untrustworthy.
+Each time we tweak the model based on test results, we fit it a little more to **those particular test rows**. Once the model is deployed, we can't peek at new data, so none of that tweaking helps there. The test score ends up **better than what the model will actually deliver**. That difference is the *optimism gap*.
 :::
 
 
 ::: {.notes}
-This slide addresses the "uncomfortable truth" from Chapter 28. Students have been unknowingly contaminating their test sets throughout Chapters 25-27.
+**Timing: ~3 minutes.**
 
-Important framing: This isn't their fault! The simple train/test split was the right pedagogical foundation. Now they're ready for the professional approach.
+This is the "uncomfortable truth" from Chapter 28: students have been quietly reusing their test sets throughout Modules 9–11.
 
-**Key analogy from the textbook:** It's like studying with a practice test, adjusting your studying based on the practice test, taking it again and again, and then having that same test be your final exam. Your score would be artificially inflated.
+Framing: this isn't their fault! The simple train/test split was the right foundation. Now they're ready for the professional approach.
 
-**Real-world impact:**
-- Report test accuracy of 91% to stakeholders
-- Deploy to production
-- Actual performance: 85%
-- That 6-point drop erodes trust
+**Analogy (from the textbook):** You study with a practice exam, adjust your studying based on it, retake it again and again, and then that same exam is your final. Your score would be inflated, and not because you learned more.
 
-**Transition:** "So how do we make decisions about models and tune hyperparameters WITHOUT contaminating our test set? That's where cross-validation comes in."
+**Land the callout:** the key asymmetry is that we get to look at the test set as often as we like, but we never get to look at next year's data. Every tweak that "helped" on the test set might only have helped on those rows.
+
+**Transition:** "So how big is that gap? Let's watch it open up."
 :::
 
-## Think-Pair-Share {.smaller}
+## The Optimism Gap {.smaller}
 
-**Scenario:** You're a data scientist at a retail company. You build a customer churn prediction model. During development, you try 10 different model configurations, evaluating each on your test set. You pick the best one (test accuracy: 87%) and present it to management.
+**Try 50 churn-model settings, keep whichever scores best on the test set**
 
-:::: {.columns}
-::: {.column width="70%"}
+```{python}
+#| echo: false
+#| fig-align: center
+from sklearn.tree import DecisionTreeClassifier
 
-**Discuss with your neighbor:**
+rng = np.random.default_rng(42)
 
-- Why might the 87% test accuracy be misleading?
-- What could happen when you deploy this model to production?
-- How would you explain this problem to a non-technical manager?
+def make_customers(n):
+    """Churn depends weakly on two of ten features; the rest is noise."""
+    X = rng.normal(size=(n, 10))
+    y = (X[:, 0] + X[:, 1] + rng.normal(0, 1.6, n) > 0).astype(int)
+    return X, y
 
-:::
-::: {.column width="30%"}
+gap_X_tr, gap_y_tr = make_customers(300)        # training customers
+gap_X_te, gap_y_te = make_customers(100)        # the test set we keep peeking at
+gap_X_new, gap_y_new = make_customers(20000)    # next year's customers (never seen)
 
-<center>
+n_configs = 50
+test_acc, new_acc = [], []
+for i in range(n_configs):
+    gap_model = DecisionTreeClassifier(
+        max_depth=int(rng.integers(1, 10)),
+        max_features=int(rng.integers(1, 11)),
+        random_state=i,
+    ).fit(gap_X_tr, gap_y_tr)
+    test_acc.append(gap_model.score(gap_X_te, gap_y_te))
+    new_acc.append(gap_model.score(gap_X_new, gap_y_new))
+test_acc, new_acc = np.array(test_acc) * 100, np.array(new_acc) * 100
 
-<div id="4minPeek"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minPeek", 240, "slide");
-    });
-</script>
-</center>
+settings_tried = np.arange(1, n_configs + 1)
+best_idx = np.array([test_acc[:n].argmax() for n in settings_tried])   # best-so-far on the test set
+reported = test_acc[best_idx]
+reality = new_acc[best_idx]
 
-:::
-::::
+fig = go.Figure()
+for n in settings_tried:
+    # every setting tried so far, scored on the test set
+    fig.add_trace(go.Scatter(
+        x=settings_tried[:n], y=test_acc[:n], mode='markers',
+        marker=dict(color='lightgray', size=8, line=dict(color='gray', width=1)),
+        name='Each setting (test score)', visible=False,
+        hovertemplate='Setting %{x}: %{y:.0f}% on test<extra></extra>'))
+    # what you would report: the best test score so far
+    fig.add_trace(go.Scatter(
+        x=settings_tried[:n], y=reported[:n], mode='lines', line=dict(color=ORANGE, width=3, shape='hv'),
+        name='Best test score (what you report)', visible=False, hoverinfo='skip'))
+    # what that same model actually does on new customers
+    fig.add_trace(go.Scatter(
+        x=settings_tried[:n], y=reality[:n], mode='lines', line=dict(color=BLUE, width=3, shape='hv'),
+        name='Same model on new customers (what you get)', visible=False, hoverinfo='skip'))
+    # the gap at the current step
+    fig.add_trace(go.Scatter(
+        x=[n, n], y=[reality[n-1], reported[n-1]], mode='lines+markers+text',
+        line=dict(color='black', width=2, dash='dot'),
+        marker=dict(color=['white', 'white'], size=10, line=dict(color=[BLUE, ORANGE], width=3)),
+        text=['', f'  {reported[n-1] - reality[n-1]:+.0f} pts'], textposition='middle right',
+        textfont=dict(size=16, color='black'), showlegend=False, visible=False, hoverinfo='skip'))
 
-Then we'll take a few responses...
+titles = [f'Settings tried: {n}  |  Report {reported[n-1]:.0f}%  vs.  reality {reality[n-1]:.0f}%'
+          for n in settings_tried]
+steps = slider_steps(0, n_configs, 4, [str(n) for n in settings_tried], titles)
+for trace in fig.data[:4]:
+    trace.visible = True
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Settings tried: '),
+                  pad=dict(t=40))],
+    xaxis=dict(title='Settings tried (each one checked on the test set)', range=[0, 53]),
+    yaxis=dict(title='Accuracy (%)', range=[40, 90]),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=480, margin=dict(l=60, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+[Nothing about the model got better. We just found the setting that got luckiest on these 100 test customers.]{.fragment style="font-size: 0.85em;"}
 
 ::: {.notes}
-**After timer expires, cold-call 2-3 groups to share.**
+**Timing: ~5 minutes.** This is the slide that turns "we've been peeking" from a warning into something students can see.
 
-Expected student responses:
-1. **Why misleading?** - "We optimized for that specific test set, so the score is inflated"
-2. **Production impact** - "The real-world accuracy will probably be lower"
-3. **Manager explanation** - "We accidentally used our final exam as practice"
+**Setup (say this before touching the slider):** "Simulated churn data: 300 training customers, a 100-customer test set, and 20,000 customers we'll pretend arrive next year. We try 50 decision-tree settings (random depth and features) and score every one on the same 100 test customers."
 
-**Key points to emphasize:**
-- Each peek = one opportunity to overfit to test set
-- The more decisions you make based on test set, the less trustworthy it becomes
-- This is a subtle, insidious problem - easy to do accidentally
+**How to read it:**
 
-**Transition to solution:** "So we need a way to make all these decisions - comparing models, tuning hyperparameters - WITHOUT ever looking at the test set. That's exactly what cross-validation solves."
+- **Gray dots:** each setting's score on the test set.
+- **Orange line:** the score you would *report*, meaning the best test score so far. It can only go up.
+- **Blue line:** that same chosen model on the 20,000 new customers, which is what you actually *get*.
+
+**Drag the slider slowly from 1 to 50.**
+
+- At 1–2 settings the gap is *negative*: one test score is just a noisy estimate, so it can come in low as easily as high. With one try there's no bias, only noise.
+- As you keep trying settings and keeping the winner, orange climbs far faster than blue (about +23 points vs. +7). The extra climb is luck on the test set, not a better model. By 50 settings you'd report roughly 78% when reality is roughly 69%.
+
+**Click to reveal the caption.** Read it aloud: nothing got better; we found the luckiest setting.
+
+**Ask:** "Which line would you put in the slide deck for your manager? Which line will your manager actually experience?"
+
+**Transition:** "That's simulated data. Does it happen on real data, with the exact habit we used last week? Let's try it on Ames."
+:::
+
+## Peeking on Real Data {.smaller}
+
+Pick the tree depth that scores best on the test set, then check that choice on homes we never looked at:
+
+```{python}
+#| code-line-numbers: "|9-10|12-16|18-20|22-24"
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.metrics import root_mean_squared_error
+
+ames = pd.read_csv('../data/ames_clean.csv')
+features = ['GrLivArea', 'LotArea', 'YearRemodAdd', 'TotRmsAbvGrd', 'GarageArea', 'Fireplaces']
+X, y = ames[features], ames['SalePrice']
+
+X_train, X_rest, y_train, y_rest = train_test_split(X, y, train_size=0.6, random_state=0)
+X_test, X_new, y_test, y_new = train_test_split(X_rest, y_rest, train_size=100, random_state=0)
+
+test_rmse = {}   # try 20 depths, scoring each on the same 100 test homes
+for depth in range(1, 21):
+    tree = DecisionTreeRegressor(max_depth=depth, random_state=42).fit(X_train, y_train)
+    test_rmse[depth] = root_mean_squared_error(y_test, tree.predict(X_test))
+best_depth = min(test_rmse, key=test_rmse.get)
+
+# score the chosen depth on homes that played no part in the choice
+best_tree = DecisionTreeRegressor(max_depth=best_depth, random_state=42).fit(X_train, y_train)
+new_rmse = root_mean_squared_error(y_new, best_tree.predict(X_new))
+
+print(f"Depth chosen by the test set:   {best_depth}")
+print(f"What you report (test RMSE):    ${test_rmse[best_depth]:,.0f}")
+print(f"What you get (new-home RMSE):   ${new_rmse:,.0f}")
+```
+
+::: {.notes}
+**Timing: ~3 minutes.** Live code. Every number here is computed at render time.
+
+**Walk the highlighted lines:**
+
+1. **Lines 9–10:** Three pieces this time: 60% to train, a small 100-home **test set** (the one we keep checking), and the remaining 484 homes as **new homes**. In real life we would *not* have these. They stand in for the future so we can see what peeking costs.
+2. **Lines 12–16:** Exactly last week's habit. Try depths 1–20, score each on the test set, keep the winner.
+3. **Lines 18–20:** Score the winner on the new homes, which played no part in choosing it.
+4. **Lines 22–24:** The test RMSE we'd report is lower (better) than the RMSE on new homes. Same story as the Optimism Gap, now on real data.
+
+**Why `random_state=0` for the split:** with Ames's handful of very expensive homes, a 100-home test set can be noticeably easier or harder than average just by luck. On this split, the test set and the new homes are equally hard on average across all 20 depths, so the gap you see comes from *choosing the best*, not from a lucky test set. If a student asks: across many random splits, the reported RMSE comes in optimistic most of the time.
+
+**Transition:** "Two numbers don't show *why* this happened. Let's look at all 20 depths."
+:::
+
+## What the Test Set Hid {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
+depths = np.arange(1, 21)
+test_curve = np.array([test_rmse[d] for d in depths])
+new_curve = np.array([
+    root_mean_squared_error(
+        y_new,
+        DecisionTreeRegressor(max_depth=d, random_state=42).fit(X_train, y_train).predict(X_new))
+    for d in depths
+])
+truly_best = depths[new_curve.argmin()]
+chosen_test, chosen_new = test_rmse[best_depth], new_curve[best_depth - 1]
+
+fig = go.Figure()
+# Fixed: what you can see, the test RMSE at every depth, plus the depth you'd pick
+fig.add_trace(go.Scatter(
+    x=depths, y=test_curve, mode='lines+markers', line=dict(color=ORANGE, width=3),
+    marker=dict(size=7), name='Test set (what you see)',
+    hovertemplate='Depth %{x}: $%{y:,.0f} on test<extra></extra>'))
+fig.add_trace(go.Scatter(
+    x=[best_depth], y=[chosen_test], mode='markers+text',
+    marker=dict(size=16, color='white', line=dict(color=ORANGE, width=3)),
+    text=[f'You pick depth {best_depth}'], textposition='bottom center',
+    textfont=dict(size=14), showlegend=False, hoverinfo='skip'))
+# Revealed: the new homes, which you never get to see in real life
+fig.add_trace(go.Scatter(
+    x=depths, y=new_curve, mode='lines+markers', line=dict(color=BLUE, width=3),
+    marker=dict(size=7), name='New homes (hidden in real life)', visible=False,
+    hovertemplate='Depth %{x}: $%{y:,.0f} on new homes<extra></extra>'))
+fig.add_trace(go.Scatter(
+    x=[best_depth, best_depth], y=[chosen_test, chosen_new], mode='lines+text',
+    line=dict(color='black', width=2, dash='dot'),
+    text=['', f'  +${chosen_new - chosen_test:,.0f} worse  '], textposition='middle right',
+    textfont=dict(size=15), showlegend=False, visible=False, hoverinfo='skip'))
+fig.add_trace(go.Scatter(
+    x=[truly_best], y=[new_curve.min()], mode='markers+text',
+    marker=dict(size=16, color='white', line=dict(color=BLUE, width=3)),
+    text=[f'Actually best: depth {truly_best}'], textposition='bottom center',
+    textfont=dict(size=14), showlegend=False, visible=False, hoverinfo='skip'))
+
+reveal_titles = [
+    f'You only see the test set: depth {best_depth} looks best (${chosen_test:,.0f})',
+    f'The new homes disagree: depth {best_depth} gets ${chosen_new:,.0f}; depth {truly_best} was the better choice',
+]
+fig.update_layout(
+    title=dict(text=reveal_titles[0], x=0.5),
+    sliders=[dict(active=0, currentvalue=dict(visible=False), pad=dict(t=40), steps=[
+        dict(method='update', label='What you see',
+             args=[{'visible': [True, True, False, False, False]}, {'title.text': reveal_titles[0]}]),
+        dict(method='update', label='What you get',
+             args=[{'visible': [True, True, True, True, True]}, {'title.text': reveal_titles[1]}]),
+    ])],
+    xaxis=dict(title='Tree max_depth', dtick=1),
+    yaxis=dict(title='RMSE ($, lower is better)', tickformat='$,.0f'),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=480, margin=dict(l=80, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~3 minutes.** The same 20 trees from the last slide. Nothing here is new modeling, it's just every depth instead of only the winner.
+
+**Start on "What you see".** "This is all the information you have in real life: the test RMSE at each depth. Like last week, you pick the lowest point, depth 9."
+
+**Ask:** "How confident are you in depth 9?" (Most will be fairly confident. It's the lowest point.)
+
+**Slide to "What you get".** The blue line is the same 20 trees on the 484 new homes, which you *never* see in practice.
+
+- At depth 9 the new homes are thousands of dollars worse than the test score promised. That's the optimism gap, on real data.
+- The blue line's best depth is a different one. Depth 9 only looked best because its errors happened to be small on those 100 test homes.
+
+**Important framing:** we can draw the blue line only because this is a demo. In a real project it doesn't exist; that's exactly the problem. Peeking at the test set doesn't just inflate the score, it can also steer you to the wrong model.
+
+**Transition:** "So what do we do about it?"
+:::
+
+## Lock the Test Set Away {.smaller}
+
+::: {.callout-important}
+## The takeaway
+
+The test set can't be used to make modeling decisions. Set it aside for one job: the **final generalization assessment**, run once, after every choice is made.
+:::
+
+. . .
+
+**But that leaves a gap.** We still need to:
+
+* Compare models (linear regression vs. tree vs. forest?)
+* Pick hyperparameters (which `max_depth`?)
+* Estimate how well the final model will do
+
+. . .
+
+... using **only the training data**, and getting a score we can trust.
+
+::: {.notes}
+**Timing: ~3 minutes.**
+
+State the rule plainly: the test set gets used exactly once, at the end. Its job is to tell us how the finished model generalizes, not to help us build it.
+
+Then name the gap. Every decision we made last week still has to be made somehow. We just can't use the test set to make it.
+
+**Quick ask:** "How could you score a depth using only the training homes?" Take one or two answers. If someone says "hold some back and score on those," that's a validation set, and it's where we're headed.
+
+**Transition:** "The professional answer is cross-validation: hold out a piece of the training data, score on it, repeat with a different piece, and average."
 :::
 
 # Solution: Cross-Validation {background="#43464B"}
 
-## Wrong Way vs. Right Way {.smaller .scrollable}
+## Where Each Decision Gets Scored {.smaller}
 
-:::: {.columns}
-::: {.column width="50%"}
+[❌ What we've been doing]{.lane-label}
 
-**❌ What we've been doing:**
+:::: {.flow}
+::: {.card}
+[Try a model]{.card-title}
 
-```{mermaid}
-%%| fig-width: 4.5
-%%| echo: false
-flowchart TD
-    A[Full Dataset] --> B[Train 80%]
-    A --> C[Test 20%]
-    B --> D[Train Model 1]
-    D --> E[Evaluate on Test]
-    C --> E
-    E --> F{Good?}
-    F -->|No| G[Try Model 2]
-    G --> H[Evaluate on Test]
-    C --> H
-    H --> I{Good?}
-    I -->|No| J[Try Model 3]
-    J --> K[Evaluate on Test]
-    C --> K
-    K -->|Yes| L[Report Score]
-
-    style C fill:#ff6b6b
-    style E fill:#ff6b6b
-    style H fill:#ff6b6b
-    style K fill:#ff6b6b
-```
-
-**Problem:** Multiple peeks contaminate test set!
-
+[Test set · peek 1]{.scored-on .test}
 :::
-::: {.column width="50%"}
 
-**✓ What we should do:**
+[→]{.arrow}
 
-```{mermaid}
-%%| fig-width: 4.5
-%%| echo: false
-flowchart TD
-    A[Full Dataset] --> B[Train 80%]
-    A --> C[Test 20%<br/>LOCKED]
-    B --> D[5-Fold CV<br/>on Training]
-    D --> E[Try Models]
-    D --> F[Tune Params]
-    D --> G[Engineer Features]
-    E & F & G --> H[Select Best]
-    H --> I[Retrain on<br/>Full Training]
-    I --> J[Test ONCE]
-    C --> J
+::: {.card}
+[Try a depth]{.card-title}
 
-    style C fill:#51cf66
-    style D fill:#51cf66
-    style J fill:#ffd43b
-```
+[Test set · peek 2]{.scored-on .test}
+:::
 
-**Solution:** Use CV, keep test pristine!
+[→]{.arrow}
 
+::: {.card}
+[Try features]{.card-title}
+
+[Test set · peek 3]{.scored-on .test}
+:::
+
+[→]{.arrow}
+
+::: {.card}
+[Report the best]{.card-title}
+
+The luckiest test score
 :::
 ::::
 
+::::: {.fragment}
+[✅ What we'll do now]{.lane-label}
+
+:::: {.flow}
+::: {.card}
+[Try a model]{.card-title}
+
+[CV on training data]{.scored-on .cv}
+:::
+
+[→]{.arrow}
+
+::: {.card}
+[Try a depth]{.card-title}
+
+[CV on training data]{.scored-on .cv}
+:::
+
+[→]{.arrow}
+
+::: {.card}
+[Try features]{.card-title}
+
+[CV on training data]{.scored-on .cv}
+:::
+
+[→]{.arrow}
+
+::: {.card .answer-card}
+[🔒 Test once]{.card-title}
+
+The final generalization assessment
+:::
+::::
+:::::
+
+::::: {.fragment}
+::: {.callout-tip}
+## Same decisions, different referee
+
+CV scores every choice using only the training data, so the test set stays untouched until the very end.
+:::
+:::::
+
 ::: {.notes}
-**This slide makes the contrast crystal clear.**
+**Timing: ~2 minutes.** A quick bridge from "the test set can't make decisions" to what does.
 
-**Left side (Wrong Way):**
-- Shows the peeking problem visually
-- Train model → evaluate on test → not good? → try again
-- Each arrow to "Evaluate on Test" is another peek
-- The test set (red) is being used repeatedly
-- This is what we've been doing in Chapters 25-27
+**Top lane:** this is last week. Every decision, whether model, depth or features, got scored on the test set. Three decisions means three peeks, and the number we reported was the winner of all of them. That's the Optimism Gap again.
 
-**Right side (Right Way):**
-- Test set is locked away (green - safe)
-- All experimentation happens with CV on training set
-- Try different models, tune parameters, engineer features
-- ALL using cross-validation
-- Only after ALL decisions are made → test once
+**Click: bottom lane.** Exactly the same decisions, but each one is scored with cross-validation on the training data. The test set doesn't appear until the last box, once, after every choice is made.
 
-**Teaching points:**
+**Click: the takeaway line.** "We're not making fewer decisions. We're changing who referees them."
 
-1. **Count the peeks:**
-   - Wrong way: 3 peeks shown (could be many more!)
-   - Right way: 0 peeks until the very end
+We'll see the full end-to-end workflow, including retraining on the full training set, at the end of class.
 
-2. **Where decisions are made:**
-   - Wrong way: Decisions based on test set
-   - Right way: Decisions based on CV scores
-
-3. **Test set purpose:**
-   - Wrong way: Used as validation set (contaminated)
-   - Right way: Used only for final honest evaluation
-
-**Key message:** "The difference between these approaches is the difference between amateur and professional data science."
-
-**Common student reaction:** "Wait, we've been doing it wrong this whole time?"
-**Answer:** "Not 'wrong' - it was the right pedagogical sequence. Simple first, then proper. Now you know both!"
-
-**Transition:** "Let's zoom in on the right side - how does cross-validation actually work in practice?"
+**Transition:** "So what does 'CV on training data' actually do? Let's step through it."
 :::
 
-## How K-Fold Cross-Validation Works {.smaller}
+## K-Fold, One Round at a Time {.smaller}
 
-:::: {.columns}
-::: {.column width="45%"}
-
-**The idea:**
-
-* Split **training data** into K equal parts (folds)
-* Rotate which fold is used for validation
-* Average results across all K iterations
-
-**Benefits:**
-
-* Test set stays completely untouched
-* Every training point gets validated once
-* More reliable performance estimates
-* Can make unlimited decisions without peeking
-
-:::
-::: {.column width="55%"}
+Each round, one fold of the **training data** sits out for validation. **CV score** = average of the rounds.
 
 ```{python}
 #| echo: false
-#| fig-width: 7
-#| fig-height: 5
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+#| fig-align: center
+# Same split and tree as the code on the next slide
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+from sklearn.model_selection import cross_val_score
 
-fig, ax = plt.subplots(figsize=(7, 5))
+K = 5
+# The exact call from the next slide, so the bars always match its printed scores
+fold_rmse = -cross_val_score(DecisionTreeRegressor(max_depth=6, random_state=42), X_train, y_train,
+                             cv=K, scoring='neg_root_mean_squared_error')
+running_avg = np.cumsum(fold_rmse) / np.arange(1, K + 1)
+fold_size = len(X_train) // K
 
-# Define colors
-train_color = '#51cf66'  # Green
-validate_color = '#ffd43b'  # Yellow/Orange
+rows = [f'Round {r}' for r in range(1, K + 1)]
+cols = [f'Fold {c}' for c in range(1, K + 1)]
+fig = make_subplots(rows=1, cols=2, column_widths=[0.55, 0.45], shared_yaxes=True,
+                    horizontal_spacing=0.04,
+                    subplot_titles=[f'Training homes in {K} folds (~{fold_size} each)',
+                                    'Validation RMSE each round (◇ = running average)'])
+for step in range(K):
+    # Grid: rounds 1..step+1 drawn; validation fold = 1, training folds = 0, not yet = blank
+    fold_roles = np.full((K, K), np.nan)
+    for r in range(step + 1):
+        fold_roles[r] = 0
+        fold_roles[r, r] = 1
+    labels = [['' if np.isnan(v) else ('Validate' if v == 1 else 'Train') for v in row]
+              for row in fold_roles]
+    fig.add_trace(go.Heatmap(
+        z=fold_roles, x=cols, y=rows, text=labels, texttemplate='%{text}', textfont=dict(size=13),
+        colorscale=[[0, '#d6e9f8'], [1, ORANGE]], zmin=0, zmax=1, showscale=False,
+        xgap=3, ygap=3, hoverinfo='skip', visible=False), row=1, col=1)
+    # Bars: each round's validation score, current round highlighted
+    fig.add_trace(go.Bar(
+        x=fold_rmse[:step + 1], y=rows[:step + 1], orientation='h',
+        marker_color=[BLUE] * step + [ORANGE],
+        text=[usd(v) for v in fold_rmse[:step + 1]], textposition='inside',
+        insidetextanchor='start', textfont=dict(color='white', size=13),
+        hoverinfo='skip', showlegend=False, visible=False), row=1, col=2)
+    # Running average after each round
+    fig.add_trace(go.Scatter(
+        x=running_avg[:step + 1], y=rows[:step + 1], mode='lines+markers',
+        line=dict(color='black', width=2, dash='dot'),
+        marker=dict(symbol='diamond', size=11, color='white', line=dict(color='black', width=2)),
+        showlegend=False, visible=False, hoverinfo='skip'), row=1, col=2)
 
-# 5 iterations
-iterations = 5
-folds = 5
+titles = [f'Round {i + 1}: validate on fold {i + 1} → RMSE {usd(fold_rmse[i])}'
+          f'  |  Running average: <b>{usd(running_avg[i])}</b>' for i in range(K - 1)]
+titles.append(f'CV score = average of {K} rounds: <b>{usd(running_avg[-1])}</b>'
+              f'  (std {usd(fold_rmse.std())})')
+steps = slider_steps(0, K, 3, [f'Round {i}' for i in range(1, K + 1)], titles)
+for trace in fig.data[:3]:
+    trace.visible = True
 
-for i in range(iterations):
-    y_pos = iterations - i - 0.5
-    # Draw each fold
-    for j in range(folds):
-        if j == i:
-            # This fold is validation
-            rect = mpatches.Rectangle((j, y_pos - 0.35), 1, 0.7,
-                                     facecolor=validate_color,
-                                     edgecolor='black', linewidth=2)
-        else:
-            # This fold is training
-            rect = mpatches.Rectangle((j, y_pos - 0.35), 1, 0.7,
-                                     facecolor=train_color,
-                                     edgecolor='black', linewidth=1.5)
-        ax.add_patch(rect)
-
-        # Add text
-        if j == i:
-            ax.text(j + 0.5, y_pos, 'Validate', ha='center', va='center',
-                   fontsize=10, fontweight='bold')
-        else:
-            ax.text(j + 0.5, y_pos, 'Train', ha='center', va='center',
-                   fontsize=10)
-
-    # Add iteration label and score arrow
-    ax.text(-0.7, y_pos, f'Iteration {i+1}', ha='right', va='center',
-           fontsize=11, fontweight='bold')
-    ax.annotate('', xy=(5.5, y_pos), xytext=(5.2, y_pos),
-               arrowprops=dict(arrowstyle='->', lw=1.5))
-    ax.text(5.8, y_pos, f'Score {i+1}', ha='left', va='center',
-           fontsize=9, style='italic')
-
-# Add fold labels at top
-for j in range(folds):
-    ax.text(j + 0.5, iterations + 0.3, f'Fold {j+1}', ha='center',
-           fontsize=11, fontweight='bold')
-
-# Add final averaging box
-ax.text(2.5, -0.8, 'Final CV Score = Average of 5 scores',
-       ha='center', fontsize=12, fontweight='bold',
-       bbox=dict(boxstyle='round', facecolor='lightblue', edgecolor='black', linewidth=2))
-
-# Set axis limits and remove axes
-ax.set_xlim(-1.2, 6.5)
-ax.set_ylim(-1.3, iterations + 0.6)
-ax.axis('off')
-
-plt.title('5-Fold Cross-Validation: Each Fold Takes a Turn as Validation Set',
-         fontsize=13, fontweight='bold', pad=10)
-plt.tight_layout()
-plt.show()
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=30))],
+    yaxis=dict(autorange='reversed'),
+    xaxis2=dict(range=[0, fold_rmse.max() * 1.1], tickformat='$,.0f'),
+    height=440, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.update_xaxes(showgrid=False, row=1, col=1)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
-:::
-::::
-
 ::: {.notes}
-**This is the key slide - take time here.**
+**Timing: ~5 minutes.** This is "hold some training data back, repeat, average," made concrete.
 
-**Walk through the diagram:**
-1. First, split data into train (80%) and test (20%)
-2. Lock the test set away - don't touch it!
-3. Take the training set and split into K folds (5 shown here)
-4. In each iteration, use 1 fold for validation, rest for training
-5. After 5 iterations, every point has been validated exactly once
-6. Average the 5 validation scores
+**Heads-up on the numbers:** from here on we use the usual 80/20 split (about 1,170 training homes). The peeking demo used 60% for training only because it also held back "new homes" to show the gap.
 
-**Important clarifications:**
-- K=5 is common, but K=10 is also popular
-- Each data point is in exactly ONE fold
-- Each point gets validated ONCE (when its fold is the validation set)
-- The model is retrained K times (5 times here)
+**Start at Round 1.** "We take only the training homes, about 1,170 of them, and cut them into 5 folds of about 233. In round 1, fold 1 sits out (orange). We train a depth-6 tree on the other four folds and score it on fold 1. That score drops into the bar on the right."
 
-**Why this solves the peeking problem:**
-- We're only using training data for all decisions
-- Test set remains pristine
-- We get K different validation scores, so we see variance/stability
+**Slide through Rounds 2–5.** Each round a different fold sits out, the tree is retrained from scratch, and a new bar appears. The diamond is the running average.
 
-**Common student question:** "Isn't this expensive computationally?"
-**Answer:** "Yes - if K=5, you train 5 models instead of 1. But it's worth it for honest performance estimates. And computers are fast!"
+**At Round 5, point out:**
 
-**Transition:** "Now let's see how this works in code with sklearn."
+- Every training home was used for validation exactly once, and for training four times.
+- The five fold scores differ a lot (roughly 39k to 62k). Any one of them could have been "the" validation score if we'd held out just one chunk. Averaging smooths that out.
+- The test set never appears on this slide. It's still locked away.
+- We trained 5 models to get one score. K=5 and K=10 are the common choices.
+
+**Common question:** "Which of the 5 models do we keep?" None of them. CV is for *scoring a choice* (here, depth 6). Once the choice is made, you retrain on the full training set.
+
+**Transition:** "That final number is exactly what scikit-learn's `cross_val_score` gives you in one line."
 :::
 
 ## Cross-Validation in Scikit-Learn {.smaller}
 
-```{python}
-#| eval: false
-#| code-line-numbers: "1,10"
-from sklearn.model_selection import cross_val_score
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+Same Ames features and depth-6 tree, in two steps:
 
-# Step 1: Split data (test set locked away)
+```{python}
+#| code-line-numbers: "|3-4|6-10|12-13"
+from sklearn.model_selection import train_test_split, cross_val_score
+
+# Step 1: split first, then lock the test set away
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Step 2: Use CV to evaluate on TRAINING SET ONLY
-dt = DecisionTreeClassifier(max_depth=5)
-cv_scores = cross_val_score(dt, X_train, y_train, cv=5, scoring='accuracy')
+# Step 2: 5-fold CV on the TRAINING set only
+tree = DecisionTreeRegressor(max_depth=6, random_state=42)
+cv_scores = cross_val_score(tree, X_train, y_train, cv=5,
+                            scoring='neg_root_mean_squared_error')
+cv_rmse = -cv_scores   # scikit-learn reports negative RMSE so that higher is always better
 
-print(f"CV Scores: {cv_scores}")
-print(f"Mean CV Accuracy: {cv_scores.mean():.3f} (+/- {cv_scores.std():.3f})")
+print(cv_rmse.round())   # one RMSE per fold
+print(f"CV RMSE: ${cv_rmse.mean():,.0f} ± ${cv_rmse.std():,.0f}")
 ```
 
-**Output:**
-```
-CV Scores: [0.847, 0.853, 0.862, 0.841, 0.858]
-Mean CV Accuracy: 0.852 (+/- 0.008)
-```
+**Notice:** `X_test` and `y_test` never appear after line 4.
 
-**Notice:** We never touched `X_test` or `y_test`!
+. . .
+
+::: {.callout-tip}
+## How many folds?
+
+**K = 5 or 10** is the norm. More folds means more models to train (K× the work) and smaller validation folds. 5 or 10 balances a steady average against compute time.
+:::
 
 ::: {.notes}
-**Walk through the code step by step:**
+**Timing: ~4 minutes.** Live code; every number is computed at render time.
 
-1. **Line 1-3:** Import what we need
-2. **Line 5-6:** First, split into train/test. Test set is now locked away.
-3. **Line 8-10:** Create model and run 5-fold CV on TRAINING data only
-4. **Line 12-13:** Print results
+**Walk the highlighted lines:**
 
-**Key points to emphasize:**
+1. **Lines 3–4:** Split first. From here on, the test set is locked away.
+2. **Lines 6–10:** One call runs all 5 rounds from the last slide. `cv=5` is the number of folds.
+3. **Lines 12–13:** `cv_rmse` is just a NumPy array with one RMSE per fold. These are the same five numbers as the bars on the previous slide. Then the mean ± std, which is the number we'd report.
 
-**The cv_scores array:**
-- Contains 5 numbers (one per fold)
-- Shows the validation accuracy for each iteration
-- Notice they're similar but not identical (0.841 to 0.862)
-- This variance tells us about model stability
+**The negative sign:** scikit-learn's scorers always treat *higher as better*, so error metrics come back negative (`neg_root_mean_squared_error`). We flip the sign to get ordinary RMSE. Students will trip on this in the Lab, so say it out loud.
 
-**The mean and standard deviation:**
-- Mean (0.852) is our best estimate of true performance
-- Std (0.008) tells us how consistent the model is
-- Low std = stable, reliable model
-- High std = might be sensitive to which data it sees
+**Mean vs. std:**
 
-**What we achieved:**
-- Made a decision (max_depth=5) without peeking at test set
-- Got 5 different validation checks instead of 1
-- Still have our pristine test set for final evaluation
+- The **mean** is our estimate of how a depth-6 tree will do on new homes.
+- The **std** tells us how much that score moves depending on which homes are held out. A big std means one validation score alone could be misleading.
 
-**Common student question:** "When do we use the test set?"
-**Answer:** "Only ONCE at the very end after ALL decisions are made. We'll see the full workflow in a moment."
+**Common question:** "When do we use the test set?" Once, at the very end, after every decision is made. We'll see the full workflow at the end of class.
 
-**Transition:** "Now that we understand CV, let's see how to use it for hyperparameter tuning."
+**The callout:** K = 5 or 10 is the convention. Each extra fold is another model to train, and each fold gets smaller, so its score gets noisier. 5 is a good default; 10 when the data is small and training is cheap.
+
+**Transition:** "Is one 5-fold run enough? Let's check it against 50 random splits of the same data."
+:::
+
+## How Lucky Was Your Split? {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
+n_seeds = 50
+split_rmse = []
+for seed in range(n_seeds):
+    seed_X_train, seed_X_test, seed_y_train, seed_y_test = train_test_split(
+        X, y, test_size=0.2, random_state=seed)
+    split_tree = DecisionTreeRegressor(max_depth=6, random_state=42).fit(seed_X_train, seed_y_train)
+    split_rmse.append(root_mean_squared_error(seed_y_test, split_tree.predict(seed_X_test)))
+split_rmse = np.array(split_rmse)
+jitter = np.random.default_rng(0).uniform(-0.3, 0.3, n_seeds)   # spread dots vertically
+cv_mean, cv_std = cv_rmse.mean(), cv_rmse.std()   # from the code slide
+
+fig = go.Figure()
+titles = []
+for n in range(1, n_seeds + 1):
+    # splits seen so far
+    fig.add_trace(go.Scatter(
+        x=split_rmse[:n], y=jitter[:n], mode='markers',
+        marker=dict(size=11, color='lightgray', line=dict(color='gray', width=1)),
+        name='One train/test split', visible=False,
+        hovertemplate='Test RMSE: $%{x:,.0f}<extra></extra>'))
+    # the split you happened to get this time
+    fig.add_trace(go.Scatter(
+        x=[split_rmse[n - 1]], y=[jitter[n - 1]], mode='markers+text',
+        marker=dict(size=15, color=ORANGE, line=dict(color='black', width=1)),
+        text=[usd(split_rmse[n - 1])], textposition='top center', textfont=dict(size=14),
+        name='The split you got', visible=False, hoverinfo='skip'))
+    titles.append(f'Split #{n}: you would report <b>{usd(split_rmse[n - 1])}</b>'
+                  f'  |  so far: {usd(split_rmse[:n].min())} to {usd(split_rmse[:n].max())}')
+
+# Final state: every split, plus the CV mean ± std from ONE training set
+fig.add_trace(go.Scatter(
+    x=split_rmse, y=jitter, mode='markers',
+    marker=dict(size=11, color='lightgray', line=dict(color='gray', width=1)),
+    name='One train/test split', visible=False, hoverinfo='skip'))
+fig.add_trace(go.Scatter(
+    x=[cv_mean - cv_std, cv_mean + cv_std, cv_mean + cv_std, cv_mean - cv_std, cv_mean - cv_std],
+    y=[-0.5, -0.5, 0.5, 0.5, -0.5], mode='lines', fill='toself',
+    fillcolor='rgba(57, 157, 229, 0.18)', line=dict(color=BLUE, width=1),
+    name='CV mean ± std', visible=False, hoverinfo='skip'))
+fig.add_trace(go.Scatter(
+    x=[cv_mean, cv_mean], y=[-0.5, 0.5], mode='lines+text', line=dict(color=BLUE, width=3),
+    text=['', f'CV: {usd(cv_mean)} ± {usd(cv_std)}'], textposition='top center',
+    textfont=dict(size=14, color=BLUE), showlegend=False, visible=False, hoverinfo='skip'))
+titles.append(f'One 5-fold CV run: <b>{usd(cv_mean)} ± {usd(cv_std)}</b>'
+              f'  |  {n_seeds} single splits ranged {usd(split_rmse.min())} to {usd(split_rmse.max())}')
+
+n_traces = len(fig.data)
+steps = []
+for i in range(n_seeds):
+    visible = [False] * n_traces
+    visible[2 * i] = visible[2 * i + 1] = True
+    steps.append(dict(method='update', label=str(i + 1),
+                      args=[{'visible': visible}, {'title.text': titles[i]}]))
+steps.append(dict(method='update', label='+ CV',
+                  args=[{'visible': [False] * (2 * n_seeds) + [True] * 3},
+                        {'title.text': titles[-1]}]))
+fig.data[0].visible = fig.data[1].visible = True
+
+x_pad = 3000   # a little room so the end dots aren't cut off
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Splits tried: '), pad=dict(t=40))],
+    xaxis=dict(title='Test RMSE on that split ($, lower is better)', tickformat='$,.0f',
+               range=[split_rmse.min() - x_pad, split_rmse.max() + x_pad]),
+    yaxis=dict(visible=False, range=[-0.7, 0.8]),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=420, margin=dict(l=40, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~4 minutes.** If you're running long, this is the first slide to cut. Students can still do it as the "How Lucky Was Your Split?" Your Turn in the Lecture notebook.
+
+**Setup:** Same depth-6 tree, same Ames data. Each dot is one random 80/20 train/test split (seeds 0–49), placed at its test RMSE.
+
+**Slide slowly through the first 10 or so, then jump to 50.** Each step, the orange dot is the one number you would have reported if that had been your split. Watch the range in the title grow. Same model, same data, yet the score lands anywhere from the mid-30s to the high-60s (thousands), depending only on which homes ended up in the test set.
+
+**Step to "+ CV".** One 5-fold CV run, from the code on the last slide.
+
+- Its mean lands inside the cloud of dots, a little right of center.
+- Its std (about $7.9k) is almost exactly the std of the 50 single-split scores (about $7.8k), even though it came from just one training set. About 6 in 10 dots fall inside the band.
+
+**The point:** one split gives you one number and no idea how lucky it was. CV gives you a score *and* a good read on how much a single score can wobble. That's why we make decisions on CV scores, not on a single split.
+
+**Transition:** "So here's the rule we'll follow for the rest of the course."
 :::
 
 ## Cross-Validation: Key Takeaway {.smaller}
@@ -479,35 +781,59 @@ Mean CV Accuracy: 0.852 (+/- 0.008)
 ::: {.callout-important}
 ## The Golden Rule of Cross-Validation
 
-**Split your data FIRST, then use cross-validation on the training set for ALL modeling decisions.**
-
-- ✅ Compare different models
-- ✅ Tune hyperparameters
-- ✅ Select features
-- ✅ Evaluate preprocessing choices
-
-**Your test set should be touched ONCE at the very end.**
+**Split first.** Use cross-validation on the training set for **every** modeling decision: models, hyperparameters, features, preprocessing. Touch the test set **once**, at the very end.
 :::
 
 . . .
 
-**Why this matters:**
+:::: {.columns}
+::: {.column width="50%"}
+**❌ Weeks 9–11**
 
-* **Test set contamination** is subtle and easy to do accidentally
-* Every peek at the test set makes your performance estimates **less trustworthy**
-* Cross-validation gives you **unlimited practice exams** while keeping your final exam pristine
-* This is the difference between **amateur** and **professional** data science
+```python
+train, test = split(data)
+model1 = tree(depth=3)
+model2 = tree(depth=8)
+
+fit(model1, train)
+fit(model2, train)
+score1 = evaluate(model1, test)  # peek!
+score2 = evaluate(model2, test)  # peek!
+
+report(best score)               # optimistic
+```
+:::
+::: {.column width="50%"}
+**✅ From now on**
+
+```python
+train, test = split(data)        # lock test away
+model1 = tree(depth=3)
+model2 = tree(depth=8)
+
+score1 = cross_validate(model1, train, k=5)
+score2 = cross_validate(model2, train, k=5)
+
+best = model with best CV score
+fit(best, train)                 # refit once
+report(evaluate(best, test))     # test once
+```
+:::
+::::
 
 ::: {.notes}
-**This slide crystallizes the main lesson from the CV section.**
+**Timing: ~3 minutes.** This slide pulls the CV section together.
 
-**The callout box contains the core message:**
-- Split first (train/test split is step 1)
-- Use CV on training set for all decisions
-- Test set = final evaluation only
+**The callout:** split first, use CV on the training set for every decision, and use the test set once.
+
+**Click: the pseudo code.** Same two candidate models on both sides, a depth-3 and a depth-8 tree. Walk them side by side.
+
+- **Left (weeks 9–11):** both models are scored on the test set, so the test set picks the winner, and the score we report is the winner's luckiest score.
+- **Right (from now on):** both models are scored with CV on the training set. The test set doesn't appear until the last line.
+- **One new step on the right:** `fit(best, train)`. CV trained 5 copies of each model only to *score* them. Once we've chosen, we refit the winner on all the training data, then test it once.
 
 **Emphasize the examples:**
-- "Want to compare Random Forest vs. Gradient Boosting? Use CV!"
+- "Want to compare a single tree vs. a random forest? Use CV!"
 - "Want to find best max_depth? Use CV!"
 - "Want to see if feature scaling helps? Use CV!"
 - "Want to try different imputation strategies? Use CV!"
@@ -597,1291 +923,848 @@ Use the student analogy from Chapter 29:
 
 **The goal:** Find the hyperparameter value that minimizes the GAP between training and validation performance while maximizing validation performance.
 
-**Visual aid:** Draw a U-shaped curve on the board:
-- X-axis: Model complexity (simple → complex)
-- Y-axis: Error
-- Two curves: Training error (decreases) and Validation error (U-shaped)
-- Sweet spot: Bottom of validation curve
+**Timing: ~3 minutes.** Keep it brief; the next slide shows it.
 
-**Transition:** "Let me show you what this looks like visually with a real example."
+**Transition:** "Let's watch the tradeoff happen. Same noisy sine wave as last week's tree-depth slide, but now with KNN."
 :::
 
-## Visualizing Bias-Variance with KNN {.smaller}
+## Bias–Variance, One K at a Time {.smaller}
 
 ```{python}
 #| echo: false
-#| fig-width: 12
-#| fig-height: 4
-import matplotlib.pyplot as plt
-import numpy as np
+#| fig-align: center
+from sklearn.model_selection import KFold
 from sklearn.neighbors import KNeighborsRegressor
 
-# Generate synthetic data with non-linear pattern
+# Same noisy sine wave as week 11's "How Deep Should a Tree Go?"
 np.random.seed(42)
-X = np.linspace(0, 10, 100)
-y_true = np.sin(X) + 0.5 * X  # True pattern
-y = y_true + np.random.normal(0, 0.4, 100)  # Add noise
+bv_x = np.sort(np.random.uniform(0, 10, 100)).reshape(-1, 1)
+bv_y = np.sin(bv_x).ravel() + np.random.normal(0, 0.4, len(bv_x))
+bv_grid = np.linspace(0, 10, 300).reshape(-1, 1)
+bv_true = np.sin(bv_grid).ravel()
 
-X_reshaped = X.reshape(-1, 1)
-X_plot = np.linspace(0, 10, 300).reshape(-1, 1)
+k_values = [50, 40, 30, 20, 15, 10, 7, 5, 3, 2, 1]          # slider runs simple → flexible
+bv_folds = KFold(n_splits=5, shuffle=True, random_state=42)  # x is sorted, so shuffle the folds
+train_err, cv_err, fits = [], [], []
+for k in k_values:
+    knn = KNeighborsRegressor(n_neighbors=k).fit(bv_x, bv_y)
+    fits.append(knn.predict(bv_grid))
+    train_err.append(root_mean_squared_error(bv_y, knn.predict(bv_x)))
+    cv_err.append(-cross_val_score(KNeighborsRegressor(n_neighbors=k), bv_x, bv_y, cv=bv_folds,
+                                   scoring='neg_root_mean_squared_error').mean())
+best_k = k_values[int(np.argmin(cv_err))]
 
-# Three models with different K values
-fig, axes = plt.subplots(1, 3, figsize=(18, 4))
+fig = make_subplots(rows=1, cols=2, column_widths=[0.55, 0.45], horizontal_spacing=0.1,
+                    subplot_titles=['The fitted curve', 'Error vs. K (lower is better)'])
+# Fixed traces: data, true pattern, and both error curves
+fig.add_trace(go.Scatter(x=bv_x.ravel(), y=bv_y, mode='markers', name='Training data',
+                         marker=dict(color='lightgray', size=7, line=dict(color='gray', width=1)),
+                         hoverinfo='skip'), row=1, col=1)
+fig.add_trace(go.Scatter(x=bv_grid.ravel(), y=bv_true, mode='lines', name='True pattern',
+                         line=dict(color='green', dash='dash', width=2), hoverinfo='skip'), row=1, col=1)
+fig.add_trace(go.Scatter(x=k_values, y=train_err, mode='lines+markers', name='Training error',
+                         line=dict(color=ORANGE, width=3), marker=dict(size=6),
+                         hovertemplate='K=%{x}: train RMSE %{y:.2f}<extra></extra>'), row=1, col=2)
+fig.add_trace(go.Scatter(x=k_values, y=cv_err, mode='lines+markers', name='CV error',
+                         line=dict(color=BLUE, width=3), marker=dict(size=6),
+                         hovertemplate='K=%{x}: CV RMSE %{y:.2f}<extra></extra>'), row=1, col=2)
+n_fixed = len(fig.data)
 
-# High Bias (K=75)
-knn_bias = KNeighborsRegressor(n_neighbors=75)
-knn_bias.fit(X_reshaped, y)
-y_bias = knn_bias.predict(X_plot)
+titles = []
+for i, k in enumerate(k_values):
+    fig.add_trace(go.Scatter(x=bv_grid.ravel(), y=fits[i], mode='lines', showlegend=False,
+                             line=dict(color='#2c3e50', width=3), visible=False, hoverinfo='skip'),
+                  row=1, col=1)
+    fig.add_trace(go.Scatter(x=[k, k], y=[train_err[i], cv_err[i]], mode='markers+lines',
+                             line=dict(color='black', width=1.5, dash='dot'),
+                             marker=dict(size=13, color='white', line=dict(color=[ORANGE, BLUE], width=3)),
+                             showlegend=False, visible=False, hoverinfo='skip'), row=1, col=2)
+    if k == best_k:
+        verdict = 'lowest CV error'
+    elif cv_err[i] <= 1.05 * min(cv_err):
+        verdict = 'close to the bottom of the U'
+    elif k > best_k:
+        verdict = 'too simple: misses the wave (high bias)'
+    else:
+        verdict = 'too flexible: chases the noise (high variance)'
+    titles.append(f'K = {k}: train RMSE <b>{train_err[i]:.2f}</b>, CV RMSE <b>{cv_err[i]:.2f}</b>  ·  {verdict}')
 
-axes[0].scatter(X, y, alpha=0.6, s=30, color='gray', label='Training data')
-axes[0].plot(X_plot, y_bias, 'r-', linewidth=3, label='Bias model')
-axes[0].set_title('High Bias (K=75)', fontsize=14, fontweight='bold')
-axes[0].set_xlabel('X', fontsize=12)
-axes[0].set_ylabel('y', fontsize=12)
-axes[0].legend(fontsize=10)
-axes[0].grid(True, alpha=0.3)
-axes[0].text(0.5, 0.95, 'Too simple - misses pattern',
-            transform=axes[0].transAxes, fontsize=10,
-            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+steps = slider_steps(n_fixed, len(k_values), 2, [str(k) for k in k_values], titles)
+for trace in fig.data[n_fixed:n_fixed + 2]:
+    trace.visible = True
 
-# Balanced (K=5)
-knn_good = KNeighborsRegressor(n_neighbors=5)
-knn_good.fit(X_reshaped, y)
-y_good = knn_good.predict(X_plot)
-
-axes[1].scatter(X, y, alpha=0.6, s=30, color='gray', label='Training data')
-axes[1].plot(X_plot, y_good, 'g-', linewidth=3, label='Just right model')
-axes[1].set_title('Balanced (K=5)', fontsize=14, fontweight='bold')
-axes[1].set_xlabel('X', fontsize=12)
-axes[1].set_ylabel('y', fontsize=12)
-axes[1].legend(fontsize=10)
-axes[1].grid(True, alpha=0.3)
-axes[1].text(0.5, 0.95, 'Sweet spot!',
-            transform=axes[1].transAxes, fontsize=10,
-            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5))
-
-# High Variance (K=1)
-knn_variance = KNeighborsRegressor(n_neighbors=1)
-knn_variance.fit(X_reshaped, y)
-y_variance = knn_variance.predict(X_plot)
-
-axes[2].scatter(X, y, alpha=0.6, s=30, color='gray', label='Training data')
-axes[2].plot(X_plot, y_variance, 'b-', linewidth=3, label='Variance model')
-axes[2].set_title('High Variance (K=1)', fontsize=14, fontweight='bold')
-axes[2].set_xlabel('X', fontsize=12)
-axes[2].set_ylabel('y', fontsize=12)
-axes[2].legend(fontsize=10)
-axes[2].grid(True, alpha=0.3)
-axes[2].text(0.5, 0.95, 'Too complex - memorizes noise',
-            transform=axes[2].transAxes, fontsize=10,
-            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.5))
-
-plt.tight_layout()
-plt.show()
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='K (neighbors averaged): '),
+                  pad=dict(t=90))],
+    xaxis=dict(title='x'), yaxis=dict(title='y', range=[-2.2, 2.2]),
+    xaxis2=dict(title='K  (← simpler · more flexible →)', type='log', autorange='reversed',
+                tickvals=[50, 20, 10, 5, 2, 1]),
+    yaxis2=dict(title='RMSE', rangemode='tozero'),
+    legend=dict(orientation='h', y=-0.22, x=0.5, xanchor='center', yanchor='top'),
+    height=500, margin=dict(l=60, r=20, t=80, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
-
-::: {.callout-caution}
-More advanced models (i.e. Decision Trees, Random Forests, Gradient Boosted Machines) are more flexible to align with data patterns; however, it is up to us to tune these models to balance the bias-variance tradeoff!
-:::
 
 ::: {.notes}
-**This visualization makes the bias-variance tradeoff concrete.**
+**Timing: ~5 minutes.** Same noisy sine wave as week 11's "How Deep Should a Tree Go?" slide, now fit with KNN. Recall KNN predicts by averaging the K nearest training points.
 
-**Walk through each panel:**
+**Start at K = 50.** The curve averages 50 neighbors, so it's nearly flat and misses the wave. Training *and* CV error are both high. That's **high bias** (underfitting).
 
-**Left: High Bias (K=75)**
-- Model averages 75 neighbors - very smooth
-- Completely misses the curved pattern
-- Too simple - underfits the data
-- Red line is nearly straight
-- Consistent errors (always wrong in the same way)
+**Drag slowly toward K = 1.** The curve bends to follow the wave, and both errors fall.
 
-**Middle: Balanced (K=5)**
-- Model averages 5 neighbors - just right
-- Captures the general curve without memorizing noise
-- Green line follows the pattern nicely
-- This is what we want!
+**Keep going past K = 7.** Training error keeps falling, all the way to 0 at K = 1, because every point is its own nearest neighbor. But CV error turns back up. The curve is now chasing noise. That's **high variance** (overfitting).
 
-**Right: High Variance (K=1)**
-- Model only uses 1 neighbor - exact match
-- Blue line zigzags through every training point
-- Memorizes noise instead of learning the pattern
-- Will perform poorly on new data
+**Point at the right panel:**
 
-**Key teaching points:**
+- The orange curve (training error) always says "more flexible is better". It can't see overfitting.
+- The blue curve (CV error) is a U. Its bottom, K = 7 here, is the setting we'd pick.
+- We found it without touching a test set.
 
-1. **Hyperparameters control complexity:**
-   - Large K = simpler model (high bias)
-   - Small K = complex model (high variance)
-   - Need to find the sweet spot
+**Key message:** flexible models (small K, deep trees, big forests) *can* fit the pattern closely, but it's up to us to tune them to the bottom of the U.
 
-2. **Training vs. validation performance:**
-   - K=1: Perfect on training (100% accuracy), poor on validation
-   - K=75: Poor on training, poor on validation
-   - K=5: Good on both - balanced
-
-3. **Generalization is the goal:**
-   - We don't want to memorize training data
-   - We want to learn patterns that work on new data
-   - The balanced model (K=5) will generalize best
-
-**Student engagement:**
-Ask: "Which model would you deploy to production?"
-Expected answer: "The balanced one (K=5)"
-Follow-up: "How do we find the right K value systematically? GridSearchCV!"
-
-**Transition:** "So we can see the problem. But how have we been finding these values so far?"
+**Transition:** "So how have we been finding the bottom of the U so far?"
 :::
 
-## The Manual Approach (What We've Been Doing) {.smaller}
+## Tuning by Hand {.smaller}
 
 :::: {.columns}
-::: {.column width="50%"}
+::: {.column width="55%"}
 
-**In previous chapters, we manually tried different values:**
+**Even with CV, tuning by hand looks like this:**
 
 ```python
-# Try max_depth = 5
-dt1 = DecisionTreeClassifier(max_depth=5)
-score1 = cross_val_score(dt1, X_train, y_train)
-print(f"max_depth=5: {score1.mean()}")
+# Try max_depth = 4
+tree4 = DecisionTreeRegressor(max_depth=4)
+cv4 = cross_val_score(tree4, X_train, y_train, cv=5)
 
-# Try max_depth = 10
-dt2 = DecisionTreeClassifier(max_depth=10)
-score2 = cross_val_score(dt2, X_train, y_train)
-print(f"max_depth=10: {score2.mean()}")
+# Try max_depth = 6
+tree6 = DecisionTreeRegressor(max_depth=6)
+cv6 = cross_val_score(tree6, X_train, y_train, cv=5)
 
-# Try max_depth = 15
-dt3 = DecisionTreeClassifier(max_depth=15)
-score3 = cross_val_score(dt3, X_train, y_train)
-print(f"max_depth=15: {score3.mean()}")
-
-# ... keep trying values manually
+# Try max_depth = 8 ... and min_samples_leaf?
+# ... keep copying and pasting
 ```
 
 :::
-::: {.column width="50%"}
+::: {.column width="45%"}
 
-**Problems with this approach:**
+**Problems:**
 
-* ⏱️ **Time-consuming** - Repetitive code for each value
-* 🐛 **Error-prone** - Easy to make copy-paste mistakes
-* 📊 **Limited exploration** - Only try a few values
-* 🔄 **Not systematic** - What about combinations of parameters?
-* 📝 **Hard to track** - Which combination was best?
+* ⏱️ **Repetitive:** same code for every value
+* 🐛 **Error-prone:** easy copy-paste mistakes
+* 📊 **Limited:** we only try a few values
+* 🔄 **Combinations explode:** 6 depths × 5 leaf sizes = 30 settings
+
+:::
+::::
 
 . . .
 
 ::: {.callout-tip}
-## A Better Way Exists!
+## A better way exists
 
-We need an **automated, systematic approach** to search through hyperparameter combinations efficiently.
+Let the computer try **every combination** in a grid, score each with CV, and keep track of the best.
 :::
-
-:::
-::::
 
 ::: {.notes}
-**This slide bridges previous chapters to GridSearchCV.**
+**Timing: ~2 minutes.** A quick bridge to GridSearchCV. Don't linger; students already feel this pain.
 
-**Left side - What students have been doing:**
+**Left: the code.**
 
-**Walk through the code:**
-- "Remember doing this in Chapters 25-27?"
-- "You tried max_depth=5, then 10, then 15..."
-- "Lots of copying and pasting, changing one number each time"
-- "Tedious and error-prone!"
+- "Remember doing this in Modules 9–11?" (Then it was scored on the test set; now at least it's CV.)
+- Two tries, each a copy-paste with one number changed: `max_depth=4`, then `max_depth=6`.
+- "What about 8? 10? And what about `min_samples_leaf` at the same time?"
 
-**Point out the pattern:**
-- Same code structure repeated 3 times
-- Only difference is the max_depth value
-- What if you want to try 10 values? 20 values?
-- What if you want to tune multiple parameters simultaneously?
+**Right: the problems.** One line each:
 
-**Right side - Problems:**
+1. **Repetitive:** more time writing the same code than thinking about the problem.
+2. **Error-prone:** easy to copy a block and forget to change the variable name or the value.
+3. **Limited:** by hand, we try 3–5 values. The best one might be one we never tried.
+4. **Combinations explode:** two hyperparameters, 6 depths × 5 leaf sizes, is already 30 settings.
 
-**Go through each problem:**
+Also say (it's not on the slide): it's hard to keep track of which combination won.
 
-1. **Time-consuming:**
-   - "You spend more time writing repetitive code than thinking about the problem"
-   - "What if you need to try 50 different combinations?"
+**Click: the callout.** "Let the computer do the tedious part. That's GridSearchCV."
 
-2. **Error-prone:**
-   - "Easy to copy-paste and forget to change the variable name"
-   - "Or forget to change the max_depth value"
-   - "I've done this myself - very frustrating!"
-
-3. **Limited exploration:**
-   - "Realistically, you only try 3-5 values manually"
-   - "But the optimal value might be max_depth=12, not 5, 10, or 15!"
-   - "You're only sampling a small part of the space"
-
-4. **Not systematic:**
-   - "What if you want to tune BOTH max_depth AND n_estimators?"
-   - "That's 3 × 3 = 9 combinations to try manually"
-   - "Add min_samples_split? Now it's 3 × 3 × 3 = 27 combinations!"
-   - "This gets out of hand quickly"
-
-5. **Hard to track:**
-   - "Which combination gave the best score?"
-   - "Did max_depth=10 with n_estimators=100 do better than max_depth=15 with n_estimators=200?"
-   - "You need to keep notes or save results somehow"
-
-**The callout box:**
-- "There's a better way - let the computer do the tedious work!"
-- "That's what GridSearchCV does"
-
-**Student engagement:**
-Ask: "How many of you have done something like this and thought 'there must be a better way'?"
-Show of hands usually gets good response.
-
-**Transition:** "Let me show you GridSearchCV, which automates all of this and makes hyperparameter tuning systematic, reproducible, and efficient."
+**Transition:** "Here's what that search looks like, cell by cell."
 :::
 
-## What is Grid Search? {.smaller}
+## What GridSearchCV Does {.smaller}
 
-**Grid Search = Systematically trying ALL combinations of hyperparameters**
-
-. . .
+Each cell is one setting, scored with 5-fold CV on the training set. **Darker = lower CV RMSE.** ★ = best so far.
 
 ```{python}
 #| echo: false
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
+#| fig-align: center
+from sklearn.model_selection import GridSearchCV
 
-fig, ax = plt.subplots(figsize=(10, 4))
+param_grid = {'max_depth': [2, 4, 6, 8, 10, None], 'min_samples_leaf': [1, 5, 10, 20, 40]}
+grid_search = GridSearchCV(DecisionTreeRegressor(random_state=42), param_grid, cv=5,
+                           scoring='neg_root_mean_squared_error').fit(X_train, y_train)
+results = (pd.DataFrame(grid_search.cv_results_)     # one row per cell, in search order
+           .assign(cv_rmse=lambda df: -df['mean_test_score']))
 
-# Define parameter values
-max_depths = [5, 10, 15, 20]
-n_estimators = [100, 200, 300]
+depth_labels = [str(d) for d in param_grid['max_depth']]          # 'None' = no limit
+leaf_labels = [str(l) for l in param_grid['min_samples_leaf']]
+n_cells, n_folds = len(results), grid_search.n_splits_
 
-# Create grid
-for i, depth in enumerate(max_depths):
-    for j, est in enumerate(n_estimators):
-        # Create rectangles for each combination
-        rect = mpatches.Rectangle((j, i), 0.9, 0.9,
-                                 facecolor='#3498db',
-                                 edgecolor='white',
-                                 linewidth=3,
-                                 alpha=0.7)
-        ax.add_patch(rect)
+def cell_position(row):
+    return depth_labels.index(str(row['param_max_depth'])), leaf_labels.index(str(row['param_min_samples_leaf']))
 
-        # Add text showing the combination
-        ax.text(j + 0.45, i + 0.45,
-                f'max_depth={depth}\nn_estimators={est}',
-                ha='center', va='center',
-                fontsize=11, fontweight='bold',
-                color='white')
+fig = go.Figure()
+titles = []
+for n in range(1, n_cells + 1):
+    rmse_grid = np.full((len(depth_labels), len(leaf_labels)), np.nan)
+    text_grid = [[''] * len(leaf_labels) for _ in depth_labels]
+    for _, row in results.iloc[:n].iterrows():
+        r, c = cell_position(row)
+        rmse_grid[r, c] = row['cv_rmse']
+        text_grid[r][c] = usd(row['cv_rmse'])
+    best_row = results.iloc[:n]['cv_rmse'].idxmin()
+    br, bc = cell_position(results.loc[best_row])
+    text_grid[br][bc] = f'★ {text_grid[br][bc]}'
+    cr, cc = cell_position(results.iloc[n - 1])
+    fig.add_trace(go.Heatmap(
+        z=rmse_grid, x=list(range(len(leaf_labels))), y=list(range(len(depth_labels))), text=text_grid, texttemplate='%{text}',
+        textfont=dict(size=13), colorscale=[[0, BLUE], [1, '#eef5fc']],
+        zmin=results['cv_rmse'].min(), zmax=results['cv_rmse'].max(), showscale=False,
+        xgap=3, ygap=3, hoverinfo='skip', visible=False))
+    # orange outline on the cell just tried
+    fig.add_trace(go.Scatter(x=[cc - 0.47, cc + 0.47, cc + 0.47, cc - 0.47, cc - 0.47],
+                             y=[cr - 0.45, cr - 0.45, cr + 0.45, cr + 0.45, cr - 0.45], mode='lines',
+                             line=dict(color=ORANGE, width=4), showlegend=False, visible=False,
+                             hoverinfo='skip'))
+    best = results.loc[best_row]
+    if n < n_cells:
+        titles.append(f'Cell {n} of {n_cells}: depth {depth_labels[cr]}, '
+                      f'leaf {leaf_labels[cc]} → {usd(results.iloc[n - 1]["cv_rmse"])}'
+                      f'  |  models trained: {n} × {n_folds} = <b>{n * n_folds}</b>')
+    else:
+        titles.append(f'★ Best: max_depth={depth_labels[br]}, min_samples_leaf={leaf_labels[bc]} '
+                      f'→ CV RMSE <b>{usd(best["cv_rmse"])}</b>'
+                      f'  |  {n_cells} cells × {n_folds} folds = <b>{n_cells * n_folds} models</b>')
 
-# Set axis properties
-ax.set_xlim(-0.1, 3)
-ax.set_ylim(-0.1, 4)
-ax.set_xticks(np.arange(3) + 0.45)
-ax.set_xticklabels([100, 200, 300], fontsize=12, fontweight='bold')
-ax.set_yticks(np.arange(4) + 0.45)
-ax.set_yticklabels([5, 10, 15, 20], fontsize=12, fontweight='bold')
-ax.set_xlabel('n_estimators', fontsize=14, fontweight='bold')
-ax.set_ylabel('max_depth', fontsize=14, fontweight='bold')
-ax.set_title('Grid Search: 4 × 3 = 12 Combinations to Try',
-             fontsize=16, fontweight='bold', pad=20)
+steps = slider_steps(0, n_cells, 2, [str(n) for n in range(1, n_cells + 1)], titles)
+for trace in fig.data[:2]:
+    trace.visible = True
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Cells tried: '), pad=dict(t=40))],
+    xaxis=dict(title='min_samples_leaf', side='top', tickvals=list(range(len(leaf_labels))),
+               ticktext=leaf_labels, range=[-0.5, len(leaf_labels) - 0.5], showgrid=False, zeroline=False),
+    yaxis=dict(title='max_depth', tickvals=list(range(len(depth_labels))), ticktext=depth_labels,
+               range=[len(depth_labels) - 0.5, -0.5], showgrid=False, zeroline=False),
+    height=470, margin=dict(l=80, r=20, t=110, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
 
-# Add arrows and annotation
-ax.annotate('Each cell = one model configuration',
-           xy=(1.5, -0.5), fontsize=12, ha='center',
-           bbox=dict(boxstyle='round,pad=0.5', facecolor='#f39c12', alpha=0.8),
-           fontweight='bold')
+::: {.notes}
+**Timing: ~4 minutes.** This replaces "copy, paste, change one number" with a grid.
 
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['bottom'].set_visible(False)
-ax.spines['left'].set_visible(False)
+**The grid:** 6 values of `max_depth` (None = no limit) × 5 values of `min_samples_leaf` = 30 settings for a decision tree on Ames. Every cell is scored with 5-fold CV on the training set, exactly like the last section.
 
-plt.tight_layout()
-plt.show()
+**Slide forward slowly for the first row, then faster.** Cells fill in the order GridSearchCV tries them: every leaf size for depth 2, then depth 4, and so on.
+
+- The **orange box** is the setting just tried.
+- The **★** is the best so far. It moves as better cells appear.
+- The **title** counts the cost: each cell is 5 models, so the full grid is 30 × 5 = **150 models**.
+
+**Things to point out at the end:**
+
+- Depth 2 is equally bad everywhere (too simple, so leaf size can't help).
+- `min_samples_leaf=1` is bad at every depth past 4. Tiny leaves let the tree memorize, which is the bias–variance story again.
+- The best cell isn't at an edge of the grid, which is a good sign the grid was wide enough.
+
+**Cost question:** "If we added a third hyperparameter with 4 values, how many models?" 30 × 4 × 5 = 600. Grids grow fast. Your readings cover random search for big grids.
+
+**Transition:** "Every number on that grid came from one scikit-learn call."
+:::
+
+## GridSearchCV in Scikit-Learn {.smaller}
+
+```{python}
+#| code-line-numbers: "|3-6|7-13|14|16-17"
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {
+    'max_depth': [2, 4, 6, 8, 10, None],
+    'min_samples_leaf': [1, 5, 10, 20, 40],
+}
+grid_search = GridSearchCV(
+    DecisionTreeRegressor(random_state=42),
+    param_grid,
+    cv=5,
+    scoring='neg_root_mean_squared_error',
+    n_jobs=-1,                       # use all CPU cores
+)
+grid_search.fit(X_train, y_train)    # 30 settings × 5 folds = 150 models
+
+print("Best settings:", grid_search.best_params_)
+print(f"Best CV RMSE: ${-grid_search.best_score_:,.0f}")
+```
+
+::: {.notes}
+**Timing: ~4 minutes.** Live code; this is the exact search from the heatmap.
+
+**Walk the highlighted lines:**
+
+1. **Lines 3–6:** The grid is a dictionary: hyperparameter name → list of values to try. Names must match the model's arguments exactly.
+2. **Lines 7–13:** The model, the grid, and the same CV settings as before. `n_jobs=-1` runs folds in parallel on every CPU core. Students will want this in the Lab.
+3. **Line 14:** One `.fit()` runs all 150 models. Only `X_train` goes in; the test set stays locked away.
+4. **Lines 16–17:** The winning cell, and its CV RMSE (flip the sign again).
+
+**Also worth knowing:** `grid_search.cv_results_` holds the score of every cell. The Lecture notebook's "Tune a Tree" Your Turn plots it.
+
+**Transition:** "We have a winner. So what do we do with it?"
+:::
+
+## Refit, Then Test Once {.smaller}
+
+```{python}
+#| code-line-numbers: "|1-3|5|7-10"
+# Step 1: refit the winning settings on ALL of the training data
+final_tree = DecisionTreeRegressor(random_state=42, **grid_search.best_params_)
+final_tree.fit(X_train, y_train)     # GridSearchCV already did this: grid_search.best_estimator_
+
+# ... more decisions to make? Keep using CV. The test set stays locked. 🔒
+
+# Step 2: ONLY when every decision is final, test once
+test_rmse = root_mean_squared_error(y_test, final_tree.predict(X_test))
+print(f"CV RMSE (our estimate):      ${-grid_search.best_score_:,.0f}")
+print(f"Test RMSE (final, one time): ${test_rmse:,.0f}")
 ```
 
 . . .
 
-::: {.callout-note icon=false}
-## 🔍 The Grid Search Process
-**For each combination:** Train model → Evaluate with cross-validation → Record score
+::: {.callout-warning}
+## The test score is the final word
 
-**After trying all combinations:** Pick the one with the best CV score!
+This is the **final generalization assessment**. If it disappoints, don't go back and re-tune against it. That's peeking again, and the score stops being honest.
 :::
 
 ::: {.notes}
-**This slide introduces the grid search concept visually.**
+**Timing: ~3 minutes.** This closes the loop on the pseudo code from the CV takeaway slide: `fit(best, train)`, then `report(evaluate(best, test))`.
 
-**Key teaching points:**
+**Walk the highlighted lines:**
 
-**The visual grid:**
-- Each blue box represents ONE complete hyperparameter configuration
-- In this example: 4 max_depth values × 3 n_estimators values = 12 total combinations
-- Grid search will try EVERY single one of these
+1. **Lines 1–3: refit.** CV trained 5 copies of each setting on 4/5 of the training data, only to *score* them. Now that we've chosen, we train one model with the winning settings on *all* 1,168 training homes. `**grid_search.best_params_` unpacks the winning dictionary into the model's arguments. GridSearchCV does this for you by default (`refit=True`), and `grid_search.best_estimator_` is that same refit model. We write it out once so students see the step.
+2. **Line 5: the pause.** In a real project there are usually more decisions: other models, features, preprocessing. Every one of them still goes through CV. The test set stays locked.
+3. **Lines 7–10: test once.** Only when every decision is final do we score on `X_test`, one time. The CV estimate and the test score land close together, which is what an honest workflow looks like. The CV score was a fair preview.
 
-**The systematic approach:**
-- Unlike our manual approach where we tried a few values
-- Grid search is exhaustive - it tries ALL combinations
-- Nothing gets missed
+**Click: the callout.** The hard part is discipline. If the test score disappoints, the temptation is to tweak and re-test. That turns the test set back into a validation set, and we're back in the Optimism Gap.
 
-**The name "Grid Search":**
-- It literally comes from this grid visualization
-- We're searching through a grid of parameter combinations
-- In higher dimensions (3+ parameters), it's harder to visualize but same concept
+**If asked "what about all of X?":** we refit on all of `X_train`, not all of `X`, because `X` includes the test homes. Some teams do one last refit on *all* the data after the final test, just before deployment. That's fine, but the reported score is still the one from this slide.
 
-**The process:**
-1. Define the grid (which parameters and which values to try)
-2. For each cell in the grid:
-   - Train a model with those parameter values
-   - Evaluate it using cross-validation
-   - Record the CV score
-3. After trying everything, select the combination with the best score
-
-**Example walkthrough:**
-"Look at this grid. We have max_depth on one axis and n_estimators on the other. Each blue box is a unique combination. For example, the top-left box is max_depth=5 and n_estimators=100. Grid search will train and evaluate a model for EACH of these 12 boxes."
-
-**Why this matters:**
-- Removes human bias (we might not try certain combinations)
-- Systematic and reproducible
-- Can find surprising optimal combinations
-- But can be computationally expensive (more parameters = more combinations)
-
-**The 'curse of dimensionality':**
-- 2 parameters with 4 values each = 4 × 4 = 16 combinations
-- 3 parameters with 4 values each = 4 × 4 × 4 = 64 combinations
-- 4 parameters with 4 values each = 4 × 4 × 4 × 4 = 256 combinations
-- This is why RandomizedSearchCV exists (for very large grids)
-
-**Engagement question:**
-"If we added a third parameter, min_samples_split, with 3 possible values, how many total combinations would we have? ... That's right, 12 × 3 = 36 combinations!"
-
-**Transition:** "Now that we understand WHAT grid search does conceptually, let's see HOW to do it in scikit-learn with GridSearchCV."
-:::
-
-## GridSearchCV: Automated Hyperparameter Search {.smaller}
-
-```{python}
-#| eval: false
-from sklearn.model_selection import GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
-
-# Define parameter grid to search
-param_grid = {
-    'n_estimators': [100, 200, 300],
-    'max_depth': [5, 10, 15, 20],
-    'min_samples_split': [2, 5, 10]
-}
-
-# Create GridSearchCV (uses cross-validation internally!)
-grid_search = GridSearchCV(
-    RandomForestClassifier(random_state=42),
-    param_grid,
-    cv=5,
-    scoring='accuracy',
-    n_jobs=-1  # Use all CPU cores
-)
-
-# Fit on training data (will try 3 × 4 × 3 = 36 configs, each with 5-fold CV = 180 models!)
-grid_search.fit(X_train, y_train)
-
-print(f"Best parameters: {grid_search.best_params_}")
-print(f"Best CV score: {grid_search.best_score_:.3f}")
-```
-
-::: {.notes}
-**This is where the magic happens - systematic hyperparameter search.**
-
-**Walk through the code:**
-
-**Lines 4-9: Define search space**
-- We're trying 3 values for n_estimators
-- 4 values for max_depth
-- 3 values for min_samples_split
-- Total combinations: 3 × 4 × 3 = 36 different configurations
-
-**Lines 12-18: Create GridSearchCV**
-- Wraps a RandomForestClassifier
-- Will try all 36 configurations
-- Each with 5-fold CV
-- Uses accuracy as the metric
-- n_jobs=-1 means "use all CPU cores" (runs in parallel)
-
-**Line 21: The computational reality**
-- 36 configurations × 5 folds = 180 models trained!
-- Sounds expensive, but computers are fast
-- Usually takes seconds to minutes, not hours
-- Worth it for finding optimal settings
-
-**Lines 23-24: Results**
-- `best_params_`: The winning hyperparameter combination
-- `best_score_`: The CV accuracy of the best configuration
-
-**Key insight:** GridSearchCV uses CV internally, so we NEVER touch the test set during this entire search!
-
-**Common student questions:**
-
-1. **"Do I have to try all combinations?"**
-   - GridSearchCV: Yes (exhaustive search)
-   - RandomizedSearchCV: No (random sampling, faster for large grids)
-   - Bayesian optimization: Smart search based on previous results
-
-2. **"How do I know which parameters to tune?"**
-   - Read documentation for your model
-   - Most important usually: complexity parameters (max_depth, n_estimators, etc.)
-   - Less important: random_state, n_jobs (these don't affect performance)
-
-3. **"What ranges should I try?"**
-   - Start broad: [10, 100, 1000]
-   - Then narrow in: [80, 90, 100, 110, 120]
-   - Trade-off between thoroughness and computation time
-
-**Transition:** "So we can now find optimal hyperparameters. But we still need to prepare our data properly first. That's feature engineering."
-:::
-
-## Think-Pair-Share: Spotting Overfitting {.smaller}
-
-**Scenario:** You've tuned a gradient boosting model and see these results:
-
-```
-Configuration A:
-  Training Accuracy: 92.3%
-  CV Accuracy: 88.7%
-
-Configuration B:
-  Training Accuracy: 99.8%
-  CV Accuracy: 85.1%
-```
-
-:::: {.columns}
-::: {.column width="70%"}
-
-**Discuss:**
-
-- Which configuration is overfitting more?
-- Which would you deploy to production?
-- What does the gap between training and CV tell you?
-
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minOverfit"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minOverfit", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-::: {.notes}
-**After timer, facilitate discussion:**
-
-**Question 1: Which is overfitting more?**
-- **Configuration B** is clearly overfitting
-- 99.8% training but only 85.1% CV = massive gap (14.7 points!)
-- It memorized the training data
-- Configuration A has smaller gap (3.6 points)
-
-**Question 2: Which to deploy?**
-- **Configuration A** for sure
-- Higher CV score (88.7% vs 85.1%)
-- Smaller gap suggests better generalization
-- CV score is what matters for production performance
-
-**Question 3: What does the gap tell you?**
-- **Small gap** (Config A): Model generalizes well
-- **Large gap** (Config B): Model memorizes training data, won't generalize
-- The gap is a direct measure of overfitting severity
-
-**Teaching moment:**
-Students often think "higher training score = better model"
-
-**Key insight:** High training score is easy (just memorize!). The hard part is generalizing to new data. That's why we care about CV score and the train/CV gap.
-
-**Real-world parallel:**
-- Config B = student who memorized practice test (99.8%) but bombs actual exam (85.1%)
-- Config A = student who understood concepts (92.3%) and does well on actual exam (88.7%)
-
-**Transition:** "Now let's talk about preparing data properly - feature engineering."
+**Transition:** "We've tuned the model. Now let's give it better inputs: feature engineering."
 :::
 
 # Feature Engineering {background="#43464B"}
 
-## What is Feature Engineering? {.smaller}
+## What Is Feature Engineering? {.smaller}
 
-**The process of creating, transforming, and selecting features to help ML models learn better.**
+**Turning raw columns into inputs a model can learn from.** You've already done it: in weeks 10–11 we turned Yes/No into 1/0.
 
-. . .
+```{python}
+#| output: false
+from ISLP import load_data
+
+Default = load_data('Default')
+before = Default[['student']].head(3)
+Default['student'] = (Default['student'] == 'Yes').astype(int)
+```
 
 :::: {.columns}
-::: {.column width="50%"}
+::: {.column width="35%"}
 
-**Raw data:**
+::: {style="font-size: 0.8em;"}
+```{python}
+#| echo: false
+pd.concat([before, Default[['student']].head(3)], axis=1, keys=['Before', 'After'])
 ```
-YearBuilt: 1995
-YearRemodel: 2015
-```
-
-**Engineered feature:**
-```python
-RelativeAge = 2025 - max(YearBuilt, YearRemodel)
-            = 2025 - 2015 = 10 years
-```
-
-*An older home (1995) with recent remodel (2015) has a younger relative age than a newer home (2010) without remodeling!*
+:::
 
 :::
-::: {.column width="50%"}
-
-**Raw features:**
-```
-GrLivArea: 2000 sq ft
-OverallQual: 8/10
-```
-
-**Engineered interaction:**
-```
-Size_x_Quality: 16,000
-```
-
-*Captures combined effect!*
-
-:::
-::::
+::: {.column width="65%"}
 
 . . .
 
-<br>
+::: {.callout-warning}
+## It works, but it's not the best way
 
-::: {.callout-important}
-## **Why it matters** 
+* It lives **outside the model**: new data needs the exact same line, or predictions break
+* A surprise value (`"yes"`, `"Y"`) silently becomes **0**
+* It doesn't scale to columns with **many categories**
 
-Good features often matter more than fancy algorithms!
+**Better:** let scikit-learn learn the encoding *inside a pipeline*. That's where we're headed.
 :::
 
-::: {.notes}
-**Feature engineering is where data science becomes an art.**
-
-**The central message:**
-> "Garbage in, garbage out. Feature engineering is how we turn raw data into high-quality input that models need."
-
-**Key concepts to emphasize:**
-
-**1. Raw data often doesn't directly represent what we want to learn**
-
-Example: YearBuilt
-- Raw: 1995
-- What matters: How OLD is the house? (Age = current year - year built)
-- Models learn better from age than year built
-
-**2. Domain knowledge is critical**
-
-Real estate examples:
-- Total bathrooms = FullBath + 0.5×HalfBath + BsmtFullBath + 0.5×BsmtHalfBath
-- Square feet per bathroom = GrLivArea / Total bathrooms
-- Was renovated? = (YearRemodAdd > YearBuilt)
-
-These features come from understanding what makes houses valuable, not from algorithms.
-
-**3. The 80/20 rule in data science:**
-Data scientists spend:
-- 80% of time on data prep and feature engineering
-- 20% on model selection and tuning
-
-This isn't inefficiency - it's because good features make a BIGGER difference than fancy algorithms!
-
-**Show impact with example:**
-- Simple linear regression + good features > Neural network + raw features
-- Feature engineering is the high-leverage activity
-
-**Types of feature engineering (preview):**
-1. Encoding categorical variables
-2. Scaling numerical features
-3. Creating new features (like examples shown)
-4. Handling missing data
-5. Building pipelines to do this systematically
-
-**Transition:** "Let's see the most common feature engineering techniques in action."
 :::
-
-## Four Essential Techniques {.smaller}
-
-::::: {.columns}
-:::: {.column width="50%"}
-
-**1. Encoding Categorical Variables**
-
-* Dummy encoding: One column per category
-* Label encoding: Single numerical column
-* Ordinal: Preserve ordering
-
-**2. Scaling Numerical Features**
-
-* StandardScaler: Mean=0, Std=1
-* MinMaxScaler: Range [0, 1]
-* Crucial for distance-based algorithms
-
 ::::
-:::: {.column width="50%"}
-
-**3. Creating New Features**
-
-* Polynomial: Square, cube terms
-* Interactions: Feature × Feature
-* Domain-specific: Age, ratios, etc.
-
-**4. Handling Missing Data**
-
-* Imputation: Fill with median/mode
-* Missingness indicators
-* Know when to drop vs. impute
-
-::::
-:::::
 
 ::: {.notes}
-**Brief overview of the four main categories from Chapter 30.**
+**Timing: ~3 minutes.**
 
-**1. Encoding Categorical Variables**
+Feature engineering sounds new, but students have done it. Week 10's `Default` data had Yes/No columns; models need numbers, so we converted them to 1/0. The table shows the same three customers' `student` column before and after.
 
-**The problem:** ML algorithms need numbers, not text
+**Click: the callout.** That one-liner did the job, but it has real problems once a model leaves the notebook:
 
-**Solutions:**
-- **Dummy/One-hot:** Create binary columns (0/1) for each category
-  - Example: BldgType → BldgType_SingleFamily, BldgType_Condo, etc.
-  - Use for: Nominal variables (no order)
-  - Watch out: Drop one column for linear regression (dummy variable trap)
+- **Outside the model:** the conversion isn't part of the model, so whoever scores new customers must remember to repeat it exactly. Forget it, and the model gets text it can't use.
+- **Silent errors:** `== 'Yes'` turns anything that isn't exactly "Yes" into 0. A new file with "yes" or "Y" would mislabel every student, with no error.
+- **Doesn't scale:** fine for two values, painful for a column with 25 neighborhoods.
 
-- **Label encoding:** Assign integers (1, 2, 3, ...)
-  - Example: Neighborhoods → 1, 2, 3, ..., 28
-  - Use for: High-cardinality + tree models
-  - Never use: With linear models for nominal variables!
+scikit-learn's encoders fix all three: they *learn* the categories from the training data, they travel with the model inside a pipeline, and they can be told what to do with values they've never seen.
 
-- **Ordinal encoding:** Custom mapping preserving order
-  - Example: Quality (Poor=1, Fair=2, Good=3, Excellent=4)
-  - Use for: Variables with natural ordering
-
-**2. Scaling Numerical Features**
-
-**The problem:** Features on different scales (sq ft: 1000-4000, bedrooms: 1-6)
-
-**When it matters:**
-- k-NN, SVM: YES (distance-based)
-- Linear regression with regularization: YES
-- Decision trees, Random Forests: NO (threshold-based)
-
-**Methods:**
-- **StandardScaler:** Transforms to mean=0, std=1 (most common)
-- **MinMaxScaler:** Transforms to range [0, 1]
-
-**3. Creating New Features**
-
-**The power move in feature engineering:**
-
-- **Polynomial features:** Capture non-linear relationships (x²,  x³)
-- **Interactions:** Feature A × Feature B (size × quality)
-- **Domain-specific:** Requires expertise in the problem domain
-  - Best source: Talk to domain experts!
-  - They know what really matters
-
-**4. Handling Missing Data**
-
-**The reality:** Real-world data always has gaps
-
-**Strategies:**
-- **Imputation:** Fill with median (numerical) or mode (categorical)
-- **Missingness indicators:** Create binary flag "was_missing"
-  - Important when missingness is informative!
-  - Example: High earners often don't report income
-- **Drop data:** Only when < 5% missing and it's random
-
-**Key decision:** Drop vs. Impute?
-- < 5% missing + random: Drop
-- > 5% missing or informative: Impute + indicator
-
-**Transition:** "Let's see some of these techniques in action with the Ames data."
+**Transition:** "There are a handful of common feature engineering moves. Today we'll focus on two of them."
 :::
 
-## Hands-On Demo: Encoding & Scaling {.smaller .scrollable}
+## Common Approaches {.smaller}
 
-**Original Features:**
-```{python}
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+::: {.card-grid .cols-2}
+::: {.card}
+[📏 Scale numeric features]{.card-title}
 
-# Load Ames data
-ames = pd.read_csv('../data/ames_clean.csv')
+Put features on comparable scales: **standardize** (mean 0, std 1) or **normalize** (0 to 1)
 
-# Look at original features
-features_to_eng = ['Neighborhood', 'GrLivArea', 'YearBuilt', 'TotalBsmtSF']
-print(ames[features_to_eng])
-```
+[Today]{.card-lesson}
+:::
+::: {.card}
+[🏷️ Encode categorical features]{.card-title}
 
+Turn text categories into numbers: **one-hot** for unordered categories, **ordinal** for ordered ones
 
-**Engineered Features:**
-```{python}
-# 1. Encode Neighborhood: 28 categories → integers
-le = LabelEncoder()
-ames['Neighborhood_Encoded'] = le.fit_transform(ames['Neighborhood'])
+[Today]{.card-lesson}
+:::
+::: {.card}
+[🧩 Handle missing values]{.card-title}
 
-# 2. Scale numerical features: mean=0, std=1
-scaler = StandardScaler()
-features_to_scale = ['Neighborhood_Encoded', 'GrLivArea', 'YearBuilt', 'TotalBsmtSF']
-ames[features_to_scale] = scaler.fit_transform(ames[features_to_scale])
+Fill gaps (**impute**) with the median or most common value, or flag that a value was missing
 
-# Look at engineered features
-print(ames[features_to_scale])
-```
+[In your reading]{.card-lesson}
+:::
+::: {.card}
+[✨ Create new features]{.card-title}
+
+Ages, ratios, totals, and interactions built from existing columns
+
+[In your reading]{.card-lesson}
+:::
+:::
 
 ::: {.notes}
-**This is a live coding demo - type it out!**
+**Timing: ~2 minutes.** One sentence per card.
 
-**Setup:**
-- Make sure ames_clean.csv is in ../data/
-- Import statements first
+We'll go deep on the top two today, because nearly every model needs them: scaling (for distance-based models like KNN) and encoding categorical columns (every scikit-learn model needs numbers). The bottom two are in Chapter 30.
 
-**Walk through step by step:**
-
-**Step 1: Label Encoding (Lines 8-10)**
-
-Before running:
-- "We have 28 unique neighborhoods - that's too many for dummy encoding"
-- "Label encoding creates one column with integers 0-27"
-- "This works well for tree-based models"
-
-Run the code:
-```python
-le = LabelEncoder()
-ames['Neighborhood_Encoded'] = le.fit_transform(ames['Neighborhood'])
-print(f"Encoded 28 neighborhoods into: {ames['Neighborhood_Encoded'].unique()}")
-```
-
-Point out:
-- Went from text labels to integers
-- Each neighborhood gets a unique number
-- Compressed 28 potential dummy columns into 1 column
-
-**Warning to students:**
-"Never use label encoding for nominal variables with LINEAR models! The model will think Neighborhood 27 is 'bigger than' Neighborhood 1, which is meaningless."
-
-**Step 2: Scaling (Lines 12-18)**
-
-Before running:
-- "These three features are on very different scales"
-- "GrLivArea ranges from 800-4000"
-- "YearBuilt ranges from 1900-2010"
-- "If we use these in KNN, GrLivArea dominates!"
-
-Run the code:
-```python
-scaler = StandardScaler()
-features_to_scale = ['GrLivArea', 'YearBuilt', 'TotalBsmtSF']
-ames[features_to_scale] = scaler.fit_transform(ames[features_to_scale])
-print("\nAfter StandardScaler:")
-print(ames[features_to_scale].describe())
-```
-
-Point out the output:
-- Mean is now ≈ 0 for each feature (might be 1e-15, basically 0)
-- Std is now ≈ 1.0 for each feature
-- All features on same scale now!
-
-**Key teaching points:**
-
-1. **When to scale:**
-   - "About to use KNN, SVM, or regularized regression? Scale!"
-   - "Using Random Forest or decision trees? Don't bother scaling"
-
-2. **Fit vs Transform:**
-   - "We fit on training data, transform both train and test"
-   - "This prevents data leakage - we'll see more on that next"
-
-3. **StandardScaler vs MinMaxScaler:**
-   - "StandardScaler is default choice (mean=0, std=1)"
-   - "MinMaxScaler when you need [0, 1] range (like neural nets)"
-
-**Common student mistakes to address:**
-
-❌ Scaling before train/test split
-✓ Split first, then fit scaler on train only
-
-❌ Using label encoding for nominal variables with linear models
-✓ Use dummy encoding instead
-
-❌ Scaling when using tree-based models
-✓ Trees don't care about scale - save the computation!
-
-**Transition:** "These techniques are powerful, but there's a dangerous pitfall: data leakage. Pipelines solve this."
+**Transition:** "Why does scaling matter? Let's look at one house and ask KNN who its neighbors are."
 :::
 
-## Preventing Data Leakage with Pipelines {.smaller}
+## Scaling: Who Are My Neighbors? {.smaller}
 
-**The problem:** If you fit a scaler on the entire dataset (train + test), test set information "leaks" into training.
-
-**The solution:** Pipelines ensure transformations fit on training data only.
+KNN measures distance. Slide to **Scaled**: each column becomes *standard deviations from its mean*, `(value − mean) / std`, so both axes share one unit.
 
 ```{python}
-#| eval: false
-from sklearn.pipeline import Pipeline
+#| echo: false
+#| fig-align: center
+from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
 
-# Create pipeline: scaling → model
-pipeline = Pipeline([
-    ('scaler', StandardScaler()),
-    ('model', RandomForestClassifier(n_estimators=100))
-])
+size_quality = ames[['GrLivArea', 'OverallQual']].to_numpy(dtype=float)
+size_scaler = StandardScaler().fit(size_quality)
+size_quality_scaled = size_scaler.transform(size_quality)
+home = 174                                    # 1,651 sq ft, quality 6, sold for $184,000
+actual = ames.loc[home, 'SalePrice']
+sd_area, sd_qual = size_scaler.scale_
 
-# Fit on training data (scaler learns from X_train only!)
-pipeline.fit(X_train, y_train)
+def five_nearest(features):
+    """Row numbers of the 5 homes closest to `home` (skipping the home itself)."""
+    finder = NearestNeighbors(n_neighbors=6).fit(features)
+    return finder.kneighbors(features[[home]], return_distance=False)[0][1:]
 
-# Predict on test data (scaler uses training stats to transform X_test)
-predictions = pipeline.predict(X_test)
+raw_nearest, scaled_nearest = five_nearest(size_quality), five_nearest(size_quality_scaled)
+jitter = np.random.default_rng(1).uniform(-0.18, 0.18, len(ames))   # spread the quality rows
+coords = {   # where every home sits in each view (jitter scaled to match)
+    'raw': (size_quality[:, 0], size_quality[:, 1] + jitter),
+    'scaled': (size_quality_scaled[:, 0], size_quality_scaled[:, 1] + jitter / sd_qual),
+}
+
+fig = go.Figure()
+for view in ['raw', 'scaled']:
+    x, y = coords[view]
+    fig.add_trace(go.Scatter(x=x, y=y, mode='markers', name='Other homes',
+                             marker=dict(color='lightgray', size=6), visible=view == 'raw', hoverinfo='skip'))
+    fig.add_trace(go.Scatter(x=[x[home]], y=[y[home]], mode='markers', name='Our home', visible=view == 'raw', hoverinfo='skip',
+                             marker=dict(symbol='star', color='black', size=24)))
+titles = []
+for view, nearest in [('raw', raw_nearest), ('scaled', scaled_nearest)]:
+    x, y = coords[view]
+    if view == 'scaled':   # ghost the old (raw) neighbors so students see how far away they really are
+        fig.add_trace(go.Scatter(x=x[raw_nearest], y=y[raw_nearest], mode='markers', name='Old neighbors',
+                                 marker=dict(symbol='circle-open', color='gray', size=12, line=dict(width=2)),
+                                 visible=False, hoverinfo='skip'))
+    for j in nearest:
+        fig.add_trace(go.Scatter(x=[x[home], x[j]], y=[y[home], y[j]], mode='lines', showlegend=False,
+                                 line=dict(color=ORANGE, width=1.5), visible=view == 'raw', hoverinfo='skip'))
+    fig.add_trace(go.Scatter(x=x[nearest], y=y[nearest], mode='markers', name='Its 5 nearest neighbors', visible=view == 'raw',
+                             marker=dict(color=ORANGE, size=12, line=dict(color='black', width=1)),
+                             customdata=ames.loc[nearest, 'SalePrice'],
+                             hovertemplate='Sold for $%{customdata:,}<extra></extra>'))
+    sizes, quals = ames.loc[nearest, 'GrLivArea'], ames.loc[nearest, 'OverallQual']
+    qual_text = (f'all quality {quals.min()}' if quals.min() == quals.max()
+                 else f'quality {quals.min()}–{quals.max()}')
+    titles.append(f'{"Raw units" if view == "raw" else "Scaled"}: neighbors are {sizes.min():,}–{sizes.max():,} '
+                  f'sq ft, {qual_text}  |  KNN predicts <b>{usd(ames.loc[nearest, "SalePrice"].mean())}</b> '
+                  f'(actual {usd(actual)})')
+
+# Which traces belong to which view: raw = homes, star, spokes + neighbors (0, 1, 4-9);
+# scaled = homes, star, ghosted old neighbors, spokes + neighbors (2, 3, 10-16)
+raw_on = [i in (0, 1) or 4 <= i <= 9 for i in range(len(fig.data))]
+scaled_on = [i in (2, 3) or i >= 10 for i in range(len(fig.data))]
+raw_layout = {'title.text': titles[0],
+              'xaxis.title.text': 'Above-ground living area (sq ft)', 'xaxis.range': [1250, 2050],
+              'yaxis.title.text': 'Overall quality (1–10)', 'yaxis.range': [2.5, 10.5], 'yaxis.dtick': 1}
+scaled_layout = {'title.text': titles[1],
+                 'xaxis.title.text': f'Living area, in std devs (1 std ≈ {sd_area:,.0f} sq ft)',
+                 'xaxis.range': [-1.5, 2.0],
+                 'yaxis.title.text': f'Quality, in std devs (1 std ≈ {sd_qual:.1f} points)',
+                 'yaxis.range': [-2.8, 3.2], 'yaxis.dtick': 1}
+steps = [dict(method='update', label='Raw units', args=[{'visible': raw_on}, raw_layout]),
+         dict(method='update', label='Scaled', args=[{'visible': scaled_on}, scaled_layout])]
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40), len=0.4, x=0.3)],
+    xaxis=dict(title='Above-ground living area (sq ft)', range=[1250, 2050]),
+    yaxis=dict(title='Overall quality (1–10)', range=[2.5, 10.5], dtick=1),
+    legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+    height=430, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
+
+::: {.notes}
+**Timing: ~5 minutes.**
+
+Our home (★): 1,651 sq ft, quality 6, sold for $184,000. KNN predicts its price by averaging the prices of the 5 closest homes.
+
+**Raw units (start here):** distance adds up square-foot differences and quality differences as-is. A 100 sq ft difference counts as much as 100 quality points, and quality only runs 1–10. So size swamps quality. The 5 "nearest" homes are almost exactly the same size but range from quality 5 to 9, and the prediction is way off.
+
+**Slide to Scaled. Watch the axis labels change.** Every value is now "how many standard deviations from the average". For living area, 1 std is about 525 sq ft; for quality, about 1.4 points. The points don't move relative to each other within a column; the *units* change, so both axes now measure the same thing.
+
+- The gray rings are the old raw-unit neighbors. On the common scale, they're 1–2 std away vertically: not close at all.
+- The new orange neighbors are close on both axes, and the prediction lands close to the actual price.
+
+**Point to make:** scaling didn't change the data's shape. It changed what "close" means, and so who counts as a neighbor.
+
+**Standardize vs. normalize:** `StandardScaler` (mean 0, std 1) is the usual default; `MinMaxScaler` squeezes each feature into 0–1. Either way, features count equally. Distance-based models (KNN) and regularized linear models need scaling; trees and forests split one feature at a time, so they don't care.
+
+**Transition:** "Numbers need scaling. Text categories need encoding."
+:::
+
+## One-Hot Encoding {.smaller}
+
+For categories with **no natural order**, like house style:
+
+::: {style="font-size: 0.85em;"}
+```{python}
+from sklearn.preprocessing import OneHotEncoder
+
+homes = ames.loc[[1, 0, 275], ['Id', 'HouseStyle']].set_index('Id')   # three actual homes
+one_hot = OneHotEncoder(sparse_output=False)
+encoded = one_hot.fit_transform(homes)
+
+homes.join(pd.DataFrame(encoded, index=homes.index,
+                        columns=one_hot.get_feature_names_out()).astype(int))
+```
+:::
+
+. . .
+
+**Why not number them** (1.5Fin = 0, 1Story = 1, 2Story = 2)? That invents an order: 2Story would be "twice" 1Story. **One-hot** gives each style its own 0/1 column, so all styles are equally different.
+
+::: {.notes}
+**Timing: ~3 minutes.** Live code.
+
+**Walk the output:** three actual homes (by `Id`). The original `HouseStyle` column is on the left. The encoder learned three categories and made one 0/1 column per category, named `HouseStyle_<category>`. Each home has exactly one 1, in its own style's column.
+
+**Click: the reasoning.** Numbering categories is tempting because it's one column, but the model reads numbers as quantities. House styles have no order, so one-hot avoids inventing one.
+
+**Transition:** "But some categories *do* have an order."
+:::
+
+## Ordinal Encoding {.smaller}
+
+For categories with a **real order**, like kitchen quality: Fair < Typical < Good < Excellent
+
+::: {style="font-size: 0.85em;"}
+```{python}
+from sklearn.preprocessing import OrdinalEncoder
+
+quality_order = ['Fa', 'TA', 'Gd', 'Ex']                       # Fair < Typical < Good < Excellent
+homes = ames.loc[[1, 0, 275], ['Id', 'KitchenQual']].set_index('Id')
+ordinal = OrdinalEncoder(categories=[quality_order])
+
+homes.assign(KitchenQual_encoded=ordinal.fit_transform(homes).ravel().astype(int))
+```
+:::
+
+. . .
+
+::: {.callout-warning}
+## You must give the order
+
+Without `categories=`, scikit-learn sorts alphabetically: Ex = 0, Fa = 1, Gd = 2, TA = 3. That's a fake order again, with Excellent at the bottom.
+:::
+
+::: {.notes}
+**Timing: ~2 minutes.** Live code. Same three homes.
+
+**Walk the output:** one column in, one column out. Typical → 1, Good → 2, Excellent → 3 (Fair would be 0). Here a single number column is *right*, because the order is real: an Excellent kitchen really is better than a Good one.
+
+**Click: the warning.** This is the classic mistake. `OrdinalEncoder()` with no `categories=` still runs, but it orders the levels alphabetically, which scrambles quality. Always pass the order explicitly.
+
+**Rule of thumb:** order is real (quality, size bins, ratings) → ordinal. No order (neighborhood, style, zoning) → one-hot.
+
+**Transition:** "Now let's put scaling, one-hot, and ordinal encoding into the workflow we've built today."
+:::
+
+## Feature Engineering Inside a Pipeline {.smaller}
+
+```{python}
+#| code-line-numbers: "|5-7|9-13|14-15|17-20"
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsRegressor
+
+numeric = ['GrLivArea', 'LotArea', 'YearRemodAdd', 'TotRmsAbvGrd', 'GarageArea', 'Fireplaces']
+categorical = ['HouseStyle', 'MSZoning']
+quality = ['KitchenQual', 'ExterQual']
+
+preprocess = ColumnTransformer([
+    ('scale', StandardScaler(), numeric),                                       # numbers → scaled
+    ('one_hot', OneHotEncoder(handle_unknown='ignore'), categorical),           # no order → 0/1 columns
+    ('ordinal', OrdinalEncoder(categories=[quality_order] * 2), quality),      # real order → 0, 1, 2, 3
+])
+knn_pipeline = Pipeline([('prep', preprocess),
+                         ('model', KNeighborsRegressor(n_neighbors=10))])
+
+X_train, X_test, y_train, y_test = train_test_split(
+    ames[numeric + categorical + quality], ames['SalePrice'], test_size=0.2, random_state=42)
+cv_rmse = -cross_val_score(knn_pipeline, X_train, y_train, cv=5, scoring='neg_root_mean_squared_error')
+print(f"CV RMSE: ${cv_rmse.mean():,.0f}")
+```
+
+. . .
+
+::: {.callout-tip}
+## Why inside the pipeline?
+
+`cross_val_score` refits the **whole pipeline** in every fold, so the scaler and encoders learn only from that fold's training rows: no leakage from the validation fold or the test set.
+:::
+
+::: {.notes}
+**Timing: ~4 minutes.** Live code.
+
+**Walk the highlighted lines:**
+
+1. **Lines 5–7: the columns.** Three groups, each needing different treatment: numeric columns, unordered categories (house style, zoning), and ordered quality ratings.
+2. **Lines 9–13: `ColumnTransformer`.** Each group of columns gets its own treatment: numeric columns are scaled, unordered categories are one-hot encoded, and the two quality columns are ordinal-encoded with the Fair < Typical < Good < Excellent order (one order per column, so `[quality_order] * 2` repeats it for both). `handle_unknown='ignore'` means a category that only shows up in new data becomes all zeros instead of crashing.
+3. **Lines 14–15: `Pipeline`.** Preprocessing and model glued into one object, with `.fit()` and `.predict()` like any model. Note the step names, `'prep'` and `'model'`; they matter on the next slide.
+4. **Lines 17–20:** split first, then hand the *pipeline* to `cross_val_score`, exactly like a plain tree.
+
+**Click: the callout.** This is the leak-free part. Scaling the whole dataset up front would let the validation and test homes shape the scaler's mean and std. Inside the pipeline, each fold's scaler and encoders only see that fold's training rows. It also fixes the problems from the Yes/No slide: the encoding travels with the model.
+
+**If asked "does scaling actually matter here?":** the same pipeline with the scaler swapped out scores a CV RMSE of about $51k, versus about $36k with it.
+
+**Transition:** "And because the pipeline acts like a model, we can tune it with GridSearchCV. There's just one naming trick."
+:::
+
+## Tuning the Whole Pipeline {.smaller}
+
+To tune a setting **inside** a pipeline, name the step and the parameter:
+
+::: {.param-decoder}
+::: {.part .step}
+`model`
+
+[the name we gave the step:<br>`('model', KNeighborsRegressor(...))`]{}
+:::
+::: {.part .sep}
+`__`
+
+[two underscores<br>= "inside"]{}
+:::
+::: {.part .param}
+`n_neighbors`
+
+[a hyperparameter of<br>that step's model]{}
+:::
+:::
+
+```{python}
+param_grid = {'model__n_neighbors': [3, 5, 7, 10, 15, 25]}
+grid_search = GridSearchCV(knn_pipeline, param_grid, cv=5,
+                           scoring='neg_root_mean_squared_error', n_jobs=-1)
+grid_search.fit(X_train, y_train)
+print("Best settings:", grid_search.best_params_)
+print(f"Best CV RMSE: ${-grid_search.best_score_:,.0f}")
+```
+
+. . .
 
 ::: {.callout-important}
-**Pipelines = reproducible, leak-free workflows!**
+## There's a lot more to feature engineering
+
+Imputing missing values, creating new features, and more: you'll see several in this week's reading (Chapter 30). They all plug into the same pipeline.
 :::
 
 ::: {.notes}
-**This is the most important slide for production ML.**
+**Timing: ~3 minutes.** Live code.
 
-**The Data Leakage Problem:**
+**The decoder:** a plain model takes `n_neighbors` directly. Inside a pipeline, GridSearchCV needs to know *which step* the setting belongs to, because a pipeline can hold a scaler, encoders, and a model. So the name is the step's name (`model`, which we chose on the last slide), two underscores, then the parameter. If we'd named the step `'knn'`, it would be `knn__n_neighbors`.
 
-**Wrong approach (causes leakage):**
-```python
-# ❌ WRONG: Fitting scaler on ALL data
-scaler = StandardScaler()
-X_all_scaled = scaler.fit_transform(X)  # Includes both train and test!
+**Handy trick if asked:** `knn_pipeline.get_params().keys()` lists every name you can tune, including `model__n_neighbors` and `model__weights`.
 
-# Now split
-X_train, X_test, y_train, y_test = train_test_split(X_all_scaled, y)
-```
+**Walk the code:** each of the 6 values × 5 folds refits the whole pipeline, scaler and encoders included. Fit on the training set only, then read off the best K and its CV RMSE. The refit-then-test-once step from earlier applies unchanged.
 
-**Why this is wrong:**
-- Scaler learned mean/std from ENTIRE dataset
-- Including test set!
-- Test set information influenced the preprocessing
-- This is data leakage
+**Click: the callout.** Point students to Chapter 30 for imputation and new features. Everything they do there drops into the same `ColumnTransformer`.
 
-**Impact:**
-- Overly optimistic performance estimates
-- Model performs worse in production
-- Stakeholders lose trust
-
-**The Right Approach: Pipelines**
-
-```python
-# ✓ CORRECT: Pipeline ensures proper fit/transform
-pipeline = Pipeline([
-    ('scaler', StandardScaler()),
-    ('model', RandomForestClassifier())
-])
-
-# First split, THEN fit pipeline
-X_train, X_test, y_train, y_test = train_test_split(X, y)
-pipeline.fit(X_train, y_train)  # Scaler fits on X_train only
-```
-
-**What happens internally:**
-
-When you call `pipeline.fit(X_train, y_train)`:
-1. Scaler fits on X_train (learns mean, std)
-2. Scaler transforms X_train using those stats
-3. Model trains on the scaled X_train
-
-When you call `pipeline.predict(X_test)`:
-1. Scaler transforms X_test using training mean/std (NOT test mean/std!)
-2. Model predicts on the scaled X_test
-
-**Key Benefits of Pipelines:**
-
-1. **Prevents data leakage** - Transformations fit on train only
-2. **Less code** - One `.fit()` call instead of multiple steps
-3. **Easier deployment** - Entire workflow in one object
-4. **Prevents mistakes** - Can't forget to scale test data
-
-**Real-World Workflow:**
-
-```python
-# Step 1: Split data
-X_train, X_test, y_train, y_test = train_test_split(X, y)
-
-# Step 2: Create pipeline
-pipeline = Pipeline([
-    ('imputer', SimpleImputer(strategy='median')),
-    ('scaler', StandardScaler()),
-    ('model', RandomForestClassifier())
-])
-
-# Step 3: Use GridSearchCV with pipeline
-param_grid = {'model__n_estimators': [100, 200, 300]}
-grid_search = GridSearchCV(pipeline, param_grid, cv=5)
-
-# Step 4: Fit on training data
-grid_search.fit(X_train, y_train)
-
-# Step 5: Evaluate on test set ONCE
-test_score = grid_search.score(X_test, y_test)
-```
-
-**Notice:**
-- Imputation, scaling, and modeling all in one pipeline
-- GridSearchCV works with pipelines
-- Test set only touched ONCE at the end
-
-**Common student questions:**
-
-1. **"Do I always need pipelines?"**
-   - If you're doing ANY preprocessing: YES
-   - Even if just scaling: YES
-   - Only exception: No preprocessing at all
-
-2. **"Can I put multiple preprocessing steps in a pipeline?"**
-   - Absolutely! That's the power of pipelines
-   - Imputation → Scaling → PCA → Model
-   - All as one reproducible unit
-
-3. **"How do I tune hyperparameters in a pipeline?"**
-   - Use double underscore: `'model__n_estimators'`
-   - Format: `'step_name__parameter_name'`
-
-**Transition:** "Now let's tie everything together - CV + hyperparameter tuning + feature engineering."
+**Transition:** "Let's wrap up with the big ideas, then put the whole workflow on one page."
 :::
 
-# Putting It All Together {background="#43464B"}
+# Looking Forward {background="#43464B"}
 
-## The Complete Professional Workflow {.smaller .scrollable}
+## Key Takeaways {.smaller}
 
-```{mermaid}
-%%| fig-width: 8
-%%| echo: false
-flowchart TD
-    A[Full Dataset] --> B[Stage 1:<br/>Train/Test Split]
-    B --> C[Training Set 80%]
-    B --> D[Test Set 20%<br/>🔒 LOCKED]
+* **Test-set peeking**: each test-set decision inflates its score
+* **Cross-validation**: honest scores without touching the test set
+* **Hyperparameter tuning**: `GridSearchCV` searches settings with CV
+* **Feature engineering**: scale numeric features, encode categorical ones
+* **Pipelines**: preprocessing inside CV, so nothing leaks
+* **The workflow**: decide with CV, touch the test set **once**
 
-    C --> E[Stage 2:<br/>Cross-Validation]
-    E --> F[Try different models<br/>Tune hyperparameters<br/>Engineer features]
-    F --> G[Stage 3:<br/>Select Best Approach]
+::: {.notes}
+**Timing: ~2 minutes.** Read each takeaway and connect it to the slide where students saw it.
 
-    G --> H[Stage 4:<br/>Retrain on Full<br/>Training Set]
+**The meta-lesson:** "Data science isn't just knowing algorithms. It's having a disciplined workflow that produces numbers you can trust."
 
-    H --> I[Stage 5:<br/>Evaluate on Test Set<br/>ONCE]
-    D --> I
-    I --> J[Report Final<br/>Performance]
+**Transition:** "Here's that workflow on one page."
+:::
 
-    style D fill:#ff6b6b
-    style E fill:#51cf66
-    style I fill:#ffd43b
-    style J fill:#51cf66
+## This Week's Full Workflow {.smaller}
+
+```{.python code-line-numbers="|1|3-7|9|11-13|15-16"}
+train, test = split(data)                       # 1. lock the test set away
+
+prep = preprocess(                              # 2. feature engineering
+    scale(numeric_cols),
+    one_hot(categorical_cols),
+    ordinal(quality_cols, order=[...]),
+)
+
+pipeline = Pipeline(prep, model)                # 3. preprocessing + model, one unit
+
+search = grid_search(pipeline, settings, cv=5)  # 4. tune with CV
+fit(search, train)                              #    every setting scored on train only
+best = search.best_model                        #    best settings, refit on all of train
+
+score = evaluate(best, test)                    # 5. test once
+report(score)                                   #    the number you can trust
 ```
 
 ::: {.notes}
-**This is the culmination - the proper professional workflow.**
+**Timing: ~3 minutes.** Step through the five stages, one click each. Each line maps to a section of today's lecture.
 
-**Walk through each stage deliberately:**
+**Line 1, split:** the first thing we do, before looking at anything. The test set stays locked away (peeking section).
 
-**Stage 1: Train/Test Split**
-- "Before doing ANYTHING else, split data"
-- "Lock test set away - don't even look at it"
-- "Everything from now on uses training set only"
-- Typical: 80/20 or 70/30 split
+**Lines 3–7, feature engineering:** scale the numeric columns, one-hot the categorical ones, ordinal-encode the ordered ones. Just a recipe so far: nothing has been learned from the data yet.
 
-**Stage 2: Cross-Validation for All Decisions**
-- "This is where you spend most of your time"
-- "Try different models, compare them with CV"
-- "Tune hyperparameters with GridSearchCV (which uses CV)"
-- "Engineer features, check impact with CV"
-- "You can make UNLIMITED decisions here"
-- "Test set stays pristine"
+**Line 9, pipeline:** bundle the preprocessing with the model so they always travel together. That's what keeps CV honest: each fold re-learns the scaling and encoding from its own training folds.
 
-Examples of decisions in Stage 2:
-- Should I use Random Forest or Gradient Boosting?
-- What max_depth works best?
-- Should I scale my features?
-- Should I add polynomial features?
-- How should I handle missing data?
+**Lines 11–13, tune with CV:** grid search scores every setting with 5-fold CV on the training set only, then refits the winner on all of the training set (`best_estimator_` in scikit-learn).
 
-**ALL answered using cross-validation on training set!**
+**Lines 15–16, test once:** the first and only time the test set is used. That's the number we report.
 
-**Stage 3: Select Best Approach**
-- "Based on CV scores, pick your winner"
-- "Maybe it's Random Forest with n_estimators=200, max_depth=15"
-- "Maybe you decided to scale features and add interactions"
-- "This is your final model configuration"
+**Contrast with weeks 9–11:** back then, line 15 happened after every model we tried. Now everything above it uses the training set only.
 
-**Stage 4: Retrain on Full Training Set**
-- "Up until now, in CV, we trained on 80% of training set (4/5 folds)"
-- "Now we want to use ALL training data"
-- "Retrain your best model on the entire training set"
-- "This gives it maximum data to learn from"
-
-**Stage 5: Final Evaluation on Test Set**
-- "Now and ONLY now, evaluate on test set"
-- "This is done ONCE"
-- "This is your honest, unbiased performance estimate"
-- "This is what you report to stakeholders"
-
-**Key principle:** Test set is like your final exam - you only get to take it once. All practice and preparation (Stages 2-4) use the training set.
-
-**Common student misconceptions:**
-
-❌ "Can I try a few final models on the test set and pick the best?"
-✓ "No! That defeats the purpose. Pick best model using CV, then test ONCE."
-
-❌ "My CV score was 85% but test score was 82%. Did I do something wrong?"
-✓ "Not necessarily. Some variation is expected. If gap is large (>5%), investigate."
-
-❌ "Can I go back and tune more if test score is disappointing?"
-✓ "Technically yes, but then you need a NEW test set. Don't iteratively peek."
-
-**Real-world context:**
-"In industry, your 'test set' is production. You deploy once and see how it performs. You don't get to keep redeploying and testing. That's why this workflow is critical."
-
-**Example timeline:**
-- Stage 1: 5 minutes (split data)
-- Stage 2: Hours to days (try things, tune, engineer)
-- Stage 3: 5 minutes (pick winner)
-- Stage 4: Minutes (retrain)
-- Stage 5: Seconds (evaluate)
-
-**Transition:** "Let's see what you'll practice with this in Thursday's lab."
+**Transition:** "Chapters 28–30 go further on each of these steps."
 :::
 
-# Looking Ahead {background="#43464B"}
+## More in Your Readings {.smaller}
 
-## Key Takeaways
+::: {.card-grid .cols-2}
+::: {.card}
+[📊 Multiple metrics at once]{.card-title}
 
-* **Cross-validation** prevents test set contamination and gives reliable performance estimates
-* **Hyperparameter tuning** finds the sweet spot in the bias-variance tradeoff
-* **Feature engineering** turns raw data into powerful inputs (often matters more than algorithms!)
-* **Pipelines** ensure reproducible, leak-free workflows
-* **The 5-stage workflow** is how professionals build trustworthy models
+`cross_validate()` scores a model on several metrics in one pass, and reports training scores too
+:::
+::: {.card}
+[🎲 Smarter searches]{.card-title}
+
+Random search and Bayesian optimization, for when a full grid is too expensive
+:::
+::: {.card}
+[🕳️ Missing-data strategies]{.card-title}
+
+When to drop vs. impute, which imputation to use, and missingness indicators
+:::
+::: {.card}
+[🔤 Beyond-the-basics encodings]{.card-title}
+
+Ordinal encoding for ordered categories, and options like target encoding for categories with many levels
+:::
+:::
 
 ::: {.notes}
-**Reinforce the big picture:**
+**Timing: ~1 minute.**
 
-**1. Cross-Validation**
-- "This is how you make unlimited decisions without peeking at test set"
-- "5-fold or 10-fold is standard"
-- "Built into GridSearchCV"
-- "Gives you mean AND variance of performance"
-
-**2. Hyperparameter Tuning**
-- "Every model has knobs to turn"
-- "GridSearchCV systematically searches combinations"
-- "Watch for overfitting (big train/validation gap)"
-- "Balance between training and validation performance"
-
-**3. Feature Engineering**
-- "Often the highest-leverage activity in ML"
-- "Domain knowledge is key"
-- "Four main categories: encoding, scaling, creating, handling missing"
-- "Talk to experts in the problem domain!"
-
-**4. Pipelines**
-- "Non-negotiable for production ML"
-- "Prevents data leakage"
-- "Makes deployment easier"
-- "One object, entire workflow"
-
-**5. The Complete Workflow**
-- "5 stages: Split, CV, Select, Retrain, Test"
-- "Test set touched ONCE"
-- "Everything else uses CV on training set"
-- "This is what separates beginners from professionals"
-
-**Connecting to previous weeks:**
-- "You've learned great models: linear regression, trees, forests"
-- "This week: How to tune them properly and prepare data right"
-- "Next week: More advanced topics building on this foundation"
-
-**The meta-lesson:**
-"Data science isn't just about knowing algorithms. It's about having a disciplined workflow that produces trustworthy results. These three techniques form the foundation of professional ML practice."
-
-**Motivate Thursday lab:**
-"Reading about this is one thing. Doing it is another. Thursday you'll practice the full workflow with real data. You'll see common mistakes and how to avoid them. Come ready to code!"
+Chapters 28-30 go further than today's lecture. Point out that these are all variations on the same workflow: CV still drives every decision.
 :::
 
-## Connection to Thursday's Lab
+## Thursday's Lab
 
 ::: {.callout-tip}
 ## This Week's Lab Preview
 
 In Thursday's lab, you'll get hands-on practice with:
 
-* Implementing the 5-stage workflow from scratch
-* Using GridSearchCV to tune a Random Forest
-* Building feature engineering pipelines
-* Comparing performance with and without proper CV
-* Seeing what happens when you peek at the test set (spoiler: bad things!)
+* Walking through cross-validation, `GridSearchCV`, scaling, and a `ColumnTransformer` pipeline on the Ames housing data
+* Comparing models with cross-validation instead of the test set
+* Tuning a random forest with `GridSearchCV`
+* Building a feature engineering pipeline and checking which features matter most
 
-Come prepared to apply today's concepts!
 :::
-
-::: {.notes}
-**Set expectations for Thursday:**
-
-**What students will do:**
-
-1. **Start with the "wrong" way:**
-   - Split data
-   - Try different hyperparameters, checking test set each time
-   - See how test score becomes unreliable
-   - Experience the peeking problem firsthand
-
-2. **Then do it the right way:**
-   - Split data
-   - Use cross-validation for all decisions
-   - Tune with GridSearchCV
-   - Evaluate on test set ONCE
-   - Compare: Which test score is trustworthy?
-
-3. **Feature engineering practice:**
-   - Encode categorical variables
-   - Scale numerical features
-   - Create new features (interactions, polynomials)
-   - Handle missing data
-   - Build pipelines to prevent leakage
-
-4. **Full workflow integration:**
-   - Combine CV + GridSearchCV + Pipelines
-   - Complete end-to-end ML project
-   - Report final, honest performance
-
-**Lab structure:**
-- Part 1: Cross-validation basics
-- Part 2: GridSearchCV hyperparameter tuning
-- Part 3: Feature engineering and pipelines
-- Part 4: Complete workflow on a new dataset
-
-**What to bring:**
-- Laptop with Python environment
-- Course materials (slides, chapter notes)
-- Questions from today's lecture
-- Willingness to make mistakes and learn!
-
-**Time allocation:**
-- Expect to spend 2-3 hours
-- Work in pairs (encouraged)
-- TAs available for questions
-
-**Common lab challenges to preview:**
-
-1. **Forgetting to split before CV:**
-   - Students try to CV on full dataset
-   - Remind: Split first, CV on training set
-
-2. **Pipeline syntax:**
-   - Double underscore for nested parameters
-   - `model__n_estimators` not `n_estimators`
-
-3. **Interpreting CV scores:**
-   - Understanding mean and std
-   - What's "good enough" variance?
-
-4. **GridSearchCV taking forever:**
-   - Remind about computational cost
-   - Start with coarse grid, then refine
-   - Use n_jobs=-1 for parallelization
-
-**Transition:** "Any questions before we wrap up?"
-:::
-
-# Questions & Next Steps {background="#43464B"}
-
-## Looking Ahead
-
-**Btwn now & Thursday:** Complete reading Chapters 28-30
-
-**Thursday Lab:** Hands-on practice with CV, hyperparameter tuning, and feature engineering
-
-**This weekend:** Week 12 quiz & homework (based on lab)
-
-. . .
 
 <br>
 
-**Next Week:** Move into the world of unsupervised ML
+::: {.callout-important}
+## Homework
 
-**Next next week:** Advanced topics & Final project prep!
+Thursday's lab will lead into this week's homework assignment.
+
+:::
 
 ::: {.notes}
-**Homework reminders:**
+**Timing: ~1 minute.**
 
-**Readings:**
-- Chapter 28: Cross-Validation (focus on the 5-stage workflow)
-- Chapter 29: Hyperparameter Tuning (understand bias-variance tradeoff)
-- Chapter 30: Feature Engineering (the four main techniques)
-
-**Quiz:**
-- Covers all three chapters
-- Due before next Tuesday
-- Tests conceptual understanding
-- 10 questions, multiple choice and scenarios
-
-**What to review before Thursday:**
-1. How k-fold cross-validation splits data
-2. The difference between overfitting and underfitting
-3. When to scale features (which algorithms care)
-4. Why pipelines prevent data leakage
-
-**Office hours:**
-- Tuesday/Thursday 2-3pm
-- Or by appointment
-- Come with specific questions
-
-**TA sessions:**
-- Wednesday evenings
-- Great for lab prep
-
-**Resources:**
-- Scikit-learn documentation for GridSearchCV
-- Chapter companion notebooks
-- Previous lab solutions (for reference)
+Remind students to read Chapters 28-30 before Thursday. Grid searches in the lab take a few minutes to run, so they should start the Challenges early rather than wait for the last one.
 :::
 
 ## Any Final Questions?
 
-* About today's concepts?
+* About cross-validation and why we stop peeking at the test set?
+* About hyperparameter tuning and `GridSearchCV`?
+* About feature engineering and pipelines?
 * About Thursday's lab?
-* About upcoming assignments?
-* About rest of the term?
 
-::: {.notes}
-**Common final questions:**
-
-**Q: "Do I need to memorize the GridSearchCV syntax?"**
-A: "No, but understand what it does. You can always look up syntax. Focus on when and why to use it."
-
-**Q: "Will the quiz cover all three chapters equally?"**
-A: "Yes, roughly equal coverage. Some questions integrate concepts (like 'when to scale AND use CV')."
-
-**Q: "How long will Thursday's lab take?"**
-A: "Plan for 2-3 hours. Some finish faster, some take longer. No rush - learning matters more than speed."
-
-**Q: "Can I use GridSearchCV on the midterm project?"**
-A: "Absolutely! In fact, I encourage it. Shows you understand proper workflow."
-
-**Q: "What if my CV scores are really different across folds?"**
-A: "High variance in CV scores suggests model instability. Might need more data, simpler model, or different features. We'll discuss in lab."
-
-**Q: "Do I always need to use pipelines?"**
-A: "For any real project: yes. Only exception is exploratory analysis with no preprocessing. When in doubt, use a pipeline."
-
-**Closing message:**
-"This week's topics - CV, hyperparameter tuning, feature engineering - are what separate textbook ML from production ML. Master these, and you'll be doing professional-quality data science. See you Thursday!"
-:::
-
----
+<br><br>
 
 <center>
-**See you Thursday for hands-on practice!**
+**See you Thursday for hands-on model tuning!**
 </center>
+
+::: {.notes}
+**Timing: ~2 minutes.** Open Q&A on anything from today, then send students to Thursday's Lab.
+:::
