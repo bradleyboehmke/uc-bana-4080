@@ -29,73 +29,107 @@ execute:
 
 * Quick overview of today's plan:
 
-  * Introduction to unsupervised learning concepts
-  * Clustering: Finding natural groups in data
-  * Dimension reduction: Simplifying complex datasets
-  * Hands-on demonstrations with real data
+  * What changes when there's no target to predict
+  * Clustering: finding natural groups with K-Means
+  * Choosing K, and turning clusters into segments
+  * PCA: compressing many features into a few
+  * PCA as a feature engineering step
+
+```{python}
+#| include: false
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+# Shared settings for the interactive (Plotly) slides
+ORANGE, BLUE = '#e58139', '#399de5'   # same color pair as weeks 11-12
+PLOTLY_CONFIG = {'displayModeBar': False}
+
+def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
+    """Build slider steps that show the fixed traces plus one group of traces per step."""
+    steps = []
+    for i in range(n_steps):
+        visible = [True] * n_fixed + [False] * (n_steps * traces_per_step)
+        for k in range(traces_per_step):
+            visible[n_fixed + i * traces_per_step + k] = True
+        steps.append(dict(method='update', label=labels[i],
+                          args=[{'visible': visible}, {'title.text': titles[i]}]))
+    return steps
+```
 
 ::: {.notes}
-**Main Takeaway**: Today marks a major shift from supervised to unsupervised learning. We're moving from prediction tasks to discovery and pattern recognition.
+**Timing: ~1 minute.**
 
-**Key Points to Emphasize**:
+**Timing plan** (each slide's notes carry its own estimate):
 
-- This is the last major topic before the final project
-- Unsupervised learning is used extensively in industry for customer segmentation, feature engineering, and data exploration
-- Both methods we'll cover today (clustering and PCA) are practical tools they'll likely use in their careers
-- The concepts build on everything they've learned (standardization, train/test splits, model evaluation)
+| Section | Time |
+|---|---|
+| Opening: welcome, notebook, Week 12 recap | ~4 min |
+| What is unsupervised learning? | ~8 min |
+| Clustering with K-Means | ~25 min |
+| PCA | ~27 min |
+| Looking forward: takeaways, when to use which, readings, lab, questions | ~7 min |
+| **Total** | **~71 min** |
+
+**First cut if behind:** the Complete Journey "Real Data Is Messy" segment at the end of the K-Means section. It's in Chapter 31, so students don't lose it.
+
+Today is a shift in kind, not just a new model. Every model so far had a target `y` to predict. Unsupervised learning looks for structure in the features alone: groups of similar rows (clustering) or a smaller set of columns that carries the same information (PCA).
 :::
 
-# Discussion: Homework & Questions {background="#43464B"}
+## 📓 Follow Along in the Notebook
 
-## Questions from Week 12? {.smaller}
+::: {.callout-tip}
+## Week 13 Lecture Notebook
 
-* Decision trees and ensemble methods?
-* Random forests and feature importance?
-* Model evaluation, comparison?
-* Hyperparameter tuning?
-* Anything confusing in the quiz or class lab?
-* Time to ask!
+Open the Lecture notebook in Colab now and follow along as we work through today's examples on K-Means clustering and PCA.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-13-lecture.ipynb)
+:::
+
+::: {.notes}
+**Timing: ~1 minute.** Give students a moment to open the notebook in Colab, then move on. They can catch up while you do the recap.
+:::
+
+# Week 12 Recap {background="#43464B"}
+
+## Last Week in 60 Seconds {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🔒 Test-set peeking]{.card-title}
+
+Every decision made by looking at the test score makes that score **optimistic**
+:::
+::: {.card}
+[🔁 Cross-validation]{.card-title}
+
+**k honest validation scores** from the training set alone, so the test set stays locked away
+:::
+::: {.card}
+[🎛️ GridSearchCV]{.card-title}
+
+Try **every combination** of settings, score each with CV, then refit the best one
+:::
+::: {.card}
+[🧰 Pipelines]{.card-title}
+
+Impute, encode, and scale **inside CV**, so no information leaks from the validation folds
+:::
+:::
 
 . . .
 
-:::: {.columns}
-::: {.column width='70%'}
-::: {.callout}
-## Activity
-
-Converse with your neighbor and identify...
-
-* 1 new thing you learned last week that you that you thought was well explained
-* 1 thing we covered last week that is still confusing
+::: {.callout-tip}
+Every model so far learned from a target `y`: a sale price, a default, a diagnosis. Today there is no `y`. We look for structure in `X` alone.
 :::
-:::
-::: {.column width='30%'}
-<center>
-
-<div id="3minWaiting"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minWaiting", 180, "slide");
-    });
-</script>
-</center>
-:::
-::::
 
 ::: {.notes}
-**Main Takeaway**: Check understanding from Week 12 and create a bridge to unsupervised learning.
+**Timing: ~2 minutes.** A quick reconnect, not a re-teach.
 
-**Activity Management**:
+Walk the four cards left to right, top to bottom. One sentence each.
 
-- Give students the full 3 minutes to discuss
-- Common topics from Week 12 that might come up:
-  - Feature importance interpretation in Random Forests
-  - When to use bagging vs. boosting
-  - Hyperparameter tuning with GridSearchCV vs. RandomizedSearchCV
-  - Cross-validation strategies
-
-**Transition to Today**: After hearing from 2-3 groups, mention: "The ensemble methods we learned last week work with labeled data. Today we'll explore what to do when you DON'T have labels—that's unsupervised learning."
+**Transition:** "Look at what all of that had in common: a column we were trying to predict, and a score telling us how close we got. What do you do when there's no such column?"
 :::
 
 # What is Unsupervised Learning? {background="#43464B"}
@@ -508,7 +542,7 @@ plt.show()
 :::
 
 
-# Clustering: Finding Natural Groups {background="#43464B"}
+# Clustering with K-Means {background="#43464B"}
 
 ## What is Clustering? {.smaller}
 
@@ -1363,7 +1397,7 @@ For this grocery retailer, **K=4 might be ideal**:
 - Provides meaningful differentiation without overwhelming complexity
 :::
 
-# Dimension Reduction with PCA {background="#43464B"}
+# PCA: Fewer Columns, Same Information {background="#43464B"}
 
 ## The Problem: Too Many Features {.smaller}
 
@@ -2301,25 +2335,24 @@ graph LR
 This is a very common pattern in practice. Clustering and dimension reduction as preprocessing steps for prediction models. Emphasize that PCA and clustering aren't just standalone techniques—they're often combined and used to engineer features for supervised learning.
 :::
 
-# Key Takeaways & Next Steps {background="#43464B"}
+# Looking Forward {background="#43464B"}
 
 ## Key Takeaways {.smaller}
 
-* **Unsupervised learning discovers patterns without labels** – Use it when you want to explore data structure rather than predict outcomes
-
-* **Clustering groups similar observations** – K-Means is the workhorse for customer segmentation, but choosing K requires judgment (elbow method, silhouette scores, business constraints)
-
-* **PCA reduces dimensionality by creating uncorrelated components** – Compress 100 features to 10 components while retaining 90%+ of information. Use scree plots to choose how many components to keep.
-
-* **ALWAYS standardize features first** – Both K-Means and PCA are highly sensitive to feature scale. Forget this and your results will be dominated by large-scale features!
-
-* **Unsupervised → Supervised pipeline** – Often you'll use clustering/PCA as preprocessing steps to create better features for supervised learning models
+* **Unsupervised learning**: find structure in `X` when there is no `y`
+* **Clustering** groups similar **rows**; K-Means alternates *assign* and *move* until nothing changes
+* **Choosing K** takes judgment: the elbow and silhouette inform it, and the business decides it
+* **Clusters become segments** once you profile them and give them names
+* **PCA** combines correlated **columns** into a few uncorrelated components
+* **Always scale first**: both K-Means and PCA are driven by distances and variances
 
 ::: {.notes}
-These are the core concepts. Emphasize that unsupervised learning is about exploration and feature engineering, not prediction accuracy.
+**Timing: ~2 minutes.** Read each takeaway and connect it to the slide where students saw it.
+
+**Transition:** "So when do you reach for which one?"
 :::
 
-## When to Use Which Method {.smaller .scrollable}
+## When to Use Which Method {.smaller}
 
 ```{mermaid}
 %%| fig-width: 12
@@ -2327,15 +2360,13 @@ These are the core concepts. Emphasize that unsupervised learning is about explo
 graph TD
     Start[I have unlabeled data] --> Q1{What's my goal?}
 
-    Q1 -->|Find groups<br/>in my data| C[Use Clustering]
-    Q1 -->|Reduce number<br/>of features| D[Use Dimension Reduction]
-    Q1 -->|Both!| Both[Use Both:<br/>PCA then Clustering]
+    Q1 -->|Find groups<br/>of similar rows| C[Clustering]
+    Q1 -->|Fewer, uncorrelated<br/>columns| D[Dimension reduction]
+    Q1 -->|Both| Both[PCA, then cluster<br/>on the components]
 
-    C --> C1[K-Means:<br/>Customer segments<br/>Product groups<br/>Market segments]
-
-    D --> D1[PCA:<br/>Feature compression<br/>Visualization<br/>Noise reduction]
-
-    Both --> B1[Common workflow:<br/>1. PCA to reduce features<br/>2. K-Means on components<br/>3. Use for supervised learning]
+    C --> C1[K-Means:<br/>customer segments<br/>product groups]
+    D --> D1[PCA:<br/>visualization<br/>model inputs]
+    Both --> B1[Thursday's Lab,<br/>Challenge 4]
 
     style Start fill:#f0f0f0
     style Q1 fill:#43464B,color:#fff
@@ -2345,131 +2376,88 @@ graph TD
 ```
 
 ::: {.notes}
-**Main Takeaway**: Learn to choose the right unsupervised learning method based on your goal.
+**Timing: ~1 minute.**
 
-**Decision Framework**:
+- **Clustering** answers "which rows are similar to each other?" The output is a cluster label for every row.
+- **PCA** answers "which columns carry the same information?" The output is a smaller set of new columns.
+- **Both:** PCA first strips out redundant, noisy columns, then K-Means clusters on the components. Students do exactly this in the Lab's last Challenge.
 
-**Start Here**: "I have unlabeled data" → Now what?
-
-**Goal 1: Find groups in my data (Use Clustering)**
-
-- **When to use**:
-  - "I want to discover customer segments"
-  - "I need to organize products into categories"
-  - "I want to identify market segments"
-  - "I'm looking for patterns in customer behavior"
-- **Key question**: "Which observations are similar to each other?"
-- **Output**: Cluster labels for each observation
-- **Example use cases**:
-
-  - Customer segmentation for targeted marketing
-  - Product recommendation (group similar products)
-  - Anomaly detection (points that don't fit any cluster)
-  - Document organization (group similar articles)
-
-**Goal 2: Reduce number of features (Use Dimension Reduction / PCA)**
-
-- **When to use**:
-  - "I have 100+ features and want to simplify"
-  - "My features are highly correlated"
-  - "Training takes too long"
-  - "I want to visualize high-dimensional data"
-  - "I'm worried about overfitting"
-- **Key question**: "Which features capture similar information?"
-- **Output**: New set of uncorrelated principal components
-- **Example use cases**:
-
-  - Feature engineering before supervised learning
-  - Data visualization (reduce to 2-3 components for plotting)
-  - Noise reduction (keep components, discard noise)
-  - Compression for faster computation
-
-**Goal 3: Both! (Use PCA then Clustering)**
-
-- **When to use**:
-  - "I have many correlated features AND want to find segments"
-  - "Clustering on 100 features is computationally expensive"
-  - "I want to remove noise before clustering"
-- **Workflow**:
-
-  1. Apply PCA to reduce 100 features → 20 components (faster, less noisy)
-  2. Apply K-Means to those 20 components (find customer segments)
-  3. Use segments as features for supervised learning (predict churn for each segment)
-- **Example use cases**:
-
-  - Customer segmentation with behavioral + demographic data
-  - Image clustering (reduce pixel features with PCA, then cluster)
-  - Gene expression analysis (reduce 20,000 genes → 50 components → cluster patients)
-
-**Decision-Making Questions**:
-
-1. "What's your PRIMARY goal?"
-   - Discover groups → Clustering
-   - Simplify features → PCA
-   - Both → PCA first, then Clustering
-
-2. "Do you have too many features?"
-   - Yes → Consider PCA first
-   - No → Go straight to clustering if you want groups
-
-3. "Are your features highly correlated?"
-   - Yes → PCA will help a lot
-   - No → Maybe feature selection instead of PCA
-
-**Real-World Insight**:
-"In practice, the combo approach (PCA → Clustering → Supervised Learning) is very common. It's like a data science pipeline: reduce complexity, discover patterns, then predict outcomes."
+**Transition:** "The readings go beyond the two methods we covered today."
 :::
 
+## More in Your Readings {.smaller}
 
-## Connection to Thursday's Lab {.smaller}
+::: {.card-grid .cols-2}
+::: {.card}
+[🌳 Hierarchical clustering]{.card-title}
+
+Builds a tree of nested clusters, so you can pick K *after* seeing the structure
+:::
+::: {.card}
+[🔵 DBSCAN]{.card-title}
+
+Finds clusters of any shape by density, and flags outliers that belong to no cluster
+:::
+::: {.card}
+[⚠️ When K-Means struggles]{.card-title}
+
+Non-spherical clusters, very unequal sizes, and outliers, with what to try instead
+:::
+::: {.card}
+[🧮 How PCA works under the hood]{.card-title}
+
+The covariance matrix and eigenvectors behind each component, plus PCA's cousins
+:::
+:::
+
+::: {.notes}
+**Timing: ~1 minute.**
+
+Chapters 31-32 go further than today's lecture. K-Means and PCA are the workhorses, and the chapters explain when to reach past them.
+:::
+
+## Thursday's Lab
 
 ::: {.callout-tip}
 ## This Week's Lab Preview
 
 In Thursday's lab, you'll get hands-on practice with:
 
-* **Applying K-Means clustering** to customer segmentation problems with real transaction data
-* **Implementing PCA** to reduce high-dimensional data (like the Ames housing dataset)
-* **Combining both** as a feature engineering step for a predictive model! 
+* Walking through K-Means and PCA on today's customer and wine data
+* Segmenting the Ames housing market with K-Means
+* Using PCA to compress 30 tumor measurements, then feeding the components to a classifier
+* Clustering on PCA components, with no labels at all
 
-Come prepared to apply today's concepts! Bring questions about clustering vs. dimension reduction use cases.
 :::
 
-::: {.notes}
-The lab will make all of this concrete. They'll see how clustering reveals customer segments and how PCA speeds up models while maintaining performance.
-:::
-
-## Looking Ahead {.smaller}
-
-**Btwn now & Thursday:** Complete reading Chapters 28-30
-
-**Thursday Lab:** Hands-on unsupervised learning exercises
-
-**Moving Foward:** Course wrap-up & Final Project
+<br>
 
 ::: {.callout-important}
-Start reviewing the final project details!
+## Homework
+
+Thursday's lab will lead into this week's homework assignment.
+
 :::
 
 ::: {.notes}
-Remind them that the final project is coming up. Unsupervised learning can add a lot of value to their analyses.
+**Timing: ~1 minute.**
+
+Remind students to read Chapters 31-32 before Thursday. The final project is coming up next, and clustering or PCA can add a lot to their analyses.
 :::
 
-## Any Final Questions? {.smaller}
+## Any Final Questions?
 
-* About clustering and K-Means?
-* About PCA and dimension reduction?
+* About clustering and choosing K?
+* About PCA and how many components to keep?
 * About when to use which method?
 * About Thursday's lab?
-* About the final project?
 
-
-::: {.notes}
-Encourage them to come to office hours, especially if they're working on final projects. Unsupervised learning can be tricky to get right.
-:::
-
----
+<br><br>
 
 <center>
-**See you Thursday for hands-on practice with clustering and PCA!**
+**See you Thursday for hands-on clustering and PCA!**
 </center>
+
+::: {.notes}
+**Timing: ~2 minutes.** Open Q&A on anything from today, then send students to Thursday's Lab.
+:::
