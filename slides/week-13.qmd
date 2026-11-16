@@ -140,68 +140,135 @@ Walk the four cards left to right, top to bottom. One sentence each.
 
 :::: {.columns}
 ::: {.column width="50%"}
-**Supervised Learning**
+**Supervised learning**
 
-* You have a target variable (labels)
-* Goal: Predict the outcome
+* You have a target `y` (labels)
+* Goal: **predict** the outcome
 * Examples:
   * Predict house prices
   * Classify loan defaults
-  * Diagnose diseases
-* Success metric: Accuracy, RMSE, etc.
+* Success: RMSE, accuracy, ... against the true `y`
 :::
 ::: {.column width="50%"}
-**Unsupervised Learning**
+**Unsupervised learning**
 
-* No target variable (no labels)
-* Goal: Discover hidden patterns
+* No target, only features `X`
+* Goal: **discover** structure
 * Examples:
   * Find customer segments
-  * Group similar documents
-  * Reduce feature complexity
-* Success metric: Interpretability, business value
+  * Compress many correlated features
+* Success: does the structure make sense, and is it useful?
 :::
 ::::
 
 ::: {.notes}
-**Main Takeaway**: Unsupervised learning is fundamentally different from everything we've done so far—we discover patterns instead of predicting outcomes.
+**Timing: ~2 minutes.**
 
-**Key Teaching Points**:
+**The big shift:** every model so far had a target `y`. Now there's only `X`.
 
-- **The Big Shift**: Up until now, every model had a target variable (y). Now there's NO target—just features (X)
-- **Success metrics change**: We can't measure accuracy or RMSE anymore. Success = interpretability + business value
-- **Real-world context**: Often you collect data but don't know what patterns exist yet. Unsupervised learning helps you explore and understand your data
-- **Examples to mention**:
-  - Supervised: "Predict which customers will churn" (you need historical churn labels)
-  - Unsupervised: "Find natural customer segments" (no predetermined groups needed)
-- **Common student question**: "How do we know if we're right?" Answer: "We validate with domain experts and measure business impact, not statistical accuracy"
+**Success changes too:** with no `y`, there's no RMSE or accuracy to check against. We judge results by whether they make sense to people who know the business, and whether they lead to a useful decision. (We'll still see a couple of numeric guides, inertia and silhouette, for choosing K.)
+
+**Common student question:** "How do we know if we're right?" There is no single right answer. We validate with domain experts and by whether the result is useful.
 :::
 
-## Think-Pair-Share {.smaller}
+## Two Kinds: Rows vs. Columns {.smaller}
 
-Let's think about when you might need unsupervised learning in business contexts.
+```{python}
+#| echo: false
+#| fig-align: center
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle, FancyArrowPatch
+
+ORANGE, BLUE, GREEN = '#e58139', '#399de5', '#5cb85c'
+W, H = 1.5, 0.75                       # cell width and height
+n_rows = 8
+features = ['Sq Ft', 'Beds', 'Baths', 'Age', 'Lot']
+n_cols = len(features)
+
+def cell(ax, col, row, color):
+    ax.add_patch(Rectangle((col * W, row * H), W, H, facecolor=color, edgecolor='white', lw=2, alpha=0.85))
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4.8), gridspec_kw={'width_ratios': [10.3, 13.5]})
+
+# Left: clustering colors ROWS (similar houses)
+row_colors = [ORANGE] * 3 + [BLUE] * 3 + [GREEN] * 2
+for r in range(n_rows):
+    for c in range(n_cols):
+        cell(ax1, c, n_rows - 1 - r, row_colors[r])
+for start, size, color, label in [(0, 3, ORANGE, 'Cluster 0'), (3, 3, BLUE, 'Cluster 1'), (6, 2, GREEN, 'Cluster 2')]:
+    top = (n_rows - start) * H
+    ax1.plot([-0.25, -0.25], [top - size * H + 0.08, top - 0.08], color=color, lw=4, solid_capstyle='round')
+    ax1.text(-0.45, top - size * H / 2, label, ha='right', va='center', fontsize=12, fontweight='bold', color=color)
+for c, f in enumerate(features):
+    ax1.text((c + 0.5) * W, n_rows * H + 0.15, f, ha='center', va='bottom', fontsize=11)
+ax1.set_title('Clustering groups ROWS\n(similar houses)', fontsize=15, fontweight='bold')
+ax1.set_xlim(-2.6, n_cols * W + 0.2); ax1.set_ylim(-0.9, n_rows * H + 0.8)
+ax1.set_aspect('equal'); ax1.axis('off')
+
+# Right: dimension reduction combines COLUMNS (related features)
+col_colors = [ORANGE, ORANGE, ORANGE, BLUE, BLUE]
+for r in range(n_rows):
+    for c in range(n_cols):
+        cell(ax2, c, r, col_colors[c])
+for c, f in enumerate(features):
+    ax2.text((c + 0.5) * W, n_rows * H + 0.15, f, ha='center', va='bottom', fontsize=11, color=col_colors[c], fontweight='bold')
+mid = n_rows * H / 2
+ax2.add_patch(FancyArrowPatch((n_cols * W + 0.4, mid), (n_cols * W + 2.2, mid), arrowstyle='simple', mutation_scale=35, color='#43464B'))
+first = n_cols + 2.6 / W               # first component column, in cell units
+for k, (color, name, meaning) in enumerate([(ORANGE, 'PC1', '"size"'), (BLUE, 'PC2', '"age & lot"')]):
+    for r in range(n_rows):
+        cell(ax2, first + k, r, color)
+    ax2.text((first + k + 0.5) * W, n_rows * H + 0.15, name, ha='center', va='bottom', fontsize=11, color=color, fontweight='bold')
+    ax2.text((first + k + 0.5) * W, -0.2, meaning, ha='center', va='top', fontsize=11, color=color, style='italic')
+ax2.set_title('Dimension reduction combines COLUMNS\n(5 related features → 2 components)', fontsize=15, fontweight='bold')
+ax2.set_xlim(-0.2, (first + 2) * W + 0.2); ax2.set_ylim(-0.9, n_rows * H + 0.8)
+ax2.set_aspect('equal'); ax2.axis('off')
+
+plt.tight_layout()
+plt.show()
+```
+
+::: {.callout-important}
+**Clustering** groups similar **rows**. **Dimension reduction** combines related **columns**.
+:::
+
+::: {.notes}
+**Timing: ~3 minutes.**
+
+This is the most common point of confusion today, so slow down here.
+
+**Left, clustering:** "Which houses are similar to each other?" Each *row* gets a cluster label. The columns don't change.
+
+**Right, dimension reduction:** "Which features carry the same information?" Square feet, bedrooms and bathrooms all measure size, so PCA combines them into one *column*. Every row is still there; we just describe each one with fewer numbers.
+
+**Today's two workhorses:** K-Means for clustering and PCA for dimension reduction. The readings cover others (hierarchical clustering, DBSCAN), and they all answer one of these same two questions.
+
+**Transition:** "Let's make sure we can tell these problems apart."
+:::
+
+## Think-Pair-Share: Which Kind of Problem? {.smaller}
 
 :::: {.columns}
 ::: {.column width="70%"}
 
-**Discuss with your neighbor:**
+**Discuss with your neighbor.** Is each one clustering, dimension reduction, or supervised learning? Why?
 
-- Think of a business problem where you have lots of data but NO labels
-- What would you want to discover about that data?
-- How might finding patterns (without predicting) be valuable?
-
-**Example to get you started:** A retailer has millions of transaction records but no predetermined customer segments...
+1. **A**: Use customer purchase history to create groups for targeted marketing campaigns
+2. **B**: Predict which customers will cancel their subscription next month
+3. **C**: Organize 10,000 products into groups of similar items
+4. **D**: Predict a house's price from its square footage and location
+5. **E**: Summarize 40 related survey questions with a handful of scores
 
 :::
 ::: {.column width="30%"}
 
 <center>
 
-<div id="4minDiscuss1"></div>
+<div id="3minWhichKind"></div>
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minDiscuss1", 240, "slide");
+        initializeTimer("3minWhichKind", 180, "slide");
     });
 </script>
 </center>
@@ -209,336 +276,20 @@ Let's think about when you might need unsupervised learning in business contexts
 :::
 ::::
 
-Then we'll take a few responses...
-
 ::: {.notes}
-**Main Takeaway**: Unsupervised learning is valuable when you have data but no predetermined labels or categories.
+**Timing: ~3 minutes** (2 to discuss, 1 to debrief).
 
-**Example Answers to Listen For**:
+**Answers:**
 
-1. **Retailer example (given)**: Millions of transactions, want to discover customer segments for targeted marketing
-2. **Healthcare**: Patient records with symptoms/treatments, discover patient subtypes that respond differently to treatments
-3. **E-commerce**: Product catalog, group similar products for recommendations (no one manually labeled "similar products")
-4. **Social media**: User behavior data, find communities or interest groups
-5. **Manufacturing**: Sensor data from machines, detect anomaly patterns (don't know failure modes ahead of time)
-6. **Document organization**: Thousands of documents, automatically organize into topics
+- **A, clustering:** no predefined customer groups; we want to discover them (rows).
+- **B, supervised:** there's a label (canceled yes/no) to learn from and predict.
+- **C, clustering:** no given product categories; group similar items (rows).
+- **D, supervised:** historical prices are the target.
+- **E, dimension reduction:** combine related questions (columns) into a few summary scores.
 
-**What Makes These Unsupervised?**:
+**Debrief:** ask for hands on each. The key test: is there a column you're trying to predict? If yes, it's supervised. If not, are you grouping rows or combining columns?
 
-- No pre-existing labels for "customer type" or "patient subtype"
-- You're discovering the structure, not predicting a known outcome
-- Value comes from finding patterns you didn't know existed
-
-**Transition**: "Great examples! Notice how in each case, we have rich data but no labels. That's when unsupervised learning shines."
-:::
-
-## Two Main Types of Unsupervised Learning {.smaller}
-
-```{mermaid}
-%%| fig-width: 12
-%%| fig-height: 6
-%%| echo: false
-graph TB
-    A[Unsupervised Learning<br/>Discover patterns without labels] --> B[Clustering<br/>Group similar observations]
-    A --> C[Dimension Reduction<br/>Reduce number of features]
-
-    B --> B1[K-Means: Customer segmentation]
-    B --> B2[Hierarchical: Organize documents]
-    B --> B3[DBSCAN: Anomaly detection]
-
-    C --> C1[PCA: Compress features]
-    C --> C2[t-SNE: Visualize high-D data]
-    C --> C3[Autoencoders: Deep learning compression]
-
-    style A fill:#43464B,stroke:#fff,stroke-width:2px,color:#fff
-    style B fill:#4ECDC4,stroke:#fff,stroke-width:2px
-    style C fill:#FF6B6B,stroke:#fff,stroke-width:2px
-```
-
-. . .
-
-::: {.callout-important}
-## Key Distinction
-
-**Clustering** is focused on finding groupings amongst the **rows** (observations) — grouping similar customers, products, or data points together.
-
-**Dimension Reduction** is focused on finding groupings amongst the **columns** (features) — combining correlated features into composite components.
-:::
-
-::: {.notes}
-**Main Takeaway**: There are two fundamentally different types of unsupervised learning—clustering works on ROWS, dimension reduction works on COLUMNS.
-
-**Critical Distinction** (emphasize heavily):
-
-- **Clustering**: "Which customers are similar to each other?" → Groups rows
-- **Dimension Reduction**: "Which features capture similar information?" → Combines columns
-- This is a common point of confusion—make sure students understand the difference!
-
-**Today's Focus**:
-
-- K-Means clustering: Most widely used clustering algorithm in business
-- PCA: Most common dimension reduction technique
-- These are the "workhorses"—students will see them constantly in industry
-
-**Diagram Interpretation**:
-
-- Point out the other methods listed (Hierarchical, DBSCAN, t-SNE, Autoencoders) to show there's a whole ecosystem
-- But K-Means and PCA are the foundations that everyone should know
-- The other methods build on or extend these core ideas
-:::
-
-## Clustering: Groups ROWS (observations) {.smaller .scrollable}
-
-```{python}
-#| echo: false
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
-
-# Create figure
-fig, ax = plt.subplots(figsize=(20, 5))
-
-# Create a sample data matrix representation
-rows, cols = 8, 18
-cell_size = 1
-
-ax.set_xlim(-2.5, cols)
-ax.set_ylim(-1, rows + 1.2)
-ax.set_aspect('equal')
-
-# Color-code clusters (groups of rows)
-cluster_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
-cluster_assignments = [0, 0, 0, 1, 1, 1, 2, 2]  # 3 clusters
-cluster_labels = ['Premium\nCustomers', 'Regular\nCustomers', 'Inactive\nCustomers']
-
-# Draw the data matrix with cluster coloring
-for i in range(rows):
-    for j in range(cols):
-        rect = mpatches.Rectangle((j, rows-i-1), 1, 1,
-                                  linewidth=1.5, edgecolor='white',
-                                  facecolor=cluster_colors[cluster_assignments[i]],
-                                  alpha=0.5)
-        ax.add_patch(rect)
-
-# Add thick borders around cluster groups to emphasize grouping
-# Cluster 1 border (rows 0-2)
-border1 = mpatches.Rectangle((0, rows-3), cols, 3,
-                             linewidth=3, edgecolor=cluster_colors[0],
-                             facecolor='none')
-ax.add_patch(border1)
-
-# Cluster 2 border (rows 3-5)
-border2 = mpatches.Rectangle((0, rows-6), cols, 3,
-                             linewidth=3, edgecolor=cluster_colors[1],
-                             facecolor='none')
-ax.add_patch(border2)
-
-# Cluster 3 border (rows 6-7)
-border3 = mpatches.Rectangle((0, rows-8), cols, 2,
-                             linewidth=3, edgecolor=cluster_colors[2],
-                             facecolor='none')
-ax.add_patch(border3)
-
-# Add large bracket-style indicators on the left with custom labels
-bracket_x = -0.3
-ax.plot([bracket_x, bracket_x], [rows-3, rows], color=cluster_colors[0],
-        linewidth=4, solid_capstyle='round')
-ax.text(-1.0, rows-1.5, cluster_labels[0], fontsize=12, ha='right',
-        color=cluster_colors[0], fontweight='bold')
-
-ax.plot([bracket_x, bracket_x], [rows-6, rows-3], color=cluster_colors[1],
-        linewidth=4, solid_capstyle='round')
-ax.text(-1.0, rows-4.5, cluster_labels[1], fontsize=12, ha='right',
-        color=cluster_colors[1], fontweight='bold')
-
-ax.plot([bracket_x, bracket_x], [rows-8, rows-6], color=cluster_colors[2],
-        linewidth=4, solid_capstyle='round')
-ax.text(-1.0, rows-7, cluster_labels[2], fontsize=12, ha='right',
-        color=cluster_colors[2], fontweight='bold')
-
-# Labels
-ax.text(cols/2, rows+0.8, 'Features (columns)', fontsize=13,
-        ha='center', fontweight='bold')
-ax.text(-5.0, rows/2, 'Observations\n(rows)', fontsize=13,
-        va='center', ha='center', rotation=90, fontweight='bold')
-ax.set_title('Clustering: Group Similar Observations',
-             fontsize=16, fontweight='bold', pad=25)
-
-# Add feature labels
-for j in range(cols):
-    ax.text(j+0.5, -0.4, f'F{j+1}', fontsize=10, ha='center')
-
-ax.axis('off')
-#plt.tight_layout()
-plt.show()
-```
-
-::: {.callout-tip}
-## Key Takeaway
-
-**Clustering finds groupings amongst the ROWS** — it identifies which observations (customers, products, patients) are similar to each other and groups them together.
-
-*"These customers behave similarly"*
-:::
-
-::: {.notes}
-**Main Takeaway**: Clustering operates on ROWS—it finds groups of similar observations.
-
-**Visual Walkthrough**:
-
-- Point to the matrix visualization showing 8 rows (customers) and 18 features
-- Notice how entire ROWS are color-coded together (Premium = red, Regular = teal, Inactive = blue)
-- Each row represents one customer across all their features
-- The algorithm looked across all 18 features to determine "these 3 customers are similar"
-
-**Emphasize**:
-
-- The number of rows stays the same (8 customers → still 8 customers)
-- We're just adding a new piece of information: cluster membership
-- Each customer now has a label: Premium, Regular, or Inactive
-- This labeling happened automatically based on patterns in the features
-
-**Real-World Application**:
-"If this were a real retailer, you might find that Premium customers all have high spending, frequent visits, and low discount usage. The algorithm discovered this pattern without being told what makes a customer 'premium.'"
-:::
-
-## Dimension Reduction: Combines COLUMNS (features) {.smaller .scrollable}
-
-```{python}
-#| echo: false
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
-
-# Create figure
-fig, ax = plt.subplots(figsize=(24, 6))
-
-# Create a sample data matrix representation
-rows, cols = 8, 5
-cell_size = 2
-
-ax.set_xlim(-1, cols+6)
-ax.set_ylim(-2, rows + 1.5)
-
-# Define feature colors and names - color-coded to match PCs they contribute to
-# First 3 features (Sq Ft, Bedrooms, Bathrooms) -> PC1 (red)
-# Last 2 features (Location, School) -> PC2 (teal)
-pc_colors = ['#FF6B6B', '#4ECDC4']
-feature_colors = [
-    '#FFB3B3',  # Sq Ft - light red (PC1)
-    '#FFB3B3',  # Bedrooms - light red (PC1)
-    '#FFB3B3',  # Bathrooms - light red (PC1)
-    '#9BE5E5',  # Location Score - light teal (PC2)
-    '#9BE5E5'   # School Rating - light teal (PC2)
-]
-feature_border_colors = [
-    pc_colors[0],  # Sq Ft
-    pc_colors[0],  # Bedrooms
-    pc_colors[0],  # Bathrooms
-    pc_colors[1],  # Location
-    pc_colors[1]   # School
-]
-feature_names = ['Sq Ft', 'Bedrooms', 'Bathrooms', 'Location\nScore', 'School\nRating']
-
-# Draw the original data matrix with color-coded features
-for i in range(rows):
-    for j in range(cols):
-        rect = mpatches.Rectangle((j, rows-i-1), 1, 1,
-                                  linewidth=1.5, edgecolor='white',
-                                  facecolor=feature_colors[j], alpha=0.7)
-        ax.add_patch(rect)
-
-# Add thick borders around each original column - color-coded to PC
-for j in range(cols):
-    border = mpatches.Rectangle((j, 0), 1, rows,
-                                linewidth=3, edgecolor=feature_border_colors[j],
-                                facecolor='none', linestyle='-')
-    ax.add_patch(border)
-
-# Draw arrow showing compression with more spacing
-arrow = mpatches.FancyArrowPatch((cols+0.5, rows/2), (cols+1.5, rows/2),
-                                arrowstyle='->', mutation_scale=40,
-                                linewidth=4, color='#2E86AB')
-ax.add_patch(arrow)
-
-# Draw the reduced data matrix (fewer columns) - shifted further right
-reduced_cols = 2
-pc_labels = ['PC1:\nOverall\nSize', 'PC2:\nLocation\nQuality']
-pc_x_offset = cols + 2  # More spacing
-
-for i in range(rows):
-    for j in range(reduced_cols):
-        rect = mpatches.Rectangle((pc_x_offset+j, rows-i-1), 1, 1,
-                                  linewidth=1.5, edgecolor='white',
-                                  facecolor=pc_colors[j], alpha=0.7)
-        ax.add_patch(rect)
-
-# Add thick border around each reduced column
-for j in range(reduced_cols):
-    reduced_border = mpatches.Rectangle((pc_x_offset+j, 0), 1, rows,
-                                       linewidth=3, edgecolor=pc_colors[j],
-                                       facecolor='none')
-    ax.add_patch(reduced_border)
-
-# Labels
-ax.text(cols/2, rows+0.8, 'Original Features (5 columns)', fontsize=13,
-        ha='center', fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
-        facecolor='white', edgecolor='gray', linewidth=1.5))
-ax.text(pc_x_offset+reduced_cols/2, rows+0.8, 'Principal\nComponents\n(2 columns)', fontsize=13,
-        ha='center', fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
-        facecolor='#A8DADC', edgecolor='#2E86AB', linewidth=2))
-ax.set_title('Dimension Reduction: Compress Features',
-             fontsize=16, fontweight='bold', pad=25)
-
-# Add feature labels - color-coded to match their PC
-for j in range(cols):
-    ax.text(j+0.5, -0.6, feature_names[j], fontsize=11, ha='center',
-           color='white', fontweight='bold',
-           bbox=dict(boxstyle='round,pad=0.3', facecolor=feature_border_colors[j],
-           edgecolor=feature_border_colors[j], linewidth=2))
-
-# Add PC labels with their meanings
-for j in range(reduced_cols):
-    ax.text(pc_x_offset+j+0.5, -0.6, pc_labels[j], fontsize=12, ha='center',
-            color='white', fontweight='bold', linespacing=1.3,
-            bbox=dict(boxstyle='round,pad=0.4', facecolor=pc_colors[j],
-            edgecolor=pc_colors[j], linewidth=2))
-
-ax.axis('off')
-plt.show()
-```
-
-::: {.callout-tip}
-## Key Takeaway
-
-**Dimension Reduction finds groupings amongst the COLUMNS** — it identifies which features are correlated and combines them into composite components.
-
-*"These features capture similar information"*
-:::
-
-::: {.notes}
-**Main Takeaway**: Dimension reduction operates on COLUMNS—it combines correlated features into composite components.
-
-**Visual Walkthrough**:
-
-- Original matrix: 8 rows × 5 features (Sq Ft, Bedrooms, Bathrooms, Location Score, School Rating)
-- Notice the color coding: Red features (Sq Ft, Bedrooms, Bathrooms) → PC1 "Overall Size"
-- Teal features (Location Score, School Rating) → PC2 "Location Quality"
-- After PCA: 8 rows × 2 components (60% fewer features!)
-
-**Key Contrast with Clustering**:
-
-- **Clustering changed**: ROWS (which customers are grouped together)
-- **PCA changes**: COLUMNS (which features are combined)
-- **Clustering output**: Same features + cluster label
-- **PCA output**: New features (principal components)
-
-**House Example Explanation**:
-"Sq Ft, bedrooms, and bathrooms are all highly correlated—big houses have more of everything. Instead of storing all three, we can create ONE composite measure called 'Overall Size' (PC1) that captures most of that information. Similarly, location score and school rating both relate to neighborhood quality, so we combine them into PC2."
-
-**Emphasize**: We went from 5 features to 2 components while keeping the same 8 houses!
+**Common follow-up:** "Can't we cluster for A and then predict cancellations within each segment?" Yes, that's a great workflow. The clustering step is still unsupervised.
 :::
 
 
@@ -737,76 +488,6 @@ plt.show()
 
 ::: {.notes}
 This visualization shows how K-Means iteratively improves cluster assignments. Notice how the centroids move from their random initial positions toward the natural cluster centers. Usually converges in 5-10 iterations.
-:::
-
-## Think-Pair-Share: Identify Clustering Problems {.smaller}
-
-Which of these business problems would benefit from clustering?
-
-:::: {.columns}
-::: {.column width="70%"}
-
-**Discuss with your neighbor:**
-
-1. **Problem A**: You have customer purchase history and want to create targeted marketing campaigns
-2. **Problem B**: You want to predict which customers will churn next month
-3. **Problem C**: You have 10,000 products and want to organize them into logical groups
-4. **Problem D**: You want to predict house prices based on square footage and location
-
-Which are clustering problems? Which are supervised learning? Why?
-
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="4minClustering"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minClustering", 240, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-**Main Takeaway**: Learn to distinguish clustering problems from supervised learning problems.
-
-**Correct Answers**:
-
-- **A (Customer purchase history → marketing campaigns)**: CLUSTERING
-  - Why: No predetermined segments exist
-  - Goal: Discover natural customer groups based on behavior
-  - Then create targeted campaigns for each discovered segment
-
-- **B (Predict customer churn)**: SUPERVISED LEARNING
-  - Why: You need historical data with churn labels (churned = yes/no)
-  - Goal: Predict a specific outcome (will this customer churn?)
-  - This requires a target variable
-
-- **C (Organize 10,000 products into groups)**: CLUSTERING
-  - Why: No predetermined product categories given
-  - Goal: Find natural groupings based on purchase patterns, attributes, etc.
-  - Similar products should end up in same cluster
-
-- **D (Predict house prices)**: SUPERVISED LEARNING
-  - Why: You have historical house prices (target variable)
-  - Goal: Predict a specific numeric outcome (price)
-  - Classic regression problem
-
-**Teaching Strategy**:
-
-- Have students vote (raise hands for clustering vs. supervised for each)
-- Ask "What's the key difference?" → Presence/absence of a target variable
-- Emphasize: If you're PREDICTING something specific → supervised; if you're DISCOVERING patterns → unsupervised
-
-**Common Student Confusion**:
-"Can't we use clustering for A and then predict churn later?" → YES! That's actually a great workflow: cluster first to find segments, THEN build supervised models for each segment. But the clustering step itself is unsupervised.
 :::
 
 ## Hands-On Demo: K-Means in Action {.smaller}
