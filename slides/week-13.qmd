@@ -41,9 +41,11 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from sklearn.preprocessing import StandardScaler
 
 # Shared settings for the interactive (Plotly) slides
 ORANGE, BLUE = '#e58139', '#399de5'   # same color pair as weeks 11-12
+GREEN, GRAY = '#59a14f', '#b0b0b0'    # third cluster color; unassigned points
 PLOTLY_CONFIG = {'displayModeBar': False}
 
 def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
@@ -56,6 +58,13 @@ def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
         steps.append(dict(method='update', label=labels[i],
                           args=[{'visible': visible}, {'title.text': titles[i]}]))
     return steps
+
+# Simulated customers used across the K-Means slides (same as the Lecture notebook)
+rng = np.random.default_rng(42)
+customers = pd.DataFrame({
+    'annual_spending': np.concatenate([rng.normal(2000, 500, 30), rng.normal(5000, 800, 30), rng.normal(8500, 700, 30)]),
+    'visits_per_year': np.concatenate([rng.normal(5, 2, 30), rng.normal(15, 3, 30), rng.normal(35, 5, 30)]),
+})
 ```
 
 ::: {.notes}
@@ -333,161 +342,150 @@ graph TD
 Emphasize that clustering finds groups that exist naturally in the data—we don't tell it what the groups should look like ahead of time.
 :::
 
-## How K-Means Works: The Algorithm {.smaller .scrollable}
-
-**K-Means** is an iterative algorithm that finds clusters by repeatedly assigning points and updating centers:
+## K-Means, Step by Step {.smaller}
 
 ```{python}
 #| echo: false
+#| fig-align: center
+# Visual-only scaling (the live demo later repeats this step on screen)
+scaler_vis = StandardScaler()
+Z = scaler_vis.fit_transform(customers)
 
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.cluster import KMeans
+K = 3
+COLORS = [ORANGE, BLUE, GREEN]
+X_obs = customers.to_numpy()
 
-# Set random seed for reproducibility
-np.random.seed(42)
+def to_original(C):
+    return scaler_vis.inverse_transform(C)
 
-# Generate two natural clusters of data
-cluster1 = np.random.randn(30, 2) * 0.5 + np.array([2, 2])
-cluster2 = np.random.randn(30, 2) * 0.5 + np.array([5, 5])
-X = np.vstack([cluster1, cluster2])
+def run_kmeans(start_rows):
+    """Plain K-Means (Lloyd's algorithm) from given starting rows; returns the stages to draw."""
+    C = Z[start_rows].copy()
+    stages = [dict(kind='start', C=C.copy(), labels=None, prev=None)]
+    labels = None
+    while True:
+        new = ((Z[:, None, :] - C[None]) ** 2).sum(-1).argmin(1)
+        if labels is not None and (new == labels).all():
+            break
+        labels = new
+        inertia = ((Z - C[labels]) ** 2).sum()
+        stages.append(dict(kind='assign', C=C.copy(), labels=labels.copy(), prev=None, inertia=inertia))
+        C_new = np.array([Z[labels == k].mean(0) for k in range(K)])
+        inertia = ((Z - C_new[labels]) ** 2).sum()
+        stages.append(dict(kind='move', C=C_new.copy(), labels=labels.copy(), prev=C.copy(), inertia=inertia))
+        C = C_new
+    stages.append(dict(kind='done', C=C.copy(), labels=labels.copy(), prev=None, inertia=inertia))
+    return stages
 
-# Create figure with 5 subplots showing the algorithm steps
-fig, axes = plt.subplots(2, 3, figsize=(12, 7))
-axes = axes.flatten()
+# Two random starts: three customers picked at random as the starting centroids
+starts = {
+    'Start A': run_kmeans(np.random.default_rng(6).choice(len(Z), K, replace=False)),
+    'Start B': run_kmeans(np.random.default_rng(55).choice(len(Z), K, replace=False)),
+}
 
-colors = ['#FF6B6B', '#4ECDC4']
-centroid_color = '#FFD700'
+fig = go.Figure()
+start_info = {}
+for name, stages in starts.items():
+    first = len(fig.data)
+    labels_txt, titles, annotations = [], [], []
+    round_no = 0
+    for st in stages:
+        C = to_original(st['C'])
+        if st['labels'] is None:
+            point_colors = [GRAY] * len(X_obs)
+        else:
+            point_colors = [COLORS[k] for k in st['labels']]
+        # Faint spokes from each customer to its centroid (assign stage only)
+        sx, sy = [], []
+        if st['kind'] == 'assign':
+            for (x, y), k in zip(X_obs, st['labels']):
+                sx += [x, C[k, 0], None]
+                sy += [y, C[k, 1], None]
+        fig.add_trace(go.Scatter(x=sx, y=sy, mode='lines', line=dict(color='rgba(0,0,0,0.12)', width=1),
+                                 hoverinfo='skip', showlegend=False, visible=False))
+        fig.add_trace(go.Scatter(x=X_obs[:, 0], y=X_obs[:, 1], mode='markers',
+                                 marker=dict(color=point_colors, size=9, line=dict(color='white', width=0.5)),
+                                 hoverinfo='skip', showlegend=False, visible=False))
+        fig.add_trace(go.Scatter(x=C[:, 0], y=C[:, 1], mode='markers',
+                                 marker=dict(symbol='x', size=20, color=COLORS, line=dict(color='#333', width=2)),
+                                 hoverinfo='skip', showlegend=False, visible=False))
+        # Arrows show where each centroid moved (move stage only)
+        arrows = []
+        if st['kind'] == 'move':
+            P = to_original(st['prev'])
+            for k in range(K):
+                arrows.append(dict(x=C[k, 0], y=C[k, 1], ax=P[k, 0], ay=P[k, 1], xref='x', yref='y',
+                                   axref='x', ayref='y', showarrow=True, arrowhead=2, arrowsize=1.4,
+                                   arrowwidth=2.5, arrowcolor=COLORS[k], standoff=8))
+        annotations.append(arrows)
+        if st['kind'] == 'start':
+            labels_txt.append('Start')
+            titles.append(f'{name}: three customers picked at random become the starting centroids (✕)')
+        elif st['kind'] == 'assign':
+            round_no += 1
+            labels_txt.append(f'{round_no}: assign')
+            titles.append(f'Round {round_no}, assign: every customer joins its nearest centroid  |  inertia {st["inertia"]:.1f}')
+        elif st['kind'] == 'move':
+            labels_txt.append(f'{round_no}: move')
+            titles.append(f'Round {round_no}, move: each centroid moves to the middle of its customers  |  inertia {st["inertia"]:.1f}')
+        else:
+            labels_txt.append('Done')
+            titles.append(f'{name}: reassigning changes nothing, so K-Means stops  |  final inertia <b>{st["inertia"]:.1f}</b>')
+    start_info[name] = dict(first=first, n=len(stages), labels=labels_txt, titles=titles, annotations=annotations)
 
-# Step 0: Show raw data
-ax = axes[0]
-ax.scatter(X[:, 0], X[:, 1], s=50, alpha=0.6, c='gray', edgecolors='black', linewidth=1)
-ax.set_title('Step 1: Choose K=2\nRaw data before clustering', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
+n_traces = len(fig.data)
 
-# Step 1: Initialize random centroids
-ax = axes[1]
-ax.scatter(X[:, 0], X[:, 1], s=50, alpha=0.6, c='gray', edgecolors='black', linewidth=1)
-initial_centroids = np.array([[1.5, 5], [5.5, 2]])
-ax.scatter(initial_centroids[:, 0], initial_centroids[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 2: Initialize Centroids\nRandomly place K=2 centers', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
+def visible_for(name, i):
+    v = [False] * n_traces
+    s = start_info[name]['first'] + 3 * i
+    v[s:s + 3] = [True] * 3
+    return v
 
-# Manual K-Means iterations to show progression
-# Iteration 1: Assign - compute actual nearest centroid for each point
-ax = axes[2]
-# Calculate distances to each initial centroid manually
-distances_to_c0 = np.sqrt(np.sum((X - initial_centroids[0])**2, axis=1))
-distances_to_c1 = np.sqrt(np.sum((X - initial_centroids[1])**2, axis=1))
-labels_iter1 = (distances_to_c1 < distances_to_c0).astype(int)  # 0 if closer to first, 1 if closer to second
+def slider_for(name):
+    info = start_info[name]
+    steps = [dict(method='update', label=info['labels'][i],
+                  args=[{'visible': visible_for(name, i)},
+                        {'title.text': info['titles'][i], 'annotations': info['annotations'][i]}])
+             for i in range(info['n'])]
+    return dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40))
 
-# Draw lines connecting points to their assigned centroid
-for i in range(len(X)):
-    cluster_id = labels_iter1[i]
-    ax.plot([X[i, 0], initial_centroids[cluster_id, 0]],
-            [X[i, 1], initial_centroids[cluster_id, 1]],
-            color=colors[cluster_id], alpha=0.15, linewidth=1, zorder=1)
-for i in range(2):
-    mask = labels_iter1 == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(initial_centroids[:, 0], initial_centroids[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 3: Assign Points\nEach point joins nearest centroid', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
+buttons = [dict(method='update', label=name,
+                args=[{'visible': visible_for(name, 0)},
+                      {'sliders': [slider_for(name)], 'title.text': start_info[name]['titles'][0],
+                       'annotations': []}])
+           for name in starts]
 
-# Now compute centroids from these assignments
-kmeans_iter1 = KMeans(n_clusters=2, init=initial_centroids, n_init=1, max_iter=1, random_state=42)
-kmeans_iter1.fit(X)
+for i, v in enumerate(visible_for('Start A', 0)):
+    fig.data[i].visible = v
 
-# Iteration 1: Update
-ax = axes[3]
-centroids_iter1 = kmeans_iter1.cluster_centers_
-for i in range(2):
-    mask = labels_iter1 == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(initial_centroids[:, 0], initial_centroids[:, 1],
-          s=300, c='lightgray', marker='*', edgecolors='gray',
-          linewidth=2, zorder=4, alpha=0.5)
-ax.scatter(centroids_iter1[:, 0], centroids_iter1[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-# Draw arrows showing centroid movement
-for i in range(2):
-    ax.annotate('', xy=centroids_iter1[i], xytext=initial_centroids[i],
-                arrowprops=dict(arrowstyle='->', lw=3, color='red', alpha=0.7))
-ax.set_title('Step 4: Update Centroids\nMove to average of assigned points', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-# Iteration 2: Re-assign with new centroids
-ax = axes[4]
-kmeans_iter2 = KMeans(n_clusters=2, init=centroids_iter1, n_init=1, max_iter=1, random_state=42)
-labels_iter2 = kmeans_iter2.fit_predict(X)
-# Draw lines connecting points to their assigned centroid
-for i in range(len(X)):
-    cluster_id = labels_iter2[i]
-    ax.plot([X[i, 0], centroids_iter1[cluster_id, 0]],
-            [X[i, 1], centroids_iter1[cluster_id, 1]],
-            color=colors[cluster_id], alpha=0.15, linewidth=1, zorder=1)
-for i in range(2):
-    mask = labels_iter2 == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(centroids_iter1[:, 0], centroids_iter1[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 5: Repeat (Iteration 2)\nRe-assign points to nearest centroid', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-# Final result: Converged
-ax = axes[5]
-kmeans_final = KMeans(n_clusters=2, init=initial_centroids, n_init=1, max_iter=100, random_state=42)
-labels_final = kmeans_final.fit_predict(X)
-centroids_final = kmeans_final.cluster_centers_
-# Draw lines connecting points to their final centroid
-for i in range(len(X)):
-    cluster_id = labels_final[i]
-    ax.plot([X[i, 0], centroids_final[cluster_id, 0]],
-            [X[i, 1], centroids_final[cluster_id, 1]],
-            color=colors[cluster_id], alpha=0.15, linewidth=1, zorder=1)
-for i in range(2):
-    mask = labels_final == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(centroids_final[:, 0], centroids_final[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 6: Converged!\nCentroids stop moving → Done', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-plt.tight_layout()
-plt.show()
+pad_x = (X_obs[:, 0].max() - X_obs[:, 0].min()) * 0.05
+pad_y = (X_obs[:, 1].max() - X_obs[:, 1].min()) * 0.05
+fig.update_layout(
+    title=dict(text=start_info['Start A']['titles'][0], x=0.5, font=dict(size=16)),
+    sliders=[slider_for('Start A')],
+    updatemenus=[dict(type='buttons', direction='right', buttons=buttons, showactive=True, active=0,
+                      x=0.5, xanchor='center', y=1.24, yanchor='bottom')],
+    xaxis=dict(title='Annual spending (USD)', range=[X_obs[:, 0].min() - pad_x, X_obs[:, 0].max() + pad_x],
+               tickformat=',.0f'),
+    yaxis=dict(title='Visits per year', range=[X_obs[:, 1].min() - pad_y, X_obs[:, 1].max() + pad_y]),
+    height=580, margin=dict(l=70, r=20, t=135, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-This visualization shows how K-Means iteratively improves cluster assignments. Notice how the centroids move from their random initial positions toward the natural cluster centers. Usually converges in 5-10 iterations.
+**Timing: ~5 minutes.**
+
+**Start A first.** Drag the slider one step at a time:
+
+- **Start:** K-Means doesn't know where the groups are, so it picks three customers at random as starting centroids. Here all three happen to land among the medium spenders.
+- **Assign:** every customer joins the nearest centroid (the faint lines). Point out how lopsided the first assignment is.
+- **Move:** each centroid moves to the middle of its customers (arrows). Ask: "Where will they go next?"
+- **Repeat** until reassigning changes nothing. Inertia, the total squared distance from customers to their centroids, drops every round.
+
+**Then click Start B.** All three starting centroids land among the big spenders. Two of them split the big spenders, and one has to cover the low *and* medium spenders. K-Means still stops, because nothing changes, but the answer is clearly worse: compare the final inertia with Start A's.
+
+**The point:** K-Means only finds the best answer *near where it started*. That's why scikit-learn's `n_init=10` runs it from 10 random starts and keeps the one with the lowest inertia.
 :::
 
 ## Hands-On Demo: K-Means in Action {.smaller}
@@ -496,27 +494,9 @@ Let's see K-Means clustering with a simple customer dataset:
 
 ```{python}
 #| echo: false
-
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
 
-# Simulate customer data: annual spending vs. visit frequency
-np.random.seed(42)
-customers = pd.DataFrame({
-    'annual_spending': np.concatenate([
-        np.random.normal(2000, 500, 30),   # Low spenders
-        np.random.normal(5000, 800, 30),   # Medium spenders
-        np.random.normal(8500, 700, 30)    # High spenders
-    ]),
-    'visits_per_year': np.concatenate([
-        np.random.normal(5, 2, 30),        # Infrequent
-        np.random.normal(15, 3, 30),       # Regular
-        np.random.normal(35, 5, 30)        # Very frequent
-    ])
-})
+# Same simulated customers as the step-by-step visual (created in the setup chunk)
 customers
 ```
 
