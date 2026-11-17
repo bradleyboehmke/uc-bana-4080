@@ -812,189 +812,69 @@ Ask: "If marketing can only handle three campaigns, what changes?" (Then three i
 
 # PCA: Fewer Columns, Same Information {background="#43464B"}
 
-## The Problem: Too Many Features {.smaller}
+## The Problem: Too Many Columns {.smaller}
 
-Modern datasets are getting **wider and wider**—hundreds or thousands of features:
+Real datasets keep getting **wider**: hundreds or thousands of columns, many of them telling the same story.
 
 :::: {.columns}
 ::: {.column width="50%"}
-**Challenges of high dimensionality:**
-
-* **Curse of dimensionality**: Data becomes sparse in high-D space
-* **Computational cost**: Training takes forever
-* **Overfitting risk**: More features = more noise
-* **Multicollinearity**: Correlated features confuse models
-* **Visualization**: Can't plot 100 dimensions!
+::: {.callout-warning}
+## 😩 What wide data costs you
+- **Redundancy:** correlated columns (square feet, bedrooms, bathrooms) repeat each other
+- **Overfitting:** more columns, more noise to memorize
+- **Speed:** training slows down
+- **Seeing it:** you can't plot 100 dimensions
+:::
 :::
 ::: {.column width="50%"}
-**Examples:**
-
-* **Healthcare**: 20,000+ genes measured per patient
-* **Computer vision**: Images with millions of pixels
-* **E-commerce**: 500+ features per customer
-* **Text analysis**: Thousands of word counts per document
-
-**Question**: Do we really need ALL these features?
+::: {.callout-note}
+## 🌍 Where it shows up
+- **Healthcare:** 20,000+ genes per patient
+- **Images:** thousands of pixels per photo
+- **Retail:** hundreds of behaviors per customer
+- **Text:** thousands of word counts per document
+:::
 :::
 ::::
 
+**Question:** do we really need all of those columns, or can a few new ones carry most of the information?
+
 ::: {.notes}
-The good news: often 10-20 carefully constructed features capture 90%+ of the information in 100 original features.
+**Timing: ~2 minutes.**
+
+Clustering grouped similar *rows*. Dimension reduction works on *columns* (back to the rows-vs-columns figure from the start of class).
+
+The key word is **correlated**. When columns move together, they're partly repeating each other, so a smaller number of well-built columns can carry most of the same information.
+
+**Transition:** "There are two ways to get fewer columns."
 :::
 
-## Think-Pair-Share: When Are Features a Problem? {.smaller .scrollable}
+## Two Ways to Get Fewer Columns {.smaller}
 
-Let's think about when having many features becomes problematic.
+Both start from many correlated columns and end with fewer:
 
 :::: {.columns}
-::: {.column width="70%"}
-
-**Discuss with your neighbor:**
-
-- You're predicting house prices with 100 features (sq ft, bedrooms, bathrooms, neighborhood, school ratings, crime rates, etc.)
-- Many features are correlated (e.g., sq ft correlates with bedrooms)
-- Your model takes 30 minutes to train
-- Test accuracy is worse than training accuracy
-
-**Questions:**
-
-1. Which of the problems above suggest you have too many features?
-2. What might you gain by reducing from 100 to 10 features?
-3. What might you lose?
-
+::: {.column width="50%"}
+::: {.callout-note}
+## ✂️ Feature selection
+**Keep a subset** of the original columns, e.g. the most important features from week 11. Easy to explain, but every dropped column's information is gone.
 :::
-::: {.column width="30%"}
-
-<center>
-
-<div id="4minFeatures"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minFeatures", 240, "slide");
-    });
-</script>
-</center>
-
 :::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-**Main Takeaway**: Recognize the problems caused by having too many features and understand the trade-offs of dimension reduction.
-
-**Question Analysis**:
-
-**1. Which problems suggest you have too many features?**
-
-- **Correlated features**: Yes! Multicollinearity causes unstable models
-  - If sq ft and bedrooms are correlated, they provide redundant information
-  - Models can't distinguish their individual effects
-  - Feature weights become unreliable
-- **Long training time (30 minutes)**: Yes! More features = more computation
-  - 100 features vs. 10 features = 10× more parameters to estimate
-  - Exponentially slower for some algorithms
-- **Test accuracy worse than training**: Yes! Classic sign of overfitting
-  - With 100 features and limited data, model memorizes noise
-  - High-dimensional spaces are sparse (curse of dimensionality)
-  - Model can't generalize to new data
-
-**2. What might you gain by reducing from 100 to 10 features?**
-
-- **Faster training**: 10-100× speedup depending on algorithm
-- **Better generalization**: Less overfitting, better test performance
-- **Simpler models**: Easier to understand, explain, and deploy
-- **Visualization**: Can actually plot and explore the data
-- **Less multicollinearity**: Components are uncorrelated by design
-- **Noise reduction**: Minor components often represent measurement noise
-
-**3. What might you lose?**
-
-- **Some information**: PCA with 10 components might capture 90% of variance, but you lose 10%
-- **Interpretability**: Original features ("sq ft") are intuitive; PC1 is a weighted combination that's harder to explain
-- **Specific details**: Rare patterns captured by minor components are lost
-- **Reversibility**: You can't perfectly reconstruct the original 100 features from 10 components
-
-**Key Teaching Insight**:
-"PCA is always a trade-off. You're betting that the information you LOSE (10-20% of variance, usually noise) is worth the benefits you GAIN (speed, simplicity, generalization). In practice, this trade-off is almost always favorable for high-dimensional data."
-:::
-
-## What is Dimension Reduction? {.smaller .scrollable}
-
-**Dimension reduction** transforms your data from high-dimensional space to lower-dimensional space while preserving most of the important information.
-
-```{mermaid}
-%%| fig-width: 10
-%%| echo: false
-graph LR
-    A["Original Data<br/>1000 observations<br/>50 features"] --> B{PCA<br/>Dimension Reduction}
-    B --> C["Transformed Data<br/>1000 observations<br/>10 components<br/><br/>Retains 90% of variance"]
-
-    style A fill:#f0f0f0
-    style B fill:#43464B,color:#fff
-    style C fill:#4ECDC4
-```
-
-**Two main approaches:**
-
-* **Feature Selection**: Pick a subset of original features (e.g., select the 10 most important)
-* **Feature Extraction**: Create NEW features by combining originals (e.g., PCA creates "principal components")
-
-::: {.callout-important}
-**Today we focus on PCA (Principal Component Analysis)** — the most widely-used feature extraction method.
-:::
-
-::: {.notes}
-Think of PCA like image compression: a 10MB photo can compress to 500KB while still looking nearly identical. PCA does the same for tabular data.
-:::
-
-## Principal Component Analysis (PCA): Visual Overview {.smaller}
-
-**How PCA transforms many correlated features into fewer uncorrelated components:**
-
-```{mermaid}
-%%| fig-width: 8
-%%| fig-height: 6
-%%| echo: false
-graph TD
-    A[50 Original Features<br/>All correlated] --> B[PCA Transformation]
-    B --> PC1[PC1: 45% variance<br/>Overall Size]
-    B --> PC2[PC2: 20% variance<br/>Location Quality]
-    B --> PC3[PC3: 10% variance<br/>Age/Condition]
-    B --> PC4[PC4: 8% variance<br/>Luxury Features]
-    B --> PC5[PC5: 5% variance<br/>...]
-    B --> Rest[PC6-PC50: 12% variance<br/>Mostly noise]
-
-    style PC1 fill:#FF6B6B
-    style PC2 fill:#4ECDC4
-    style PC3 fill:#45B7D1
-    style Rest fill:#f0f0f0
-```
-
-::: {.notes}
-This diagram shows how PCA takes 50 correlated features and creates new uncorrelated components, with the first few capturing most of the variance.
-:::
-
-## PCA: The Intuition {.smaller}
-
-**PCA finds new coordinate axes (principal components) that capture maximum variance:**
-
-**The idea:**
-
-1. **PC1** points in the direction where data varies the MOST
-2. **PC2** points in the next-most variation direction (perpendicular to PC1)
-3. **PC3** points in the next direction (perpendicular to both)
-4. And so on...
-
+::: {.column width="50%"}
 ::: {.callout-tip}
-## Key Insight
-
-Often the first 5-10 components capture 90%+ of the total variation! This means you can reduce from 50 features to just 5-10 components while retaining most of the information.
+## 🧪 Feature extraction (PCA)
+**Build a few new columns**, each a weighted mix of *all* the originals. **PCA** (principal component analysis) builds them so the first keeps as much of the data's spread as possible, the second keeps the most of what's left, and so on.
 :::
+:::
+::::
 
 ::: {.notes}
-Analogy: Imagine taking photos at a concert. One angle (PC1) captures most of the action. Adding a second angle (PC2) adds some new perspective. A third angle (PC3) adds a bit more. After that, additional angles don't reveal much new information.
+**Timing: ~2 minutes.**
+
+- **Selection:** easy to explain, because the columns are the originals. But dropping a column throws away everything in it.
+- **Extraction:** each new column (a **principal component**) is a weighted mix of all the originals, so information from every column survives. The trade-off is that the new columns need interpreting.
+
+**Transition:** "What does 'keeps the most spread' actually mean? Let's find PC1 by hand."
 :::
 
 ## Finding the Direction of Most Variance {.smaller}
@@ -1220,9 +1100,11 @@ print(f"\nPC1 captures most variance because sq ft, bedrooms, and bathrooms are 
 ```
 
 ::: {.notes}
+**Timing: ~2 minutes.** Same idea as the last slide, one dimension up.
+
 **Interpreting the Principal Components:**
 
-**PC1 (Red arrow - ~80-85% of variance):**
+**PC1 (red arrow, about 93% of the variance):**
 
 - Points in the direction where houses vary the MOST
 - Represents "Overall House Size" - a composite measure combining all three features
@@ -1231,14 +1113,14 @@ print(f"\nPC1 captures most variance because sq ft, bedrooms, and bathrooms are 
 - This makes sense because sq ft, bedrooms, and bathrooms are all highly correlated - they increase together
 - Notice how PC1 points diagonally through the data cloud in the direction of maximum spread
 
-**PC2 (Teal arrow - ~10-15% of variance):**
+**PC2 (teal arrow, about 6%):**
 
 - Perpendicular to PC1, captures the next-most variation
 - Might represent "Layout efficiency" or deviations from the typical size relationship
 - Example: A house with more bedrooms than expected for its square footage (positive PC2) vs. fewer bedrooms (negative PC2)
 - This captures residual variation NOT explained by overall size
 
-**PC3 (Blue arrow - ~5-10% of variance):**
+**PC3 (blue arrow, about 2%):**
 
 - Perpendicular to both PC1 and PC2
 - Captures very small remaining variations
@@ -1249,557 +1131,199 @@ print(f"\nPC1 captures most variance because sq ft, bedrooms, and bathrooms are 
 
 - Rotate the plot to show students how PC1 aligns with the "longest" dimension of the data cloud
 - Show how PC2 and PC3 are at right angles to PC1 (orthogonal/uncorrelated)
-- Emphasize that PC1 alone captures 80%+ of the variation, so we could reduce from 3 features to 1 component with minimal information loss
+- Emphasize that PC1 alone captures over 90% of the variation, so we could reduce from 3 features to 1 component with minimal information loss
 - Ask: "If we only kept PC1, what information would we lose?" (Answer: The ability to distinguish houses with unusual bedroom/bathroom configurations for their size)
 :::
 
-## The Apartment-Finding Analogy {.smaller}
+## PCA on Real Data: Scale First {.smaller}
 
-Imagine tracking 10 apartment features: rent, sq ft, distance from downtown, bedrooms, building age, floor number, etc.
-
-**You might notice correlations:**
-
-* Larger apartments → more bedrooms, more bathrooms
-* Newer buildings → farther from downtown, higher rent
-* Higher floors → better views, cost more
-
-**PCA would identify underlying factors:**
-
-:::: {.columns}
-::: {.column width="33%"}
-**PC1: "Size & Space"**
-
-* Square footage: ✓
-* Bedrooms: ✓
-* Bathrooms: ✓
-* Closet space: ✓
-
-*Captures 50% of variance*
-:::
-::: {.column width="33%"}
-**PC2: "Location & Age"**
-
-* Distance to downtown: ✓
-* Building age: ✓
-* Neighborhood rating: ✓
-
-*Captures 25% of variance*
-:::
-::: {.column width="33%"}
-**PC3: "Luxury & Amenities"**
-
-* Floor number: ✓
-* Building finishes: ✓
-* Gym/pool access: ✓
-
-*Captures 15% of variance*
-:::
-::::
-
-**Result**: Instead of tracking 10 correlated features, you have 3 uncorrelated components capturing 90% of information!
-
-::: {.notes}
-**Main Takeaway**: PCA discovers underlying "themes" or "factors" that explain why multiple features are correlated.
-
-**Analogy Walkthrough**:
-
-**The Setup**:
-
-- Imagine you're tracking 10 apartment features for every listing
-- Many features are correlated (not independent):
-  - Big apartments → more bedrooms, bathrooms, closets
-  - New buildings → farther from city center, higher rent
-  - High floors → better views, premium pricing
-
-**What PCA Discovers**:
-
-**PC1: "Size & Space" (50% of variance)**
-
-- This component captures the SHARED PATTERN in: sq footage, bedrooms, bathrooms, closet space
-- **Why are these correlated?** They all increase together as apartments get larger
-- **What PC1 represents**: A single "size score" that summarizes all size-related features
-- **Example**: Apartment A (PC1 = 2.5) vs. Apartment B (PC1 = -1.2)
-  - A is large on ALL size dimensions
-  - B is small on ALL size dimensions
-  - One number tells the whole story!
-
-**PC2: "Location & Age" (25% of variance)**
-
-- Captures: distance to downtown, building age, neighborhood rating
-- **Why correlated?** Older buildings tend to be downtown in better-established neighborhoods
-- **What PC2 represents**: Urban vs. suburban character
-- **High PC2**: Downtown, older, established neighborhood
-- **Low PC2**: Suburban, newer, developing area
-
-**PC3: "Luxury & Amenities" (15% of variance)**
-
-- Captures: floor number, finishes, gym/pool access
-- **Why correlated?** Luxury features tend to come together in premium buildings
-- **What PC3 represents**: Luxury tier
-- **High PC3**: High-floor unit with premium finishes and amenities
-- **Low PC3**: Basic unit with standard features
-
-**The Power of PCA**:
-
-- **Original**: 10 features to track and compare
-- **After PCA**: 3 components capture 90% of variation
-- **Benefit**: Much easier to compare apartments, make decisions, and find similar listings
-- **The key**: PCA found these patterns automatically—didn't need domain expertise to group "size features" together
-
-**Teaching Point**:
-"PCA isn't doing magic—it's just finding correlations and grouping correlated features together. Humans could have done this manually, but PCA does it mathematically and optimally."
-:::
-
-## Step 1: The Original Data {.smaller}
-
-Let's apply PCA to a medical dataset with **569 patients** and **30 features** measuring tumor characteristics:
+**Wine:** 178 wines, 13 chemical measurements each, from three cultivars (grape varieties). We'll use the cultivar only to *check* the results, never to fit PCA.
 
 ```{python}
-#| echo: false
-
-import pandas as pd
+#| echo: true
+from sklearn.datasets import load_wine
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-import numpy as np
 
-# Load breast cancer dataset
-data = pd.read_csv('../data/breast_cancer.csv')
+wine = load_wine(as_frame=True)
+X_wine, y_wine = wine.data, wine.target
 
-# Separate features from target
-X = data.drop('diagnosis', axis=1)
-y = data['diagnosis'].map({'M': 1, 'B': 0})  # M=Malignant (1), B=Benign (0)
-X
+pca_unscaled = PCA().fit(X_wine)
+wine_scaled = StandardScaler().fit_transform(X_wine)
+pca = PCA().fit(wine_scaled)
+
+print(f"PC1 share of the variance, unscaled: {pca_unscaled.explained_variance_ratio_[0]:.1%}")
+print(f"PC1 share of the variance, scaled:   {pca.explained_variance_ratio_[0]:.1%}")
 ```
 
-::: {.notes}
-Point out that we have 30 features per patient - way too many to visualize or easily interpret. This is a perfect use case for PCA to reduce dimensionality.
+. . .
+
+::: {.callout-warning}
+## Unscaled, PC1 is just "proline"
+Proline is measured in the hundreds to over a thousand; most other columns are under 10. PCA chases **variance**, so the biggest-number column wins, the same trap as K-Means. Always scale first.
 :::
-
-## Step 2: Standardize and Apply PCA {.smaller .scrollable}
-
-```{python}
-#| echo: true
-#| code-line-numbers: 1-7
-
-# Step 1: Standardize (critical for PCA!)
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-# Step 2: Fit PCA to create all 30 principal components
-pca_full = PCA()
-X_pca = pca_full.fit_transform(X_scaled)
-
-print(f"\nOriginal data: {X.shape}")
-print(f"PCA-transformed data: {X_pca.shape}")
-print(f"\nFirst few patients in PC space:")
-pd.DataFrame(X_pca[:5, :5],
-             columns=[f'PC{i+1}' for i in range(5)]).round(3)
-```
 
 ::: {.notes}
-Emphasize that standardization is CRITICAL for PCA—otherwise features with large values will dominate. After PCA, we still have 30 components (same as features), but now they're uncorrelated and ordered by variance. Show how the data looks completely different in PC space.
+**Timing: ~3 minutes.**
+
+- `explained_variance_ratio_` is each component's share of the total variance.
+- **Unscaled:** PC1 "explains" nearly everything. That sounds great, until you realize it's because proline's numbers are so much bigger than every other column's, so PC1 is basically proline by itself. It isn't finding a shared pattern at all.
+- **Scaled:** every column has std 1, so each one gets a fair say. PC1 now takes about a third of the variance, and it's built from many columns.
+
+Ask: "Where have we seen this before?" (KNN neighbors in week 12, K-Means today. Anything built on distance or variance needs scaling.)
 :::
 
-## Step 3: How Many Components Should We Keep? {.smaller}
-
-```{python}
-#| echo: true
-#| output-location: column
-#| code-line-numbers: 4-5
-
-# Create scree plot
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 6))
-
-# Individual variance explained
-variance_explained = pca_full.explained_variance_ratio_
-ax1.plot(range(1, len(variance_explained) + 1),
-         variance_explained, 'bo-', linewidth=2, markersize=8)
-ax1.set_xlabel('Principal Component', fontweight='bold', fontsize=11)
-ax1.set_ylabel('Variance Explained', fontweight='bold', fontsize=11)
-ax1.set_title('Scree Plot: Variance per Component', fontweight='bold', fontsize=12)
-ax1.grid(True, alpha=0.3)
-ax1.axvline(x=7, color='red', linestyle='--', alpha=0.7, label='Elbow around PC7')
-ax1.legend()
-
-# Cumulative variance explained
-cumsum = np.cumsum(variance_explained)
-ax2.plot(range(1, len(cumsum) + 1), cumsum, 'ro-', linewidth=2, markersize=8)
-ax2.axhline(y=0.95, color='green', linestyle='--', linewidth=2, label='95% threshold')
-ax2.axhline(y=0.90, color='orange', linestyle='--', linewidth=2, label='90% threshold')
-ax2.set_xlabel('Number of Components', fontweight='bold', fontsize=11)
-ax2.set_ylabel('Cumulative Variance', fontweight='bold', fontsize=11)
-ax2.set_title('Cumulative Variance Explained', fontweight='bold', fontsize=12)
-ax2.legend()
-ax2.grid(True, alpha=0.3)
-
-# Find components needed for 95%
-n_95 = np.argmax(cumsum >= 0.95) + 1
-ax2.axvline(x=n_95, color='green', linestyle=':', alpha=0.7)
-ax2.text(n_95 + 1, 0.5, f'{n_95} components\nfor 95% variance',
-         fontsize=10, bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
-
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-The elbow is around PC6-7. We can reduce from 30 features to just 7 components while keeping 95% of the information!
-:::
-
-## Interactive Activity: Reading Scree Plots {.smaller}
-
-:::: {.columns}
-::: {.column width="70%"}
-::: {.callout}
-## Your Turn
-
-You're analyzing customer behavior with 50 features. After running PCA, you get:
-
-* PC1: 35% variance
-* PC2: 20% variance
-* PC3: 12% variance
-* PC4: 8% variance
-* PC5: 6% variance
-* PC6-50: 19% variance (combined)
-
-**Discuss with your neighbor:**
-
-1. How many components would you keep? Why?
-2. If you keep just PC1 and PC2, what percentage of information do you retain?
-3. What are you trading off when you reduce from 50 to 5 features?
-:::
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minScree"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minScree", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-**Main Takeaway**: Practice reading scree plots and making informed decisions about how many components to retain.
-
-**Question Analysis**:
-
-**1. How many components would you keep? Why?**
-
-Let's calculate cumulative variance for each option:
-
-- **PC1 only**: 35% variance — Too little information!
-- **PC1-2**: 35% + 20% = 55% variance — Still losing half the information
-- **PC1-3**: 55% + 12% = 67% variance — Getting better, but below typical threshold
-- **PC1-4**: 67% + 8% = **75% variance** — Good threshold, retained 3/4 of information
-- **PC1-5**: 75% + 6% = **81% variance** — Even better, common threshold
-- **PC1-6+**: 81% + 19% = 100% variance — Keeping 45 components for last 19%? Diminishing returns!
-
-**Recommended answer**: **Keep PC1-5 (81% variance)**
-
-- **Common rule of thumb**: Aim for 80-90% cumulative variance
-- **PC1-4 (75%)**: Also defensible if simplicity is paramount
-- **PC1-10**: Might be justified if you really need that extra precision
-
-**2. If you keep just PC1 and PC2, what percentage do you retain?**
-
-- **Answer**: 35% + 20% = **55% of variance**
-- **Is this enough?**
-  - For visualization: Yes! Often we reduce to 2-3 components just to plot
-  - For modeling: Probably not—you're losing 45% of information
-  - For exploration: Maybe—depends if those 2 components capture the main patterns
-
-**3. What are you trading off when you reduce from 50 to 5 features?**
-
-- **Gain**: 90% reduction in features (50 → 5)
-- **Lose**: 19% of variance (81% retained, 19% lost)
-- **The trade-off**:
-  - That 19% you're losing is spread across 45 components (PC6-50)
-  - Each of those captures < 0.5% of variance on average
-  - Likely represents noise, measurement error, or very subtle patterns
-  - The first 5 components capture the "signal," the rest is mostly "noise"
-
-**Key Teaching Points**:
-
-- "There's no universal 'right' answer—it depends on your goals"
-- "For modeling: usually keep components up to 80-90% variance"
-- "For visualization: often just keep 2-3 components"
-- "Look for the 'elbow' in scree plot—where adding more components gives diminishing returns"
-- "In this example, PC6+ each add < 1% variance—probably not worth the complexity"
-
-**Real-World Context**:
-"Imagine you're building a recommendation system. You might reduce 10,000 product features to 50 components (99% variance) for speed, or reduce to 10 components (95% variance) if you need real-time predictions. The choice depends on your business requirements!"
-:::
-
-## What Do Principal Components Mean? {.smaller .scrollable}
-
-**Principal components are weighted combinations of original features.**
-
-Let's look at what contributes to PC1 in our breast cancer data:
-
-```{python}
-#| echo: true
-
-# Refit with more components to examine
-pca_7 = PCA(n_components=7)
-pca_7.fit(X_scaled)
-
-# Look at loadings (weights) for PC1
-pc1_loadings = pd.DataFrame({
-    'feature': X.columns,
-    'loading': pca_7.components_[0]
-}).sort_values('loading', key=abs, ascending=False)
-
-print("Top 10 features contributing to PC1:")
-print(pc1_loadings.head(10).to_string(index=False))
-```
-
-**Interpretation**: PC1 loads heavily on features related to tumor size, texture, and shape irregularity. It represents **"overall tumor severity"**—high PC1 means larger, more irregular tumors.
-
-::: {.notes}
-**Main Takeaway**: Principal components are interpretable by examining which original features contribute most strongly (highest loadings).
-
-**What are "loadings"?**
-
-- **Loadings** = weights that show how much each original feature contributes to a principal component
-- **High absolute loading** = that feature strongly influences this component
-- **Positive loading** = feature increases with the component
-- **Negative loading** = feature decreases with the component
-- **Near-zero loading** = feature doesn't contribute much to this component
-
-**How to Interpret PC1 in Breast Cancer Data**:
-
-Looking at the top features from the code output, we'll see:
-
-1. **radius_worst** (high loading): Largest radius measurement
-2. **perimeter_worst** (high loading): Largest perimeter
-3. **area_worst** (high loading): Largest area
-4. **concave points_worst** (high loading): Most severe concavity
-5. **radius_mean** (high loading): Average radius
-6. **perimeter_mean** (high loading): Average perimeter
-
-**What does this tell us?**
-
-- PC1 is dominated by SIZE and IRREGULARITY measurements
-- All the "worst" measurements (most extreme values) load heavily
-- **Interpretation**: PC1 represents "Overall Tumor Severity"
-  - High PC1 score → Large tumor with irregular features → Likely malignant
-  - Low PC1 score → Small tumor with regular features → Likely benign
-
-**Teaching Strategy**:
-
-1. Show the loadings table from the code output
-2. Ask: "What do these top features have in common?" → All relate to size/shape
-3. Explain: "PC1 is a weighted average of these features—a single score summarizing tumor severity"
-4. Contrast with original features: "Instead of looking at 30 separate measurements, PC1 gives you ONE number that captures the most important pattern"
-
-**Why This Matters**:
-
-- PCA creates new features, but they're NOT random or meaningless
-- Each component has an interpretation based on its loadings
-- Good practice: Always examine loadings to understand what your components represent
-- You can name components based on their interpretation (e.g., "Tumor Severity Score")
-
-**Common Student Question**:
-"Are all loadings equally important?" → No! Focus on the highest absolute loadings—those features dominate that component. Small loadings (< 0.1) contribute very little.
-:::
-
-## Demo: Visualizing High-Dimensional Data with PCA {.smaller}
-
-One powerful use of PCA: reducing to 2D for visualization!
+## How Many Components? {.smaller}
 
 ```{python}
 #| echo: false
+#| fig-align: center
+X_wine = load_wine(as_frame=True).data
+pca_wine = PCA().fit(StandardScaler().fit_transform(X_wine))
+var_pct = 100 * pca_wine.explained_variance_ratio_
+cum_pct = np.cumsum(var_pct)
+n_comp = len(var_pct)
+pcs = [f'PC{i}' for i in range(1, n_comp + 1)]
 
-# Reduce to 2 components for visualization
-pca_2d = PCA(n_components=2)
-X_pca_2d = pca_2d.fit_transform(X_scaled)
+fig = go.Figure()
+n_fixed = 0
+titles = []
+for k in range(1, n_comp + 1):
+    # bars: kept components in orange, the rest faded
+    fig.add_trace(go.Bar(x=pcs, y=var_pct, marker_color=[ORANGE if i < k else '#e6e6e6' for i in range(n_comp)],
+                         text=[f'{v:.0f}%' if i < k else '' for i, v in enumerate(var_pct)], textposition='outside',
+                         hoverinfo='skip', showlegend=False, visible=False))
+    # cumulative variance, filled in up to k
+    fig.add_trace(go.Scatter(x=pcs[:k], y=cum_pct[:k], mode='lines+markers', line=dict(color=BLUE, width=3),
+                             marker=dict(size=9), hoverinfo='skip', showlegend=False, visible=False))
+    titles.append(f'Keep <b>{k} of {n_comp}</b> columns → <b>{cum_pct[k - 1]:.0f}%</b> of the variance')
 
-print(f"Reduced from {X.shape[1]} features to 2 components")
-print(f"Retained {pca_2d.explained_variance_ratio_.sum()*100:.1f}% of variance")
+steps = slider_steps(n_fixed, n_comp, 2, [str(k) for k in range(1, n_comp + 1)], titles)
+for trace in fig.data[:2]:
+    trace.visible = True
 
-# Visualize: Can we see the two classes (malignant vs benign)?
-plt.figure(figsize=(8, 4.5))
-colors = ['#FF6B6B', '#4ECDC4']
-for i, label in enumerate(['Malignant', 'Benign']):
-    mask = (y == i)
-    plt.scatter(X_pca_2d[mask, 0], X_pca_2d[mask, 1],
-                c=colors[i], label=label, s=80, alpha=0.6,
-                edgecolors='black', linewidth=0.5)
-
-plt.xlabel(f'PC1 ({pca_2d.explained_variance_ratio_[0]*100:.1f}% variance)',
-           fontweight='bold', fontsize=11)
-plt.ylabel(f'PC2 ({pca_2d.explained_variance_ratio_[1]*100:.1f}% variance)',
-           fontweight='bold', fontsize=11)
-plt.title('Breast Cancer Data: 30 Features → 2 Components',
-          fontweight='bold', fontsize=13)
-plt.legend(fontsize=11)
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-**Interpreting the 2D PCA Plot:**
-
-Amazing! We can see clear separation between malignant and benign tumors using just 2 components. This was impossible to visualize with 30 original features.
-
-**What PC1 represents (X-axis, ~44% of variance):**
-- PC1 captures "Overall Tumor Severity"
-- Loads heavily on features like: radius_worst, perimeter_worst, area_worst, concave points_worst, radius_mean, perimeter_mean, area_mean
-- These are all measures of tumor SIZE and IRREGULARITY
-- **High PC1 (moving right)** = Larger tumors with more irregular shapes → More likely MALIGNANT (red points)
-- **Low PC1 (moving left)** = Smaller, more regular tumors → More likely BENIGN (teal points)
-- Notice how malignant tumors cluster on the right (high PC1) and benign on the left (low PC1)
-
-**What PC2 represents (Y-axis, ~19% of variance):**
-- PC2 captures secondary tumor characteristics not explained by overall size
-- Likely related to texture variation, symmetry, and smoothness
-- Loads on features like: texture_worst, smoothness_worst, symmetry measures
-- **High PC2** = Tumors with high texture variation and less smoothness
-- **Low PC2** = Smoother, more uniform texture
-- There's some overlap here, but generally malignant tumors show more variation
-
-**Key Teaching Points:**
-- These 2 components alone (PC1 + PC2) capture ~63% of total variance from 30 features
-- PC1 is doing most of the "heavy lifting" for separating malignant vs. benign
-- The clear visual separation shows why PCA is powerful: it found the most discriminating directions in the data
-- Point out the cluster centers: malignant tumors (right side, higher PC1) vs. benign (left side, lower PC1)
-- Ask: "If you had to diagnose with just these 2 numbers (PC1, PC2), how would you do it?" (Answer: High PC1 → likely malignant)
-:::
-
-## PCA as Feature Engineering for Machine Learning {.smaller}
-
-Another powerful use case: **Use PCA-transformed features as input to ML models**
-
-**Why use PCA before modeling?**
-
-* **Reduces overfitting** - Fewer features = simpler model = better generalization
-* **Speeds up training** - Fewer features = faster computation
-* **Handles multicollinearity** - PCs are uncorrelated by design
-* **Removes noise** - Minor components often represent noise
-
-Let's compare model performance with and without PCA using our breast cancer data:
-
-::: {.notes}
-Emphasize that PCA is often used as a preprocessing step in ML pipelines, not just for visualization. This is a key practical application that students will use in real projects.
-:::
-
-## Model Comparison: Original vs. PCA Features {.smaller .scrollable}
-
-```{python}
-#| echo: true
-
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-
-# Split into train/test
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
+fig.add_hline(y=90, line=dict(color=GRAY, dash='dash'), annotation_text='90%', annotation_position='top left')
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=18)),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Components kept: '), pad=dict(t=40))],
+    yaxis=dict(title='Variance explained (%)', range=[0, 105]),
+    xaxis=dict(title='Principal component  (bars: each one alone, blue line: running total)'),
+    height=540, margin=dict(l=70, r=20, t=70, b=10), template='plotly_white',
 )
-
-# Standardize the features (critical!)
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-print(f"Original training data shape: {X_train_scaled.shape}")
-```
-
-```{python}
-#| echo: true
-
-# Model 1: All 30 original features
-model_original = LogisticRegression(max_iter=5000, random_state=42)
-model_original.fit(X_train_scaled, y_train)
-y_pred_original = model_original.predict(X_test_scaled)
-
-# Model 2: 7 PCA components (from earlier analysis)
-pca_7 = PCA(n_components=7)
-X_train_pca = pca_7.fit_transform(X_train_scaled)
-X_test_pca = pca_7.transform(X_test_scaled)
-
-model_pca = LogisticRegression(max_iter=5000, random_state=42)
-model_pca.fit(X_train_pca, y_train)
-y_pred_pca = model_pca.predict(X_test_pca)
-
-# Calculate all metrics for both models
-metrics_original = {
-    'Accuracy': accuracy_score(y_test, y_pred_original),
-    'Precision': precision_score(y_test, y_pred_original),
-    'Recall': recall_score(y_test, y_pred_original),
-    'F1-Score': f1_score(y_test, y_pred_original)
-}
-
-metrics_pca = {
-    'Accuracy': accuracy_score(y_test, y_pred_pca),
-    'Precision': precision_score(y_test, y_pred_pca),
-    'Recall': recall_score(y_test, y_pred_pca),
-    'F1-Score': f1_score(y_test, y_pred_pca)
-}
-
-# Display comparison table
-print(f"\n{'Model':<25} {'Features':<10} {'Accuracy':<10} {'Precision':<11} {'Recall':<10} {'F1-Score':<10}")
-print(f"{'-'*85}")
-print(f"{'Original Features':<25} {30:<10} {metrics_original['Accuracy']:<10.3f} {metrics_original['Precision']:<11.3f} {metrics_original['Recall']:<10.3f} {metrics_original['F1-Score']:<10.3f}")
-print(f"{'PCA (7 components)':<25} {7:<10} {metrics_pca['Accuracy']:<10.3f} {metrics_pca['Precision']:<11.3f} {metrics_pca['Recall']:<10.3f} {metrics_pca['F1-Score']:<10.3f}")
-print(f"\nReduced features by {(1 - 7/30)*100:.0f}% with minimal performance loss across all metrics!")
+fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-Point out that performance is maintained across ALL metrics while reducing from 30 to 7 features (77% reduction). Show students that accuracy, precision, recall, and F1-score are all very similar between the two models. This demonstrates that PCA preserves the discriminative information needed for classification. The slight differences across metrics are often worth the benefits in speed, simplicity, and reduced overfitting.
+**Timing: ~4 minutes.**
+
+This is a **scree plot** (the bars) plus its running total (the blue line), for the 13 standardized wine measurements.
+
+**Start at 1.** PC1 alone keeps about a third of the information in all 13 columns.
+
+**Slide to 2.** Two columns, more than half the variance. That's what makes a 2-D picture of 13-D data possible (coming up).
+
+**Keep sliding.** Each new component adds less than the one before: the bars shrink. Ask: "Where would you stop?" Common rules:
+
+- **A variance target** like 90%: here that takes 8 of 13.
+- **The elbow** in the bars, where they flatten out.
+- **What the job needs:** 2 for a picture, or whatever count keeps model accuracy (the notebook's *How Many Components Do You Need?* Your Turn).
+
+**The point:** there's no free lunch with real data. Wine's columns are only partly correlated, so compressing hard (2 components) keeps the main pattern but drops a lot of detail.
 :::
 
-## Why Accept Slightly Lower Accuracy? {.smaller .scrollable}
+## What Does PC1 Mean? {.smaller}
 
-Even if PCA features have slightly lower accuracy, the tradeoffs are often worth it:
+Each component is a weighted mix of the original columns. Those weights are its **loadings**.
 
-:::: {.columns}
-::: {.column width="50%"}
-**Benefits of Using PCA:**
+```{python}
+#| echo: true
+pc1_loadings = pd.Series(pca.components_[0], index=X_wine.columns).sort_values()
+```
 
-1. **Faster training & prediction**
-   - 7 features vs. 30 = ~4× speedup
-   - Matters for large datasets or complex models
+```{python}
+#| echo: false
+#| fig-align: center
+fig = go.Figure(go.Bar(x=pc1_loadings.values, y=pc1_loadings.index, orientation='h',
+                       marker_color=[BLUE if v < 0 else ORANGE for v in pc1_loadings.values],
+                       hoverinfo='skip'))
+fig.add_vline(x=0, line=dict(color='#333', width=1))
+fig.update_layout(xaxis=dict(title='PC1 loading (weight)', range=[-0.5, 0.5]),
+                  height=400, margin=dict(l=220, r=20, t=10, b=10), template='plotly_white')
+fig.show(config=PLOTLY_CONFIG)
+```
 
-2. **Reduced overfitting risk**
-   - Simpler model = less prone to memorizing noise
-   - Better generalization to new data
+::: {.notes}
+**Timing: ~3 minutes.**
 
-3. **Eliminates multicollinearity**
-   - PCs are uncorrelated by design
-   - Helps algorithms that assume independence
+- **Big orange bars:** flavanoids, total phenols, the OD280 measure and proanthocyanins. These all rise together, so PC1 is high for wines rich in phenolic compounds.
+- **Blue bars:** nonflavanoid phenols, malic acid and alcalinity pull the other way.
+- **Near zero:** ash barely contributes to PC1.
+
+So a fair name for PC1 is something like "phenolic richness". Naming a component is the same move as naming a segment: the algorithm builds it, a person reads the weights and describes it.
+
+**Watch out:** the sign is arbitrary. Another run could flip every weight; the pattern (which columns move together) is what matters.
 :::
-::: {.column width="50%"}
-**More Benefits:**
 
-4. **Easier deployment**
-   - Smaller models are faster to deploy
-   - Require less memory in production
+## 13 Columns, One Picture {.smaller}
 
-5. **Noise filtering**
-   - Discarding minor components removes noise
-   - Can actually improve performance!
+```{python}
+#| echo: true
+wine_2d = PCA(n_components=2).fit_transform(wine_scaled)
+```
 
-6. **Scalability**
-   - With 100s-1000s of features, PCA becomes essential
-   - Our 77% reduction would be even more dramatic
+```{python}
+#| echo: false
+#| fig-align: center
+fig = go.Figure()
+for cultivar, color in zip(range(3), [ORANGE, BLUE, GREEN]):
+    mask = (y_wine == cultivar).to_numpy()
+    fig.add_trace(go.Scatter(x=wine_2d[mask, 0], y=wine_2d[mask, 1], mode='markers', name=f'Cultivar {cultivar}',
+                             marker=dict(color=color, size=9, line=dict(color='white', width=0.5)),
+                             hoverinfo='skip'))
+fig.update_layout(xaxis=dict(title=f'PC1 ({pca.explained_variance_ratio_[0]:.0%} of variance)'),
+                  yaxis=dict(title=f'PC2 ({pca.explained_variance_ratio_[1]:.0%} of variance)'),
+                  legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+                  height=450, margin=dict(l=70, r=20, t=40, b=10), template='plotly_white')
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~3 minutes.**
+
+- Two components squeeze 13 columns into one picture. They keep a bit over half of the variance.
+- **PCA never saw the cultivar.** The colors are added afterwards, only to check. Yet the three cultivars land in three fairly separate regions: the main differences between wines line up with the grape variety.
+- This is the most common everyday use of PCA: getting a look at data you otherwise can't draw.
+
+Ask: "If I hid the colors, how many groups would you guess?" (A nice link back to clustering. The Lab's Challenge 4 runs K-Means on PCA output.)
 :::
-::::
 
-::: {.callout-tip}
-## The Key Tradeoff
+## PCA in a Pipeline {.smaller}
 
-PCA trades a small amount of accuracy for significant gains in speed, simplicity, and robustness. As datasets grow larger and wider, this tradeoff becomes increasingly favorable.
+PCA can also feed a model. Put it **inside** the pipeline so it's refit on each fold's training part (week 12).
+
+```{python}
+#| echo: true
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X_wine, y_wine, test_size=0.2, stratify=y_wine, random_state=42)
+
+all_13 = Pipeline([('scale', StandardScaler()), ('model', LogisticRegression(max_iter=1000))])
+pcs_2 = Pipeline([('scale', StandardScaler()), ('pca', PCA(n_components=2)),
+                  ('model', LogisticRegression(max_iter=1000))])
+
+for name, pipe in [('All 13 columns', all_13), ('2 PCA components', pcs_2)]:
+    print(f"{name:>16}: 5-fold CV accuracy {cross_val_score(pipe, X_train, y_train, cv=5).mean():.3f}")
+```
+
+::: {.notes}
+**Timing: ~3 minutes.**
+
+- Same habits as week 12: split first, lock the test set away, and compare choices with CV on the training set only.
+- **PCA goes inside the pipeline.** If you fit PCA on all the data first, every CV fold's validation rows would have helped build the components. That's the same leak as scaling outside the pipeline.
+- **Result:** 2 columns instead of 13, and the CV accuracy barely moves. With 13 columns that doesn't buy much, but with thousands of columns, fewer inputs means faster training and less overfitting.
+- How many components to keep for a model is a hyperparameter: `pca__n_components` could go straight into a GridSearchCV grid. The notebook's **How Many Components Do You Need?** Your Turn loops over every count.
 :::
 
 ## Using Clustering/PCA in ML Pipelines {.smaller}
