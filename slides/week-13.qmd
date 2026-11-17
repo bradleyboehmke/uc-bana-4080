@@ -488,243 +488,232 @@ fig.show(config=PLOTLY_CONFIG)
 **The point:** K-Means only finds the best answer *near where it started*. That's why scikit-learn's `n_init=10` runs it from 10 random starts and keeps the one with the lowest inertia.
 :::
 
-## Hands-On Demo: K-Means in Action {.smaller}
+## Scale Before You Cluster {.smaller}
 
-Let's see K-Means clustering with a simple customer dataset:
-
-```{python}
-#| echo: false
-from sklearn.cluster import KMeans
-
-# Same simulated customers as the step-by-step visual (created in the setup chunk)
-customers
-```
-
-## Demo: Fitting K-Means {.smaller}
-
-```{python}
-#| echo: true
-
-# Standardize features (important for K-Means!)
-scaler = StandardScaler()
-customers_scaled = scaler.fit_transform(customers)
-
-# Fit K-Means with K=3 clusters
-kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
-customers['cluster'] = kmeans.fit_predict(customers_scaled)
-```
+Same lesson as week 12's **"Who Are My Neighbors?"** K-Means measures distance, and in raw units \$1 counts as much as 1 visit, so the big-number column decides who's "close." `StandardScaler` gives every column a fair say.
 
 ```{python}
 #| echo: false
-# Visualize the clusters
-plt.figure(figsize=(5, 5))
-colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
-for i in range(3):
-    mask = customers['cluster'] == i
-    plt.scatter(
-        customers[mask]['annual_spending'],
-        customers[mask]['visits_per_year'],
-        c=colors[i], label=f'Cluster {i}',
-        s=100, alpha=0.6, edgecolors='black'
-    )
+#| fig-align: center
+import matplotlib.pyplot as plt
 
-plt.xlabel('Annual Spending ($)', fontsize=12, fontweight='bold')
-plt.ylabel('Visits Per Year', fontsize=12, fontweight='bold')
-plt.title('Customer Segments from K-Means', fontsize=14, fontweight='bold')
-plt.legend()
-plt.grid(True, alpha=0.3)
+raw = customers.to_numpy()
+fig, axes = plt.subplots(1, 3, figsize=(13, 3.6))
+panels = [
+    (raw, 'What we see\n(each axis stretched to fit)', 'Annual spending ($)', 'Visits per year', False),
+    (raw, 'What K-Means measures in raw units\n($1 counts as much as 1 visit)', 'Annual spending ($)', 'Visits per year', True),
+    (Z, 'After StandardScaler\n(both axes in std devs)', 'Spending (std devs)', 'Visits (std devs)', True),
+]
+for ax, (data, title, xlabel, ylabel, equal) in zip(axes, panels):
+    ax.scatter(data[:, 0], data[:, 1], s=18, color=BLUE, edgecolor='white', linewidth=0.4)
+    ax.set_title(title, fontsize=11)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if equal:
+        ax.set_aspect('equal', adjustable='datalim')   # one unit is the same length on both axes
+    ax.grid(alpha=0.3)
+axes[0].xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:,.0f}'))
+axes[1].xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:,.0f}'))
 plt.tight_layout()
 plt.show()
 ```
 
 ::: {.notes}
-Point out how the algorithm found three natural groups: budget shoppers, regular customers, and premium high-frequency buyers.
+**Timing: ~2 minutes.** A callback, not a new idea.
+
+**Left:** the plot we've been looking at. Matplotlib quietly stretches each axis to fit, so both features look equally important.
+
+**Middle:** the same data drawn with one unit the same length on both axes, which is how K-Means actually measures distance. Spending runs over thousands of dollars and visits over a few dozen, so the visits axis collapses to a flat line. In raw units K-Means is essentially clustering on spending alone.
+
+**Right:** after `StandardScaler`, both columns are in standard deviations and both shape the clusters. (The step-by-step visual already ran on scaled data; it just drew the result in dollars and visits.)
+
+Ask: "Remember last week's KNN neighbors? Same problem, same fix." Both are distance-based.
+
+The notebook's **Skip the Scaler** Your Turn shows what goes wrong when a big-unit column like household income joins the data.
 :::
 
-## The Big Question: How Many Clusters (K)? {.smaller}
-
-**Problem**: K-Means requires you to specify the number of clusters upfront. But how do you know what K should be?
-
-:::: {.columns}
-::: {.column width="50%"}
-**Elbow Method**
-
-1. Try different values of K (e.g., 2, 3, 4, 5, 6...)
-2. Measure "inertia" (within-cluster sum of squares)
-3. Plot inertia vs. K
-4. Look for the "elbow" where adding more clusters doesn't help much
-
-**Lower inertia = tighter clusters = better fit**
-:::
-::: {.column width="50%"}
-**Silhouette Score**
-
-* Measures how similar each point is to its own cluster vs. other clusters
-* Ranges from -1 (wrong cluster) to +1 (perfect cluster)
-* **Higher is better**
-* Typical good score: 0.5-0.7
-
-**Silhouette score balances cluster tightness with separation**
-:::
-::::
-
-::: {.notes}
-**Main Takeaway**: K-Means requires you to choose K upfront, but we have two complementary methods to help make this decision.
-
-**Elbow Method - Deep Explanation**:
-
-- **What is inertia?** Sum of squared distances from each point to its cluster center
-- **Why does it decrease?** More clusters = points closer to their centers on average
-- **The "elbow"**: The point where adding more clusters gives diminishing returns
-- **How to spot it**: Look for the "bend" where the curve starts flattening out
-- **Limitation**: Sometimes there's no clear elbow (we'll see this with real data!)
-
-**Silhouette Score - Deep Explanation**:
-
-- **What it measures**: For each point, how similar is it to its own cluster vs. the nearest other cluster?
-- **Score = +1**: Perfect! Point is very close to its cluster center and far from others
-- **Score = 0**: Point is on the boundary between two clusters (could go either way)
-- **Score = -1**: Wrong cluster! Point is closer to a different cluster
-- **Overall score**: Average across all points
-- **Good scores**: 0.5-0.7 for well-separated clusters; 0.2-0.4 is acceptable for messy real-world data
-
-**Key Teaching Point**:
-
-"These are GUIDES, not rules. The best K depends on:
-
-1. Statistical fit (elbow & silhouette)
-2. Business needs (can marketing handle 5 segments or only 3?)
-3. Interpretability (can you clearly describe each cluster?)
-4. Actionability (can you do something different for each segment?)"
-
-**Common Question**: "Which metric should I trust more?" → Use BOTH together. If they agree, great! If they disagree, try a few values of K and see which produces the most interpretable segments.
-:::
-
-## Demo: Finding the Right K {.smaller}
+## K-Means in scikit-learn {.smaller}
 
 ```{python}
 #| echo: true
-#| output-location: column
-#| fig-width: 6
-#| fig-height: 8
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
+customers_scaled = StandardScaler().fit_transform(customers)
+
+kmeans = KMeans(n_clusters=3, n_init=10, random_state=42)
+cluster_labels = kmeans.fit_predict(customers_scaled)
+
+customers.assign(cluster=cluster_labels).round(1).head(3)
+```
+
+. . .
+
+::: {.callout-note}
+## Two settings worth knowing
+- **`n_init=10`**: run K-Means from 10 different starts and keep the one with the lowest inertia (remember Start B?)
+- **`random_state=42`**: makes those starts repeatable, so you get the same clusters every time you run it
+:::
+
+::: {.notes}
+**Timing: ~3 minutes.** Live in the notebook if the room is following along.
+
+- `fit_predict` both fits the centroids and returns each row's cluster number.
+- There's no `y` anywhere in this code. Contrast with every `fit(X, y)` from weeks 9–12.
+- **The cluster numbers are just names.** Cluster 0 isn't "first" or "best", and a different `random_state` can shuffle which number each group gets. Never compare cluster 0 from one run to cluster 0 from another.
+
+**Transition:** "We asked for 3 clusters because we drew the data and could see three groups. With 14 features, you can't draw it. So how do you choose K?"
+:::
+
+## How Many Clusters (K)? {.smaller}
+
+K-Means needs K up front. Fit several values of K and score each fit two ways:
+
+:::: {.columns}
+::: {.column width="50%"}
+::: {.callout-note}
+## 📉 Inertia (elbow method)
+- Total squared distance from each customer to its centroid
+- **Lower = tighter clusters**, but it *always* drops as K grows
+- Look for the **elbow**: where adding a cluster stops buying much
+:::
+:::
+::: {.column width="50%"}
+::: {.callout-note}
+## 📈 Silhouette score
+- For each customer: how close to its own cluster vs. the next-nearest one
+- Ranges from −1 to +1; **higher = better separated**
+- Look for the **peak**
+:::
+:::
+::::
+
+```python
+inertia = KMeans(n_clusters=k, n_init=10, random_state=42).fit(customers_scaled).inertia_
+score = silhouette_score(customers_scaled, cluster_labels)
+```
+
+::: {.notes}
+**Timing: ~2 minutes.** Just enough to read the next visual.
+
+- **Inertia** is what K-Means minimizes. You saw it drop round by round in the step-by-step visual. Because more centroids always means shorter distances, "pick the lowest inertia" would always pick the biggest K. That's why we look for the bend instead.
+- **Silhouette** rewards clusters that are both tight *and* far apart, so it can go back down when K-Means starts splitting real groups.
+- Neither one is a rule. They're evidence, alongside "can we describe and act on these groups?"
+:::
+
+## Choosing K {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
 from sklearn.metrics import silhouette_score
 
-# Try K from 2 to 8
-K_range = range(2, 9)
-inertias = []
-silhouettes = []
+# Cluster colors ordered by cluster spending, so low spenders keep the same color as K grows
+PALETTE = [ORANGE, BLUE, GREEN, '#e15759', '#b07aa1', '#edc948', '#76b7b2', '#9c755f']
+k_values = list(range(2, 9))
+X_obs = customers.to_numpy()
 
-for k in K_range:
-    km = KMeans(n_clusters=k, random_state=42, n_init=10)
-    km.fit(customers_scaled)
-    inertias.append(km.inertia_)
-    silhouettes.append(silhouette_score(customers_scaled, km.labels_))
+fits = []
+for k in k_values:
+    km = KMeans(n_clusters=k, n_init=10, random_state=42).fit(Z)
+    order = np.argsort(km.cluster_centers_[:, 0])          # rank clusters by spending
+    rank = np.empty(k, dtype=int)
+    rank[order] = np.arange(k)
+    fits.append(dict(k=k, labels=rank[km.labels_],
+                     centers=scaler_vis.inverse_transform(km.cluster_centers_[order]),
+                     inertia=km.inertia_, silhouette=silhouette_score(Z, km.labels_)))
+inertias = [f['inertia'] for f in fits]
+silhouettes = [f['silhouette'] for f in fits]
 
-# Plot both metrics
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 6))
+fig = make_subplots(rows=2, cols=2, column_widths=[0.55, 0.45], horizontal_spacing=0.1,
+                    vertical_spacing=0.2, specs=[[{'rowspan': 2}, {}], [None, {}]],
+                    subplot_titles=['Customers colored by cluster (✕ = centroid)',
+                                    'Inertia (lower = tighter; look for the elbow)',
+                                    'Silhouette (higher = better separated)'])
+# Fixed traces: the full inertia and silhouette curves
+fig.add_trace(go.Scatter(x=k_values, y=inertias, mode='lines+markers', line=dict(color=GRAY, width=2),
+                         marker=dict(size=7, color=GRAY), hoverinfo='skip', showlegend=False), row=1, col=2)
+fig.add_trace(go.Scatter(x=k_values, y=silhouettes, mode='lines+markers', line=dict(color=GRAY, width=2),
+                         marker=dict(size=7, color=GRAY), hoverinfo='skip', showlegend=False), row=2, col=2)
+n_fixed = 2
 
-# Elbow plot
-ax1.plot(K_range, inertias, 'bo-', linewidth=2, markersize=8)
-ax1.set_xlabel('Number of Clusters (K)', fontweight='bold')
-ax1.set_ylabel('Inertia (Within-cluster SS)', fontweight='bold')
-ax1.set_title('Elbow Method', fontweight='bold')
-ax1.grid(True, alpha=0.3)
-ax1.axvline(x=3, color='red', linestyle='--', alpha=0.5, label='Elbow at K=3')
-ax1.legend()
+for f in fits:
+    fig.add_trace(go.Scatter(x=X_obs[:, 0], y=X_obs[:, 1], mode='markers',
+                             marker=dict(color=[PALETTE[c] for c in f['labels']], size=9,
+                                         line=dict(color='white', width=0.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=f['centers'][:, 0], y=f['centers'][:, 1], mode='markers',
+                             marker=dict(symbol='x', size=18, color=PALETTE[:f['k']], line=dict(color='#333', width=2)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[f['k']], y=[f['inertia']], mode='markers',
+                             marker=dict(size=15, color=ORANGE, line=dict(color='#333', width=1.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[f['k']], y=[f['silhouette']], mode='markers',
+                             marker=dict(size=15, color=ORANGE, line=dict(color='#333', width=1.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=2, col=2)
 
-# Silhouette plot
-ax2.plot(K_range, silhouettes, 'ro-', linewidth=2, markersize=8)
-ax2.set_xlabel('Number of Clusters (K)', fontweight='bold')
-ax2.set_ylabel('Silhouette Score', fontweight='bold')
-ax2.set_title('Silhouette Score by K', fontweight='bold')
-ax2.grid(True, alpha=0.3)
-ax2.axvline(x=3, color='red', linestyle='--', alpha=0.5, label='Peak at K=3')
-ax2.legend()
+titles = [f"K = {f['k']}  |  inertia {f['inertia']:.1f}  |  silhouette <b>{f['silhouette']:.2f}</b>" for f in fits]
+steps = slider_steps(n_fixed, len(fits), 4, [str(k) for k in k_values], titles)
+for trace in fig.data[n_fixed:n_fixed + 4]:
+    trace.visible = True
 
-plt.tight_layout()
-plt.show()
+pad_x = (X_obs[:, 0].max() - X_obs[:, 0].min()) * 0.05
+pad_y = (X_obs[:, 1].max() - X_obs[:, 1].min()) * 0.05
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=16)),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40))],
+    xaxis=dict(title='Annual spending (USD)', tickformat=',.0f',
+               range=[X_obs[:, 0].min() - pad_x, X_obs[:, 0].max() + pad_x]),
+    yaxis=dict(title='Visits per year', range=[X_obs[:, 1].min() - pad_y, X_obs[:, 1].max() + pad_y]),
+    xaxis2=dict(dtick=1), xaxis3=dict(title='K (number of clusters)', dtick=1),
+    height=560, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-The elbow occurs at K=3 (inertia stops dropping dramatically), and silhouette score peaks at K=3. This confirms 3 is a good choice for this data.
+**Timing: ~5 minutes.**
+
+**Start at K = 2.** "We have to tell K-Means how many clusters to find. Here we asked for two, so it merged the low and medium spenders. Look where that centroid sits: in empty space between two groups, describing nobody." Point at the orange dot on each curve on the right.
+
+**Drag to K = 3.** Three clean groups. On the right: inertia has dropped sharply (the elbow), and silhouette is at its peak.
+
+**Keep dragging to 4, 5, 6.** K-Means happily splits real groups in half. Inertia *always* goes down as K grows, because more centroids means every customer is closer to one, so "lowest inertia" can't be the rule. That's why we look for the elbow, where adding a cluster stops buying much. Silhouette drops, because the split groups sit right next to each other.
+
+**The point:** read the two curves together, then look at the clusters themselves. Real data rarely gives an answer this clean; we'll see that shortly.
+
+The loop that produces these curves is in the notebook.
 :::
 
-## Interactive Activity: Interpret Elbow Plots {.smaller}
+## From Clusters to Segments {.smaller}
 
-:::: {.columns}
-::: {.column width="70%"}
-::: {.callout}
-## Your Turn
+K-Means hands back **cluster numbers**. **Profile** each cluster (average its features), **name** it in business terms, and it becomes a **segment** you can **act** on.
 
-Imagine you're analyzing shopping behavior and get this elbow plot:
+```{python}
+#| echo: true
+segment_names = ['Occasional shoppers', 'Regulars', 'Loyal big spenders']
 
-* K=2: Inertia = 10,000
-* K=3: Inertia = 7,000
-* K=4: Inertia = 5,200
-* K=5: Inertia = 4,800
-* K=6: Inertia = 4,600
-
-**Discuss with your neighbor:**
-
-1. Where is the "elbow" in this data?
-2. What K would you recommend? Why?
-3. What if your marketing team says they can only handle 3 customer segments? Does that change your answer?
-:::
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minElbow"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minElbow", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
+(customers
+ .assign(cluster=cluster_labels)
+ .groupby('cluster')
+ .agg(customers=('annual_spending', 'size'),
+      avg_spending=('annual_spending', 'mean'),
+      avg_visits=('visits_per_year', 'mean'))
+ .sort_values('avg_spending')
+ .assign(segment=segment_names)   # names chosen AFTER reading the profile
+ .round(1))
+```
 
 ::: {.notes}
-**Main Takeaway**: Practice interpreting elbow plots and balancing statistical vs. business considerations.
+**Timing: ~3 minutes.**
 
-**Question-by-Question Analysis**:
+- **Profile:** `groupby('cluster')` plus means is all it takes. This is week 4's aggregation, now pointed at model output.
+- **Name:** the names come from a person reading the profile, not from the algorithm. K-Means doesn't know what a "regular" is. We sorted by spending first because the cluster numbers themselves are arbitrary.
+- **Vocabulary we'll use from here on:** a *cluster* is the raw output (a number); a *segment* is a cluster you've profiled and named.
 
-**1. Where is the "elbow" in this data?**
+Ask: "If you were the marketing team, what would you do differently for each segment?" (Win-back offers for occasional shoppers, loyalty perks for big spenders.)
 
-- Look for the biggest drop in inertia:
-  - K=2 to K=3: Drop of 3,000 (10,000 → 7,000) — **HUGE drop (30%)**
-  - K=3 to K=4: Drop of 1,800 (7,000 → 5,200) — Still significant (26%)
-  - K=4 to K=5: Drop of 400 (5,200 → 4,800) — **Flattening out (8%)**
-  - K=5 to K=6: Drop of 200 (4,800 → 4,600) — Very small (4%)
-- **The elbow is around K=3 or K=4** (where the curve starts to flatten)
-
-**2. What K would you recommend? Why?**
-
-- **Statistical answer**: K=3 or K=4
-  - K=3 gives you the biggest "bang for your buck" (biggest drop before flattening)
-  - K=4 still shows meaningful improvement
-  - K=5+ shows diminishing returns
-- **Practical answer**: "It depends on what the segments mean"
-  - Need to actually look at the cluster profiles
-  - Are they interpretable? Actionable?
-
-**3. What if marketing says they can only handle 3 segments?**
-
-- **Critical teaching moment**: Business constraints trump statistical optimization!
-- Even if K=4 is statistically "better," K=3 is the right answer if:
-  - Marketing team doesn't have resources for 4 campaigns
-  - Leadership can't remember/act on 4 different strategies
-  - The cost of managing 4 segments exceeds the benefit
-- **Real-world insight**: "In industry, you'll often have to choose a 'good enough' solution that's actually implementable over a 'perfect' solution that won't be used."
-
-**Broader Lesson**:
-"Data science isn't just about finding the optimal statistical answer. It's about finding the BEST answer given real-world constraints: resources, time, budget, organizational complexity, and stakeholder understanding."
+**Transition:** "Three clean groups with an obvious K. Real data is rarely this tidy..."
 :::
 
 ## Reality Check: Real Data is Messy {.smaller}
