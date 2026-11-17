@@ -997,6 +997,95 @@ Often the first 5-10 components capture 90%+ of the total variation! This means 
 Analogy: Imagine taking photos at a concert. One angle (PC1) captures most of the action. Adding a second angle (PC2) adds some new perspective. A third angle (PC3) adds a bit more. After that, additional angles don't reveal much new information.
 :::
 
+## Finding the Direction of Most Variance {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
+# Same synthetic houses as the 3-D figure: square feet drives bedrooms
+np.random.seed(42)
+n_houses = 100
+sq_ft = np.random.normal(2000, 600, n_houses)
+bedrooms = 1 + (sq_ft / 500) + np.random.normal(0, 0.5, n_houses)
+houses_2d = StandardScaler().fit_transform(np.column_stack([sq_ft, bedrooms]))
+
+angles = list(range(0, 180, 15))
+total_var = houses_2d.var(axis=0).sum()
+
+def captured_pct(deg):
+    u = np.array([np.cos(np.radians(deg)), np.sin(np.radians(deg))])
+    return 100 * (houses_2d @ u).var() / total_var
+
+curve_angles = np.arange(0, 181, 1)
+curve = [captured_pct(a) for a in curve_angles]
+
+fig = make_subplots(rows=1, cols=2, column_widths=[0.5, 0.5], horizontal_spacing=0.12,
+                    subplot_titles=['Houses (standardized) and a candidate direction',
+                                    'Variance captured by each direction'])
+# Fixed: the houses and the full variance curve
+fig.add_trace(go.Scatter(x=houses_2d[:, 0], y=houses_2d[:, 1], mode='markers',
+                         marker=dict(color=BLUE, size=8, line=dict(color='white', width=0.5)),
+                         hoverinfo='skip', showlegend=False), row=1, col=1)
+fig.add_trace(go.Scatter(x=curve_angles, y=curve, mode='lines', line=dict(color=GRAY, width=2),
+                         hoverinfo='skip', showlegend=False), row=1, col=2)
+n_fixed = 2
+
+L = 3.2
+titles = []
+for deg in angles:
+    u = np.array([np.cos(np.radians(deg)), np.sin(np.radians(deg))])
+    proj = np.outer(houses_2d @ u, u)
+    # the candidate direction
+    fig.add_trace(go.Scatter(x=[-L * u[0], L * u[0]], y=[-L * u[1], L * u[1]], mode='lines',
+                             line=dict(color=ORANGE, width=3), hoverinfo='skip', showlegend=False,
+                             visible=False), row=1, col=1)
+    # each house dropped onto the line
+    sx, sy = [], []
+    for (x, y), (px, py) in zip(houses_2d, proj):
+        sx += [x, px, None]
+        sy += [y, py, None]
+    fig.add_trace(go.Scatter(x=sx, y=sy, mode='lines', line=dict(color='rgba(0,0,0,0.18)', width=1),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=proj[:, 0], y=proj[:, 1], mode='markers',
+                             marker=dict(color=ORANGE, size=6), hoverinfo='skip', showlegend=False,
+                             visible=False), row=1, col=1)
+    # current angle on the curve
+    fig.add_trace(go.Scatter(x=[deg], y=[captured_pct(deg)], mode='markers',
+                             marker=dict(size=15, color=ORANGE, line=dict(color='#333', width=1.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=2)
+    tag = '  ←  <b>PC1</b>' if deg == 45 else ('  ←  <b>PC2</b>' if deg == 135 else '')
+    titles.append(f'Direction at {deg}°: captures <b>{captured_pct(deg):.0f}%</b> of the variance{tag}')
+
+steps = slider_steps(n_fixed, len(angles), 4, [f'{a}°' for a in angles], titles)
+for trace in fig.data[n_fixed:n_fixed + 4]:
+    trace.visible = True
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=16)),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40))],
+    xaxis=dict(title='Square feet (std devs)', range=[-3.3, 3.3], zeroline=False),
+    yaxis=dict(title='Bedrooms (std devs)', range=[-3.3, 3.3], scaleanchor='x', zeroline=False),
+    xaxis2=dict(title='Direction angle (degrees)', dtick=45, range=[-5, 185]),
+    yaxis2=dict(title='Variance captured (%)', range=[0, 100]),
+    height=560, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~5 minutes.**
+
+**Start at 0°.** The orange line is a candidate new column. Each house drops onto it (the faint lines), and the orange dots are the house's score on that new column. At 0° the new column is just square feet, and it keeps about half of the total variance (one of two standardized features).
+
+**Drag slowly to 45°.** The dots spread out along the line, and the readout climbs. Ask: "Why does spread matter?" Spread is information: if every house landed in the same spot, the new column couldn't tell them apart.
+
+**At 45°: PC1.** This is the direction where houses spread out the most. PCA's first component is *defined* as this direction. Point to the curve on the right: it peaks here.
+
+**Keep going to 135°: PC2.** Perpendicular to PC1, and it captures what's left. Ask: "What does a house far out along PC2 look like?" (More or fewer bedrooms than you'd expect for its size.)
+
+**The point:** PCA builds new columns by rotating the axes. PC1 keeps the most spread, PC2 the most of what's left, and so on. Next we'll see the same idea in 3-D.
+:::
+
 ## Visualizing PCA in 3D: House Features {.smaller .scrollable}
 
 Let's see how PCA works with 3 house features: square feet, bedrooms, and bathrooms.
