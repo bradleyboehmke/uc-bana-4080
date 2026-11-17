@@ -339,7 +339,11 @@ graph TD
 ::::
 
 ::: {.notes}
-Emphasize that clustering finds groups that exist naturally in the data—we don't tell it what the groups should look like ahead of time.
+**Timing: ~2 minutes.**
+
+Clustering finds groups that exist in the data on its own: we never tell it what the groups should look like. The diagram's segment names come later, from a person reading the cluster profiles (we'll do exactly that today).
+
+**Transition:** "The most popular clustering algorithm is K-Means. Let's watch it work."
 :::
 
 ## K-Means, Step by Step {.smaller}
@@ -1324,41 +1328,6 @@ for name, pipe in [('All 13 columns', all_13), ('2 PCA components', pcs_2)]:
 - **PCA goes inside the pipeline.** If you fit PCA on all the data first, every CV fold's validation rows would have helped build the components. That's the same leak as scaling outside the pipeline.
 - **Result:** 2 columns instead of 13, and the CV accuracy barely moves. With 13 columns that doesn't buy much, but with thousands of columns, fewer inputs means faster training and less overfitting.
 - How many components to keep for a model is a hyperparameter: `pca__n_components` could go straight into a GridSearchCV grid. The notebook's **How Many Components Do You Need?** Your Turn loops over every count.
-:::
-
-## Using Clustering/PCA in ML Pipelines {.smaller}
-
-**Unsupervised methods often feed into supervised models:**
-
-```{mermaid}
-%%| fig-width: 12
-%%| echo: false
-graph LR
-    A[Raw Data<br/>100 features] --> B[StandardScaler<br/>Standardize]
-    B --> C{PCA<br/>Reduce to 20 components}
-    C --> D[K-Means<br/>Create 5 clusters]
-    D --> E[Add cluster labels<br/>as new feature]
-    E --> F[Supervised Model<br/>Random Forest<br/>Predict churn]
-
-    style A fill:#f0f0f0
-    style B fill:#FFE5B4
-    style C fill:#FF6B6B
-    style D fill:#4ECDC4
-    style E fill:#45B7D1
-    style F fill:#95E1D3
-```
-
-**Example workflow:**
-
-1. Reduce 100 features to 20 components with PCA (noise reduction)
-2. Cluster customers into 5 segments using K-Means on those 20 components
-3. Add cluster ID as a categorical feature
-4. Train a Random Forest to predict customer churn using PCA components + cluster ID
-
-**Benefit**: Unsupervised learning creates better features for supervised learning!
-
-::: {.notes}
-This is a very common pattern in practice. Clustering and dimension reduction as preprocessing steps for prediction models. Emphasize that PCA and clustering aren't just standalone techniques—they're often combined and used to engineer features for supervised learning.
 :::
 
 # Looking Forward {background="#43464B"}
