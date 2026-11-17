@@ -716,335 +716,98 @@ Ask: "If you were the marketing team, what would you do differently for each seg
 **Transition:** "Three clean groups with an obvious K. Real data is rarely this tidy..."
 :::
 
-## Reality Check: Real Data is Messy {.smaller}
+## Real Data Is Messy {.smaller}
 
-**The examples so far have been clean and simple...**
-
-But real business data rarely has such clear clusters!
-
-Let's look at a real-world example: **grocery store customer segmentation** with:
-
-- 801 actual households
-- Transaction history over 1 year
-- 14 features combining:
-  - **Behavioral**: spending, visit frequency, discount usage, recency
-  - **Demographic**: age, income, household size, marital status, homeownership
-
-::: {.callout-warning}
-## Coming Up
-
-We'll see that real data doesn't give us clean, obvious answers. This is completely normal and expected in industry!
-:::
-
-::: {.notes}
-**Main Takeaway**: Prepare students for the reality that real-world clustering often doesn't have clear, obvious solutions.
-
-**Critical Mindset Shift**:
-
-- **So far**: Toy examples with clean, well-separated clusters
-  - Synthetic customer data with 3 obvious segments
-  - Perfect elbow at K=3
-  - High silhouette scores (0.5-0.7)
-  - Clear interpretation
-
-- **Reality**: Real business data is messy
-  - Customers exist on a SPECTRUM, not in neat boxes
-  - No clear elbow (gradual decline)
-  - Low silhouette scores (0.15-0.20)
-  - Overlapping patterns
-
-**Why This Matters**:
-
-- **Student expectation**: "I'll run K-Means and get obvious segments with high scores"
-- **Reality**: "I'll get ambiguous results that require judgment and domain expertise"
-- **Goal of this section**: Set realistic expectations so students don't get discouraged
-
-**Upcoming Real-World Dataset**:
-
-- **Complete Journey**: Actual grocery store transaction data
-- **801 households**: Real people with messy, inconsistent behavior
-- **14 features**: Mix of behavioral (spending, frequency) and demographic (age, income)
-- **Result**: No clear "winner" for K, low silhouette scores across the board
-
-**Teaching Strategy**:
-
-1. Show the messy results AFTER showing clean examples
-2. Emphasize: "This doesn't mean you did something wrong!"
-3. Explain: "Real customer behavior is complex and doesn't fit into neat boxes"
-4. Reassure: "Low silhouette scores (0.15-0.20) are NORMAL and ACCEPTABLE for behavioral data"
-
-**Key Message to Students**:
-"When you get 'messy' results in your own projects, don't panic! This is what real data science looks like. The skill is in interpreting ambiguous results, combining statistical metrics with business context, and making defensible decisions even when there's no clear 'right answer.'"
-:::
-
-## Real Data: Customer Features {.smaller .scrollable}
-
-```{python}
-#| echo: false
-
-import pandas as pd
-import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import silhouette_score
-import matplotlib.pyplot as plt
-from completejourney_py import get_data
-
-# Load the Complete Journey datasets
-data = get_data()
-transactions = data['transactions']
-demographics = data["demographics"]
-
-# Feature engineering (hide the lengthy code)
-# Convert transaction_timestamp to datetime
-transactions['transaction_timestamp'] = pd.to_datetime(transactions['transaction_timestamp'], format='mixed')
-max_date = transactions['transaction_timestamp'].max()
-
-# Aggregate transaction data by household
-behavioral_features = transactions.groupby('household_id').agg({
-    'sales_value': ['sum', 'mean'],
-    'basket_id': 'nunique',
-    'product_id': 'nunique',
-    'retail_disc': 'sum',
-    'coupon_disc': 'sum',
-    'transaction_timestamp': ['min', 'max']
-}).reset_index()
-
-behavioral_features.columns = ['household_id', 'total_spending', 'avg_basket_value',
-                                'num_trips', 'num_unique_products',
-                                'total_retail_disc', 'total_coupon_disc',
-                                'first_purchase', 'last_purchase']
-
-behavioral_features['days_active'] = (behavioral_features['last_purchase'] -
-                                      behavioral_features['first_purchase']).dt.days + 1
-behavioral_features['recency_days'] = (max_date - behavioral_features['last_purchase']).dt.days
-behavioral_features['avg_days_between_trips'] = (behavioral_features['days_active'] /
-                                                  behavioral_features['num_trips'])
-behavioral_features['total_discount'] = (behavioral_features['total_retail_disc'] +
-                                         behavioral_features['total_coupon_disc'])
-behavioral_features['discount_rate'] = (behavioral_features['total_discount'] /
-                                        behavioral_features['total_spending'])
-behavioral_features['coupon_usage_rate'] = (behavioral_features['total_coupon_disc'] /
-                                            behavioral_features['total_spending'])
-behavioral_features = behavioral_features.drop(['first_purchase', 'last_purchase'], axis=1)
-
-# Merge with demographics
-customer_data = behavioral_features.merge(demographics, on='household_id', how='inner')
-
-# Encode demographics
-col_mapping = {}
-for col in customer_data.columns:
-    lower_col = col.lower()
-    if 'age' in lower_col and 'age_encoded' not in lower_col:
-        col_mapping['age'] = col
-    elif 'income' in lower_col and 'income_encoded' not in lower_col:
-        col_mapping['income'] = col
-    elif 'household_size' in lower_col or 'hh_size' in lower_col:
-        col_mapping['household_size'] = col
-    elif 'marital' in lower_col:
-        col_mapping['marital_status'] = col
-    elif 'homeowner' in lower_col or 'home_owner' in lower_col:
-        col_mapping['homeowner'] = col
-    elif 'kid' in lower_col or 'child' in lower_col:
-        col_mapping['kids'] = col
-
-age_map = {'19-24': 1, '25-34': 2, '35-44': 3, '45-54': 4, '55-64': 5, '65+': 6}
-customer_data['age_encoded'] = customer_data[col_mapping.get('age', 'age')].map(age_map)
-
-income_map = {
-    'Under 15K': 1, '15-24K': 2, '25-34K': 3, '35-49K': 4,
-    '50-74K': 5, '75-99K': 6, '100-124K': 7, '125-149K': 8,
-    '150-174K': 9, '175-199K': 10, '200-249K': 11, '250K+': 12
-}
-customer_data['income_encoded'] = customer_data[col_mapping.get('income', 'income')].map(income_map)
-
-hh_size_col = col_mapping.get('household_size', 'household_size')
-if customer_data[hh_size_col].dtype == 'object':
-    customer_data['household_size_num'] = customer_data[hh_size_col].str.extract(r'(\d+)').astype(float)
-else:
-    customer_data['household_size_num'] = customer_data[hh_size_col]
-
-if 'kids' in col_mapping:
-    kids_col = col_mapping['kids']
-    if customer_data[kids_col].dtype == 'object':
-        customer_data['num_kids'] = customer_data[kids_col].replace('None/Unknown', '0')
-        customer_data['num_kids'] = customer_data['num_kids'].str.extract(r'(\d+)').fillna(0).astype(int)
-    else:
-        customer_data['num_kids'] = customer_data[kids_col].fillna(0).astype(int)
-else:
-    customer_data['num_kids'] = 0
-
-marital_col = col_mapping.get('marital_status', 'marital_status')
-customer_data['is_married'] = (customer_data[marital_col] == 'Married').astype(int)
-
-homeowner_col = col_mapping.get('homeowner', 'homeowner')
-customer_data['is_homeowner'] = (customer_data[homeowner_col] == 'Homeowner').astype(int)
-
-customer_data_clean = customer_data.dropna(subset=['age_encoded', 'income_encoded'])
-
-# Select features for clustering
-cluster_features = [
-    'total_spending', 'avg_basket_value', 'num_trips', 'num_unique_products',
-    'avg_days_between_trips', 'recency_days', 'discount_rate', 'coupon_usage_rate',
-    'age_encoded', 'income_encoded', 'household_size_num', 'num_kids',
-    'is_married', 'is_homeowner'
-]
-
-X_cluster = customer_data_clean[cluster_features]
-
-print(f"Real customer data shape: {X_cluster.shape}")
-print(f"\nFirst few customers:")
-X_cluster.head(10)
-```
-
-::: {.notes}
-Point out the diversity of features - both behavioral and demographic. Real customers are complex!
-:::
-
-## Real Data: Elbow & Silhouette Analysis {.smaller .scrollable}
-
-Let's apply the same methods we used before:
-
-```{python}
-#| echo: false
-
-# Scale the features
-scaler = StandardScaler()
-X_cluster_scaled = scaler.fit_transform(X_cluster)
-
-# Compute metrics for different K values
-k_range = range(2, 11)
-wcss_values = []
-sil_scores = []
-
-for k in k_range:
-    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=20)
-    kmeans_temp.fit(X_cluster_scaled)
-    wcss_values.append(kmeans_temp.inertia_)
-
-    labels_temp = kmeans_temp.predict(X_cluster_scaled)
-    sil_score = silhouette_score(X_cluster_scaled, labels_temp)
-    sil_scores.append(sil_score)
-
-# Plot both methods
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-
-# Elbow plot
-ax1.plot(k_range, wcss_values, 'bo-', linewidth=2, markersize=8)
-ax1.set_xlabel('Number of Clusters (K)', fontweight='bold', fontsize=11)
-ax1.set_ylabel('Inertia (WCSS)', fontweight='bold', fontsize=11)
-ax1.set_title('Elbow Method\n(Where is the elbow?)', fontweight='bold', fontsize=12)
-ax1.grid(True, alpha=0.3)
-ax1.set_xticks(k_range)
-
-# Silhouette plot
-ax2.plot(k_range, sil_scores, 'go-', linewidth=2, markersize=8)
-ax2.set_xlabel('Number of Clusters (K)', fontweight='bold', fontsize=11)
-ax2.set_ylabel('Silhouette Score', fontweight='bold', fontsize=11)
-ax2.set_title('Silhouette Analysis\n(Which K is best?)', fontweight='bold', fontsize=12)
-ax2.grid(True, alpha=0.3)
-ax2.set_xticks(k_range)
-
-plt.tight_layout()
-plt.show()
-
-print("\nResults for different K values:")
-for k, wcss_val, sil_val in zip(k_range, wcss_values, sil_scores):
-    print(f"  K={k}: Inertia={wcss_val:>8,.0f}, Silhouette={sil_val:.3f}")
-```
-
-## What Do You Notice? {.smaller}
+Same workflow, real customers: **801 households** from a grocery retailer's Complete Journey data, with **14 features** per household.
 
 :::: {.columns}
 ::: {.column width="50%"}
-**Observations:**
-
-1. **No clear elbow!** 📉
-   - WCSS decreases gradually
-   - No obvious "bend" like our simple examples
-
-2. **Low silhouette scores** 📊
-   - All scores around 0.14-0.17
-   - K=2 is highest, but barely
-   - Small differences between K values
+::: {.callout-note}
+## 🛒 Behavioral (8)
+Total spending, average basket value, number of trips, unique products, days between trips, recency, discount rate, coupon usage
+:::
 :::
 ::: {.column width="50%"}
-::: {.callout-important}
-## This is COMPLETELY NORMAL!
-
-Real customer data:
-
-- Lives on a **spectrum**, not in neat boxes
-- Has **overlapping patterns** (customers share behaviors)
-- Shows **fuzzy boundaries** between segments
-- Rarely has one "correct" K
-
-**Low silhouette scores (0.15-0.20) are expected and acceptable for behavioral data!**
+::: {.callout-note}
+## 👪 Demographic (6)
+Age, income, household size, number of kids, married, homeowner
 :::
 :::
 ::::
 
+Scale all 14 features, fit K-Means for K = 2 to 10, and read the same two scores as before.
+
 ::: {.notes}
-Emphasize that students shouldn't be discouraged when they see this in their own work. It's the reality of messy, real-world data.
+**Timing: ~1 minute. First cut if the lecture is running behind:** skip straight to PCA. All three slides are covered in Chapter 31.
+
+The full feature-engineering code is in Chapter 31 (aggregating transactions per household, then encoding demographics). We're skipping it here to focus on what the scores look like.
+
+**Transition:** "With 14 features we can't draw the data, so the scores are all we have. Here's what they say."
 :::
 
-## When Metrics Don't Give Clear Answers {.smaller .scrollable}
+## Real Data: No Clear Answer {.smaller}
 
-**What should you do when there's no obvious "winner"?**
+```{python}
+#| echo: false
+#| fig-align: center
+# Pre-computed from the Chapter 31 workflow (801 households, 14 scaled features,
+# KMeans(n_clusters=k, n_init=20, random_state=42)), so the deck doesn't need the
+# completejourney_py package or its long feature-engineering step at render time.
+cj_k = list(range(2, 11))
+cj_inertia = [9662.7, 8617.8, 7897.9, 7424.8, 6991.3, 6615.7, 6337.5, 6105.8, 5911.3]
+cj_silhouette = [0.1729, 0.1501, 0.1398, 0.1443, 0.1460, 0.1402, 0.1346, 0.1270, 0.1253]
 
-:::: {.columns}
-::: {.column width="50%"}
-**Statistical considerations:**
+fig = make_subplots(rows=1, cols=2, horizontal_spacing=0.12,
+                    subplot_titles=['Inertia: where is the elbow?', 'Silhouette: low everywhere'])
+fig.add_trace(go.Scatter(x=cj_k, y=cj_inertia, mode='lines+markers', line=dict(color=BLUE, width=2.5),
+                         marker=dict(size=8), hoverinfo='skip', showlegend=False), row=1, col=1)
+fig.add_trace(go.Scatter(x=cj_k, y=cj_silhouette, mode='lines+markers', line=dict(color=ORANGE, width=2.5),
+                         marker=dict(size=8), hoverinfo='skip', showlegend=False), row=1, col=2)
+fig.update_xaxes(title='K (number of clusters)', dtick=1)
+fig.update_yaxes(title='Inertia', row=1, col=1)
+fig.update_yaxes(title='Silhouette score', range=[0, 0.8], row=1, col=2)
+fig.update_layout(height=380, margin=dict(l=70, r=20, t=40, b=10), template='plotly_white')
+fig.show(config=PLOTLY_CONFIG)
+```
 
-- K=2 has highest silhouette (0.166)
-- K=3-4 show similar performance
-- K=5+ continue declining gradually
-
-**But statistics alone aren't enough!**
+::: {.incremental}
+- **No elbow:** inertia falls smoothly, with no bend to point at
+- **Low silhouette:** about 0.15 at every K (our toy customers scored 0.75 at K = 3). K = 2 is highest, but barely
+- **This is normal.** Real customers sit on a spectrum, not in neat boxes
 :::
-::: {.column width="50%"}
-**Business considerations:**
 
-- Can marketing handle 2 segments? 4? 6?
-- What's the ROI of personalization?
-- Are segments actionable?
-- Can you describe each segment clearly?
-- Do stakeholders understand the segmentation?
+::: {.notes}
+**Timing: ~1 minute.**
+
+- Compare with the slider a few minutes ago: there, the elbow and the silhouette peak landed on the same K. Here the elbow is nowhere and the silhouette is nearly flat.
+- The silhouette y-axis runs to 0.8 on purpose, so the flatness is honest. Don't let anyone read the K = 2 "peak" as a clear winner.
+- Low silhouette scores (roughly 0.1–0.3) are common and acceptable for behavioral data. It doesn't mean you did something wrong.
 :::
-::::
+
+## When the Scores Don't Decide {.smaller}
+
+The metrics narrow the options. **People** make the call.
 
 ::: {.callout-tip}
-## Work with Stakeholders!
-
-When metrics are ambiguous:
-
-1. **Try multiple K values** (e.g., K=3, 4, 5)
-2. **Profile each segmentation** - what do the clusters mean?
-3. **Present options to business stakeholders**
-4. **Choose based on**: interpretability + actionability + resource constraints
-5. **Validate** with domain experts ("Do these segments make sense?")
+## Work with stakeholders
+1. **Try a few K values** that the scores don't rule out (say 3, 4 and 5)
+2. **Profile each one** and name the segments, as we did with the toy customers
+3. **Show the options** to the people who will use them
+4. **Choose** the K whose segments are clear, actionable, and something the team can actually run campaigns for
 :::
 
-## Example: Choosing K for This Dataset {.smaller}
+. . .
 
-Let's walk through the decision process:
+> A grocery marketing team that can run four campaigns might pick **K = 4** (budget shoppers, loyal regulars, premium buyers, infrequent visitors), even though K = 2 scores slightly higher.
 
-| **K** | **Pros** | **Cons** | **Decision** |
-|-------|----------|----------|--------------|
-| **K=2** | Highest silhouette (0.166)<br/>Simple to explain | Too coarse? Miss nuances<br/>Only "high" vs "low" spenders | Maybe too simple |
-| **K=3** | Good silhouette (0.158)<br/>Aligns with classic RFM | Still quite broad segments | **Good choice** |
-| **K=4** | Moderate silhouette (0.148)<br/>More granular insights | Marketing can handle 4 segments | **Good choice** |
-| **K=5** | Lower silhouette (0.144)<br/>Very specific segments | Complex for marketing<br/>Harder to operationalize | Probably too many |
+::: {.notes}
+**Timing: ~1 minute.**
 
-::: {.callout-note}
-## Real-World Choice
+**The point:** clustering is exploratory. The scores rule options out; they don't pick the answer. The best K is the one the business can describe and act on.
 
-For this grocery retailer, **K=4 might be ideal**:
+Ask: "If marketing can only handle three campaigns, what changes?" (Then three is the answer, as long as the three segments are distinct.)
 
-- Statistical performance is reasonable (silhouette = 0.148)
-- Creates actionable segments (e.g., "budget shoppers," "loyal regulars," "premium buyers," "infrequent visitors")
-- Marketing team can manage 4 distinct campaigns
-- Provides meaningful differentiation without overwhelming complexity
+**Transition:** "Clustering groups *rows*. Now let's turn to the other unsupervised question: what if we have too many *columns*?"
 :::
 
 # PCA: Fewer Columns, Same Information {background="#43464B"}
