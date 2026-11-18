@@ -39,6 +39,10 @@ _Avoid_: Lab quiz
 The trivial model (predict the mean, or the majority class) that any real model must beat to be worth using.
 _Avoid_: Lazy model (acceptable as an informal nickname on slides only)
 
+**Segment**:
+A cluster that has been profiled and given a business name (e.g., "Budget Shoppers"). Until it is profiled, it is just a cluster, identified by its number.
+_Avoid_: Segment for an unprofiled cluster
+
 **Test-set peeking**:
 Making any modeling decision based on test-set performance, which makes the final test score optimistically biased.
 _Avoid_: Test set contamination (describes the result, not the act)

@@ -29,73 +29,116 @@ execute:
 
 * Quick overview of today's plan:
 
-  * Introduction to unsupervised learning concepts
-  * Clustering: Finding natural groups in data
-  * Dimension reduction: Simplifying complex datasets
-  * Hands-on demonstrations with real data
+  * What changes when there's no target to predict
+  * Clustering: finding natural groups with K-Means
+  * Choosing K, and turning clusters into segments
+  * PCA: compressing many features into a few
+  * PCA as a feature engineering step
+
+```{python}
+#| include: false
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from sklearn.preprocessing import StandardScaler
+
+# Shared settings for the interactive (Plotly) slides
+ORANGE, BLUE = '#e58139', '#399de5'   # same color pair as weeks 11-12
+GREEN, GRAY = '#59a14f', '#b0b0b0'    # third cluster color; unassigned points
+PLOTLY_CONFIG = {'displayModeBar': False}
+
+def slider_steps(n_fixed, n_steps, traces_per_step, labels, titles):
+    """Build slider steps that show the fixed traces plus one group of traces per step."""
+    steps = []
+    for i in range(n_steps):
+        visible = [True] * n_fixed + [False] * (n_steps * traces_per_step)
+        for k in range(traces_per_step):
+            visible[n_fixed + i * traces_per_step + k] = True
+        steps.append(dict(method='update', label=labels[i],
+                          args=[{'visible': visible}, {'title.text': titles[i]}]))
+    return steps
+
+# Simulated customers used across the K-Means slides (same as the Lecture notebook)
+rng = np.random.default_rng(42)
+customers = pd.DataFrame({
+    'annual_spending': np.concatenate([rng.normal(2000, 500, 30), rng.normal(5000, 800, 30), rng.normal(8500, 700, 30)]),
+    'visits_per_year': np.concatenate([rng.normal(5, 2, 30), rng.normal(15, 3, 30), rng.normal(35, 5, 30)]),
+})
+```
 
 ::: {.notes}
-**Main Takeaway**: Today marks a major shift from supervised to unsupervised learning. We're moving from prediction tasks to discovery and pattern recognition.
+**Timing: ~1 minute.**
 
-**Key Points to Emphasize**:
+**Timing plan** (each slide's notes carry its own estimate):
 
-- This is the last major topic before the final project
-- Unsupervised learning is used extensively in industry for customer segmentation, feature engineering, and data exploration
-- Both methods we'll cover today (clustering and PCA) are practical tools they'll likely use in their careers
-- The concepts build on everything they've learned (standardization, train/test splits, model evaluation)
+| Section | Time |
+|---|---|
+| Opening: welcome, notebook, Week 12 recap | ~4 min |
+| What is unsupervised learning? | ~8 min |
+| Clustering with K-Means | ~25 min |
+| PCA | ~27 min |
+| Looking forward: takeaways, when to use which, readings, lab, questions | ~7 min |
+| **Total** | **~71 min** |
+
+**First cut if behind:** the Complete Journey "Real Data Is Messy" segment at the end of the K-Means section. It's in Chapter 31, so students don't lose it.
+
+Today is a shift in kind, not just a new model. Every model so far had a target `y` to predict. Unsupervised learning looks for structure in the features alone: groups of similar rows (clustering) or a smaller set of columns that carries the same information (PCA).
 :::
 
-# Discussion: Homework & Questions {background="#43464B"}
+## 📓 Follow Along in the Notebook
 
-## Questions from Week 12? {.smaller}
+::: {.callout-tip}
+## Week 13 Lecture Notebook
 
-* Decision trees and ensemble methods?
-* Random forests and feature importance?
-* Model evaluation, comparison?
-* Hyperparameter tuning?
-* Anything confusing in the quiz or class lab?
-* Time to ask!
+Open the Lecture notebook in Colab now and follow along as we work through today's examples on K-Means clustering and PCA.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bradleyboehmke/uc-bana-4080/blob/main/notebooks/tuesday-your-turn/week-13-lecture.ipynb)
+:::
+
+::: {.notes}
+**Timing: ~1 minute.** Give students a moment to open the notebook in Colab, then move on. They can catch up while you do the recap.
+:::
+
+# Week 12 Recap {background="#43464B"}
+
+## Last Week in 60 Seconds {.smaller}
+
+::: {.card-grid .cols-2}
+::: {.card}
+[🔒 Test-set peeking]{.card-title}
+
+Every decision made by looking at the test score makes that score **optimistic**
+:::
+::: {.card}
+[🔁 Cross-validation]{.card-title}
+
+**k honest validation scores** from the training set alone, so the test set stays locked away
+:::
+::: {.card}
+[🎛️ GridSearchCV]{.card-title}
+
+Try **every combination** of settings, score each with CV, then refit the best one
+:::
+::: {.card}
+[🧰 Pipelines]{.card-title}
+
+Impute, encode, and scale **inside CV**, so no information leaks from the validation folds
+:::
+:::
 
 . . .
 
-:::: {.columns}
-::: {.column width='70%'}
-::: {.callout}
-## Activity
-
-Converse with your neighbor and identify...
-
-* 1 new thing you learned last week that you that you thought was well explained
-* 1 thing we covered last week that is still confusing
+::: {.callout-tip}
+Every model so far learned from a target `y`: a sale price, a default, a diagnosis. Today there is no `y`. We look for structure in `X` alone.
 :::
-:::
-::: {.column width='30%'}
-<center>
-
-<div id="3minWaiting"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minWaiting", 180, "slide");
-    });
-</script>
-</center>
-:::
-::::
 
 ::: {.notes}
-**Main Takeaway**: Check understanding from Week 12 and create a bridge to unsupervised learning.
+**Timing: ~2 minutes.** A quick reconnect, not a re-teach.
 
-**Activity Management**:
+Walk the four cards left to right, top to bottom. One sentence each.
 
-- Give students the full 3 minutes to discuss
-- Common topics from Week 12 that might come up:
-  - Feature importance interpretation in Random Forests
-  - When to use bagging vs. boosting
-  - Hyperparameter tuning with GridSearchCV vs. RandomizedSearchCV
-  - Cross-validation strategies
-
-**Transition to Today**: After hearing from 2-3 groups, mention: "The ensemble methods we learned last week work with labeled data. Today we'll explore what to do when you DON'T have labels—that's unsupervised learning."
+**Transition:** "Look at what all of that had in common: a column we were trying to predict, and a score telling us how close we got. What do you do when there's no such column?"
 :::
 
 # What is Unsupervised Learning? {background="#43464B"}
@@ -106,68 +149,134 @@ Converse with your neighbor and identify...
 
 :::: {.columns}
 ::: {.column width="50%"}
-**Supervised Learning**
+**Supervised learning**
 
-* You have a target variable (labels)
-* Goal: Predict the outcome
+* You have a target `y` (labels)
+* Goal: **predict** the outcome
 * Examples:
   * Predict house prices
   * Classify loan defaults
-  * Diagnose diseases
-* Success metric: Accuracy, RMSE, etc.
+* Success: RMSE, accuracy, ... against the true `y`
 :::
 ::: {.column width="50%"}
-**Unsupervised Learning**
+**Unsupervised learning**
 
-* No target variable (no labels)
-* Goal: Discover hidden patterns
+* No target, only features `X`
+* Goal: **discover** structure
 * Examples:
   * Find customer segments
-  * Group similar documents
-  * Reduce feature complexity
-* Success metric: Interpretability, business value
+  * Compress many correlated features
+* Success: does the structure make sense, and is it useful?
 :::
 ::::
 
 ::: {.notes}
-**Main Takeaway**: Unsupervised learning is fundamentally different from everything we've done so far—we discover patterns instead of predicting outcomes.
+**Timing: ~2 minutes.**
 
-**Key Teaching Points**:
+**The big shift:** every model so far had a target `y`. Now there's only `X`.
 
-- **The Big Shift**: Up until now, every model had a target variable (y). Now there's NO target—just features (X)
-- **Success metrics change**: We can't measure accuracy or RMSE anymore. Success = interpretability + business value
-- **Real-world context**: Often you collect data but don't know what patterns exist yet. Unsupervised learning helps you explore and understand your data
-- **Examples to mention**:
-  - Supervised: "Predict which customers will churn" (you need historical churn labels)
-  - Unsupervised: "Find natural customer segments" (no predetermined groups needed)
-- **Common student question**: "How do we know if we're right?" Answer: "We validate with domain experts and measure business impact, not statistical accuracy"
+**Success changes too:** with no `y`, there's no RMSE or accuracy to check against. We judge results by whether they make sense to people who know the business, and whether they lead to a useful decision. (We'll still see a couple of numeric guides, inertia and silhouette, for choosing K.)
+
+**Common student question:** "How do we know if we're right?" There is no single right answer. We validate with domain experts and by whether the result is useful.
 :::
 
-## Think-Pair-Share {.smaller}
+## Two Kinds: Rows vs. Columns {.smaller}
 
-Let's think about when you might need unsupervised learning in business contexts.
+```{python}
+#| echo: false
+#| fig-align: center
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle, FancyArrowPatch
+
+W, H = 1.5, 0.75                       # cell width and height
+n_rows = 8
+features = ['Sq Ft', 'Beds', 'Baths', 'Age', 'Lot']
+n_cols = len(features)
+
+def cell(ax, col, row, color):
+    ax.add_patch(Rectangle((col * W, row * H), W, H, facecolor=color, edgecolor='white', lw=2, alpha=0.85))
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4.8), gridspec_kw={'width_ratios': [10.3, 13.5]})
+
+# Left: clustering colors ROWS (similar houses)
+row_colors = [ORANGE] * 3 + [BLUE] * 3 + [GREEN] * 2
+for r in range(n_rows):
+    for c in range(n_cols):
+        cell(ax1, c, n_rows - 1 - r, row_colors[r])
+for start, size, color, label in [(0, 3, ORANGE, 'Cluster 0'), (3, 3, BLUE, 'Cluster 1'), (6, 2, GREEN, 'Cluster 2')]:
+    top = (n_rows - start) * H
+    ax1.plot([-0.25, -0.25], [top - size * H + 0.08, top - 0.08], color=color, lw=4, solid_capstyle='round')
+    ax1.text(-0.45, top - size * H / 2, label, ha='right', va='center', fontsize=12, fontweight='bold', color=color)
+for c, f in enumerate(features):
+    ax1.text((c + 0.5) * W, n_rows * H + 0.15, f, ha='center', va='bottom', fontsize=11)
+ax1.set_title('Clustering groups ROWS\n(similar houses)', fontsize=15, fontweight='bold')
+ax1.set_xlim(-2.6, n_cols * W + 0.2); ax1.set_ylim(-0.9, n_rows * H + 0.8)
+ax1.set_aspect('equal'); ax1.axis('off')
+
+# Right: dimension reduction combines COLUMNS (related features)
+col_colors = [ORANGE, ORANGE, ORANGE, BLUE, BLUE]
+for r in range(n_rows):
+    for c in range(n_cols):
+        cell(ax2, c, r, col_colors[c])
+for c, f in enumerate(features):
+    ax2.text((c + 0.5) * W, n_rows * H + 0.15, f, ha='center', va='bottom', fontsize=11, color=col_colors[c], fontweight='bold')
+mid = n_rows * H / 2
+ax2.add_patch(FancyArrowPatch((n_cols * W + 0.4, mid), (n_cols * W + 2.2, mid), arrowstyle='simple', mutation_scale=35, color='#43464B'))
+first = n_cols + 2.6 / W               # first component column, in cell units
+for k, (color, name, meaning) in enumerate([(ORANGE, 'PC1', '"size"'), (BLUE, 'PC2', '"age & lot"')]):
+    for r in range(n_rows):
+        cell(ax2, first + k, r, color)
+    ax2.text((first + k + 0.5) * W, n_rows * H + 0.15, name, ha='center', va='bottom', fontsize=11, color=color, fontweight='bold')
+    ax2.text((first + k + 0.5) * W, -0.2, meaning, ha='center', va='top', fontsize=11, color=color, style='italic')
+ax2.set_title('Dimension reduction combines COLUMNS\n(5 related features → 2 components)', fontsize=15, fontweight='bold')
+ax2.set_xlim(-0.2, (first + 2) * W + 0.2); ax2.set_ylim(-0.9, n_rows * H + 0.8)
+ax2.set_aspect('equal'); ax2.axis('off')
+
+plt.tight_layout()
+plt.show()
+```
+
+::: {.callout-important}
+**Clustering** groups similar **rows**. **Dimension reduction** combines related **columns**.
+:::
+
+::: {.notes}
+**Timing: ~3 minutes.**
+
+This is the most common point of confusion today, so slow down here.
+
+**Left, clustering:** "Which houses are similar to each other?" Each *row* gets a cluster label. The columns don't change.
+
+**Right, dimension reduction:** "Which features carry the same information?" Square feet, bedrooms and bathrooms all measure size, so PCA combines them into one *column*. Every row is still there; we just describe each one with fewer numbers.
+
+**Today's two workhorses:** K-Means for clustering and PCA for dimension reduction. The readings cover others (hierarchical clustering, DBSCAN), and they all answer one of these same two questions.
+
+**Transition:** "Let's make sure we can tell these problems apart."
+:::
+
+## Think-Pair-Share: Which Kind of Problem? {.smaller}
 
 :::: {.columns}
 ::: {.column width="70%"}
 
-**Discuss with your neighbor:**
+**Discuss with your neighbor.** Is each one clustering, dimension reduction, or supervised learning? Why?
 
-- Think of a business problem where you have lots of data but NO labels
-- What would you want to discover about that data?
-- How might finding patterns (without predicting) be valuable?
-
-**Example to get you started:** A retailer has millions of transaction records but no predetermined customer segments...
+1. **A**: Use customer purchase history to create groups for targeted marketing campaigns
+2. **B**: Predict which customers will cancel their subscription next month
+3. **C**: Organize 10,000 products into groups of similar items
+4. **D**: Predict a house's price from its square footage and location
+5. **E**: Summarize 40 related survey questions with a handful of scores
 
 :::
 ::: {.column width="30%"}
 
 <center>
 
-<div id="4minDiscuss1"></div>
+<div id="3minWhichKind"></div>
 <script src="_extensions/produnis/timer/timer.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minDiscuss1", 240, "slide");
+        initializeTimer("3minWhichKind", 180, "slide");
     });
 </script>
 </center>
@@ -175,340 +284,24 @@ Let's think about when you might need unsupervised learning in business contexts
 :::
 ::::
 
-Then we'll take a few responses...
-
 ::: {.notes}
-**Main Takeaway**: Unsupervised learning is valuable when you have data but no predetermined labels or categories.
+**Timing: ~3 minutes** (2 to discuss, 1 to debrief).
 
-**Example Answers to Listen For**:
+**Answers:**
 
-1. **Retailer example (given)**: Millions of transactions, want to discover customer segments for targeted marketing
-2. **Healthcare**: Patient records with symptoms/treatments, discover patient subtypes that respond differently to treatments
-3. **E-commerce**: Product catalog, group similar products for recommendations (no one manually labeled "similar products")
-4. **Social media**: User behavior data, find communities or interest groups
-5. **Manufacturing**: Sensor data from machines, detect anomaly patterns (don't know failure modes ahead of time)
-6. **Document organization**: Thousands of documents, automatically organize into topics
+- **A, clustering:** no predefined customer groups; we want to discover them (rows).
+- **B, supervised:** there's a label (canceled yes/no) to learn from and predict.
+- **C, clustering:** no given product categories; group similar items (rows).
+- **D, supervised:** historical prices are the target.
+- **E, dimension reduction:** combine related questions (columns) into a few summary scores.
 
-**What Makes These Unsupervised?**:
+**Debrief:** ask for hands on each. The key test: is there a column you're trying to predict? If yes, it's supervised. If not, are you grouping rows or combining columns?
 
-- No pre-existing labels for "customer type" or "patient subtype"
-- You're discovering the structure, not predicting a known outcome
-- Value comes from finding patterns you didn't know existed
-
-**Transition**: "Great examples! Notice how in each case, we have rich data but no labels. That's when unsupervised learning shines."
-:::
-
-## Two Main Types of Unsupervised Learning {.smaller}
-
-```{mermaid}
-%%| fig-width: 12
-%%| fig-height: 6
-%%| echo: false
-graph TB
-    A[Unsupervised Learning<br/>Discover patterns without labels] --> B[Clustering<br/>Group similar observations]
-    A --> C[Dimension Reduction<br/>Reduce number of features]
-
-    B --> B1[K-Means: Customer segmentation]
-    B --> B2[Hierarchical: Organize documents]
-    B --> B3[DBSCAN: Anomaly detection]
-
-    C --> C1[PCA: Compress features]
-    C --> C2[t-SNE: Visualize high-D data]
-    C --> C3[Autoencoders: Deep learning compression]
-
-    style A fill:#43464B,stroke:#fff,stroke-width:2px,color:#fff
-    style B fill:#4ECDC4,stroke:#fff,stroke-width:2px
-    style C fill:#FF6B6B,stroke:#fff,stroke-width:2px
-```
-
-. . .
-
-::: {.callout-important}
-## Key Distinction
-
-**Clustering** is focused on finding groupings amongst the **rows** (observations) — grouping similar customers, products, or data points together.
-
-**Dimension Reduction** is focused on finding groupings amongst the **columns** (features) — combining correlated features into composite components.
-:::
-
-::: {.notes}
-**Main Takeaway**: There are two fundamentally different types of unsupervised learning—clustering works on ROWS, dimension reduction works on COLUMNS.
-
-**Critical Distinction** (emphasize heavily):
-
-- **Clustering**: "Which customers are similar to each other?" → Groups rows
-- **Dimension Reduction**: "Which features capture similar information?" → Combines columns
-- This is a common point of confusion—make sure students understand the difference!
-
-**Today's Focus**:
-
-- K-Means clustering: Most widely used clustering algorithm in business
-- PCA: Most common dimension reduction technique
-- These are the "workhorses"—students will see them constantly in industry
-
-**Diagram Interpretation**:
-
-- Point out the other methods listed (Hierarchical, DBSCAN, t-SNE, Autoencoders) to show there's a whole ecosystem
-- But K-Means and PCA are the foundations that everyone should know
-- The other methods build on or extend these core ideas
-:::
-
-## Clustering: Groups ROWS (observations) {.smaller .scrollable}
-
-```{python}
-#| echo: false
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
-
-# Create figure
-fig, ax = plt.subplots(figsize=(20, 5))
-
-# Create a sample data matrix representation
-rows, cols = 8, 18
-cell_size = 1
-
-ax.set_xlim(-2.5, cols)
-ax.set_ylim(-1, rows + 1.2)
-ax.set_aspect('equal')
-
-# Color-code clusters (groups of rows)
-cluster_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
-cluster_assignments = [0, 0, 0, 1, 1, 1, 2, 2]  # 3 clusters
-cluster_labels = ['Premium\nCustomers', 'Regular\nCustomers', 'Inactive\nCustomers']
-
-# Draw the data matrix with cluster coloring
-for i in range(rows):
-    for j in range(cols):
-        rect = mpatches.Rectangle((j, rows-i-1), 1, 1,
-                                  linewidth=1.5, edgecolor='white',
-                                  facecolor=cluster_colors[cluster_assignments[i]],
-                                  alpha=0.5)
-        ax.add_patch(rect)
-
-# Add thick borders around cluster groups to emphasize grouping
-# Cluster 1 border (rows 0-2)
-border1 = mpatches.Rectangle((0, rows-3), cols, 3,
-                             linewidth=3, edgecolor=cluster_colors[0],
-                             facecolor='none')
-ax.add_patch(border1)
-
-# Cluster 2 border (rows 3-5)
-border2 = mpatches.Rectangle((0, rows-6), cols, 3,
-                             linewidth=3, edgecolor=cluster_colors[1],
-                             facecolor='none')
-ax.add_patch(border2)
-
-# Cluster 3 border (rows 6-7)
-border3 = mpatches.Rectangle((0, rows-8), cols, 2,
-                             linewidth=3, edgecolor=cluster_colors[2],
-                             facecolor='none')
-ax.add_patch(border3)
-
-# Add large bracket-style indicators on the left with custom labels
-bracket_x = -0.3
-ax.plot([bracket_x, bracket_x], [rows-3, rows], color=cluster_colors[0],
-        linewidth=4, solid_capstyle='round')
-ax.text(-1.0, rows-1.5, cluster_labels[0], fontsize=12, ha='right',
-        color=cluster_colors[0], fontweight='bold')
-
-ax.plot([bracket_x, bracket_x], [rows-6, rows-3], color=cluster_colors[1],
-        linewidth=4, solid_capstyle='round')
-ax.text(-1.0, rows-4.5, cluster_labels[1], fontsize=12, ha='right',
-        color=cluster_colors[1], fontweight='bold')
-
-ax.plot([bracket_x, bracket_x], [rows-8, rows-6], color=cluster_colors[2],
-        linewidth=4, solid_capstyle='round')
-ax.text(-1.0, rows-7, cluster_labels[2], fontsize=12, ha='right',
-        color=cluster_colors[2], fontweight='bold')
-
-# Labels
-ax.text(cols/2, rows+0.8, 'Features (columns)', fontsize=13,
-        ha='center', fontweight='bold')
-ax.text(-5.0, rows/2, 'Observations\n(rows)', fontsize=13,
-        va='center', ha='center', rotation=90, fontweight='bold')
-ax.set_title('Clustering: Group Similar Observations',
-             fontsize=16, fontweight='bold', pad=25)
-
-# Add feature labels
-for j in range(cols):
-    ax.text(j+0.5, -0.4, f'F{j+1}', fontsize=10, ha='center')
-
-ax.axis('off')
-#plt.tight_layout()
-plt.show()
-```
-
-::: {.callout-tip}
-## Key Takeaway
-
-**Clustering finds groupings amongst the ROWS** — it identifies which observations (customers, products, patients) are similar to each other and groups them together.
-
-*"These customers behave similarly"*
-:::
-
-::: {.notes}
-**Main Takeaway**: Clustering operates on ROWS—it finds groups of similar observations.
-
-**Visual Walkthrough**:
-
-- Point to the matrix visualization showing 8 rows (customers) and 18 features
-- Notice how entire ROWS are color-coded together (Premium = red, Regular = teal, Inactive = blue)
-- Each row represents one customer across all their features
-- The algorithm looked across all 18 features to determine "these 3 customers are similar"
-
-**Emphasize**:
-
-- The number of rows stays the same (8 customers → still 8 customers)
-- We're just adding a new piece of information: cluster membership
-- Each customer now has a label: Premium, Regular, or Inactive
-- This labeling happened automatically based on patterns in the features
-
-**Real-World Application**:
-"If this were a real retailer, you might find that Premium customers all have high spending, frequent visits, and low discount usage. The algorithm discovered this pattern without being told what makes a customer 'premium.'"
-:::
-
-## Dimension Reduction: Combines COLUMNS (features) {.smaller .scrollable}
-
-```{python}
-#| echo: false
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
-
-# Create figure
-fig, ax = plt.subplots(figsize=(24, 6))
-
-# Create a sample data matrix representation
-rows, cols = 8, 5
-cell_size = 2
-
-ax.set_xlim(-1, cols+6)
-ax.set_ylim(-2, rows + 1.5)
-
-# Define feature colors and names - color-coded to match PCs they contribute to
-# First 3 features (Sq Ft, Bedrooms, Bathrooms) -> PC1 (red)
-# Last 2 features (Location, School) -> PC2 (teal)
-pc_colors = ['#FF6B6B', '#4ECDC4']
-feature_colors = [
-    '#FFB3B3',  # Sq Ft - light red (PC1)
-    '#FFB3B3',  # Bedrooms - light red (PC1)
-    '#FFB3B3',  # Bathrooms - light red (PC1)
-    '#9BE5E5',  # Location Score - light teal (PC2)
-    '#9BE5E5'   # School Rating - light teal (PC2)
-]
-feature_border_colors = [
-    pc_colors[0],  # Sq Ft
-    pc_colors[0],  # Bedrooms
-    pc_colors[0],  # Bathrooms
-    pc_colors[1],  # Location
-    pc_colors[1]   # School
-]
-feature_names = ['Sq Ft', 'Bedrooms', 'Bathrooms', 'Location\nScore', 'School\nRating']
-
-# Draw the original data matrix with color-coded features
-for i in range(rows):
-    for j in range(cols):
-        rect = mpatches.Rectangle((j, rows-i-1), 1, 1,
-                                  linewidth=1.5, edgecolor='white',
-                                  facecolor=feature_colors[j], alpha=0.7)
-        ax.add_patch(rect)
-
-# Add thick borders around each original column - color-coded to PC
-for j in range(cols):
-    border = mpatches.Rectangle((j, 0), 1, rows,
-                                linewidth=3, edgecolor=feature_border_colors[j],
-                                facecolor='none', linestyle='-')
-    ax.add_patch(border)
-
-# Draw arrow showing compression with more spacing
-arrow = mpatches.FancyArrowPatch((cols+0.5, rows/2), (cols+1.5, rows/2),
-                                arrowstyle='->', mutation_scale=40,
-                                linewidth=4, color='#2E86AB')
-ax.add_patch(arrow)
-
-# Draw the reduced data matrix (fewer columns) - shifted further right
-reduced_cols = 2
-pc_labels = ['PC1:\nOverall\nSize', 'PC2:\nLocation\nQuality']
-pc_x_offset = cols + 2  # More spacing
-
-for i in range(rows):
-    for j in range(reduced_cols):
-        rect = mpatches.Rectangle((pc_x_offset+j, rows-i-1), 1, 1,
-                                  linewidth=1.5, edgecolor='white',
-                                  facecolor=pc_colors[j], alpha=0.7)
-        ax.add_patch(rect)
-
-# Add thick border around each reduced column
-for j in range(reduced_cols):
-    reduced_border = mpatches.Rectangle((pc_x_offset+j, 0), 1, rows,
-                                       linewidth=3, edgecolor=pc_colors[j],
-                                       facecolor='none')
-    ax.add_patch(reduced_border)
-
-# Labels
-ax.text(cols/2, rows+0.8, 'Original Features (5 columns)', fontsize=13,
-        ha='center', fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
-        facecolor='white', edgecolor='gray', linewidth=1.5))
-ax.text(pc_x_offset+reduced_cols/2, rows+0.8, 'Principal\nComponents\n(2 columns)', fontsize=13,
-        ha='center', fontweight='bold', bbox=dict(boxstyle='round,pad=0.3',
-        facecolor='#A8DADC', edgecolor='#2E86AB', linewidth=2))
-ax.set_title('Dimension Reduction: Compress Features',
-             fontsize=16, fontweight='bold', pad=25)
-
-# Add feature labels - color-coded to match their PC
-for j in range(cols):
-    ax.text(j+0.5, -0.6, feature_names[j], fontsize=11, ha='center',
-           color='white', fontweight='bold',
-           bbox=dict(boxstyle='round,pad=0.3', facecolor=feature_border_colors[j],
-           edgecolor=feature_border_colors[j], linewidth=2))
-
-# Add PC labels with their meanings
-for j in range(reduced_cols):
-    ax.text(pc_x_offset+j+0.5, -0.6, pc_labels[j], fontsize=12, ha='center',
-            color='white', fontweight='bold', linespacing=1.3,
-            bbox=dict(boxstyle='round,pad=0.4', facecolor=pc_colors[j],
-            edgecolor=pc_colors[j], linewidth=2))
-
-ax.axis('off')
-plt.show()
-```
-
-::: {.callout-tip}
-## Key Takeaway
-
-**Dimension Reduction finds groupings amongst the COLUMNS** — it identifies which features are correlated and combines them into composite components.
-
-*"These features capture similar information"*
-:::
-
-::: {.notes}
-**Main Takeaway**: Dimension reduction operates on COLUMNS—it combines correlated features into composite components.
-
-**Visual Walkthrough**:
-
-- Original matrix: 8 rows × 5 features (Sq Ft, Bedrooms, Bathrooms, Location Score, School Rating)
-- Notice the color coding: Red features (Sq Ft, Bedrooms, Bathrooms) → PC1 "Overall Size"
-- Teal features (Location Score, School Rating) → PC2 "Location Quality"
-- After PCA: 8 rows × 2 components (60% fewer features!)
-
-**Key Contrast with Clustering**:
-
-- **Clustering changed**: ROWS (which customers are grouped together)
-- **PCA changes**: COLUMNS (which features are combined)
-- **Clustering output**: Same features + cluster label
-- **PCA output**: New features (principal components)
-
-**House Example Explanation**:
-"Sq Ft, bedrooms, and bathrooms are all highly correlated—big houses have more of everything. Instead of storing all three, we can create ONE composite measure called 'Overall Size' (PC1) that captures most of that information. Similarly, location score and school rating both relate to neighborhood quality, so we combine them into PC2."
-
-**Emphasize**: We went from 5 features to 2 components while keeping the same 8 houses!
+**Common follow-up:** "Can't we cluster for A and then predict cancellations within each segment?" Yes, that's a great workflow. The clustering step is still unsupervised.
 :::
 
 
-# Clustering: Finding Natural Groups {background="#43464B"}
+# Clustering with K-Means {background="#43464B"}
 
 ## What is Clustering? {.smaller}
 
@@ -545,1009 +338,635 @@ graph TD
 ::::
 
 ::: {.notes}
-Emphasize that clustering finds groups that exist naturally in the data—we don't tell it what the groups should look like ahead of time.
+**Timing: ~2 minutes.**
+
+Clustering finds groups that exist in the data on its own: we never tell it what the groups should look like. The diagram's segment names come later, from a person reading the cluster profiles (we'll do exactly that today).
+
+**Transition:** "The most popular clustering algorithm is K-Means. Let's watch it work."
 :::
 
-## How K-Means Works: The Algorithm {.smaller .scrollable}
-
-**K-Means** is an iterative algorithm that finds clusters by repeatedly assigning points and updating centers:
+## K-Means, Step by Step {.smaller}
 
 ```{python}
 #| echo: false
-
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.cluster import KMeans
-
-# Set random seed for reproducibility
-np.random.seed(42)
-
-# Generate two natural clusters of data
-cluster1 = np.random.randn(30, 2) * 0.5 + np.array([2, 2])
-cluster2 = np.random.randn(30, 2) * 0.5 + np.array([5, 5])
-X = np.vstack([cluster1, cluster2])
-
-# Create figure with 5 subplots showing the algorithm steps
-fig, axes = plt.subplots(2, 3, figsize=(12, 7))
-axes = axes.flatten()
-
-colors = ['#FF6B6B', '#4ECDC4']
-centroid_color = '#FFD700'
-
-# Step 0: Show raw data
-ax = axes[0]
-ax.scatter(X[:, 0], X[:, 1], s=50, alpha=0.6, c='gray', edgecolors='black', linewidth=1)
-ax.set_title('Step 1: Choose K=2\nRaw data before clustering', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-# Step 1: Initialize random centroids
-ax = axes[1]
-ax.scatter(X[:, 0], X[:, 1], s=50, alpha=0.6, c='gray', edgecolors='black', linewidth=1)
-initial_centroids = np.array([[1.5, 5], [5.5, 2]])
-ax.scatter(initial_centroids[:, 0], initial_centroids[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 2: Initialize Centroids\nRandomly place K=2 centers', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-# Manual K-Means iterations to show progression
-# Iteration 1: Assign - compute actual nearest centroid for each point
-ax = axes[2]
-# Calculate distances to each initial centroid manually
-distances_to_c0 = np.sqrt(np.sum((X - initial_centroids[0])**2, axis=1))
-distances_to_c1 = np.sqrt(np.sum((X - initial_centroids[1])**2, axis=1))
-labels_iter1 = (distances_to_c1 < distances_to_c0).astype(int)  # 0 if closer to first, 1 if closer to second
-
-# Draw lines connecting points to their assigned centroid
-for i in range(len(X)):
-    cluster_id = labels_iter1[i]
-    ax.plot([X[i, 0], initial_centroids[cluster_id, 0]],
-            [X[i, 1], initial_centroids[cluster_id, 1]],
-            color=colors[cluster_id], alpha=0.15, linewidth=1, zorder=1)
-for i in range(2):
-    mask = labels_iter1 == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(initial_centroids[:, 0], initial_centroids[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 3: Assign Points\nEach point joins nearest centroid', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-# Now compute centroids from these assignments
-kmeans_iter1 = KMeans(n_clusters=2, init=initial_centroids, n_init=1, max_iter=1, random_state=42)
-kmeans_iter1.fit(X)
-
-# Iteration 1: Update
-ax = axes[3]
-centroids_iter1 = kmeans_iter1.cluster_centers_
-for i in range(2):
-    mask = labels_iter1 == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(initial_centroids[:, 0], initial_centroids[:, 1],
-          s=300, c='lightgray', marker='*', edgecolors='gray',
-          linewidth=2, zorder=4, alpha=0.5)
-ax.scatter(centroids_iter1[:, 0], centroids_iter1[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-# Draw arrows showing centroid movement
-for i in range(2):
-    ax.annotate('', xy=centroids_iter1[i], xytext=initial_centroids[i],
-                arrowprops=dict(arrowstyle='->', lw=3, color='red', alpha=0.7))
-ax.set_title('Step 4: Update Centroids\nMove to average of assigned points', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-# Iteration 2: Re-assign with new centroids
-ax = axes[4]
-kmeans_iter2 = KMeans(n_clusters=2, init=centroids_iter1, n_init=1, max_iter=1, random_state=42)
-labels_iter2 = kmeans_iter2.fit_predict(X)
-# Draw lines connecting points to their assigned centroid
-for i in range(len(X)):
-    cluster_id = labels_iter2[i]
-    ax.plot([X[i, 0], centroids_iter1[cluster_id, 0]],
-            [X[i, 1], centroids_iter1[cluster_id, 1]],
-            color=colors[cluster_id], alpha=0.15, linewidth=1, zorder=1)
-for i in range(2):
-    mask = labels_iter2 == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(centroids_iter1[:, 0], centroids_iter1[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 5: Repeat (Iteration 2)\nRe-assign points to nearest centroid', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-# Final result: Converged
-ax = axes[5]
-kmeans_final = KMeans(n_clusters=2, init=initial_centroids, n_init=1, max_iter=100, random_state=42)
-labels_final = kmeans_final.fit_predict(X)
-centroids_final = kmeans_final.cluster_centers_
-# Draw lines connecting points to their final centroid
-for i in range(len(X)):
-    cluster_id = labels_final[i]
-    ax.plot([X[i, 0], centroids_final[cluster_id, 0]],
-            [X[i, 1], centroids_final[cluster_id, 1]],
-            color=colors[cluster_id], alpha=0.15, linewidth=1, zorder=1)
-for i in range(2):
-    mask = labels_final == i
-    ax.scatter(X[mask, 0], X[mask, 1], s=50, alpha=0.6, c=colors[i],
-              edgecolors='black', linewidth=1)
-ax.scatter(centroids_final[:, 0], centroids_final[:, 1],
-          s=500, c=centroid_color, marker='*', edgecolors='black',
-          linewidth=2, zorder=5)
-ax.set_title('Step 6: Converged!\nCentroids stop moving → Done', fontsize=10, fontweight='bold')
-ax.set_xlim(0, 7)
-ax.set_ylim(0, 7)
-ax.grid(True, alpha=0.3)
-ax.set_aspect('equal')
-
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-This visualization shows how K-Means iteratively improves cluster assignments. Notice how the centroids move from their random initial positions toward the natural cluster centers. Usually converges in 5-10 iterations.
-:::
-
-## Think-Pair-Share: Identify Clustering Problems {.smaller}
-
-Which of these business problems would benefit from clustering?
-
-:::: {.columns}
-::: {.column width="70%"}
-
-**Discuss with your neighbor:**
-
-1. **Problem A**: You have customer purchase history and want to create targeted marketing campaigns
-2. **Problem B**: You want to predict which customers will churn next month
-3. **Problem C**: You have 10,000 products and want to organize them into logical groups
-4. **Problem D**: You want to predict house prices based on square footage and location
-
-Which are clustering problems? Which are supervised learning? Why?
-
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="4minClustering"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minClustering", 240, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-**Main Takeaway**: Learn to distinguish clustering problems from supervised learning problems.
-
-**Correct Answers**:
-
-- **A (Customer purchase history → marketing campaigns)**: CLUSTERING
-  - Why: No predetermined segments exist
-  - Goal: Discover natural customer groups based on behavior
-  - Then create targeted campaigns for each discovered segment
-
-- **B (Predict customer churn)**: SUPERVISED LEARNING
-  - Why: You need historical data with churn labels (churned = yes/no)
-  - Goal: Predict a specific outcome (will this customer churn?)
-  - This requires a target variable
-
-- **C (Organize 10,000 products into groups)**: CLUSTERING
-  - Why: No predetermined product categories given
-  - Goal: Find natural groupings based on purchase patterns, attributes, etc.
-  - Similar products should end up in same cluster
-
-- **D (Predict house prices)**: SUPERVISED LEARNING
-  - Why: You have historical house prices (target variable)
-  - Goal: Predict a specific numeric outcome (price)
-  - Classic regression problem
-
-**Teaching Strategy**:
-
-- Have students vote (raise hands for clustering vs. supervised for each)
-- Ask "What's the key difference?" → Presence/absence of a target variable
-- Emphasize: If you're PREDICTING something specific → supervised; if you're DISCOVERING patterns → unsupervised
-
-**Common Student Confusion**:
-"Can't we use clustering for A and then predict churn later?" → YES! That's actually a great workflow: cluster first to find segments, THEN build supervised models for each segment. But the clustering step itself is unsupervised.
-:::
-
-## Hands-On Demo: K-Means in Action {.smaller}
-
-Let's see K-Means clustering with a simple customer dataset:
-
-```{python}
-#| echo: false
-
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-
-# Simulate customer data: annual spending vs. visit frequency
-np.random.seed(42)
-customers = pd.DataFrame({
-    'annual_spending': np.concatenate([
-        np.random.normal(2000, 500, 30),   # Low spenders
-        np.random.normal(5000, 800, 30),   # Medium spenders
-        np.random.normal(8500, 700, 30)    # High spenders
-    ]),
-    'visits_per_year': np.concatenate([
-        np.random.normal(5, 2, 30),        # Infrequent
-        np.random.normal(15, 3, 30),       # Regular
-        np.random.normal(35, 5, 30)        # Very frequent
-    ])
-})
-customers
-```
-
-## Demo: Fitting K-Means {.smaller}
-
-```{python}
-#| echo: true
-
-# Standardize features (important for K-Means!)
-scaler = StandardScaler()
-customers_scaled = scaler.fit_transform(customers)
-
-# Fit K-Means with K=3 clusters
-kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
-customers['cluster'] = kmeans.fit_predict(customers_scaled)
-```
-
-```{python}
-#| echo: false
-# Visualize the clusters
-plt.figure(figsize=(5, 5))
-colors = ['#FF6B6B', '#4ECDC4', '#45B7D1']
-for i in range(3):
-    mask = customers['cluster'] == i
-    plt.scatter(
-        customers[mask]['annual_spending'],
-        customers[mask]['visits_per_year'],
-        c=colors[i], label=f'Cluster {i}',
-        s=100, alpha=0.6, edgecolors='black'
-    )
-
-plt.xlabel('Annual Spending ($)', fontsize=12, fontweight='bold')
-plt.ylabel('Visits Per Year', fontsize=12, fontweight='bold')
-plt.title('Customer Segments from K-Means', fontsize=14, fontweight='bold')
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-Point out how the algorithm found three natural groups: budget shoppers, regular customers, and premium high-frequency buyers.
-:::
-
-## The Big Question: How Many Clusters (K)? {.smaller}
-
-**Problem**: K-Means requires you to specify the number of clusters upfront. But how do you know what K should be?
-
-:::: {.columns}
-::: {.column width="50%"}
-**Elbow Method**
-
-1. Try different values of K (e.g., 2, 3, 4, 5, 6...)
-2. Measure "inertia" (within-cluster sum of squares)
-3. Plot inertia vs. K
-4. Look for the "elbow" where adding more clusters doesn't help much
-
-**Lower inertia = tighter clusters = better fit**
-:::
-::: {.column width="50%"}
-**Silhouette Score**
-
-* Measures how similar each point is to its own cluster vs. other clusters
-* Ranges from -1 (wrong cluster) to +1 (perfect cluster)
-* **Higher is better**
-* Typical good score: 0.5-0.7
-
-**Silhouette score balances cluster tightness with separation**
-:::
-::::
-
-::: {.notes}
-**Main Takeaway**: K-Means requires you to choose K upfront, but we have two complementary methods to help make this decision.
-
-**Elbow Method - Deep Explanation**:
-
-- **What is inertia?** Sum of squared distances from each point to its cluster center
-- **Why does it decrease?** More clusters = points closer to their centers on average
-- **The "elbow"**: The point where adding more clusters gives diminishing returns
-- **How to spot it**: Look for the "bend" where the curve starts flattening out
-- **Limitation**: Sometimes there's no clear elbow (we'll see this with real data!)
-
-**Silhouette Score - Deep Explanation**:
-
-- **What it measures**: For each point, how similar is it to its own cluster vs. the nearest other cluster?
-- **Score = +1**: Perfect! Point is very close to its cluster center and far from others
-- **Score = 0**: Point is on the boundary between two clusters (could go either way)
-- **Score = -1**: Wrong cluster! Point is closer to a different cluster
-- **Overall score**: Average across all points
-- **Good scores**: 0.5-0.7 for well-separated clusters; 0.2-0.4 is acceptable for messy real-world data
-
-**Key Teaching Point**:
-
-"These are GUIDES, not rules. The best K depends on:
-
-1. Statistical fit (elbow & silhouette)
-2. Business needs (can marketing handle 5 segments or only 3?)
-3. Interpretability (can you clearly describe each cluster?)
-4. Actionability (can you do something different for each segment?)"
-
-**Common Question**: "Which metric should I trust more?" → Use BOTH together. If they agree, great! If they disagree, try a few values of K and see which produces the most interpretable segments.
-:::
-
-## Demo: Finding the Right K {.smaller}
-
-```{python}
-#| echo: true
-#| output-location: column
-#| fig-width: 6
-#| fig-height: 8
-
-from sklearn.metrics import silhouette_score
-
-# Try K from 2 to 8
-K_range = range(2, 9)
-inertias = []
-silhouettes = []
-
-for k in K_range:
-    km = KMeans(n_clusters=k, random_state=42, n_init=10)
-    km.fit(customers_scaled)
-    inertias.append(km.inertia_)
-    silhouettes.append(silhouette_score(customers_scaled, km.labels_))
-
-# Plot both metrics
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 6))
-
-# Elbow plot
-ax1.plot(K_range, inertias, 'bo-', linewidth=2, markersize=8)
-ax1.set_xlabel('Number of Clusters (K)', fontweight='bold')
-ax1.set_ylabel('Inertia (Within-cluster SS)', fontweight='bold')
-ax1.set_title('Elbow Method', fontweight='bold')
-ax1.grid(True, alpha=0.3)
-ax1.axvline(x=3, color='red', linestyle='--', alpha=0.5, label='Elbow at K=3')
-ax1.legend()
-
-# Silhouette plot
-ax2.plot(K_range, silhouettes, 'ro-', linewidth=2, markersize=8)
-ax2.set_xlabel('Number of Clusters (K)', fontweight='bold')
-ax2.set_ylabel('Silhouette Score', fontweight='bold')
-ax2.set_title('Silhouette Score by K', fontweight='bold')
-ax2.grid(True, alpha=0.3)
-ax2.axvline(x=3, color='red', linestyle='--', alpha=0.5, label='Peak at K=3')
-ax2.legend()
-
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-The elbow occurs at K=3 (inertia stops dropping dramatically), and silhouette score peaks at K=3. This confirms 3 is a good choice for this data.
-:::
-
-## Interactive Activity: Interpret Elbow Plots {.smaller}
-
-:::: {.columns}
-::: {.column width="70%"}
-::: {.callout}
-## Your Turn
-
-Imagine you're analyzing shopping behavior and get this elbow plot:
-
-* K=2: Inertia = 10,000
-* K=3: Inertia = 7,000
-* K=4: Inertia = 5,200
-* K=5: Inertia = 4,800
-* K=6: Inertia = 4,600
-
-**Discuss with your neighbor:**
-
-1. Where is the "elbow" in this data?
-2. What K would you recommend? Why?
-3. What if your marketing team says they can only handle 3 customer segments? Does that change your answer?
-:::
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minElbow"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minElbow", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-**Main Takeaway**: Practice interpreting elbow plots and balancing statistical vs. business considerations.
-
-**Question-by-Question Analysis**:
-
-**1. Where is the "elbow" in this data?**
-
-- Look for the biggest drop in inertia:
-  - K=2 to K=3: Drop of 3,000 (10,000 → 7,000) — **HUGE drop (30%)**
-  - K=3 to K=4: Drop of 1,800 (7,000 → 5,200) — Still significant (26%)
-  - K=4 to K=5: Drop of 400 (5,200 → 4,800) — **Flattening out (8%)**
-  - K=5 to K=6: Drop of 200 (4,800 → 4,600) — Very small (4%)
-- **The elbow is around K=3 or K=4** (where the curve starts to flatten)
-
-**2. What K would you recommend? Why?**
-
-- **Statistical answer**: K=3 or K=4
-  - K=3 gives you the biggest "bang for your buck" (biggest drop before flattening)
-  - K=4 still shows meaningful improvement
-  - K=5+ shows diminishing returns
-- **Practical answer**: "It depends on what the segments mean"
-  - Need to actually look at the cluster profiles
-  - Are they interpretable? Actionable?
-
-**3. What if marketing says they can only handle 3 segments?**
-
-- **Critical teaching moment**: Business constraints trump statistical optimization!
-- Even if K=4 is statistically "better," K=3 is the right answer if:
-  - Marketing team doesn't have resources for 4 campaigns
-  - Leadership can't remember/act on 4 different strategies
-  - The cost of managing 4 segments exceeds the benefit
-- **Real-world insight**: "In industry, you'll often have to choose a 'good enough' solution that's actually implementable over a 'perfect' solution that won't be used."
-
-**Broader Lesson**:
-"Data science isn't just about finding the optimal statistical answer. It's about finding the BEST answer given real-world constraints: resources, time, budget, organizational complexity, and stakeholder understanding."
-:::
-
-## Reality Check: Real Data is Messy {.smaller}
-
-**The examples so far have been clean and simple...**
-
-But real business data rarely has such clear clusters!
-
-Let's look at a real-world example: **grocery store customer segmentation** with:
-
-- 801 actual households
-- Transaction history over 1 year
-- 14 features combining:
-  - **Behavioral**: spending, visit frequency, discount usage, recency
-  - **Demographic**: age, income, household size, marital status, homeownership
-
-::: {.callout-warning}
-## Coming Up
-
-We'll see that real data doesn't give us clean, obvious answers. This is completely normal and expected in industry!
-:::
-
-::: {.notes}
-**Main Takeaway**: Prepare students for the reality that real-world clustering often doesn't have clear, obvious solutions.
-
-**Critical Mindset Shift**:
-
-- **So far**: Toy examples with clean, well-separated clusters
-  - Synthetic customer data with 3 obvious segments
-  - Perfect elbow at K=3
-  - High silhouette scores (0.5-0.7)
-  - Clear interpretation
-
-- **Reality**: Real business data is messy
-  - Customers exist on a SPECTRUM, not in neat boxes
-  - No clear elbow (gradual decline)
-  - Low silhouette scores (0.15-0.20)
-  - Overlapping patterns
-
-**Why This Matters**:
-
-- **Student expectation**: "I'll run K-Means and get obvious segments with high scores"
-- **Reality**: "I'll get ambiguous results that require judgment and domain expertise"
-- **Goal of this section**: Set realistic expectations so students don't get discouraged
-
-**Upcoming Real-World Dataset**:
-
-- **Complete Journey**: Actual grocery store transaction data
-- **801 households**: Real people with messy, inconsistent behavior
-- **14 features**: Mix of behavioral (spending, frequency) and demographic (age, income)
-- **Result**: No clear "winner" for K, low silhouette scores across the board
-
-**Teaching Strategy**:
-
-1. Show the messy results AFTER showing clean examples
-2. Emphasize: "This doesn't mean you did something wrong!"
-3. Explain: "Real customer behavior is complex and doesn't fit into neat boxes"
-4. Reassure: "Low silhouette scores (0.15-0.20) are NORMAL and ACCEPTABLE for behavioral data"
-
-**Key Message to Students**:
-"When you get 'messy' results in your own projects, don't panic! This is what real data science looks like. The skill is in interpreting ambiguous results, combining statistical metrics with business context, and making defensible decisions even when there's no clear 'right answer.'"
-:::
-
-## Real Data: Customer Features {.smaller .scrollable}
-
-```{python}
-#| echo: false
-
-import pandas as pd
-import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import silhouette_score
-import matplotlib.pyplot as plt
-from completejourney_py import get_data
-
-# Load the Complete Journey datasets
-data = get_data()
-transactions = data['transactions']
-demographics = data["demographics"]
-
-# Feature engineering (hide the lengthy code)
-# Convert transaction_timestamp to datetime
-transactions['transaction_timestamp'] = pd.to_datetime(transactions['transaction_timestamp'], format='mixed')
-max_date = transactions['transaction_timestamp'].max()
-
-# Aggregate transaction data by household
-behavioral_features = transactions.groupby('household_id').agg({
-    'sales_value': ['sum', 'mean'],
-    'basket_id': 'nunique',
-    'product_id': 'nunique',
-    'retail_disc': 'sum',
-    'coupon_disc': 'sum',
-    'transaction_timestamp': ['min', 'max']
-}).reset_index()
-
-behavioral_features.columns = ['household_id', 'total_spending', 'avg_basket_value',
-                                'num_trips', 'num_unique_products',
-                                'total_retail_disc', 'total_coupon_disc',
-                                'first_purchase', 'last_purchase']
-
-behavioral_features['days_active'] = (behavioral_features['last_purchase'] -
-                                      behavioral_features['first_purchase']).dt.days + 1
-behavioral_features['recency_days'] = (max_date - behavioral_features['last_purchase']).dt.days
-behavioral_features['avg_days_between_trips'] = (behavioral_features['days_active'] /
-                                                  behavioral_features['num_trips'])
-behavioral_features['total_discount'] = (behavioral_features['total_retail_disc'] +
-                                         behavioral_features['total_coupon_disc'])
-behavioral_features['discount_rate'] = (behavioral_features['total_discount'] /
-                                        behavioral_features['total_spending'])
-behavioral_features['coupon_usage_rate'] = (behavioral_features['total_coupon_disc'] /
-                                            behavioral_features['total_spending'])
-behavioral_features = behavioral_features.drop(['first_purchase', 'last_purchase'], axis=1)
-
-# Merge with demographics
-customer_data = behavioral_features.merge(demographics, on='household_id', how='inner')
-
-# Encode demographics
-col_mapping = {}
-for col in customer_data.columns:
-    lower_col = col.lower()
-    if 'age' in lower_col and 'age_encoded' not in lower_col:
-        col_mapping['age'] = col
-    elif 'income' in lower_col and 'income_encoded' not in lower_col:
-        col_mapping['income'] = col
-    elif 'household_size' in lower_col or 'hh_size' in lower_col:
-        col_mapping['household_size'] = col
-    elif 'marital' in lower_col:
-        col_mapping['marital_status'] = col
-    elif 'homeowner' in lower_col or 'home_owner' in lower_col:
-        col_mapping['homeowner'] = col
-    elif 'kid' in lower_col or 'child' in lower_col:
-        col_mapping['kids'] = col
-
-age_map = {'19-24': 1, '25-34': 2, '35-44': 3, '45-54': 4, '55-64': 5, '65+': 6}
-customer_data['age_encoded'] = customer_data[col_mapping.get('age', 'age')].map(age_map)
-
-income_map = {
-    'Under 15K': 1, '15-24K': 2, '25-34K': 3, '35-49K': 4,
-    '50-74K': 5, '75-99K': 6, '100-124K': 7, '125-149K': 8,
-    '150-174K': 9, '175-199K': 10, '200-249K': 11, '250K+': 12
+#| fig-align: center
+# Visual-only scaling (the live demo later repeats this step on screen)
+scaler_vis = StandardScaler()
+Z = scaler_vis.fit_transform(customers)
+
+K = 3
+COLORS = [ORANGE, BLUE, GREEN]
+X_obs = customers.to_numpy()
+
+def to_original(C):
+    return scaler_vis.inverse_transform(C)
+
+def run_kmeans(start_rows):
+    """Plain K-Means (Lloyd's algorithm) from given starting rows; returns the stages to draw."""
+    C = Z[start_rows].copy()
+    stages = [dict(kind='start', C=C.copy(), labels=None, prev=None)]
+    labels = None
+    while True:
+        new = ((Z[:, None, :] - C[None]) ** 2).sum(-1).argmin(1)
+        if labels is not None and (new == labels).all():
+            break
+        labels = new
+        inertia = ((Z - C[labels]) ** 2).sum()
+        stages.append(dict(kind='assign', C=C.copy(), labels=labels.copy(), prev=None, inertia=inertia))
+        C_new = np.array([Z[labels == k].mean(0) for k in range(K)])
+        inertia = ((Z - C_new[labels]) ** 2).sum()
+        stages.append(dict(kind='move', C=C_new.copy(), labels=labels.copy(), prev=C.copy(), inertia=inertia))
+        C = C_new
+    stages.append(dict(kind='done', C=C.copy(), labels=labels.copy(), prev=None, inertia=inertia))
+    return stages
+
+# Two random starts: three customers picked at random as the starting centroids
+starts = {
+    'Start A': run_kmeans(np.random.default_rng(6).choice(len(Z), K, replace=False)),
+    'Start B': run_kmeans(np.random.default_rng(55).choice(len(Z), K, replace=False)),
 }
-customer_data['income_encoded'] = customer_data[col_mapping.get('income', 'income')].map(income_map)
 
-hh_size_col = col_mapping.get('household_size', 'household_size')
-if customer_data[hh_size_col].dtype == 'object':
-    customer_data['household_size_num'] = customer_data[hh_size_col].str.extract(r'(\d+)').astype(float)
-else:
-    customer_data['household_size_num'] = customer_data[hh_size_col]
+fig = go.Figure()
+start_info = {}
+for name, stages in starts.items():
+    first = len(fig.data)
+    labels_txt, titles, annotations = [], [], []
+    round_no = 0
+    for st in stages:
+        C = to_original(st['C'])
+        if st['labels'] is None:
+            point_colors = [GRAY] * len(X_obs)
+        else:
+            point_colors = [COLORS[k] for k in st['labels']]
+        # Faint spokes from each customer to its centroid (assign stage only)
+        sx, sy = [], []
+        if st['kind'] == 'assign':
+            for (x, y), k in zip(X_obs, st['labels']):
+                sx += [x, C[k, 0], None]
+                sy += [y, C[k, 1], None]
+        fig.add_trace(go.Scatter(x=sx, y=sy, mode='lines', line=dict(color='rgba(0,0,0,0.12)', width=1),
+                                 hoverinfo='skip', showlegend=False, visible=False))
+        fig.add_trace(go.Scatter(x=X_obs[:, 0], y=X_obs[:, 1], mode='markers',
+                                 marker=dict(color=point_colors, size=9, line=dict(color='white', width=0.5)),
+                                 hoverinfo='skip', showlegend=False, visible=False))
+        fig.add_trace(go.Scatter(x=C[:, 0], y=C[:, 1], mode='markers',
+                                 marker=dict(symbol='x', size=20, color=COLORS, line=dict(color='#333', width=2)),
+                                 hoverinfo='skip', showlegend=False, visible=False))
+        # Arrows show where each centroid moved (move stage only)
+        arrows = []
+        if st['kind'] == 'move':
+            P = to_original(st['prev'])
+            for k in range(K):
+                arrows.append(dict(x=C[k, 0], y=C[k, 1], ax=P[k, 0], ay=P[k, 1], xref='x', yref='y',
+                                   axref='x', ayref='y', showarrow=True, arrowhead=2, arrowsize=1.4,
+                                   arrowwidth=2.5, arrowcolor=COLORS[k], standoff=8))
+        annotations.append(arrows)
+        if st['kind'] == 'start':
+            labels_txt.append('Start')
+            titles.append(f'{name}: three customers picked at random become the starting centroids (✕)')
+        elif st['kind'] == 'assign':
+            round_no += 1
+            labels_txt.append(f'{round_no}: assign')
+            titles.append(f'Round {round_no}, assign: every customer joins its nearest centroid  |  inertia {st["inertia"]:.1f}')
+        elif st['kind'] == 'move':
+            labels_txt.append(f'{round_no}: move')
+            titles.append(f'Round {round_no}, move: each centroid moves to the middle of its customers  |  inertia {st["inertia"]:.1f}')
+        else:
+            labels_txt.append('Done')
+            titles.append(f'{name}: reassigning changes nothing, so K-Means stops  |  final inertia <b>{st["inertia"]:.1f}</b>')
+    start_info[name] = dict(first=first, n=len(stages), labels=labels_txt, titles=titles, annotations=annotations)
 
-if 'kids' in col_mapping:
-    kids_col = col_mapping['kids']
-    if customer_data[kids_col].dtype == 'object':
-        customer_data['num_kids'] = customer_data[kids_col].replace('None/Unknown', '0')
-        customer_data['num_kids'] = customer_data['num_kids'].str.extract(r'(\d+)').fillna(0).astype(int)
-    else:
-        customer_data['num_kids'] = customer_data[kids_col].fillna(0).astype(int)
-else:
-    customer_data['num_kids'] = 0
+n_traces = len(fig.data)
 
-marital_col = col_mapping.get('marital_status', 'marital_status')
-customer_data['is_married'] = (customer_data[marital_col] == 'Married').astype(int)
+def visible_for(name, i):
+    v = [False] * n_traces
+    s = start_info[name]['first'] + 3 * i
+    v[s:s + 3] = [True] * 3
+    return v
 
-homeowner_col = col_mapping.get('homeowner', 'homeowner')
-customer_data['is_homeowner'] = (customer_data[homeowner_col] == 'Homeowner').astype(int)
+def slider_for(name):
+    info = start_info[name]
+    steps = [dict(method='update', label=info['labels'][i],
+                  args=[{'visible': visible_for(name, i)},
+                        {'title.text': info['titles'][i], 'annotations': info['annotations'][i]}])
+             for i in range(info['n'])]
+    return dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40))
 
-customer_data_clean = customer_data.dropna(subset=['age_encoded', 'income_encoded'])
+buttons = [dict(method='update', label=name,
+                args=[{'visible': visible_for(name, 0)},
+                      {'sliders': [slider_for(name)], 'title.text': start_info[name]['titles'][0],
+                       'annotations': []}])
+           for name in starts]
 
-# Select features for clustering
-cluster_features = [
-    'total_spending', 'avg_basket_value', 'num_trips', 'num_unique_products',
-    'avg_days_between_trips', 'recency_days', 'discount_rate', 'coupon_usage_rate',
-    'age_encoded', 'income_encoded', 'household_size_num', 'num_kids',
-    'is_married', 'is_homeowner'
-]
+for i, v in enumerate(visible_for('Start A', 0)):
+    fig.data[i].visible = v
 
-X_cluster = customer_data_clean[cluster_features]
-
-print(f"Real customer data shape: {X_cluster.shape}")
-print(f"\nFirst few customers:")
-X_cluster.head(10)
+pad_x = (X_obs[:, 0].max() - X_obs[:, 0].min()) * 0.05
+pad_y = (X_obs[:, 1].max() - X_obs[:, 1].min()) * 0.05
+fig.update_layout(
+    title=dict(text=start_info['Start A']['titles'][0], x=0.5, font=dict(size=16)),
+    sliders=[slider_for('Start A')],
+    updatemenus=[dict(type='buttons', direction='right', buttons=buttons, showactive=True, active=0,
+                      x=0.5, xanchor='center', y=1.24, yanchor='bottom')],
+    xaxis=dict(title='Annual spending (USD)', range=[X_obs[:, 0].min() - pad_x, X_obs[:, 0].max() + pad_x],
+               tickformat=',.0f'),
+    yaxis=dict(title='Visits per year', range=[X_obs[:, 1].min() - pad_y, X_obs[:, 1].max() + pad_y]),
+    height=580, margin=dict(l=70, r=20, t=135, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-Point out the diversity of features - both behavioral and demographic. Real customers are complex!
+**Timing: ~5 minutes.**
+
+**Start A first.** Drag the slider one step at a time:
+
+- **Start:** K-Means doesn't know where the groups are, so it picks three customers at random as starting centroids. Here all three happen to land among the medium spenders.
+- **Assign:** every customer joins the nearest centroid (the faint lines). Point out how lopsided the first assignment is.
+- **Move:** each centroid moves to the middle of its customers (arrows). Ask: "Where will they go next?"
+- **Repeat** until reassigning changes nothing. Inertia, the total squared distance from customers to their centroids, drops every round.
+
+**Then click Start B.** All three starting centroids land among the big spenders. Two of them split the big spenders, and one has to cover the low *and* medium spenders. K-Means still stops, because nothing changes, but the answer is clearly worse: compare the final inertia with Start A's.
+
+**The point:** K-Means only finds the best answer *near where it started*. That's why scikit-learn's `n_init=10` runs it from 10 random starts and keeps the one with the lowest inertia.
 :::
 
-## Real Data: Elbow & Silhouette Analysis {.smaller .scrollable}
+## Scale Before You Cluster {.smaller}
 
-Let's apply the same methods we used before:
+Same lesson as week 12's **"Who Are My Neighbors?"** K-Means measures distance, and in raw units \$1 counts as much as 1 visit, so the big-number column decides who's "close." `StandardScaler` gives every column a fair say.
 
 ```{python}
 #| echo: false
+#| fig-align: center
+import matplotlib.pyplot as plt
 
-# Scale the features
-scaler = StandardScaler()
-X_cluster_scaled = scaler.fit_transform(X_cluster)
-
-# Compute metrics for different K values
-k_range = range(2, 11)
-wcss_values = []
-sil_scores = []
-
-for k in k_range:
-    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=20)
-    kmeans_temp.fit(X_cluster_scaled)
-    wcss_values.append(kmeans_temp.inertia_)
-
-    labels_temp = kmeans_temp.predict(X_cluster_scaled)
-    sil_score = silhouette_score(X_cluster_scaled, labels_temp)
-    sil_scores.append(sil_score)
-
-# Plot both methods
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
-
-# Elbow plot
-ax1.plot(k_range, wcss_values, 'bo-', linewidth=2, markersize=8)
-ax1.set_xlabel('Number of Clusters (K)', fontweight='bold', fontsize=11)
-ax1.set_ylabel('Inertia (WCSS)', fontweight='bold', fontsize=11)
-ax1.set_title('Elbow Method\n(Where is the elbow?)', fontweight='bold', fontsize=12)
-ax1.grid(True, alpha=0.3)
-ax1.set_xticks(k_range)
-
-# Silhouette plot
-ax2.plot(k_range, sil_scores, 'go-', linewidth=2, markersize=8)
-ax2.set_xlabel('Number of Clusters (K)', fontweight='bold', fontsize=11)
-ax2.set_ylabel('Silhouette Score', fontweight='bold', fontsize=11)
-ax2.set_title('Silhouette Analysis\n(Which K is best?)', fontweight='bold', fontsize=12)
-ax2.grid(True, alpha=0.3)
-ax2.set_xticks(k_range)
-
+raw = customers.to_numpy()
+fig, axes = plt.subplots(1, 3, figsize=(13, 3.6))
+panels = [
+    (raw, 'What we see\n(each axis stretched to fit)', 'Annual spending ($)', 'Visits per year', False),
+    (raw, 'What K-Means measures in raw units\n($1 counts as much as 1 visit)', 'Annual spending ($)', 'Visits per year', True),
+    (Z, 'After StandardScaler\n(both axes in std devs)', 'Spending (std devs)', 'Visits (std devs)', True),
+]
+for ax, (data, title, xlabel, ylabel, equal) in zip(axes, panels):
+    ax.scatter(data[:, 0], data[:, 1], s=18, color=BLUE, edgecolor='white', linewidth=0.4)
+    ax.set_title(title, fontsize=11)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    if equal:
+        ax.set_aspect('equal', adjustable='datalim')   # one unit is the same length on both axes
+    ax.grid(alpha=0.3)
+axes[0].xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:,.0f}'))
+axes[1].xaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v:,.0f}'))
 plt.tight_layout()
 plt.show()
-
-print("\nResults for different K values:")
-for k, wcss_val, sil_val in zip(k_range, wcss_values, sil_scores):
-    print(f"  K={k}: Inertia={wcss_val:>8,.0f}, Silhouette={sil_val:.3f}")
 ```
 
-## What Do You Notice? {.smaller}
-
-:::: {.columns}
-::: {.column width="50%"}
-**Observations:**
-
-1. **No clear elbow!** 📉
-   - WCSS decreases gradually
-   - No obvious "bend" like our simple examples
-
-2. **Low silhouette scores** 📊
-   - All scores around 0.14-0.17
-   - K=2 is highest, but barely
-   - Small differences between K values
-:::
-::: {.column width="50%"}
-::: {.callout-important}
-## This is COMPLETELY NORMAL!
-
-Real customer data:
-
-- Lives on a **spectrum**, not in neat boxes
-- Has **overlapping patterns** (customers share behaviors)
-- Shows **fuzzy boundaries** between segments
-- Rarely has one "correct" K
-
-**Low silhouette scores (0.15-0.20) are expected and acceptable for behavioral data!**
-:::
-:::
-::::
-
 ::: {.notes}
-Emphasize that students shouldn't be discouraged when they see this in their own work. It's the reality of messy, real-world data.
+**Timing: ~2 minutes.** A callback, not a new idea.
+
+**Left:** the plot we've been looking at. Matplotlib quietly stretches each axis to fit, so both features look equally important.
+
+**Middle:** the same data drawn with one unit the same length on both axes, which is how K-Means actually measures distance. Spending runs over thousands of dollars and visits over a few dozen, so the visits axis collapses to a flat line. In raw units K-Means is essentially clustering on spending alone.
+
+**Right:** after `StandardScaler`, both columns are in standard deviations and both shape the clusters. (The step-by-step visual already ran on scaled data; it just drew the result in dollars and visits.)
+
+Ask: "Remember last week's KNN neighbors? Same problem, same fix." Both are distance-based.
+
+The notebook's **Skip the Scaler** Your Turn shows what goes wrong when a big-unit column like household income joins the data.
 :::
 
-## When Metrics Don't Give Clear Answers {.smaller .scrollable}
+## K-Means in scikit-learn {.smaller .scrollable}
 
-**What should you do when there's no obvious "winner"?**
+```{python}
+#| echo: true
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
-:::: {.columns}
-::: {.column width="50%"}
-**Statistical considerations:**
+customers_scaled = StandardScaler().fit_transform(customers)
 
-- K=2 has highest silhouette (0.166)
-- K=3-4 show similar performance
-- K=5+ continue declining gradually
+kmeans = KMeans(n_clusters=3, n_init=10, random_state=42)
+cluster_labels = kmeans.fit_predict(customers_scaled)
 
-**But statistics alone aren't enough!**
-:::
-::: {.column width="50%"}
-**Business considerations:**
+customers.assign(cluster=cluster_labels).round(1).sample(4, random_state=42)
+```
 
-- Can marketing handle 2 segments? 4? 6?
-- What's the ROI of personalization?
-- Are segments actionable?
-- Can you describe each segment clearly?
-- Do stakeholders understand the segmentation?
-:::
-::::
-
-::: {.callout-tip}
-## Work with Stakeholders!
-
-When metrics are ambiguous:
-
-1. **Try multiple K values** (e.g., K=3, 4, 5)
-2. **Profile each segmentation** - what do the clusters mean?
-3. **Present options to business stakeholders**
-4. **Choose based on**: interpretability + actionability + resource constraints
-5. **Validate** with domain experts ("Do these segments make sense?")
-:::
-
-## Example: Choosing K for This Dataset {.smaller}
-
-Let's walk through the decision process:
-
-| **K** | **Pros** | **Cons** | **Decision** |
-|-------|----------|----------|--------------|
-| **K=2** | Highest silhouette (0.166)<br/>Simple to explain | Too coarse? Miss nuances<br/>Only "high" vs "low" spenders | Maybe too simple |
-| **K=3** | Good silhouette (0.158)<br/>Aligns with classic RFM | Still quite broad segments | **Good choice** |
-| **K=4** | Moderate silhouette (0.148)<br/>More granular insights | Marketing can handle 4 segments | **Good choice** |
-| **K=5** | Lower silhouette (0.144)<br/>Very specific segments | Complex for marketing<br/>Harder to operationalize | Probably too many |
+. . .
 
 ::: {.callout-note}
-## Real-World Choice
-
-For this grocery retailer, **K=4 might be ideal**:
-
-- Statistical performance is reasonable (silhouette = 0.148)
-- Creates actionable segments (e.g., "budget shoppers," "loyal regulars," "premium buyers," "infrequent visitors")
-- Marketing team can manage 4 distinct campaigns
-- Provides meaningful differentiation without overwhelming complexity
+## Two settings worth knowing
+- **`n_init=10`**: run K-Means from 10 different starts and keep the one with the lowest inertia (remember Start B?)
+- **`random_state=42`**: makes those starts repeatable, so you get the same clusters every time you run it
 :::
 
-# Dimension Reduction with PCA {background="#43464B"}
+::: {.notes}
+**Timing: ~3 minutes.** Live in the notebook if the room is following along.
 
-## The Problem: Too Many Features {.smaller}
+- `fit_predict` both fits the centroids and returns each row's cluster number.
+- There's no `y` anywhere in this code. Contrast with every `fit(X, y)` from weeks 9–12.
+- **The cluster numbers are just names.** Cluster 0 isn't "first" or "best", and a different `random_state` can shuffle which number each group gets. Never compare cluster 0 from one run to cluster 0 from another.
 
-Modern datasets are getting **wider and wider**—hundreds or thousands of features:
+**Transition:** "We asked for 3 clusters because we drew the data and could see three groups. With 14 features, you can't draw it. So how do you choose K?"
+:::
+
+## How Many Clusters (K)? {.smaller}
+
+K-Means needs K up front. Fit several values of K and score each fit two ways:
 
 :::: {.columns}
 ::: {.column width="50%"}
-**Challenges of high dimensionality:**
-
-* **Curse of dimensionality**: Data becomes sparse in high-D space
-* **Computational cost**: Training takes forever
-* **Overfitting risk**: More features = more noise
-* **Multicollinearity**: Correlated features confuse models
-* **Visualization**: Can't plot 100 dimensions!
+::: {.callout-note}
+## 📉 Inertia (elbow method)
+- Total squared distance from each customer to its centroid
+- **Lower = tighter clusters**, but it *always* drops as K grows
+- Look for the **elbow**: where adding a cluster stops buying much
+:::
 :::
 ::: {.column width="50%"}
-**Examples:**
-
-* **Healthcare**: 20,000+ genes measured per patient
-* **Computer vision**: Images with millions of pixels
-* **E-commerce**: 500+ features per customer
-* **Text analysis**: Thousands of word counts per document
-
-**Question**: Do we really need ALL these features?
+::: {.callout-note}
+## 📈 Silhouette score
+- For each customer: how close to its own cluster vs. the next-nearest one
+- Ranges from −1 to +1; **higher = better separated**
+- Look for the **peak**
+:::
 :::
 ::::
 
+```python
+inertia = KMeans(n_clusters=k, n_init=10, random_state=42).fit(customers_scaled).inertia_
+score = silhouette_score(customers_scaled, cluster_labels)
+```
+
 ::: {.notes}
-The good news: often 10-20 carefully constructed features capture 90%+ of the information in 100 original features.
+**Timing: ~2 minutes.** Just enough to read the next visual.
+
+- **Inertia** is what K-Means minimizes. You saw it drop round by round in the step-by-step visual. Because more centroids always means shorter distances, "pick the lowest inertia" would always pick the biggest K. That's why we look for the bend instead.
+- **Silhouette** rewards clusters that are both tight *and* far apart, so it can go back down when K-Means starts splitting real groups.
+- Neither one is a rule. They're evidence, alongside "can we describe and act on these groups?"
 :::
 
-## Think-Pair-Share: When Are Features a Problem? {.smaller .scrollable}
+## Choosing K {.smaller}
 
-Let's think about when having many features becomes problematic.
+```{python}
+#| echo: false
+#| fig-align: center
+from sklearn.metrics import silhouette_score
+
+# Cluster colors ordered by cluster spending, so low spenders keep the same color as K grows
+PALETTE = [ORANGE, BLUE, GREEN, '#e15759', '#b07aa1', '#edc948', '#76b7b2', '#9c755f']
+k_values = list(range(2, 9))
+X_obs = customers.to_numpy()
+
+fits = []
+for k in k_values:
+    km = KMeans(n_clusters=k, n_init=10, random_state=42).fit(Z)
+    order = np.argsort(km.cluster_centers_[:, 0])          # rank clusters by spending
+    rank = np.empty(k, dtype=int)
+    rank[order] = np.arange(k)
+    fits.append(dict(k=k, labels=rank[km.labels_],
+                     centers=scaler_vis.inverse_transform(km.cluster_centers_[order]),
+                     inertia=km.inertia_, silhouette=silhouette_score(Z, km.labels_)))
+inertias = [f['inertia'] for f in fits]
+silhouettes = [f['silhouette'] for f in fits]
+
+fig = make_subplots(rows=2, cols=2, column_widths=[0.55, 0.45], horizontal_spacing=0.1,
+                    vertical_spacing=0.2, specs=[[{'rowspan': 2}, {}], [None, {}]],
+                    subplot_titles=['Customers colored by cluster (✕ = centroid)',
+                                    'Inertia (lower = tighter; look for the elbow)',
+                                    'Silhouette (higher = better separated)'])
+# Fixed traces: the full inertia and silhouette curves
+fig.add_trace(go.Scatter(x=k_values, y=inertias, mode='lines+markers', line=dict(color=GRAY, width=2),
+                         marker=dict(size=7, color=GRAY), hoverinfo='skip', showlegend=False), row=1, col=2)
+fig.add_trace(go.Scatter(x=k_values, y=silhouettes, mode='lines+markers', line=dict(color=GRAY, width=2),
+                         marker=dict(size=7, color=GRAY), hoverinfo='skip', showlegend=False), row=2, col=2)
+n_fixed = 2
+
+for f in fits:
+    fig.add_trace(go.Scatter(x=X_obs[:, 0], y=X_obs[:, 1], mode='markers',
+                             marker=dict(color=[PALETTE[c] for c in f['labels']], size=9,
+                                         line=dict(color='white', width=0.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=f['centers'][:, 0], y=f['centers'][:, 1], mode='markers',
+                             marker=dict(symbol='x', size=18, color=PALETTE[:f['k']], line=dict(color='#333', width=2)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=[f['k']], y=[f['inertia']], mode='markers',
+                             marker=dict(size=15, color=ORANGE, line=dict(color='#333', width=1.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=2)
+    fig.add_trace(go.Scatter(x=[f['k']], y=[f['silhouette']], mode='markers',
+                             marker=dict(size=15, color=ORANGE, line=dict(color='#333', width=1.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=2, col=2)
+
+titles = [f"K = {f['k']}  |  inertia {f['inertia']:.1f}  |  silhouette <b>{f['silhouette']:.2f}</b>" for f in fits]
+steps = slider_steps(n_fixed, len(fits), 4, [str(k) for k in k_values], titles)
+for trace in fig.data[n_fixed:n_fixed + 4]:
+    trace.visible = True
+
+pad_x = (X_obs[:, 0].max() - X_obs[:, 0].min()) * 0.05
+pad_y = (X_obs[:, 1].max() - X_obs[:, 1].min()) * 0.05
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=16)),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40))],
+    xaxis=dict(title='Annual spending (USD)', tickformat=',.0f',
+               range=[X_obs[:, 0].min() - pad_x, X_obs[:, 0].max() + pad_x]),
+    yaxis=dict(title='Visits per year', range=[X_obs[:, 1].min() - pad_y, X_obs[:, 1].max() + pad_y]),
+    xaxis2=dict(dtick=1), xaxis3=dict(title='K (number of clusters)', dtick=1),
+    height=560, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~5 minutes.**
+
+**Start at K = 2.** "We have to tell K-Means how many clusters to find. Here we asked for two, so it merged the low and medium spenders. Look where that centroid sits: in empty space between two groups, describing nobody." Point at the orange dot on each curve on the right.
+
+**Drag to K = 3.** Three clean groups. On the right: inertia has dropped sharply (the elbow), and silhouette is at its peak.
+
+**Keep dragging to 4, 5, 6.** K-Means happily splits real groups in half. Inertia *always* goes down as K grows, because more centroids means every customer is closer to one, so "lowest inertia" can't be the rule. That's why we look for the elbow, where adding a cluster stops buying much. Silhouette drops, because the split groups sit right next to each other.
+
+**The point:** read the two curves together, then look at the clusters themselves. Real data rarely gives an answer this clean; we'll see that shortly.
+
+The loop that produces these curves is in the notebook.
+:::
+
+## From Clusters to Segments {.smaller}
+
+K-Means hands back **cluster numbers**. **Profile** each cluster (average its features), **name** it in business terms, and it becomes a **segment** you can **act** on.
+
+```{python}
+#| echo: true
+segment_names = ['Occasional shoppers', 'Regulars', 'Loyal big spenders']
+
+(customers
+ .assign(cluster=cluster_labels)
+ .groupby('cluster')
+ .agg(customers=('annual_spending', 'size'),
+      avg_spending=('annual_spending', 'mean'),
+      avg_visits=('visits_per_year', 'mean'))
+ .sort_values('avg_spending')
+ .assign(segment=segment_names)   # names chosen AFTER reading the profile
+ .round(1))
+```
+
+::: {.notes}
+**Timing: ~3 minutes.**
+
+- **Profile:** `groupby('cluster')` plus means is all it takes. This is week 4's aggregation, now pointed at model output.
+- **Name:** the names come from a person reading the profile, not from the algorithm. K-Means doesn't know what a "regular" is. We sorted by spending first because the cluster numbers themselves are arbitrary.
+- **Vocabulary we'll use from here on:** a *cluster* is the raw output (a number); a *segment* is a cluster you've profiled and named.
+
+Ask: "If you were the marketing team, what would you do differently for each segment?" (Win-back offers for occasional shoppers, loyalty perks for big spenders.)
+
+**Transition:** "Three clean groups with an obvious K. Real data is rarely this tidy..."
+:::
+
+## Real Data Is Messy {.smaller}
+
+Same workflow, real customers: **801 households** from a grocery retailer's Complete Journey data, with **14 features** per household.
 
 :::: {.columns}
-::: {.column width="70%"}
-
-**Discuss with your neighbor:**
-
-- You're predicting house prices with 100 features (sq ft, bedrooms, bathrooms, neighborhood, school ratings, crime rates, etc.)
-- Many features are correlated (e.g., sq ft correlates with bedrooms)
-- Your model takes 30 minutes to train
-- Test accuracy is worse than training accuracy
-
-**Questions:**
-
-1. Which of the problems above suggest you have too many features?
-2. What might you gain by reducing from 100 to 10 features?
-3. What might you lose?
-
+::: {.column width="50%"}
+::: {.callout-note}
+## 🛒 Behavioral (8)
+Total spending, average basket value, number of trips, unique products, days between trips, recency, discount rate, coupon usage
 :::
-::: {.column width="30%"}
-
-<center>
-
-<div id="4minFeatures"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("4minFeatures", 240, "slide");
-    });
-</script>
-</center>
-
+:::
+::: {.column width="50%"}
+::: {.callout-note}
+## 👪 Demographic (6)
+Age, income, household size, number of kids, married, homeowner
+:::
 :::
 ::::
 
-Then we'll take a few responses...
+Scale all 14 features, fit K-Means for K = 2 to 10, and read the same two scores as before.
 
 ::: {.notes}
-**Main Takeaway**: Recognize the problems caused by having too many features and understand the trade-offs of dimension reduction.
+**Timing: ~1 minute. First cut if the lecture is running behind:** skip straight to PCA. All three slides are covered in Chapter 31.
 
-**Question Analysis**:
+The full feature-engineering code is in Chapter 31 (aggregating transactions per household, then encoding demographics). We're skipping it here to focus on what the scores look like.
 
-**1. Which problems suggest you have too many features?**
-
-- **Correlated features**: Yes! Multicollinearity causes unstable models
-  - If sq ft and bedrooms are correlated, they provide redundant information
-  - Models can't distinguish their individual effects
-  - Feature weights become unreliable
-- **Long training time (30 minutes)**: Yes! More features = more computation
-  - 100 features vs. 10 features = 10× more parameters to estimate
-  - Exponentially slower for some algorithms
-- **Test accuracy worse than training**: Yes! Classic sign of overfitting
-  - With 100 features and limited data, model memorizes noise
-  - High-dimensional spaces are sparse (curse of dimensionality)
-  - Model can't generalize to new data
-
-**2. What might you gain by reducing from 100 to 10 features?**
-
-- **Faster training**: 10-100× speedup depending on algorithm
-- **Better generalization**: Less overfitting, better test performance
-- **Simpler models**: Easier to understand, explain, and deploy
-- **Visualization**: Can actually plot and explore the data
-- **Less multicollinearity**: Components are uncorrelated by design
-- **Noise reduction**: Minor components often represent measurement noise
-
-**3. What might you lose?**
-
-- **Some information**: PCA with 10 components might capture 90% of variance, but you lose 10%
-- **Interpretability**: Original features ("sq ft") are intuitive; PC1 is a weighted combination that's harder to explain
-- **Specific details**: Rare patterns captured by minor components are lost
-- **Reversibility**: You can't perfectly reconstruct the original 100 features from 10 components
-
-**Key Teaching Insight**:
-"PCA is always a trade-off. You're betting that the information you LOSE (10-20% of variance, usually noise) is worth the benefits you GAIN (speed, simplicity, generalization). In practice, this trade-off is almost always favorable for high-dimensional data."
+**Transition:** "With 14 features we can't draw the data, so the scores are all we have. Here's what they say."
 :::
 
-## What is Dimension Reduction? {.smaller .scrollable}
+## Real Data: No Clear Answer {.smaller}
 
-**Dimension reduction** transforms your data from high-dimensional space to lower-dimensional space while preserving most of the important information.
+```{python}
+#| echo: false
+#| fig-align: center
+# Pre-computed from the Chapter 31 workflow (801 households, 14 scaled features,
+# KMeans(n_clusters=k, n_init=20, random_state=42)), so the deck doesn't need the
+# completejourney_py package or its long feature-engineering step at render time.
+cj_k = list(range(2, 11))
+cj_inertia = [9662.7, 8617.8, 7897.9, 7424.8, 6991.3, 6615.7, 6337.5, 6105.8, 5911.3]
+cj_silhouette = [0.1729, 0.1501, 0.1398, 0.1443, 0.1460, 0.1402, 0.1346, 0.1270, 0.1253]
 
-```{mermaid}
-%%| fig-width: 10
-%%| echo: false
-graph LR
-    A["Original Data<br/>1000 observations<br/>50 features"] --> B{PCA<br/>Dimension Reduction}
-    B --> C["Transformed Data<br/>1000 observations<br/>10 components<br/><br/>Retains 90% of variance"]
-
-    style A fill:#f0f0f0
-    style B fill:#43464B,color:#fff
-    style C fill:#4ECDC4
+fig = make_subplots(rows=1, cols=2, horizontal_spacing=0.12,
+                    subplot_titles=['Inertia: where is the elbow?', 'Silhouette: low everywhere'])
+fig.add_trace(go.Scatter(x=cj_k, y=cj_inertia, mode='lines+markers', line=dict(color=BLUE, width=2.5),
+                         marker=dict(size=8), hoverinfo='skip', showlegend=False), row=1, col=1)
+fig.add_trace(go.Scatter(x=cj_k, y=cj_silhouette, mode='lines+markers', line=dict(color=ORANGE, width=2.5),
+                         marker=dict(size=8), hoverinfo='skip', showlegend=False), row=1, col=2)
+fig.update_xaxes(title='K (number of clusters)', dtick=1)
+fig.update_yaxes(title='Inertia', row=1, col=1)
+fig.update_yaxes(title='Silhouette score', range=[0, 0.8], row=1, col=2)
+fig.update_layout(height=380, margin=dict(l=70, r=20, t=40, b=10), template='plotly_white')
+fig.show(config=PLOTLY_CONFIG)
 ```
 
-**Two main approaches:**
-
-* **Feature Selection**: Pick a subset of original features (e.g., select the 10 most important)
-* **Feature Extraction**: Create NEW features by combining originals (e.g., PCA creates "principal components")
-
-::: {.callout-important}
-**Today we focus on PCA (Principal Component Analysis)** — the most widely-used feature extraction method.
+::: {.incremental}
+- **No elbow:** inertia falls smoothly, with no bend to point at
+- **Low silhouette:** about 0.15 at every K (our toy customers scored 0.75 at K = 3). K = 2 is highest, but barely
+- **This is normal.** Real customers sit on a spectrum, not in neat boxes
 :::
 
 ::: {.notes}
-Think of PCA like image compression: a 10MB photo can compress to 500KB while still looking nearly identical. PCA does the same for tabular data.
+**Timing: ~1 minute.**
+
+- Compare with the slider a few minutes ago: there, the elbow and the silhouette peak landed on the same K. Here the elbow is nowhere and the silhouette is nearly flat.
+- The silhouette y-axis runs to 0.8 on purpose, so the flatness is honest. Don't let anyone read the K = 2 "peak" as a clear winner.
+- Low silhouette scores (roughly 0.1–0.3) are common and acceptable for behavioral data. It doesn't mean you did something wrong.
 :::
 
-## Principal Component Analysis (PCA): Visual Overview {.smaller}
+## When the Scores Don't Decide {.smaller}
 
-**How PCA transforms many correlated features into fewer uncorrelated components:**
-
-```{mermaid}
-%%| fig-width: 8
-%%| fig-height: 6
-%%| echo: false
-graph TD
-    A[50 Original Features<br/>All correlated] --> B[PCA Transformation]
-    B --> PC1[PC1: 45% variance<br/>Overall Size]
-    B --> PC2[PC2: 20% variance<br/>Location Quality]
-    B --> PC3[PC3: 10% variance<br/>Age/Condition]
-    B --> PC4[PC4: 8% variance<br/>Luxury Features]
-    B --> PC5[PC5: 5% variance<br/>...]
-    B --> Rest[PC6-PC50: 12% variance<br/>Mostly noise]
-
-    style PC1 fill:#FF6B6B
-    style PC2 fill:#4ECDC4
-    style PC3 fill:#45B7D1
-    style Rest fill:#f0f0f0
-```
-
-::: {.notes}
-This diagram shows how PCA takes 50 correlated features and creates new uncorrelated components, with the first few capturing most of the variance.
-:::
-
-## PCA: The Intuition {.smaller}
-
-**PCA finds new coordinate axes (principal components) that capture maximum variance:**
-
-**The idea:**
-
-1. **PC1** points in the direction where data varies the MOST
-2. **PC2** points in the next-most variation direction (perpendicular to PC1)
-3. **PC3** points in the next direction (perpendicular to both)
-4. And so on...
+The metrics narrow the options. **People** make the call.
 
 ::: {.callout-tip}
-## Key Insight
-
-Often the first 5-10 components capture 90%+ of the total variation! This means you can reduce from 50 features to just 5-10 components while retaining most of the information.
+## Work with stakeholders
+1. **Try a few K values** that the scores don't rule out (say 3, 4 and 5)
+2. **Profile each one** and name the segments, as we did with the toy customers
+3. **Show the options** to the people who will use them
+4. **Choose** the K whose segments are clear, actionable, and something the team can actually run campaigns for
 :::
 
+. . .
+
+> A grocery marketing team that can run four campaigns might pick **K = 4** (budget shoppers, loyal regulars, premium buyers, infrequent visitors), even though K = 2 scores slightly higher.
+
 ::: {.notes}
-Analogy: Imagine taking photos at a concert. One angle (PC1) captures most of the action. Adding a second angle (PC2) adds some new perspective. A third angle (PC3) adds a bit more. After that, additional angles don't reveal much new information.
+**Timing: ~1 minute.**
+
+**The point:** clustering is exploratory. The scores rule options out; they don't pick the answer. The best K is the one the business can describe and act on.
+
+Ask: "If marketing can only handle three campaigns, what changes?" (Then three is the answer, as long as the three segments are distinct.)
+
+**Transition:** "Clustering groups *rows*. Now let's turn to the other unsupervised question: what if we have too many *columns*?"
+:::
+
+# PCA: Fewer Columns, Same Information {background="#43464B"}
+
+## The Problem: Too Many Columns {.smaller}
+
+Real datasets keep getting **wider**: hundreds or thousands of columns, many of them telling the same story.
+
+:::: {.columns}
+::: {.column width="50%"}
+::: {.callout-warning}
+## 😩 What wide data costs you
+- **Redundancy:** correlated columns (square feet, bedrooms, bathrooms) repeat each other
+- **Overfitting:** more columns, more noise to memorize
+- **Speed:** training slows down
+- **Seeing it:** you can't plot 100 dimensions
+:::
+:::
+::: {.column width="50%"}
+::: {.callout-note}
+## 🌍 Where it shows up
+- **Healthcare:** 20,000+ genes per patient
+- **Images:** thousands of pixels per photo
+- **Retail:** hundreds of behaviors per customer
+- **Text:** thousands of word counts per document
+:::
+:::
+::::
+
+**Question:** do we really need all of those columns, or can a few new ones carry most of the information?
+
+::: {.notes}
+**Timing: ~2 minutes.**
+
+Clustering grouped similar *rows*. Dimension reduction works on *columns* (back to the rows-vs-columns figure from the start of class).
+
+The key word is **correlated**. When columns move together, they're partly repeating each other, so a smaller number of well-built columns can carry most of the same information.
+
+**Transition:** "There are two ways to get fewer columns."
+:::
+
+## Two Ways to Get Fewer Columns {.smaller}
+
+Both start from many correlated columns and end with fewer:
+
+:::: {.columns}
+::: {.column width="50%"}
+::: {.callout-note}
+## ✂️ Feature selection
+**Keep a subset** of the original columns, e.g. the most important features from week 11. Easy to explain, but every dropped column's information is gone.
+:::
+:::
+::: {.column width="50%"}
+::: {.callout-tip}
+## 🧪 Feature extraction (PCA)
+**Build a few new columns**, each a weighted mix of *all* the originals. **PCA** (principal component analysis) builds them so the first keeps as much of the data's spread as possible, the second keeps the most of what's left, and so on.
+:::
+:::
+::::
+
+::: {.notes}
+**Timing: ~2 minutes.**
+
+- **Selection:** easy to explain, because the columns are the originals. But dropping a column throws away everything in it.
+- **Extraction:** each new column (a **principal component**) is a weighted mix of all the originals, so information from every column survives. The trade-off is that the new columns need interpreting.
+
+**Transition:** "What does 'keeps the most spread' actually mean? Let's find PC1 by hand."
+:::
+
+## Finding the Direction of Most Variance {.smaller}
+
+```{python}
+#| echo: false
+#| fig-align: center
+# Same synthetic houses as the 3-D figure: square feet drives bedrooms
+np.random.seed(42)
+n_houses = 100
+sq_ft = np.random.normal(2000, 600, n_houses)
+bedrooms = 1 + (sq_ft / 500) + np.random.normal(0, 0.5, n_houses)
+houses_2d = StandardScaler().fit_transform(np.column_stack([sq_ft, bedrooms]))
+
+angles = list(range(0, 180, 15))
+total_var = houses_2d.var(axis=0).sum()
+
+def captured_pct(deg):
+    u = np.array([np.cos(np.radians(deg)), np.sin(np.radians(deg))])
+    return 100 * (houses_2d @ u).var() / total_var
+
+curve_angles = np.arange(0, 181, 1)
+curve = [captured_pct(a) for a in curve_angles]
+
+fig = make_subplots(rows=1, cols=2, column_widths=[0.5, 0.5], horizontal_spacing=0.12,
+                    subplot_titles=['Houses (standardized) and a candidate direction',
+                                    'Variance captured by each direction'])
+# Fixed: the houses and the full variance curve
+fig.add_trace(go.Scatter(x=houses_2d[:, 0], y=houses_2d[:, 1], mode='markers',
+                         marker=dict(color=BLUE, size=8, line=dict(color='white', width=0.5)),
+                         hoverinfo='skip', showlegend=False), row=1, col=1)
+fig.add_trace(go.Scatter(x=curve_angles, y=curve, mode='lines', line=dict(color=GRAY, width=2),
+                         hoverinfo='skip', showlegend=False), row=1, col=2)
+n_fixed = 2
+
+L = 3.2
+titles = []
+for deg in angles:
+    u = np.array([np.cos(np.radians(deg)), np.sin(np.radians(deg))])
+    proj = np.outer(houses_2d @ u, u)
+    # the candidate direction
+    fig.add_trace(go.Scatter(x=[-L * u[0], L * u[0]], y=[-L * u[1], L * u[1]], mode='lines',
+                             line=dict(color=ORANGE, width=3), hoverinfo='skip', showlegend=False,
+                             visible=False), row=1, col=1)
+    # each house dropped onto the line
+    sx, sy = [], []
+    for (x, y), (px, py) in zip(houses_2d, proj):
+        sx += [x, px, None]
+        sy += [y, py, None]
+    fig.add_trace(go.Scatter(x=sx, y=sy, mode='lines', line=dict(color='rgba(0,0,0,0.18)', width=1),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=1)
+    fig.add_trace(go.Scatter(x=proj[:, 0], y=proj[:, 1], mode='markers',
+                             marker=dict(color=ORANGE, size=6), hoverinfo='skip', showlegend=False,
+                             visible=False), row=1, col=1)
+    # current angle on the curve
+    fig.add_trace(go.Scatter(x=[deg], y=[captured_pct(deg)], mode='markers',
+                             marker=dict(size=15, color=ORANGE, line=dict(color='#333', width=1.5)),
+                             hoverinfo='skip', showlegend=False, visible=False), row=1, col=2)
+    tag = '  ←  <b>PC1</b>' if deg == 45 else ('  ←  <b>PC2</b>' if deg == 135 else '')
+    titles.append(f'Direction at {deg}°: captures <b>{captured_pct(deg):.0f}%</b> of the variance{tag}')
+
+steps = slider_steps(n_fixed, len(angles), 4, [f'{a}°' for a in angles], titles)
+for trace in fig.data[n_fixed:n_fixed + 4]:
+    trace.visible = True
+
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=16)),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(visible=False), pad=dict(t=40))],
+    xaxis=dict(title='Square feet (std devs)', range=[-3.3, 3.3], zeroline=False),
+    yaxis=dict(title='Bedrooms (std devs)', range=[-3.3, 3.3], scaleanchor='x', zeroline=False),
+    xaxis2=dict(title='Direction angle (degrees)', dtick=45, range=[-5, 185]),
+    yaxis2=dict(title='Variance captured (%)', range=[0, 100]),
+    height=560, margin=dict(l=70, r=20, t=90, b=10), template='plotly_white',
+)
+fig.show(config=PLOTLY_CONFIG)
+```
+
+::: {.notes}
+**Timing: ~5 minutes.**
+
+**Start at 0°.** The orange line is a candidate new column. Each house drops onto it (the faint lines), and the orange dots are the house's score on that new column. At 0° the new column is just square feet, and it keeps about half of the total variance (one of two standardized features).
+
+**Drag slowly to 45°.** The dots spread out along the line, and the readout climbs. Ask: "Why does spread matter?" Spread is information: if every house landed in the same spot, the new column couldn't tell them apart.
+
+**At 45°: PC1.** This is the direction where houses spread out the most. PCA's first component is *defined* as this direction. Point to the curve on the right: it peaks here.
+
+**Keep going to 135°: PC2.** Perpendicular to PC1, and it captures what's left. Ask: "What does a house far out along PC2 look like?" (More or fewer bedrooms than you'd expect for its size.)
+
+**The point:** PCA builds new columns by rotating the axes. PC1 keeps the most spread, PC2 the most of what's left, and so on. Next we'll see the same idea in 3-D.
 :::
 
 ## Visualizing PCA in 3D: House Features {.smaller .scrollable}
@@ -1684,9 +1103,11 @@ print(f"\nPC1 captures most variance because sq ft, bedrooms, and bathrooms are 
 ```
 
 ::: {.notes}
+**Timing: ~2 minutes.** Same idea as the last slide, one dimension up.
+
 **Interpreting the Principal Components:**
 
-**PC1 (Red arrow - ~80-85% of variance):**
+**PC1 (red arrow, about 93% of the variance):**
 
 - Points in the direction where houses vary the MOST
 - Represents "Overall House Size" - a composite measure combining all three features
@@ -1695,14 +1116,14 @@ print(f"\nPC1 captures most variance because sq ft, bedrooms, and bathrooms are 
 - This makes sense because sq ft, bedrooms, and bathrooms are all highly correlated - they increase together
 - Notice how PC1 points diagonally through the data cloud in the direction of maximum spread
 
-**PC2 (Teal arrow - ~10-15% of variance):**
+**PC2 (teal arrow, about 6%):**
 
 - Perpendicular to PC1, captures the next-most variation
 - Might represent "Layout efficiency" or deviations from the typical size relationship
 - Example: A house with more bedrooms than expected for its square footage (positive PC2) vs. fewer bedrooms (negative PC2)
 - This captures residual variation NOT explained by overall size
 
-**PC3 (Blue arrow - ~5-10% of variance):**
+**PC3 (blue arrow, about 2%):**
 
 - Perpendicular to both PC1 and PC2
 - Captures very small remaining variations
@@ -1713,613 +1134,219 @@ print(f"\nPC1 captures most variance because sq ft, bedrooms, and bathrooms are 
 
 - Rotate the plot to show students how PC1 aligns with the "longest" dimension of the data cloud
 - Show how PC2 and PC3 are at right angles to PC1 (orthogonal/uncorrelated)
-- Emphasize that PC1 alone captures 80%+ of the variation, so we could reduce from 3 features to 1 component with minimal information loss
+- Emphasize that PC1 alone captures over 90% of the variation, so we could reduce from 3 features to 1 component with minimal information loss
 - Ask: "If we only kept PC1, what information would we lose?" (Answer: The ability to distinguish houses with unusual bedroom/bathroom configurations for their size)
 :::
 
-## The Apartment-Finding Analogy {.smaller}
+## PCA on Real Data: Scale First {.smaller}
 
-Imagine tracking 10 apartment features: rent, sq ft, distance from downtown, bedrooms, building age, floor number, etc.
-
-**You might notice correlations:**
-
-* Larger apartments → more bedrooms, more bathrooms
-* Newer buildings → farther from downtown, higher rent
-* Higher floors → better views, cost more
-
-**PCA would identify underlying factors:**
-
-:::: {.columns}
-::: {.column width="33%"}
-**PC1: "Size & Space"**
-
-* Square footage: ✓
-* Bedrooms: ✓
-* Bathrooms: ✓
-* Closet space: ✓
-
-*Captures 50% of variance*
-:::
-::: {.column width="33%"}
-**PC2: "Location & Age"**
-
-* Distance to downtown: ✓
-* Building age: ✓
-* Neighborhood rating: ✓
-
-*Captures 25% of variance*
-:::
-::: {.column width="33%"}
-**PC3: "Luxury & Amenities"**
-
-* Floor number: ✓
-* Building finishes: ✓
-* Gym/pool access: ✓
-
-*Captures 15% of variance*
-:::
-::::
-
-**Result**: Instead of tracking 10 correlated features, you have 3 uncorrelated components capturing 90% of information!
-
-::: {.notes}
-**Main Takeaway**: PCA discovers underlying "themes" or "factors" that explain why multiple features are correlated.
-
-**Analogy Walkthrough**:
-
-**The Setup**:
-
-- Imagine you're tracking 10 apartment features for every listing
-- Many features are correlated (not independent):
-  - Big apartments → more bedrooms, bathrooms, closets
-  - New buildings → farther from city center, higher rent
-  - High floors → better views, premium pricing
-
-**What PCA Discovers**:
-
-**PC1: "Size & Space" (50% of variance)**
-
-- This component captures the SHARED PATTERN in: sq footage, bedrooms, bathrooms, closet space
-- **Why are these correlated?** They all increase together as apartments get larger
-- **What PC1 represents**: A single "size score" that summarizes all size-related features
-- **Example**: Apartment A (PC1 = 2.5) vs. Apartment B (PC1 = -1.2)
-  - A is large on ALL size dimensions
-  - B is small on ALL size dimensions
-  - One number tells the whole story!
-
-**PC2: "Location & Age" (25% of variance)**
-
-- Captures: distance to downtown, building age, neighborhood rating
-- **Why correlated?** Older buildings tend to be downtown in better-established neighborhoods
-- **What PC2 represents**: Urban vs. suburban character
-- **High PC2**: Downtown, older, established neighborhood
-- **Low PC2**: Suburban, newer, developing area
-
-**PC3: "Luxury & Amenities" (15% of variance)**
-
-- Captures: floor number, finishes, gym/pool access
-- **Why correlated?** Luxury features tend to come together in premium buildings
-- **What PC3 represents**: Luxury tier
-- **High PC3**: High-floor unit with premium finishes and amenities
-- **Low PC3**: Basic unit with standard features
-
-**The Power of PCA**:
-
-- **Original**: 10 features to track and compare
-- **After PCA**: 3 components capture 90% of variation
-- **Benefit**: Much easier to compare apartments, make decisions, and find similar listings
-- **The key**: PCA found these patterns automatically—didn't need domain expertise to group "size features" together
-
-**Teaching Point**:
-"PCA isn't doing magic—it's just finding correlations and grouping correlated features together. Humans could have done this manually, but PCA does it mathematically and optimally."
-:::
-
-## Step 1: The Original Data {.smaller}
-
-Let's apply PCA to a medical dataset with **569 patients** and **30 features** measuring tumor characteristics:
+**Wine:** 178 wines, 13 chemical measurements each, from three cultivars (grape varieties). We'll use the cultivar only to *check* the results, never to fit PCA.
 
 ```{python}
-#| echo: false
-
-import pandas as pd
+#| echo: true
+from sklearn.datasets import load_wine
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-import numpy as np
 
-# Load breast cancer dataset
-data = pd.read_csv('../data/breast_cancer.csv')
+wine = load_wine(as_frame=True)
+X_wine, y_wine = wine.data, wine.target
 
-# Separate features from target
-X = data.drop('diagnosis', axis=1)
-y = data['diagnosis'].map({'M': 1, 'B': 0})  # M=Malignant (1), B=Benign (0)
-X
+pca_unscaled = PCA().fit(X_wine)
+wine_scaled = StandardScaler().fit_transform(X_wine)
+pca = PCA().fit(wine_scaled)
+
+print(f"PC1 share of the variance, unscaled: {pca_unscaled.explained_variance_ratio_[0]:.1%}")
+print(f"PC1 share of the variance, scaled:   {pca.explained_variance_ratio_[0]:.1%}")
 ```
 
-::: {.notes}
-Point out that we have 30 features per patient - way too many to visualize or easily interpret. This is a perfect use case for PCA to reduce dimensionality.
+. . .
+
+::: {.callout-warning}
+## Unscaled, PC1 is just "proline"
+Proline is measured in the hundreds to over a thousand; most other columns are under 10. PCA chases **variance**, so the biggest-number column wins, the same trap as K-Means. Always scale first.
 :::
-
-## Step 2: Standardize and Apply PCA {.smaller .scrollable}
-
-```{python}
-#| echo: true
-#| code-line-numbers: 1-7
-
-# Step 1: Standardize (critical for PCA!)
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-# Step 2: Fit PCA to create all 30 principal components
-pca_full = PCA()
-X_pca = pca_full.fit_transform(X_scaled)
-
-print(f"\nOriginal data: {X.shape}")
-print(f"PCA-transformed data: {X_pca.shape}")
-print(f"\nFirst few patients in PC space:")
-pd.DataFrame(X_pca[:5, :5],
-             columns=[f'PC{i+1}' for i in range(5)]).round(3)
-```
 
 ::: {.notes}
-Emphasize that standardization is CRITICAL for PCA—otherwise features with large values will dominate. After PCA, we still have 30 components (same as features), but now they're uncorrelated and ordered by variance. Show how the data looks completely different in PC space.
+**Timing: ~3 minutes.**
+
+- `explained_variance_ratio_` is each component's share of the total variance.
+- **Unscaled:** PC1 "explains" nearly everything. That sounds great, until you realize it's because proline's numbers are so much bigger than every other column's, so PC1 is basically proline by itself. It isn't finding a shared pattern at all.
+- **Scaled:** every column has std 1, so each one gets a fair say. PC1 now takes about a third of the variance, and it's built from many columns.
+
+Ask: "Where have we seen this before?" (KNN neighbors in week 12, K-Means today. Anything built on distance or variance needs scaling.)
 :::
 
-## Step 3: How Many Components Should We Keep? {.smaller}
-
-```{python}
-#| echo: true
-#| output-location: column
-#| code-line-numbers: 4-5
-
-# Create scree plot
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(6, 6))
-
-# Individual variance explained
-variance_explained = pca_full.explained_variance_ratio_
-ax1.plot(range(1, len(variance_explained) + 1),
-         variance_explained, 'bo-', linewidth=2, markersize=8)
-ax1.set_xlabel('Principal Component', fontweight='bold', fontsize=11)
-ax1.set_ylabel('Variance Explained', fontweight='bold', fontsize=11)
-ax1.set_title('Scree Plot: Variance per Component', fontweight='bold', fontsize=12)
-ax1.grid(True, alpha=0.3)
-ax1.axvline(x=7, color='red', linestyle='--', alpha=0.7, label='Elbow around PC7')
-ax1.legend()
-
-# Cumulative variance explained
-cumsum = np.cumsum(variance_explained)
-ax2.plot(range(1, len(cumsum) + 1), cumsum, 'ro-', linewidth=2, markersize=8)
-ax2.axhline(y=0.95, color='green', linestyle='--', linewidth=2, label='95% threshold')
-ax2.axhline(y=0.90, color='orange', linestyle='--', linewidth=2, label='90% threshold')
-ax2.set_xlabel('Number of Components', fontweight='bold', fontsize=11)
-ax2.set_ylabel('Cumulative Variance', fontweight='bold', fontsize=11)
-ax2.set_title('Cumulative Variance Explained', fontweight='bold', fontsize=12)
-ax2.legend()
-ax2.grid(True, alpha=0.3)
-
-# Find components needed for 95%
-n_95 = np.argmax(cumsum >= 0.95) + 1
-ax2.axvline(x=n_95, color='green', linestyle=':', alpha=0.7)
-ax2.text(n_95 + 1, 0.5, f'{n_95} components\nfor 95% variance',
-         fontsize=10, bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
-
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-The elbow is around PC6-7. We can reduce from 30 features to just 7 components while keeping 95% of the information!
-:::
-
-## Interactive Activity: Reading Scree Plots {.smaller}
-
-:::: {.columns}
-::: {.column width="70%"}
-::: {.callout}
-## Your Turn
-
-You're analyzing customer behavior with 50 features. After running PCA, you get:
-
-* PC1: 35% variance
-* PC2: 20% variance
-* PC3: 12% variance
-* PC4: 8% variance
-* PC5: 6% variance
-* PC6-50: 19% variance (combined)
-
-**Discuss with your neighbor:**
-
-1. How many components would you keep? Why?
-2. If you keep just PC1 and PC2, what percentage of information do you retain?
-3. What are you trading off when you reduce from 50 to 5 features?
-:::
-:::
-::: {.column width="30%"}
-
-<center>
-
-<div id="3minScree"></div>
-<script src="_extensions/produnis/timer/timer.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeTimer("3minScree", 180, "slide");
-    });
-</script>
-</center>
-
-:::
-::::
-
-Then we'll take a few responses...
-
-::: {.notes}
-**Main Takeaway**: Practice reading scree plots and making informed decisions about how many components to retain.
-
-**Question Analysis**:
-
-**1. How many components would you keep? Why?**
-
-Let's calculate cumulative variance for each option:
-
-- **PC1 only**: 35% variance — Too little information!
-- **PC1-2**: 35% + 20% = 55% variance — Still losing half the information
-- **PC1-3**: 55% + 12% = 67% variance — Getting better, but below typical threshold
-- **PC1-4**: 67% + 8% = **75% variance** — Good threshold, retained 3/4 of information
-- **PC1-5**: 75% + 6% = **81% variance** — Even better, common threshold
-- **PC1-6+**: 81% + 19% = 100% variance — Keeping 45 components for last 19%? Diminishing returns!
-
-**Recommended answer**: **Keep PC1-5 (81% variance)**
-
-- **Common rule of thumb**: Aim for 80-90% cumulative variance
-- **PC1-4 (75%)**: Also defensible if simplicity is paramount
-- **PC1-10**: Might be justified if you really need that extra precision
-
-**2. If you keep just PC1 and PC2, what percentage do you retain?**
-
-- **Answer**: 35% + 20% = **55% of variance**
-- **Is this enough?**
-  - For visualization: Yes! Often we reduce to 2-3 components just to plot
-  - For modeling: Probably not—you're losing 45% of information
-  - For exploration: Maybe—depends if those 2 components capture the main patterns
-
-**3. What are you trading off when you reduce from 50 to 5 features?**
-
-- **Gain**: 90% reduction in features (50 → 5)
-- **Lose**: 19% of variance (81% retained, 19% lost)
-- **The trade-off**:
-  - That 19% you're losing is spread across 45 components (PC6-50)
-  - Each of those captures < 0.5% of variance on average
-  - Likely represents noise, measurement error, or very subtle patterns
-  - The first 5 components capture the "signal," the rest is mostly "noise"
-
-**Key Teaching Points**:
-
-- "There's no universal 'right' answer—it depends on your goals"
-- "For modeling: usually keep components up to 80-90% variance"
-- "For visualization: often just keep 2-3 components"
-- "Look for the 'elbow' in scree plot—where adding more components gives diminishing returns"
-- "In this example, PC6+ each add < 1% variance—probably not worth the complexity"
-
-**Real-World Context**:
-"Imagine you're building a recommendation system. You might reduce 10,000 product features to 50 components (99% variance) for speed, or reduce to 10 components (95% variance) if you need real-time predictions. The choice depends on your business requirements!"
-:::
-
-## What Do Principal Components Mean? {.smaller .scrollable}
-
-**Principal components are weighted combinations of original features.**
-
-Let's look at what contributes to PC1 in our breast cancer data:
-
-```{python}
-#| echo: true
-
-# Refit with more components to examine
-pca_7 = PCA(n_components=7)
-pca_7.fit(X_scaled)
-
-# Look at loadings (weights) for PC1
-pc1_loadings = pd.DataFrame({
-    'feature': X.columns,
-    'loading': pca_7.components_[0]
-}).sort_values('loading', key=abs, ascending=False)
-
-print("Top 10 features contributing to PC1:")
-print(pc1_loadings.head(10).to_string(index=False))
-```
-
-**Interpretation**: PC1 loads heavily on features related to tumor size, texture, and shape irregularity. It represents **"overall tumor severity"**—high PC1 means larger, more irregular tumors.
-
-::: {.notes}
-**Main Takeaway**: Principal components are interpretable by examining which original features contribute most strongly (highest loadings).
-
-**What are "loadings"?**
-
-- **Loadings** = weights that show how much each original feature contributes to a principal component
-- **High absolute loading** = that feature strongly influences this component
-- **Positive loading** = feature increases with the component
-- **Negative loading** = feature decreases with the component
-- **Near-zero loading** = feature doesn't contribute much to this component
-
-**How to Interpret PC1 in Breast Cancer Data**:
-
-Looking at the top features from the code output, we'll see:
-
-1. **radius_worst** (high loading): Largest radius measurement
-2. **perimeter_worst** (high loading): Largest perimeter
-3. **area_worst** (high loading): Largest area
-4. **concave points_worst** (high loading): Most severe concavity
-5. **radius_mean** (high loading): Average radius
-6. **perimeter_mean** (high loading): Average perimeter
-
-**What does this tell us?**
-
-- PC1 is dominated by SIZE and IRREGULARITY measurements
-- All the "worst" measurements (most extreme values) load heavily
-- **Interpretation**: PC1 represents "Overall Tumor Severity"
-  - High PC1 score → Large tumor with irregular features → Likely malignant
-  - Low PC1 score → Small tumor with regular features → Likely benign
-
-**Teaching Strategy**:
-
-1. Show the loadings table from the code output
-2. Ask: "What do these top features have in common?" → All relate to size/shape
-3. Explain: "PC1 is a weighted average of these features—a single score summarizing tumor severity"
-4. Contrast with original features: "Instead of looking at 30 separate measurements, PC1 gives you ONE number that captures the most important pattern"
-
-**Why This Matters**:
-
-- PCA creates new features, but they're NOT random or meaningless
-- Each component has an interpretation based on its loadings
-- Good practice: Always examine loadings to understand what your components represent
-- You can name components based on their interpretation (e.g., "Tumor Severity Score")
-
-**Common Student Question**:
-"Are all loadings equally important?" → No! Focus on the highest absolute loadings—those features dominate that component. Small loadings (< 0.1) contribute very little.
-:::
-
-## Demo: Visualizing High-Dimensional Data with PCA {.smaller}
-
-One powerful use of PCA: reducing to 2D for visualization!
+## How Many Components? {.smaller}
 
 ```{python}
 #| echo: false
+#| fig-align: center
+X_wine = load_wine(as_frame=True).data
+pca_wine = PCA().fit(StandardScaler().fit_transform(X_wine))
+var_pct = 100 * pca_wine.explained_variance_ratio_
+cum_pct = np.cumsum(var_pct)
+n_comp = len(var_pct)
+pcs = [f'PC{i}' for i in range(1, n_comp + 1)]
 
-# Reduce to 2 components for visualization
-pca_2d = PCA(n_components=2)
-X_pca_2d = pca_2d.fit_transform(X_scaled)
+fig = go.Figure()
+n_fixed = 0
+titles = []
+for k in range(1, n_comp + 1):
+    # bars: kept components in orange, the rest faded
+    fig.add_trace(go.Bar(x=pcs, y=var_pct, marker_color=[ORANGE if i < k else '#e6e6e6' for i in range(n_comp)],
+                         text=[f'{v:.0f}%' if i < k else '' for i, v in enumerate(var_pct)], textposition='outside',
+                         hoverinfo='skip', showlegend=False, visible=False))
+    # cumulative variance, filled in up to k
+    fig.add_trace(go.Scatter(x=pcs[:k], y=cum_pct[:k], mode='lines+markers', line=dict(color=BLUE, width=3),
+                             marker=dict(size=9), hoverinfo='skip', showlegend=False, visible=False))
+    titles.append(f'Keep <b>{k} of {n_comp}</b> columns → <b>{cum_pct[k - 1]:.0f}%</b> of the variance')
 
-print(f"Reduced from {X.shape[1]} features to 2 components")
-print(f"Retained {pca_2d.explained_variance_ratio_.sum()*100:.1f}% of variance")
+steps = slider_steps(n_fixed, n_comp, 2, [str(k) for k in range(1, n_comp + 1)], titles)
+for trace in fig.data[:2]:
+    trace.visible = True
 
-# Visualize: Can we see the two classes (malignant vs benign)?
-plt.figure(figsize=(8, 4.5))
-colors = ['#FF6B6B', '#4ECDC4']
-for i, label in enumerate(['Malignant', 'Benign']):
-    mask = (y == i)
-    plt.scatter(X_pca_2d[mask, 0], X_pca_2d[mask, 1],
-                c=colors[i], label=label, s=80, alpha=0.6,
-                edgecolors='black', linewidth=0.5)
-
-plt.xlabel(f'PC1 ({pca_2d.explained_variance_ratio_[0]*100:.1f}% variance)',
-           fontweight='bold', fontsize=11)
-plt.ylabel(f'PC2 ({pca_2d.explained_variance_ratio_[1]*100:.1f}% variance)',
-           fontweight='bold', fontsize=11)
-plt.title('Breast Cancer Data: 30 Features → 2 Components',
-          fontweight='bold', fontsize=13)
-plt.legend(fontsize=11)
-plt.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.show()
-```
-
-::: {.notes}
-**Interpreting the 2D PCA Plot:**
-
-Amazing! We can see clear separation between malignant and benign tumors using just 2 components. This was impossible to visualize with 30 original features.
-
-**What PC1 represents (X-axis, ~44% of variance):**
-- PC1 captures "Overall Tumor Severity"
-- Loads heavily on features like: radius_worst, perimeter_worst, area_worst, concave points_worst, radius_mean, perimeter_mean, area_mean
-- These are all measures of tumor SIZE and IRREGULARITY
-- **High PC1 (moving right)** = Larger tumors with more irregular shapes → More likely MALIGNANT (red points)
-- **Low PC1 (moving left)** = Smaller, more regular tumors → More likely BENIGN (teal points)
-- Notice how malignant tumors cluster on the right (high PC1) and benign on the left (low PC1)
-
-**What PC2 represents (Y-axis, ~19% of variance):**
-- PC2 captures secondary tumor characteristics not explained by overall size
-- Likely related to texture variation, symmetry, and smoothness
-- Loads on features like: texture_worst, smoothness_worst, symmetry measures
-- **High PC2** = Tumors with high texture variation and less smoothness
-- **Low PC2** = Smoother, more uniform texture
-- There's some overlap here, but generally malignant tumors show more variation
-
-**Key Teaching Points:**
-- These 2 components alone (PC1 + PC2) capture ~63% of total variance from 30 features
-- PC1 is doing most of the "heavy lifting" for separating malignant vs. benign
-- The clear visual separation shows why PCA is powerful: it found the most discriminating directions in the data
-- Point out the cluster centers: malignant tumors (right side, higher PC1) vs. benign (left side, lower PC1)
-- Ask: "If you had to diagnose with just these 2 numbers (PC1, PC2), how would you do it?" (Answer: High PC1 → likely malignant)
-:::
-
-## PCA as Feature Engineering for Machine Learning {.smaller}
-
-Another powerful use case: **Use PCA-transformed features as input to ML models**
-
-**Why use PCA before modeling?**
-
-* **Reduces overfitting** - Fewer features = simpler model = better generalization
-* **Speeds up training** - Fewer features = faster computation
-* **Handles multicollinearity** - PCs are uncorrelated by design
-* **Removes noise** - Minor components often represent noise
-
-Let's compare model performance with and without PCA using our breast cancer data:
-
-::: {.notes}
-Emphasize that PCA is often used as a preprocessing step in ML pipelines, not just for visualization. This is a key practical application that students will use in real projects.
-:::
-
-## Model Comparison: Original vs. PCA Features {.smaller .scrollable}
-
-```{python}
-#| echo: true
-
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-
-# Split into train/test
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
+fig.add_hline(y=90, line=dict(color=GRAY, dash='dash'), annotation_text='90%', annotation_position='top left')
+fig.update_layout(
+    title=dict(text=titles[0], x=0.5, font=dict(size=18)),
+    sliders=[dict(active=0, steps=steps, currentvalue=dict(prefix='Components kept: '), pad=dict(t=40))],
+    yaxis=dict(title='Variance explained (%)', range=[0, 105]),
+    xaxis=dict(title='Principal component  (bars: each one alone, blue line: running total)'),
+    height=540, margin=dict(l=70, r=20, t=70, b=10), template='plotly_white',
 )
-
-# Standardize the features (critical!)
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
-
-print(f"Original training data shape: {X_train_scaled.shape}")
+fig.show(config=PLOTLY_CONFIG)
 ```
+
+::: {.notes}
+**Timing: ~4 minutes.**
+
+This is a **scree plot** (the bars) plus its running total (the blue line), for the 13 standardized wine measurements.
+
+**Start at 1.** PC1 alone keeps about a third of the information in all 13 columns.
+
+**Slide to 2.** Two columns, more than half the variance. That's what makes a 2-D picture of 13-D data possible (coming up).
+
+**Keep sliding.** Each new component adds less than the one before: the bars shrink. Ask: "Where would you stop?" Common rules:
+
+- **A variance target** like 90%: here that takes 8 of 13.
+- **The elbow** in the bars, where they flatten out.
+- **What the job needs:** 2 for a picture, or whatever count keeps model accuracy (the notebook's *How Many Components Do You Need?* Your Turn).
+
+**The point:** there's no free lunch with real data. Wine's columns are only partly correlated, so compressing hard (2 components) keeps the main pattern but drops a lot of detail.
+:::
+
+## What Does PC1 Mean? {.smaller}
+
+Each component is a weighted mix of the original columns. Those weights are its **loadings**.
 
 ```{python}
 #| echo: true
+pc1_loadings = pd.Series(pca.components_[0], index=X_wine.columns).sort_values()
+```
 
-# Model 1: All 30 original features
-model_original = LogisticRegression(max_iter=5000, random_state=42)
-model_original.fit(X_train_scaled, y_train)
-y_pred_original = model_original.predict(X_test_scaled)
-
-# Model 2: 7 PCA components (from earlier analysis)
-pca_7 = PCA(n_components=7)
-X_train_pca = pca_7.fit_transform(X_train_scaled)
-X_test_pca = pca_7.transform(X_test_scaled)
-
-model_pca = LogisticRegression(max_iter=5000, random_state=42)
-model_pca.fit(X_train_pca, y_train)
-y_pred_pca = model_pca.predict(X_test_pca)
-
-# Calculate all metrics for both models
-metrics_original = {
-    'Accuracy': accuracy_score(y_test, y_pred_original),
-    'Precision': precision_score(y_test, y_pred_original),
-    'Recall': recall_score(y_test, y_pred_original),
-    'F1-Score': f1_score(y_test, y_pred_original)
-}
-
-metrics_pca = {
-    'Accuracy': accuracy_score(y_test, y_pred_pca),
-    'Precision': precision_score(y_test, y_pred_pca),
-    'Recall': recall_score(y_test, y_pred_pca),
-    'F1-Score': f1_score(y_test, y_pred_pca)
-}
-
-# Display comparison table
-print(f"\n{'Model':<25} {'Features':<10} {'Accuracy':<10} {'Precision':<11} {'Recall':<10} {'F1-Score':<10}")
-print(f"{'-'*85}")
-print(f"{'Original Features':<25} {30:<10} {metrics_original['Accuracy']:<10.3f} {metrics_original['Precision']:<11.3f} {metrics_original['Recall']:<10.3f} {metrics_original['F1-Score']:<10.3f}")
-print(f"{'PCA (7 components)':<25} {7:<10} {metrics_pca['Accuracy']:<10.3f} {metrics_pca['Precision']:<11.3f} {metrics_pca['Recall']:<10.3f} {metrics_pca['F1-Score']:<10.3f}")
-print(f"\nReduced features by {(1 - 7/30)*100:.0f}% with minimal performance loss across all metrics!")
+```{python}
+#| echo: false
+#| fig-align: center
+fig = go.Figure(go.Bar(x=pc1_loadings.values, y=pc1_loadings.index, orientation='h',
+                       marker_color=[BLUE if v < 0 else ORANGE for v in pc1_loadings.values],
+                       hoverinfo='skip'))
+fig.add_vline(x=0, line=dict(color='#333', width=1))
+fig.update_layout(xaxis=dict(title='PC1 loading (weight)', range=[-0.5, 0.5]),
+                  height=400, margin=dict(l=220, r=20, t=10, b=10), template='plotly_white')
+fig.show(config=PLOTLY_CONFIG)
 ```
 
 ::: {.notes}
-Point out that performance is maintained across ALL metrics while reducing from 30 to 7 features (77% reduction). Show students that accuracy, precision, recall, and F1-score are all very similar between the two models. This demonstrates that PCA preserves the discriminative information needed for classification. The slight differences across metrics are often worth the benefits in speed, simplicity, and reduced overfitting.
+**Timing: ~3 minutes.**
+
+- **Big orange bars:** flavanoids, total phenols, the OD280 measure and proanthocyanins. These all rise together, so PC1 is high for wines rich in phenolic compounds.
+- **Blue bars:** nonflavanoid phenols, malic acid and alcalinity pull the other way.
+- **Near zero:** ash barely contributes to PC1.
+
+So a fair name for PC1 is something like "phenolic richness". Naming a component is the same move as naming a segment: the algorithm builds it, a person reads the weights and describes it.
+
+**Watch out:** the sign is arbitrary. Another run could flip every weight; the pattern (which columns move together) is what matters.
 :::
 
-## Why Accept Slightly Lower Accuracy? {.smaller .scrollable}
+## 13 Columns, One Picture {.smaller}
 
-Even if PCA features have slightly lower accuracy, the tradeoffs are often worth it:
-
-:::: {.columns}
-::: {.column width="50%"}
-**Benefits of Using PCA:**
-
-1. **Faster training & prediction**
-   - 7 features vs. 30 = ~4× speedup
-   - Matters for large datasets or complex models
-
-2. **Reduced overfitting risk**
-   - Simpler model = less prone to memorizing noise
-   - Better generalization to new data
-
-3. **Eliminates multicollinearity**
-   - PCs are uncorrelated by design
-   - Helps algorithms that assume independence
-:::
-::: {.column width="50%"}
-**More Benefits:**
-
-4. **Easier deployment**
-   - Smaller models are faster to deploy
-   - Require less memory in production
-
-5. **Noise filtering**
-   - Discarding minor components removes noise
-   - Can actually improve performance!
-
-6. **Scalability**
-   - With 100s-1000s of features, PCA becomes essential
-   - Our 77% reduction would be even more dramatic
-:::
-::::
-
-::: {.callout-tip}
-## The Key Tradeoff
-
-PCA trades a small amount of accuracy for significant gains in speed, simplicity, and robustness. As datasets grow larger and wider, this tradeoff becomes increasingly favorable.
-:::
-
-## Using Clustering/PCA in ML Pipelines {.smaller}
-
-**Unsupervised methods often feed into supervised models:**
-
-```{mermaid}
-%%| fig-width: 12
-%%| echo: false
-graph LR
-    A[Raw Data<br/>100 features] --> B[StandardScaler<br/>Standardize]
-    B --> C{PCA<br/>Reduce to 20 components}
-    C --> D[K-Means<br/>Create 5 clusters]
-    D --> E[Add cluster labels<br/>as new feature]
-    E --> F[Supervised Model<br/>Random Forest<br/>Predict churn]
-
-    style A fill:#f0f0f0
-    style B fill:#FFE5B4
-    style C fill:#FF6B6B
-    style D fill:#4ECDC4
-    style E fill:#45B7D1
-    style F fill:#95E1D3
+```{python}
+#| echo: true
+wine_2d = PCA(n_components=2).fit_transform(wine_scaled)
 ```
 
-**Example workflow:**
-
-1. Reduce 100 features to 20 components with PCA (noise reduction)
-2. Cluster customers into 5 segments using K-Means on those 20 components
-3. Add cluster ID as a categorical feature
-4. Train a Random Forest to predict customer churn using PCA components + cluster ID
-
-**Benefit**: Unsupervised learning creates better features for supervised learning!
+```{python}
+#| echo: false
+#| fig-align: center
+fig = go.Figure()
+for cultivar, color in zip(range(3), [ORANGE, BLUE, GREEN]):
+    mask = (y_wine == cultivar).to_numpy()
+    fig.add_trace(go.Scatter(x=wine_2d[mask, 0], y=wine_2d[mask, 1], mode='markers', name=f'Cultivar {cultivar}',
+                             marker=dict(color=color, size=9, line=dict(color='white', width=0.5)),
+                             hoverinfo='skip'))
+fig.update_layout(xaxis=dict(title=f'PC1 ({pca.explained_variance_ratio_[0]:.0%} of variance)'),
+                  yaxis=dict(title=f'PC2 ({pca.explained_variance_ratio_[1]:.0%} of variance)'),
+                  legend=dict(orientation='h', y=1.02, x=0.5, xanchor='center', yanchor='bottom'),
+                  height=450, margin=dict(l=70, r=20, t=40, b=10), template='plotly_white')
+fig.show(config=PLOTLY_CONFIG)
+```
 
 ::: {.notes}
-This is a very common pattern in practice. Clustering and dimension reduction as preprocessing steps for prediction models. Emphasize that PCA and clustering aren't just standalone techniques—they're often combined and used to engineer features for supervised learning.
+**Timing: ~3 minutes.**
+
+- Two components squeeze 13 columns into one picture. They keep a bit over half of the variance.
+- **PCA never saw the cultivar.** The colors are added afterwards, only to check. Yet the three cultivars land in three fairly separate regions: the main differences between wines line up with the grape variety.
+- This is the most common everyday use of PCA: getting a look at data you otherwise can't draw.
+
+Ask: "If I hid the colors, how many groups would you guess?" (A nice link back to clustering. The Lab's Challenge 4 runs K-Means on PCA output.)
 :::
 
-# Key Takeaways & Next Steps {background="#43464B"}
+## PCA in a Pipeline {.smaller}
+
+PCA can also feed a model. Put it **inside** the pipeline so it's refit on each fold's training part (week 12).
+
+```{python}
+#| echo: true
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X_wine, y_wine, test_size=0.2, stratify=y_wine, random_state=42)
+
+all_13 = Pipeline([('scale', StandardScaler()), ('model', LogisticRegression(max_iter=1000))])
+pcs_2 = Pipeline([('scale', StandardScaler()), ('pca', PCA(n_components=2)),
+                  ('model', LogisticRegression(max_iter=1000))])
+
+for name, pipe in [('All 13 columns', all_13), ('2 PCA components', pcs_2)]:
+    print(f"{name:>16}: 5-fold CV accuracy {cross_val_score(pipe, X_train, y_train, cv=5).mean():.3f}")
+```
+
+::: {.notes}
+**Timing: ~3 minutes.**
+
+- Same habits as week 12: split first, lock the test set away, and compare choices with CV on the training set only.
+- **PCA goes inside the pipeline.** If you fit PCA on all the data first, every CV fold's validation rows would have helped build the components. That's the same leak as scaling outside the pipeline.
+- **Result:** 2 columns instead of 13, and the CV accuracy barely moves. With 13 columns that doesn't buy much, but with thousands of columns, fewer inputs means faster training and less overfitting.
+- How many components to keep for a model is a hyperparameter: `pca__n_components` could go straight into a GridSearchCV grid. The notebook's **How Many Components Do You Need?** Your Turn loops over every count.
+:::
+
+# Looking Forward {background="#43464B"}
 
 ## Key Takeaways {.smaller}
 
-* **Unsupervised learning discovers patterns without labels** – Use it when you want to explore data structure rather than predict outcomes
-
-* **Clustering groups similar observations** – K-Means is the workhorse for customer segmentation, but choosing K requires judgment (elbow method, silhouette scores, business constraints)
-
-* **PCA reduces dimensionality by creating uncorrelated components** – Compress 100 features to 10 components while retaining 90%+ of information. Use scree plots to choose how many components to keep.
-
-* **ALWAYS standardize features first** – Both K-Means and PCA are highly sensitive to feature scale. Forget this and your results will be dominated by large-scale features!
-
-* **Unsupervised → Supervised pipeline** – Often you'll use clustering/PCA as preprocessing steps to create better features for supervised learning models
+* **Unsupervised learning**: find structure in `X` when there is no `y`
+* **Clustering** groups similar **rows**; K-Means alternates *assign* and *move* until nothing changes
+* **Choosing K** takes judgment: the elbow and silhouette inform it, and the business decides it
+* **Clusters become segments** once you profile them and give them names
+* **PCA** combines correlated **columns** into a few uncorrelated components
+* **Always scale first**: both K-Means and PCA are driven by distances and variances
 
 ::: {.notes}
-These are the core concepts. Emphasize that unsupervised learning is about exploration and feature engineering, not prediction accuracy.
+**Timing: ~2 minutes.** Read each takeaway and connect it to the slide where students saw it.
+
+**Transition:** "So when do you reach for which one?"
 :::
 
-## When to Use Which Method {.smaller .scrollable}
+## When to Use Which Method {.smaller}
 
 ```{mermaid}
 %%| fig-width: 12
@@ -2327,15 +1354,13 @@ These are the core concepts. Emphasize that unsupervised learning is about explo
 graph TD
     Start[I have unlabeled data] --> Q1{What's my goal?}
 
-    Q1 -->|Find groups<br/>in my data| C[Use Clustering]
-    Q1 -->|Reduce number<br/>of features| D[Use Dimension Reduction]
-    Q1 -->|Both!| Both[Use Both:<br/>PCA then Clustering]
+    Q1 -->|Find groups<br/>of similar rows| C[Clustering]
+    Q1 -->|Fewer, uncorrelated<br/>columns| D[Dimension reduction]
+    Q1 -->|Both| Both[PCA, then cluster<br/>on the components]
 
-    C --> C1[K-Means:<br/>Customer segments<br/>Product groups<br/>Market segments]
-
-    D --> D1[PCA:<br/>Feature compression<br/>Visualization<br/>Noise reduction]
-
-    Both --> B1[Common workflow:<br/>1. PCA to reduce features<br/>2. K-Means on components<br/>3. Use for supervised learning]
+    C --> C1[K-Means:<br/>customer segments<br/>product groups]
+    D --> D1[PCA:<br/>visualization<br/>model inputs]
+    Both --> B1[Thursday's Lab,<br/>Challenge 4]
 
     style Start fill:#f0f0f0
     style Q1 fill:#43464B,color:#fff
@@ -2345,131 +1370,88 @@ graph TD
 ```
 
 ::: {.notes}
-**Main Takeaway**: Learn to choose the right unsupervised learning method based on your goal.
+**Timing: ~1 minute.**
 
-**Decision Framework**:
+- **Clustering** answers "which rows are similar to each other?" The output is a cluster label for every row.
+- **PCA** answers "which columns carry the same information?" The output is a smaller set of new columns.
+- **Both:** PCA first strips out redundant, noisy columns, then K-Means clusters on the components. Students do exactly this in the Lab's last Challenge.
 
-**Start Here**: "I have unlabeled data" → Now what?
-
-**Goal 1: Find groups in my data (Use Clustering)**
-
-- **When to use**:
-  - "I want to discover customer segments"
-  - "I need to organize products into categories"
-  - "I want to identify market segments"
-  - "I'm looking for patterns in customer behavior"
-- **Key question**: "Which observations are similar to each other?"
-- **Output**: Cluster labels for each observation
-- **Example use cases**:
-
-  - Customer segmentation for targeted marketing
-  - Product recommendation (group similar products)
-  - Anomaly detection (points that don't fit any cluster)
-  - Document organization (group similar articles)
-
-**Goal 2: Reduce number of features (Use Dimension Reduction / PCA)**
-
-- **When to use**:
-  - "I have 100+ features and want to simplify"
-  - "My features are highly correlated"
-  - "Training takes too long"
-  - "I want to visualize high-dimensional data"
-  - "I'm worried about overfitting"
-- **Key question**: "Which features capture similar information?"
-- **Output**: New set of uncorrelated principal components
-- **Example use cases**:
-
-  - Feature engineering before supervised learning
-  - Data visualization (reduce to 2-3 components for plotting)
-  - Noise reduction (keep components, discard noise)
-  - Compression for faster computation
-
-**Goal 3: Both! (Use PCA then Clustering)**
-
-- **When to use**:
-  - "I have many correlated features AND want to find segments"
-  - "Clustering on 100 features is computationally expensive"
-  - "I want to remove noise before clustering"
-- **Workflow**:
-
-  1. Apply PCA to reduce 100 features → 20 components (faster, less noisy)
-  2. Apply K-Means to those 20 components (find customer segments)
-  3. Use segments as features for supervised learning (predict churn for each segment)
-- **Example use cases**:
-
-  - Customer segmentation with behavioral + demographic data
-  - Image clustering (reduce pixel features with PCA, then cluster)
-  - Gene expression analysis (reduce 20,000 genes → 50 components → cluster patients)
-
-**Decision-Making Questions**:
-
-1. "What's your PRIMARY goal?"
-   - Discover groups → Clustering
-   - Simplify features → PCA
-   - Both → PCA first, then Clustering
-
-2. "Do you have too many features?"
-   - Yes → Consider PCA first
-   - No → Go straight to clustering if you want groups
-
-3. "Are your features highly correlated?"
-   - Yes → PCA will help a lot
-   - No → Maybe feature selection instead of PCA
-
-**Real-World Insight**:
-"In practice, the combo approach (PCA → Clustering → Supervised Learning) is very common. It's like a data science pipeline: reduce complexity, discover patterns, then predict outcomes."
+**Transition:** "The readings go beyond the two methods we covered today."
 :::
 
+## More in Your Readings {.smaller}
 
-## Connection to Thursday's Lab {.smaller}
+::: {.card-grid .cols-2}
+::: {.card}
+[🌳 Hierarchical clustering]{.card-title}
+
+Builds a tree of nested clusters, so you can pick K *after* seeing the structure
+:::
+::: {.card}
+[🔵 DBSCAN]{.card-title}
+
+Finds clusters of any shape by density, and flags outliers that belong to no cluster
+:::
+::: {.card}
+[⚠️ When K-Means struggles]{.card-title}
+
+Non-spherical clusters, very unequal sizes, and outliers, with what to try instead
+:::
+::: {.card}
+[🧮 How PCA works under the hood]{.card-title}
+
+The covariance matrix and eigenvectors behind each component, plus PCA's cousins
+:::
+:::
+
+::: {.notes}
+**Timing: ~1 minute.**
+
+Chapters 31-32 go further than today's lecture. K-Means and PCA are the workhorses, and the chapters explain when to reach past them.
+:::
+
+## Thursday's Lab
 
 ::: {.callout-tip}
 ## This Week's Lab Preview
 
 In Thursday's lab, you'll get hands-on practice with:
 
-* **Applying K-Means clustering** to customer segmentation problems with real transaction data
-* **Implementing PCA** to reduce high-dimensional data (like the Ames housing dataset)
-* **Combining both** as a feature engineering step for a predictive model! 
+* Walking through K-Means and PCA on today's customer and wine data
+* Segmenting the Ames housing market with K-Means
+* Using PCA to compress 30 tumor measurements, then feeding the components to a classifier
+* Clustering on PCA components, with no labels at all
 
-Come prepared to apply today's concepts! Bring questions about clustering vs. dimension reduction use cases.
 :::
 
-::: {.notes}
-The lab will make all of this concrete. They'll see how clustering reveals customer segments and how PCA speeds up models while maintaining performance.
-:::
-
-## Looking Ahead {.smaller}
-
-**Btwn now & Thursday:** Complete reading Chapters 28-30
-
-**Thursday Lab:** Hands-on unsupervised learning exercises
-
-**Moving Foward:** Course wrap-up & Final Project
+<br>
 
 ::: {.callout-important}
-Start reviewing the final project details!
+## Homework
+
+Thursday's lab will lead into this week's homework assignment.
+
 :::
 
 ::: {.notes}
-Remind them that the final project is coming up. Unsupervised learning can add a lot of value to their analyses.
+**Timing: ~1 minute.**
+
+Remind students to read Chapters 31-32 before Thursday. The final project is coming up next, and clustering or PCA can add a lot to their analyses.
 :::
 
-## Any Final Questions? {.smaller}
+## Any Final Questions?
 
-* About clustering and K-Means?
-* About PCA and dimension reduction?
+* About clustering and choosing K?
+* About PCA and how many components to keep?
 * About when to use which method?
 * About Thursday's lab?
-* About the final project?
 
-
-::: {.notes}
-Encourage them to come to office hours, especially if they're working on final projects. Unsupervised learning can be tricky to get right.
-:::
-
----
+<br><br>
 
 <center>
-**See you Thursday for hands-on practice with clustering and PCA!**
+**See you Thursday for hands-on clustering and PCA!**
 </center>
+
+::: {.notes}
+**Timing: ~2 minutes.** Open Q&A on anything from today, then send students to Thursday's Lab.
+:::
